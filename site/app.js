@@ -350,6 +350,24 @@
       },
     });
     new MapMenu().addTo(map);
+    // mobil: Namensnennungen hinter „© Quellen“, als Kasten über der Leiste (auf breiten Bildschirmen immer sichtbar)
+    const Sources = L.Control.extend({
+      options: { position: "bottomleft" },
+      onAdd() {
+        const b = L.DomUtil.create("button", "map-style map-sources");
+        b.type = "button";
+        b.textContent = "© Quellen";
+        b.setAttribute("aria-expanded", "false");
+        b.setAttribute("aria-controls", "map-attribution");
+        const set = (open) => { map.getContainer().classList.toggle("attr-open", open); b.setAttribute("aria-expanded", String(open)); };
+        b.addEventListener("click", () => set(b.getAttribute("aria-expanded") !== "true"));
+        map.on("click", () => set(false));
+        L.DomEvent.disableClickPropagation(b);
+        return b;
+      },
+    });
+    new Sources().addTo(map);
+    map.attributionControl.getContainer().id = "map-attribution";
     const Legend = L.Control.extend({
       options: { position: "bottomleft" },
       onAdd() {

@@ -206,8 +206,17 @@ test("Mobil: Kartenoptionen in einem Menü, ohne Verstöße", async () => {
   await page.locator('.toggle[data-panel="panel-detail"]').click();
   const menu = page.locator(".map-menu");
   assert.equal(await page.locator(".map-whole").isVisible(), false);
+  assert.equal(await page.locator(".leaflet-control-attribution").isVisible(), false, "Namensnennung zugeklappt");
+  await page.locator(".map-sources").click();
+  assert.ok(await page.locator(".leaflet-control-attribution").isVisible());
+  assert.equal(await page.locator(".map-sources").getAttribute("aria-expanded"), "true");
+  await page.locator(".map-sources").click();
   await menu.click();
   assert.ok(await page.locator(".map-whole").isVisible());
+  // Kartenoptionen als Kasten über der Leiste: nichts ragt über den Seitentitel
+  const kasten = await page.locator(".leaflet-bottom.leaflet-right").boundingBox();
+  const titel = await page.locator(".site-title").boundingBox();
+  assert.ok(kasten.y >= titel.y + titel.height, `Kasten ${kasten.y} unter Titel ${titel.y + titel.height}`);
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.close();
