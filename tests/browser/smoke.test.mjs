@@ -64,6 +64,27 @@ test("Gebiet aus dem Link: Vorgang mit zwei Stationen, Ergebnis als Lücke, ohne
   await page.close();
 });
 
+test("Karte: Ortsbezirk anklicken lädt das Gebiet, Hinweis zur Zuordnung", async () => {
+  const page = await open(SITE);
+  const pts = await page.evaluate(() => {
+    const o = [];
+    for (let y = 120; y < innerHeight - 60; y += 20) for (let x = 40; x < innerWidth - 500; x += 20) {
+      const el = document.elementFromPoint(x, y);
+      if (el && el.closest(".leaflet-gebiete-pane path")) o.push({ x, y });
+    }
+    return o;
+  });
+  assert.ok(pts.length, "keine anklickbare Fläche");
+  await page.mouse.click(pts[Math.floor(pts.length / 2)].x, pts[Math.floor(pts.length / 2)].y);
+  await page.waitForFunction(() => document.querySelector("#f-area").value.startsWith("ortsteil:"));
+  assert.match(page.url(), /gebiet=ortsteil/);
+  assert.match(await page.locator(".map-legend").textContent(), /Hauptsatzung/);
+  assert.match(await page.locator(".leaflet-control-attribution").textContent(), /HVBG/);
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 test("Verfahrenspunkte sind standardmäßig ausgeblendet", async () => {
   const page = await open(SITE, "?gebiet=ortsteil:neuseesen");
   await page.locator('.toggle[data-panel="panel-list"]').click();

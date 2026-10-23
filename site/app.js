@@ -337,16 +337,19 @@
     const top = desktop && !$("#timeline-wrap").hidden ? 86 + $("#timeline-wrap").offsetHeight + 12 : 90;
     return { paddingTopLeft: [left, top], paddingBottomRight: [right, desktop ? 70 : 150], animate: !REDUCED };
   }
-  // Ortsbezirke als anklickbare Flächen, sobald die Pipeline sie liefert (Gemarkungen, HVBG)
+  // Ortsbezirke als anklickbare Flächen, abgeleitet aus den Gemarkungen (HVBG); Zuordnung mit Prüfstatus
   function initNav() {
     if (!flaechen) return;
     map.createPane("gebiete").style.zIndex = 350;
     navLayer = L.geoJSON(flaechen, {
-      pane: "gebiete", style: () => ({ color: color("accent-ink"), weight: 1, opacity: 0.5, fillColor: color("accent"), fillOpacity: 0.06 }),
+      pane: "gebiete", attribution: esc(flaechen.attribution || ""),
+      style: () => ({ color: color("accent-ink"), weight: 1.5, opacity: 0.85, fillColor: color("accent"), fillOpacity: 0.05 }),
       onEachFeature(f, layer) {
         const o = ortsteile().find((x) => x.slug === f.properties.slug);
         if (!o) return;
-        layer.bindTooltip(() => `<strong>${esc(o.name)}</strong><br>${de(countIn(o))} Vorgänge mit Ortsbezug`, { sticky: true, className: "nav-tip" });
+        const p = f.properties;
+        layer.bindTooltip(() => `<strong>${esc(o.name)}</strong>${o.ortsbezirk ? "" : " (ohne Ortsbeirat)"}<br>${de(countIn(o))} Vorgänge mit Ortsbezug
+          <br><span class="nav-dim">Gemarkung ${esc(p.gemarkung)} · Zuordnung: ${esc(p.zuordnung_status || "–")}</span>`, { sticky: true, className: "nav-tip" });
         layer.on("click", () => { if (!(area.kind === "ortsteil" && area.key === o.slug)) chooseArea(`ortsteil:${o.slug}`); });
       },
     }).addTo(map);
@@ -369,6 +372,7 @@
     legendEl.innerHTML = `<summary>Legende: Sicherheit des Orts</summary><ul>${rows
       .map(([c, t]) => `<li><span class="swatch" style="background:${c}" aria-hidden="true"></span>${esc(t)}</li>`).join("")}</ul>
       <p class="hint">Vorgänge, die nur einem Ortsteil zugeordnet sind, stehen in der Liste, nicht als Punkt.</p>
+      ${navLayer ? '<p class="hint">Grenzen: Gemarkungen (HVBG). Die Gleichsetzung mit den Ortsbezirken ist plausibel, aber noch nicht mit § 6 der Hauptsatzung abgeglichen.</p>' : ""}
       ${planOn ? `<ul><li><span class="swatch swatch-plan" aria-hidden="true"></span>Geltungsbereich eines Bebauungsplans</li>
         <li><span class="swatch swatch-fplan" aria-hidden="true"></span>Änderung des Flächennutzungsplans</li></ul>
         <p class="hint">${esc(cfg.bauleitplanung.attribution)}. Nicht rechtsverbindlich.</p>` : ""}`;

@@ -8,13 +8,13 @@
 - Ortsbezug Stufe A: Ortsbeirat bzw. Stadtteilbeirat X → Ortsteil X (Ortsbezug des Gremiums).
 - Ortsbezug Stufe B, Plan-Abgleich: „Bebauungsplan Nr. N Gemarkung G“ bzw. „N. Änderung des Flächennutzungsplanes“
   im Titel → Geltungsbereich der Stadt. Ergebnis ist die Plannummer; die Lage auf der Karte ist ein Punkt im
-  Geltungsbereich. Stufe B für Straßen und Flurstücke folgt mit den Gemarkungen (Phase 3).
+  Geltungsbereich. Stufe B für Straßen und Flurstücke folgt mit Arbeitspaket B.
 """
 import json
 import re
 from datetime import datetime, timezone
 
-from . import audit, bauleitplanung, config, fetch, parse
+from . import audit, bauleitplanung, config, fetch, geo, parse
 
 VERFAHREN = re.compile(
     r"^(Eröffnung|Begrüßung|Feststellung (der|des)|Genehmigung (der|des) (Tagesordnung|Niederschrift|Protokoll)|"
@@ -87,6 +87,7 @@ def plan_treffer(v, plaene):
 def build():
     medien = json.loads(fetch.MEDIEN.read_text(encoding="utf-8"))
     plaene = bauleitplanung.plaene()
+    flaechen = geo.Ortsteile() if config.ORTSBEZIRKE.exists() else None
     sitzungen, tops, fehler = {}, [], []
     for m in medien["medien"]:
         name = fetch.dateiname(m["source_url"])
@@ -142,8 +143,8 @@ def build():
                 if p and p["key"] not in [x["key"] for x in verweise]:
                     verweise.append({"key": p["key"], "titel": p["titel"], "treffer": treffer, "evidence": v["evidence"]})
                     pt = p["geometry"].representative_point()
-                    # FNP-Blätter ohne Gemarkung (0000): Ortsteil über die Lage bestimmt Phase 3 (Gemarkungsflächen)
-                    o = ortsteil_zu(nr=p.get("gemarkung_nr")) or {"name": None}
+                    # Plan ohne Gemarkung in der Kennung (FNP-Blätter 0000): Ortsteil über die Lage in den Gemarkungen
+                    o = ortsteil_zu(nr=p.get("gemarkung_nr")) or (flaechen.locate(pt.x, pt.y) if flaechen else None) or {"name": None}
                     locations.append({"level": "bebauungsplan", "name": p["titel"], "ortsteil": o["name"], "stage": "B",
                                       "method": "bebauungsplan" if p["art"] == "bplan" else "flaechennutzungsplan",
                                       "confidence": "hoch" if treffer == "eindeutig" else "mittel",

@@ -14,8 +14,9 @@ EXPORT = ROOT / "data" / "export"
 SITE_SRC = ROOT / "site"
 SITE_OUT = ROOT / "_site"
 
-# Ortsbezirke als Flächen (aus den Gemarkungen der HVBG abgeleitet, ab Phase 2)
-ORTSBEZIRKE = GEO / "ortsbezirke.geojson"
+# Ortsbezirke als Flächen, abgeleitet aus den Gemarkungen der HVBG (dl-de/zero-2.0, daher im Repository);
+# Daten je Lizenz in eigenem Unterordner (dl-de-zero/, restricted/ …)
+ORTSBEZIRKE = GEO / "dl-de-zero" / "ortsbezirke.geojson"
 VORGAENGE = EXPORT / "vorgaenge.json"
 
 USER_AGENT = STADT["projekt"]["user_agent"]

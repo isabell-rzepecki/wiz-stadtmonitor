@@ -301,12 +301,13 @@
       "slug": "kernstadt",
       "name": "Kernstadt",
       "ortsbezirk": false,
-      "hinweis": "ohne Ortsbeirat; umfasst nach Wikipedia auch Bischhausen (zu prüfen)",
       "varianten": [
         "Witzenhausen (Kernstadt)"
       ],
       "gemarkung": "Witzenhausen",
-      "gemarkung_nr": "2246"
+      "gemarkung_nr": "2246",
+      "zuordnung_status": "Annahme",
+      "anmerkung": "Kernstadt ohne Ortsbeirat; Zugehörigkeit von Bischhausen prüfen"
     },
     {
       "slug": "albshausen",
@@ -315,7 +316,8 @@
       "wikidata": "Q1660176",
       "stadtteilbeirat": true,
       "gemarkung": "Albshausen",
-      "gemarkung_nr": "2113"
+      "gemarkung_nr": "2113",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "berlepsch-ellerode",
@@ -329,7 +331,9 @@
         "Hübenthal"
       ],
       "gemarkung": "Berlepsch-Ellerode",
-      "gemarkung_nr": "2121"
+      "gemarkung_nr": "2121",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen",
+      "anmerkung": "Hübenthal liegt laut Wikidata als eigener Wohnplatz vor; Gemarkungszugehörigkeit prüfen"
     },
     {
       "slug": "blickershausen",
@@ -337,7 +341,8 @@
       "ortsbezirk": true,
       "wikidata": "Q884011",
       "gemarkung": "Blickershausen",
-      "gemarkung_nr": "2125"
+      "gemarkung_nr": "2125",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "dohrenbach",
@@ -345,7 +350,8 @@
       "ortsbezirk": true,
       "wikidata": "Q1234893",
       "gemarkung": "Dohrenbach",
-      "gemarkung_nr": "2132"
+      "gemarkung_nr": "2132",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "ellingerode",
@@ -353,7 +359,8 @@
       "ortsbezirk": true,
       "wikidata": "Q1332184",
       "gemarkung": "Ellingerode",
-      "gemarkung_nr": "2136"
+      "gemarkung_nr": "2136",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "ermschwerd",
@@ -361,7 +368,8 @@
       "ortsbezirk": true,
       "wikidata": "Q1292400",
       "gemarkung": "Ermschwerd",
-      "gemarkung_nr": "2140"
+      "gemarkung_nr": "2140",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "gertenbach",
@@ -369,7 +377,8 @@
       "ortsbezirk": true,
       "wikidata": "Q1433972",
       "gemarkung": "Gertenbach",
-      "gemarkung_nr": "2151"
+      "gemarkung_nr": "2151",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "hubenrode",
@@ -378,7 +387,8 @@
       "wikidata": "Q1632999",
       "stadtteilbeirat": true,
       "gemarkung": "Hubenrode",
-      "gemarkung_nr": "2172"
+      "gemarkung_nr": "2172",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "hundelshausen",
@@ -386,7 +396,8 @@
       "ortsbezirk": true,
       "wikidata": "Q1637452",
       "gemarkung": "Hundelshausen",
-      "gemarkung_nr": "2173"
+      "gemarkung_nr": "2173",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "kleinalmerode",
@@ -394,7 +405,8 @@
       "ortsbezirk": true,
       "wikidata": "Q1746285",
       "gemarkung": "Kleinalmerode",
-      "gemarkung_nr": "2177"
+      "gemarkung_nr": "2177",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "neuseesen",
@@ -402,7 +414,8 @@
       "ortsbezirk": true,
       "wikidata": "Q1745254",
       "gemarkung": "Neuseesen",
-      "gemarkung_nr": "2194"
+      "gemarkung_nr": "2194",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "rossbach",
@@ -413,7 +426,8 @@
         "Rossbach"
       ],
       "gemarkung": "Roßbach",
-      "gemarkung_nr": "2214"
+      "gemarkung_nr": "2214",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "unterrieden",
@@ -421,7 +435,8 @@
       "ortsbezirk": true,
       "wikidata": "Q2498818",
       "gemarkung": "Unterrieden",
-      "gemarkung_nr": "2227"
+      "gemarkung_nr": "2227",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "wendershausen",
@@ -429,7 +444,8 @@
       "ortsbezirk": true,
       "wikidata": "Q2559136",
       "gemarkung": "Wendershausen",
-      "gemarkung_nr": "2241"
+      "gemarkung_nr": "2241",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "werleshausen",
@@ -437,7 +453,8 @@
       "ortsbezirk": true,
       "wikidata": "Q2560623",
       "gemarkung": "Werleshausen",
-      "gemarkung_nr": "2242"
+      "gemarkung_nr": "2242",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     },
     {
       "slug": "ziegenhagen",
@@ -445,7 +462,8 @@
       "ortsbezirk": true,
       "wikidata": "Q198786",
       "gemarkung": "Ziegenhagen",
-      "gemarkung_nr": "2251"
+      "gemarkung_nr": "2251",
+      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
     }
   ],
   "texte": {
@@ -465,5 +483,10 @@
         "element": "witzenhausen_fplaene_umringe_feature"
       }
     }
-  }
+  },
+  "offene_punkte_raum": [
+    "Wortlaut § 6 Hauptsatzung (Ortsbezirke = Gemarkungen?) – Issue #3",
+    "Bischhausen: Kernstadt? – Issue #3",
+    "Hübenthal: Berlepsch-Ellerode? – Issue #3"
+  ]
 }

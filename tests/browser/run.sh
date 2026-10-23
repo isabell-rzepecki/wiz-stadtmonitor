@@ -11,6 +11,8 @@ python3 -c "from pathlib import Path; from pipeline import site; site.build(Path
 python3 -c "from pathlib import Path; from pipeline import site; site.build(Path('$TMP/test'), mit_daten=False)"
 cp tests/fixtures/vorgaenge.json "$TMP/test/data/export/vorgaenge.json"
 # Kartenebene Bauleitplanung: eine erfundene Testfläche (keine Daten der Stadt; deren Umringe liegen nicht im Repository)
+# Ortsbezirksflächen (Gemarkungen, HVBG, dl-de/zero-2.0; im Repository)
+cp data/geo/dl-de-zero/ortsbezirke.geojson "$TMP/test/data/export/flaechen.json"
 mkdir -p "$TMP/test/data/export/karte" && cp tests/fixtures/bauleitplanung_test.json "$TMP/test/data/export/karte/bauleitplanung.json"
 python3 -m http.server 8765 --bind 127.0.0.1 --directory "$TMP/leer" >/dev/null 2>&1 &
 python3 -m http.server 8766 --bind 127.0.0.1 --directory "$TMP/test" >/dev/null 2>&1 &

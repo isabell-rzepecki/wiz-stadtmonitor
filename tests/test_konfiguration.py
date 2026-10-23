@@ -14,6 +14,12 @@ class Konfiguration(unittest.TestCase):
         self.assertEqual(len({o["slug"] for o in ot}), len(ot))
         self.assertTrue(all(re.fullmatch(r"[a-z0-9-]+", o["slug"]) for o in ot))
 
+    def test_gemarkungen(self):
+        nrs = [o["gemarkung_nr"] for o in STADT["ortsteile"]]
+        self.assertEqual(len(set(nrs)), 17)
+        self.assertTrue(all(re.fullmatch(r"\d{4}", n) for n in nrs))
+        self.assertTrue(all(o.get("zuordnung_status") for o in STADT["ortsteile"]))
+
     def test_gremien(self):
         ids = {g["id"] for g in STADT["gremien"]}
         self.assertTrue({i for r in STADT["zeitleiste_gremien"] for i in r["ids"]} <= ids)
