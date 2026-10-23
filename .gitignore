@@ -1,3 +1,9 @@
 node_modules/
 .DS_Store
 *.local.*
+__pycache__/
+.env
+.venv/
+_site/
+data/raw/
+data/build/

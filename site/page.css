@@ -1,0 +1,28 @@
+/* Textseiten des Stadtmonitors (Datenschutz): gleiche Schriften und Farben wie die Karte, normal scrollbar */
+@font-face { font-family: "Space Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/space-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Space Mono"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/space-mono-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Lilita One"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/lilita-one-latin-400-normal.woff2") format("woff2"); }
+:root { --bg: #fdf6f4; --surface: #ffffff; --text: #1a1a1a; --muted: #5c5458; --accent-ink: #b8352e; --accent-tint: rgba(244, 114, 107, 0.12); --line: rgba(26, 26, 26, 0.12); color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1c1a1b; --surface: #242122; --text: #ece6e7; --muted: #b8adb0; --accent-ink: #f8a29d; --accent-tint: rgba(244, 114, 107, 0.14); --line: rgba(236, 230, 231, 0.16); color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html { font-synthesis: none; }
+body { margin: 0; font: 400 16px/1.6 "Space Mono", ui-monospace, Menlo, Consolas, monospace; color: var(--text); background: var(--bg); }
+a { color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.page-head, .page, .page-foot { width: min(72ch, calc(100% - 32px)); margin: 0 auto; }
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0 8px; }
+.page-brand { display: inline-flex; align-items: center; gap: 10px; font: 400 22px/1 "Lilita One", system-ui, sans-serif; color: var(--accent-ink); text-decoration: none; }
+.page-brand span { color: var(--text); }
+.page-back { font-weight: 700; text-decoration: none; padding: 8px 14px; border-radius: 12px; background: var(--accent-tint); }
+.page { padding: 16px 28px 28px; margin-top: 12px; border-radius: 20px; background: var(--surface); box-shadow: 0 8px 32px rgba(26, 26, 26, 0.08); }
+.page h1, .page h2 { font-family: "Lilita One", system-ui, sans-serif; font-weight: 400; }
+.page h1 { font-size: 34px; line-height: 1.2; margin: 12px 0 6px; }
+.page h2 { font-size: 22px; margin: 28px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+.page p, .page li { margin: 0 0 12px; }
+.page .lead { font-size: 18px; color: var(--muted); margin-top: 0; }
+.page code { font-size: 15px; background: var(--accent-tint); padding: 1px 5px; border-radius: 6px; }
+.page .offen { padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--accent-ink); }
+.page-foot { padding: 20px 0 32px; color: var(--muted); font-size: 14px; }
+@media (max-width: 600px) { .page { padding: 8px 18px 20px; } .page h1 { font-size: 28px; } }

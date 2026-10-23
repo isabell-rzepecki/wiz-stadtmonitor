@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>Seite nicht gefunden – Stadtmonitor</title>
+  <meta name="robots" content="noindex">
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; box-sizing: border-box;
+      font: 400 16px/1.6 ui-monospace, Menlo, Consolas, monospace; color: #1a1a1a; background: #fdf6f4; }
+    main { max-width: 460px; padding: 28px; border-radius: 20px; background: #fff; box-shadow: 0 14px 40px rgba(26, 26, 26, 0.14); }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    a { color: #b8352e; }
+    .btn { display: inline-block; margin: 8px 0 16px; padding: 10px 16px; border-radius: 12px; background: #b8352e; color: #fff; font-weight: 700; text-decoration: none; }
+    .btn:focus-visible, a:focus-visible { outline: 2px solid #b8352e; outline-offset: 2px; }
+    @media (prefers-color-scheme: dark) {
+      body { color: #ece6e7; background: #1c1a1b; } main { background: #242122; } a { color: #f8a29d; }
+      .btn { background: #f4726b; color: #1a1a1a; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Diese Seite gibt es nicht</h1>
+    <p>Die Adresse ist vielleicht veraltet oder unvollständig. Alle Vorgänge finden Sie auf der Karte.</p>
+    <!-- relativ zum Pfad der Seite; bei Auslieferung unter Unterpfaden setzt die Pipeline die Adresse ein -->
+    <a class="btn" href="./">Zum Stadtmonitor</a>
+  </main>
+</body>
+</html>

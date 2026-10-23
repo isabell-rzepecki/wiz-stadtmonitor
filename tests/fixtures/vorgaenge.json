@@ -1,0 +1,53 @@
+{
+  "_hinweis": "Testdaten für den Browsertest (tests/browser). Inhalte wörtlich aus vier Einladungen der amtlichen Bekanntmachungen (Nr. 106/2025, 177/2025, 166/2026, 167/2026); Ortsbezüge von Hand nach Stufe A/B gesetzt. Nicht Teil der veröffentlichten Daten.",
+  "meta": {
+    "generated_at": "2026-10-23T12:00:00Z",
+    "data_start": "2024-07-01",
+    "sources": [{"name": "Amtliche Bekanntmachungen der Stadt", "license": "amtliche Werke (Prüfung offen)", "retrieved_at": "2026-10-23"}]
+  },
+  "sitzungen": [
+    {"id": "106/2025", "gremium": "Ortsbeirat Neuseesen", "ortsteil": "Neuseesen", "date": "2025-07-25", "time": "20:00", "ort": "Dorfgemeinschaftshaus Neuseesen", "oeffentlich": true, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/07/106-2025-Einladung-OB-Neuseesen-25-07-2025.pdf"},
+    {"id": "177/2025", "gremium": "Stadtverordnetenversammlung", "date": "2025-12-16", "time": "18:00", "ort": "Rathaussaal, Am Markt 1", "oeffentlich": true, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/12/177-2025-Einladung-STVV-16-12-2025.pdf"},
+    {"id": "166/2026", "gremium": "Haupt-, Finanz-, Rechts-, Digitalisierungs- und Wirtschaftsausschuss", "date": "2026-11-04", "time": "19:00", "ort": "Rathaussaal, Am Markt 1", "oeffentlich": true, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/166-2026-Einladung-HFR-04-11-2026.pdf"},
+    {"id": "167/2026", "gremium": "Stadtverordnetenversammlung", "date": "2026-11-10", "time": "19:00", "ort": "Rathaussaal, Am Markt 1", "oeffentlich": true, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/167-2026-Einladung-STVV-10-11-2026.pdf"}
+  ],
+  "vorgaenge": [
+    {
+      "reference": "STV/066/2026", "vorlage": "STV/066/2026",
+      "name": "Beratung und Beschlussfassung über die Genehmigung einer überplanmäßigen Ausgabe Sachkonto 6161000 bei der Kostenstelle 33620 Mehrzweckhalle Gertenbach",
+      "date": "2026-11-04", "verfahrenspunkt": false,
+      "process": [
+        {"sitzung": "166/2026", "bekanntmachung": "166/2026", "gremium": "Haupt-, Finanz-, Rechts-, Digitalisierungs- und Wirtschaftsausschuss", "date": "2026-11-04", "time": "19:00", "ort": "Rathaussaal, Am Markt 1", "top": "6.2", "oeffentlich": true, "result": null, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/166-2026-Einladung-HFR-04-11-2026.pdf"},
+        {"sitzung": "167/2026", "bekanntmachung": "167/2026", "gremium": "Stadtverordnetenversammlung", "date": "2026-11-10", "time": "19:00", "ort": "Rathaussaal, Am Markt 1", "top": "13.2", "oeffentlich": true, "result": null, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/167-2026-Einladung-STVV-10-11-2026.pdf"}
+      ],
+      "locations": [{"level": "ortsteil", "name": "Gertenbach", "ortsteil": "Gertenbach", "stage": "B", "method": "ortsteil_name", "confidence": "mittel", "evidence": "Mehrzweckhalle Gertenbach", "source_pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/166-2026-Einladung-HFR-04-11-2026.pdf"}]
+    },
+    {
+      "reference": "STV/488/2025", "vorlage": "STV/488/2025",
+      "name": "Beratung und Beschlussfassung über die Neufassung der Satzung über die Erhebung der Hundesteuer im Gebiet der Stadt Witzenhausen zum 01.01.2026 - Ortsrecht 9.1",
+      "date": "2025-12-16", "verfahrenspunkt": false,
+      "process": [
+        {"sitzung": "177/2025", "bekanntmachung": "177/2025", "gremium": "Stadtverordnetenversammlung", "date": "2025-12-16", "time": "18:00", "ort": "Rathaussaal, Am Markt 1", "top": "8", "oeffentlich": true, "result": null, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/12/177-2025-Einladung-STVV-16-12-2025.pdf"}
+      ],
+      "locations": []
+    },
+    {
+      "reference": "106/2025-TOP5", "vorlage": null,
+      "name": "Stellungnahme zur geplanten Stromtrasse \"Südwestlink - Nordwestlink\"",
+      "date": "2025-07-25", "verfahrenspunkt": false,
+      "process": [
+        {"sitzung": "106/2025", "bekanntmachung": "106/2025", "gremium": "Ortsbeirat Neuseesen", "date": "2025-07-25", "time": "20:00", "ort": "Dorfgemeinschaftshaus Neuseesen", "top": "5", "oeffentlich": true, "result": null, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/07/106-2025-Einladung-OB-Neuseesen-25-07-2025.pdf"}
+      ],
+      "locations": [{"level": "ortsteil", "name": "Neuseesen", "ortsteil": "Neuseesen", "stage": "A", "method": "gremium_ortsbeirat", "confidence": "hoch", "evidence": "Ortsbeirat Neuseesen", "source_pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/07/106-2025-Einladung-OB-Neuseesen-25-07-2025.pdf"}]
+    },
+    {
+      "reference": "106/2025-TOP1", "vorlage": null,
+      "name": "Eröffnung und Begrüßung",
+      "date": "2025-07-25", "verfahrenspunkt": true,
+      "process": [
+        {"sitzung": "106/2025", "bekanntmachung": "106/2025", "gremium": "Ortsbeirat Neuseesen", "date": "2025-07-25", "time": "20:00", "ort": "Dorfgemeinschaftshaus Neuseesen", "top": "1", "oeffentlich": true, "result": null, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/07/106-2025-Einladung-OB-Neuseesen-25-07-2025.pdf"}
+      ],
+      "locations": [{"level": "ortsteil", "name": "Neuseesen", "ortsteil": "Neuseesen", "stage": "A", "method": "gremium_ortsbeirat", "confidence": "hoch", "evidence": "Ortsbeirat Neuseesen", "source_pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/07/106-2025-Einladung-OB-Neuseesen-25-07-2025.pdf"}]
+    }
+  ]
+}
