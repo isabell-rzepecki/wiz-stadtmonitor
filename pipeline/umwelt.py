@@ -1,5 +1,6 @@
-"""Umweltebenen: Hochwasser (ÜSG, HWRM), Trinkwasser- und Heilquellenschutz (HLNUG, CC BY 4.0) und Schutzgebiete
-Natur (HMLU, Naturparke HessenForst; frei nutzbar, keine Weiterveräußerung).
+"""Weitere Kartenebenen: Hochwasser (ÜSG, HWRM), Trinkwasser- und Heilquellenschutz (HLNUG, CC BY 4.0), Schutzgebiete
+Natur (HMLU, Naturparke HessenForst; frei nutzbar, keine Weiterveräußerung), Windvorranggebiete (Regionalplan
+Nordhessen) und Kulturdenkmäler (DenkXweb), beide dl-de/by-2.0.
 
 Ebenen und Quellenvermerke stehen in config/stadt.json (umwelt). Abruf über die INSPIRE-WFS des Landes; der Dienst
 liefert nur mit einer BBOX in EPSG:4326 (Breite, Länge) Objekte. Die Flächen werden auf das Stadtgebiet
@@ -11,6 +12,7 @@ Fläche sagt über die Lage eines Vorhabens zu wenig aus.
 """
 import hashlib
 import json
+import re
 import time
 import urllib.parse
 from datetime import date
@@ -40,6 +42,8 @@ def ebenen():
 
 def url(e, bbox):
     w, s, o, n = bbox
+    if e.get("url"):  # andere Dienste mit eigener Adresse (BBOX in EPSG:4326, Breite zuerst)
+        return e["url"].format(w=w, s=s, o=o, n=n)
     q = {"SERVICE": "WFS", "VERSION": "2.0.0", "REQUEST": "GetFeature", "TYPENAMES": f"inspire_{e['dienst']}:{e['typ']}",
          "BBOX": f"{s},{w},{n},{o},urn:ogc:def:crs:EPSG::4326", "OUTPUTFORMAT": "GEOJSON"}
     return U["dienst"].format(dienst=e["dienst"]) + "?" + urllib.parse.urlencode(q)
@@ -51,6 +55,8 @@ def fetch():
     w, s, o, n = stadtgebiet().bounds
     bbox = (w - 0.005, s - 0.005, o + 0.005, n + 0.005)
     for g, e in ebenen():
+        if e.get("abruf"):  # eigener Abruf in einem anderen Modul (z. B. gebaeude.py)
+            continue
         ziel = RAW / f"{e['id']}.geojson"
         if ziel.exists() and time.time() - ziel.stat().st_mtime < 7 * 86400:
             continue
@@ -84,7 +90,10 @@ def flaechen(stadt=None):
                 continue
             pr = f["properties"]
             link = _wert(pr, e.get("link"))
-            out.append({"gruppe": g["id"], "ebene": e["id"], "titel": e["titel"], "name": _wert(pr, e.get("name")),
+            name = _wert(pr, e.get("name"))
+            if name and e.get("name_praefix"):  # „Kreis_Gemeinde_Ortsteil_Adresse“ → „Ortsteil, Adresse“
+                name = re.sub(e["name_praefix"], "", name).replace("_", ", ")
+            out.append({"gruppe": g["id"], "ebene": e["id"], "titel": e["titel"], "name": name,
                         "zone": _wert(pr, e.get("zone")), "status": _wert(pr, e.get("status")),
                         "vo_gueltig": _wert(pr, e.get("vo_gueltig")), "link": link if link and link.startswith("https://") else None,
                         "ueberschneidung": e.get("ueberschneidung", True), "geometry": geom})
@@ -103,8 +112,8 @@ def build():
             props = {k: f[k] for k in ("ebene", "name", "zone", "status", "vo_gueltig", "link") if f[k]}
             feats.append({"type": "Feature", "properties": props, "geometry": geom})
         quelle = next(e for e in g["ebenen"])
-        data = {"type": "FeatureCollection", "attribution": g["attribution"], "hinweis": U["hinweis"],
-                "source": U["dienst"].format(dienst=quelle["dienst"]), "retrieved": date.today().isoformat(),
+        data = {"type": "FeatureCollection", "attribution": g["attribution"], "hinweis": g.get("hinweis", U["hinweis"]),
+                "source": quelle["url"].split("?")[0] if quelle.get("url") else g.get("quelle_url") or U["dienst"].format(dienst=quelle["dienst"]), "retrieved": date.today().isoformat(),
                 "ebenen": {e["id"]: e["titel"] for e in g["ebenen"]}, "features": feats}
         (KARTE / f"umwelt_{g['id']}.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"Umweltebenen: {len(liste)} Flächen im Stadtgebiet")

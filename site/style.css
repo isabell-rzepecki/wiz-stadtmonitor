@@ -338,6 +338,9 @@ table.compare th[scope=row], table.compare thead th:first-child { text-align: le
 table.compare tr.own th, table.compare tr.own td { font-weight: 700; }
 dl.glossar dt { font-weight: 700; margin-top: 6px; } dl.glossar dd { margin: 0; }
 table.compare td.text { text-align: left; }
+ol.beteiligung { margin: 4px 0 10px; padding-left: 18px; } ol.beteiligung ul { margin: 2px 0 6px; padding-left: 16px; }
+.badge.badge-live { background: var(--accent-fill); color: var(--on-accent-fill); }
+.beteiligung-live { border: 1px solid var(--accent-ink); border-radius: var(--radius-s); padding: 8px 12px; }
 .stat-block h4 { font: 600 14px/1.3 var(--font-body); margin: 12px 0 6px; }
 .bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
 .bar { width: 100%; display: grid; grid-template-columns: minmax(120px, 34%) 1fr 48px; align-items: center; gap: 10px; border: 0; background: transparent; padding: 4px 6px; border-radius: 10px; cursor: pointer; text-align: left; font-size: 14px; }

@@ -105,6 +105,7 @@ test("Termine: kommende Sitzungen mit Tagesordnung", async () => {
   // Sitzungen ab heute; die Testdaten enthalten zwei im November 2026
   const n = await page.locator("#termine .meeting").count();
   assert.ok(n <= 2);
+  assert.match(await page.locator("#termine").textContent(), /Laufende Beteiligung der Öffentlichkeit.*Testplan/s);
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.close();
@@ -175,6 +176,8 @@ test("Wohnen und Boden: Stichtage, getrennte Mietbegriffe, Vergleich, Ortsbezirk
   assert.match(text, /Angebotsmiete/);
   assert.match(text, /Ortsübliche Vergleichsmiete/);
   assert.ok(await page.locator("#wohnen table.compare tbody tr").count() >= 5);
+  assert.match(text, /Gebäude und Eigentum/);
+  assert.match(text, /Pflichtangaben/);
   assert.deepEqual(await axe(page), []);
   await page.locator("[data-brw-on]").click();
   assert.match(page.url(), /ebenen=bodenrichtwerte/);

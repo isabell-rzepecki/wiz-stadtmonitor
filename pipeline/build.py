@@ -96,6 +96,9 @@ def build():
     flaechen = geo.Ortsteile() if config.ORTSBEZIRKE.exists() else None
     verz = verortung.Verzeichnis()
     umweltflaechen = umwelt.flaechen() if config.ORTSBEZIRKE.exists() else []
+    # Beteiligungsverfahren der Bauleitplanung (pipeline/beteiligung.py), je Planverfahren
+    bet_datei = config.EXPORT / "beteiligung.json"
+    beteiligung = json.loads(bet_datei.read_text(encoding="utf-8"))["verfahren"] if bet_datei.exists() else []
     sitzungen, tops, fehler = {}, [], []
     for m in medien["medien"]:
         name = fetch.dateiname(m["source_url"])
@@ -141,9 +144,10 @@ def build():
             if s["ortsteil"] and not any(l["ortsteil"] == s["ortsteil"] and l["stage"] == "A" for l in locations):
                 locations.append({"level": "ortsteil", "name": s["ortsteil"], "ortsteil": s["ortsteil"], "stage": "A",
                                   "method": f"gremium_{s['gremium_typ']}", "confidence": "hoch", "evidence": s["gremium"], "source_pdf": s["pdf"]})
-        verweise = []
+        verweise, verfahren_ids = [], set()
         for t in ts:
             for v in plan_verweise(t["titel"], sitzungen[t["sitzung"]]):
+                verfahren_ids.add(f"fplan:{v['aenderung']}" if v["art"] == "fplan" else f"bplan:{v['gemarkung_nr'] or '?'}:{v['nr']}:{v['aenderung']}")
                 p, treffer = plan_treffer(v, plaene)
                 plan_audit.append({"vorgang": key, "sitzung": t["sitzung"], "top": t["top"], "art": v["art"], "nr": v.get("nr", ""),
                                    "aenderung": v["aenderung"], "gemarkung_nr": v.get("gemarkung_nr", ""), "treffer": treffer,
@@ -190,11 +194,14 @@ def build():
                 e_audit.append({"vorgang": key, "sitzung": t["sitzung"], "top": t["top"], "typ": r["typ"], "einreicher": ",".join(r["einreicher"]) or "nicht zugeordnet",
                                 "datum": r["datum"], "gemeinsam": "ja" if r["gemeinsam"] else "nein", "fundstelle": r["fundstelle"]})
                 initiative = initiative or r
+        schritte = [{"nr": b["nr"], "veroeffentlicht": b["veroeffentlicht"], "pdf": b["pdf"], "stufen": b["stufen"]}
+                    for b in beteiligung if b["plan"]["verfahren"] in verfahren_ids]
         vorgaenge.append({"reference": key, "vorlage": first["vorlage"], "name": first["titel"], "date": process[0]["date"],
                           "verfahrenspunkt": all(t["verfahrenspunkt"] for t in ts),
                           "bezuege": sorted({b for t in ts for b in t["bezuege"]}),
                           "process": process, "locations": locations, "plans": verweise,
-                          **({"overlaps": overlaps} if overlaps else {}), **({"initiative": initiative} if initiative else {})})
+                          **({"overlaps": overlaps} if overlaps else {}), **({"initiative": initiative} if initiative else {}),
+                          **({"beteiligung": sorted(schritte, key=lambda b: b["veroeffentlicht"])} if schritte else {})})
     vorgaenge.sort(key=lambda v: (v["date"], v["reference"]), reverse=True)
     stand = datetime.now(timezone.utc).isoformat(timespec="seconds")
     daten = {"meta": {"generated_at": stand, "data_start": config.STADT["quelle"]["datenbeginn"],

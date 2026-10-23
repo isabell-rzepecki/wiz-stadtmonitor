@@ -14,6 +14,10 @@
   const WOHNEN_URL = "data/export/wohnen.json";
   // Wahlen: nur amtliche Ergebnisse, ohne Personennamen (stadt.json, wahlen._hinweis)
   const WAHLEN_URL = "data/export/wahlen.json";
+  // Beteiligungsverfahren der Bauleitplanung (Stufen und Fristen aus den Bekanntmachungen)
+  const BETEILIGUNG_URL = "data/export/beteiligung.json";
+  // Gebäude und Eigentum: städtische Gesellschaften (Beteiligungsbericht), ohne Personen
+  const EIGENTUM_URL = "data/export/eigentum.json";
   const BRW_URL = "data/export/karte/bodenrichtwerte.json";
   const DEFAULT_AREA = "stadt:alle";
   const RANK = { hoch: 3, mittel: 2, niedrig: 1 };
@@ -61,7 +65,7 @@
   const de = (n) => Number(n || 0).toLocaleString("de-DE");
   const get = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 
-  let wohnen = null, brwData = null, brwLayer = null, wahlen = null;
+  let wohnen = null, brwData = null, brwLayer = null, wahlen = null, beteiligung = null, eigentum = null;
   let cfg = null, data = null, flaechen = null, zeit = null, all = [], papers = [], area = null, selected = null, dataStand = null;
   let planData = null, planLayer = null, planOn = false, planShown = null;
   const umweltOn = new Set(), umweltData = {}, umweltLayers = {};
@@ -407,7 +411,7 @@
     legendEl.innerHTML = `<summary>Legende: Sicherheit des Orts</summary><ul>${rows
       .map(([c, t]) => `<li><span class="swatch" style="background:${c}" aria-hidden="true"></span>${esc(t)}</li>`).join("")}</ul>
       <p class="hint">Vorgänge, die nur einem Ortsteil zugeordnet sind, stehen in der Liste, nicht als Punkt.</p>
-      ${navLayer ? '<p class="hint">Grenzen: Gemarkungen (HVBG). Die Gleichsetzung mit den Ortsbezirken ist plausibel, aber noch nicht mit § 6 der Hauptsatzung abgeglichen.</p>' : ""}
+      ${navLayer ? '<p class="hint">Grenzen: Gemarkungen (HVBG). Nach § 6 der Hauptsatzung umfasst jeder Ortsbezirk das Gebiet der ehemaligen Gemeinde; die Gemarkung bildet es ab. Die Kernstadt ist kein Ortsbezirk.</p>' : ""}
       ${planOn ? `<ul><li><span class="swatch swatch-plan" aria-hidden="true"></span>Geltungsbereich eines Bebauungsplans</li>
         <li><span class="swatch swatch-fplan" aria-hidden="true"></span>Änderung des Flächennutzungsplans</li></ul>
         <p class="hint">${esc(cfg.bauleitplanung.attribution)}. Nicht rechtsverbindlich.</p>` : ""}
@@ -468,7 +472,7 @@
       const vorhanden = new Set(((umweltLayers[g.id] && umweltLayers[g.id].toGeoJSON().features) || []).map((f) => f.properties.ebene));
       const rows = g.ebenen.filter((e) => vorhanden.has(e.id)).map((e) => `<li><span class="swatch swatch-area" aria-hidden="true"
         style="border-color:${g.farbe};border-style:${e.stil.dash ? (e.stil.dash.startsWith("1 ") || e.stil.dash.startsWith("2 ") ? "dotted" : "dashed") : "solid"};background:${e.stil.fill ? `color-mix(in srgb, ${g.farbe} ${Math.round(e.stil.fill * 100)}%, transparent)` : "transparent"}"></span>${esc(e.titel)}</li>`).join("");
-      return `<p class="legend-group">${esc(g.titel)}</p><ul>${rows || "<li>keine Fläche im Stadtgebiet</li>"}</ul><p class="hint">${esc(g.attribution)}.</p>`;
+      return `<p class="legend-group">${esc(g.titel)}</p><ul>${rows || "<li>keine Fläche im Stadtgebiet</li>"}</ul>${g.hinweis ? `<p class="hint">${esc(g.hinweis)}</p>` : ""}<p class="hint">${esc(g.attribution)}.</p>`;
     }).join("") + `<p class="hint">${esc(cfg.umwelt.hinweis)}</p>`;
   }
   // Kartenebene Bauleitplanung: erst beim Einschalten geladen; Hinweis zur Nutzung in Legende und Namensnennung
@@ -503,6 +507,8 @@
       <dl class="facts">${f.properties.gueltig_ab ? `<dt>Rechtskräftig seit</dt><dd>${fmtDate(f.properties.gueltig_ab)}</dd>` : ""}
         ${f.properties.nr ? `<dt>Plannummer</dt><dd>${esc(f.properties.nr)}${f.properties.aenderung ? `, ${f.properties.aenderung}. Änderung` : ""}</dd>` : ""}</dl>
       ${docs.length ? `<h4>Plandokumente der Stadt</h4><ul class="related">${docs.map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
+      ${(() => { const bs = ((beteiligung && beteiligung.verfahren) || []).filter((b) => b.plan.key === key);
+        return bs.length ? `<h4>Beteiligung und Verfahrensschritte</h4>${beteiligungHtml(bs.map((b) => ({ ...b })))}` : ""; })()}
       <h4>Vorgänge mit dieser Plannummer (${list.length})</h4>
       ${list.length ? `<ul class="related">${list.map((v) => `<li><button type="button" class="link-btn" data-open-ref="${esc(v.reference)}">${esc(v.name)}</button> · ${fmtDate(v.date)}</li>`).join("")}</ul>`
         : "<p>Kein Tagesordnungspunkt seit Juli 2024 nennt diesen Plan.</p>"}
@@ -668,6 +674,8 @@
       ${p.vorlage ? `<p class="hint">Stationen sind die Sitzungen, in deren Tagesordnung die Vorlage ${esc(p.vorlage)} steht, chronologisch.</p>`
         : '<p class="hint">Ohne Vorlagennummer: eine einzelne Station. Tagesordnungspunkte werden nicht über ähnliche Titel verknüpft.</p>'}
       <ol class="steps">${p.process.map(stepHtml).join("")}</ol>
+      ${(p.beteiligung || []).length ? `<h4>Beteiligung der Öffentlichkeit (Bauleitplanung)</h4>
+        <p class="hint">Verfahrensschritte laut amtlichen Bekanntmachungen zu diesem Plan; zugeordnet über Plannummer und Gemarkung.</p>${beteiligungHtml(p.beteiligung)}` : ""}
       ${legend()}
       <h4>Ortsbezug</h4><ul class="locs">${locs}</ul>
       ${(p.plans || []).length ? `<h4>Bauleitplanung</h4><ul class="locs">${p.plans.map((x) => `<li><button type="button" class="link-btn" data-open-plan="${esc(x.key)}">${esc(x.titel)}</button>
@@ -707,6 +715,28 @@
   });
 
   // --- Termine: kommende Sitzungen -------------------------------------------------------------------
+  // --- Beteiligung: Stufen mit Frist; laufend, solange das Fristende nicht überschritten ist ---------------
+  const heute = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
+  const laeuft = (st) => st.bis && st.bis >= heute();
+  function stufeHtml(st) {
+    const frist = st.von ? `${fmtDate(st.von)} bis ${fmtDate(st.bis)}` : st.beschluss ? `Beschluss vom ${fmtDate(st.beschluss)}` : "";
+    return `<li>${esc(st.titel)}${frist ? ` · ${frist}` : ""}${laeuft(st) ? ' <span class="badge badge-live">läuft</span>' : ""}</li>`;
+  }
+  function beteiligungHtml(schritte) {
+    return `<ol class="beteiligung">${schritte.map((b) => `<li><span class="meta">${fmtDate(b.veroeffentlicht)} · ${link(b.pdf, `Bekanntmachung Nr. ${esc(b.nr)} (PDF)`)}</span>
+      <ul>${b.stufen.map(stufeHtml).join("")}</ul></li>`).join("")}</ol>`;
+  }
+  const planLabel = (pl) => `${pl.art === "fplan" ? `${pl.aenderung}. Änderung des Flächennutzungsplans` : `${pl.aenderung ? `${pl.aenderung}. Änderung des ` : ""}Bebauungsplan${pl.aenderung ? "s" : ""} Nr. ${pl.nr}`}${pl.name ? ` „${pl.name}“` : ""}`;
+  function laufendeBeteiligung() {
+    const liste = ((beteiligung && beteiligung.verfahren) || []).filter((b) => b.stufen.some(laeuft) &&
+      (area.kind !== "ortsteil" || !b.plan.ortsteil || b.plan.ortsteil === area.name));
+    if (!liste.length) return "";
+    return `<section class="stat-block beteiligung-live"><h3>Laufende Beteiligung der Öffentlichkeit</h3><ul class="locs">${liste.map((b) => {
+      const st = b.stufen.find(laeuft);
+      return `<li><strong>${esc(planLabel(b.plan))}</strong>${b.plan.ortsteil ? `, ${esc(b.plan.ortsteil)}` : ""}<br>${esc(st.titel)}: ${fmtDate(st.von)} bis ${fmtDate(st.bis)}
+        <br>${link(b.pdf, `Bekanntmachung Nr. ${esc(b.nr)} (PDF)`)}${beteiligung.seite ? ` · ${link(beteiligung.seite, "Planunterlagen der Stadt")}` : ""}</li>`;
+    }).join("")}</ul><p class="hint">Stellungnahmen sind innerhalb der Frist bei der Stadt möglich; Einzelheiten in der Bekanntmachung.</p></section>`;
+  }
   function showTermine() {
     const box = $("#termine");
     const scope = box.querySelector("#termine-scope") ? box.querySelector("#termine-scope").value : "gebiet";
@@ -727,7 +757,7 @@
         ${ps.length ? `<div class="agenda"><span>Auf der Tagesordnung${area.kind === "ortsteil" ? ` (${esc(area.name)})` : ""}:</span><ul>${ps.map((p) => `<li><button type="button" class="linkish" data-ref="${esc(p.reference)}">${esc(p.name)}</button></li>`).join("")}</ul></div>` : ""}
       </div>`;
     }).join("");
-    box.innerHTML = `<p class="hint">Sitzungen laut Einladungen in den amtlichen Bekanntmachungen. Sie sind in der Regel öffentlich; die Einladung erscheint etwa ein bis zwei Wochen vorher.</p>
+    box.innerHTML = `${laufendeBeteiligung()}<p class="hint">Sitzungen laut Einladungen in den amtlichen Bekanntmachungen. Sie sind in der Regel öffentlich; die Einladung erscheint etwa ein bis zwei Wochen vorher.</p>
       <div class="filters termine-filters"><label>Gremien
         <select id="termine-scope"><option value="gebiet"${scope === "gebiet" ? " selected" : ""}>${area.kind === "ortsteil" ? `stadtweite Gremien und ${esc(area.name)}` : "alle Gremien"}</option>
         <option value="alle"${scope === "alle" ? " selected" : ""}>alle Gremien</option></select></label></div>
@@ -853,9 +883,36 @@
       <section class="stat-block"><h3>Begriffe</h3><dl class="glossar">${W.begriffe.map((b) => `<dt>${esc(b.begriff)}</dt><dd>${esc(b.text)}</dd>`).join("")}</dl></section>
       <section class="stat-block"><h3>Immobilienmarktberichte</h3><ul class="locs">${W.berichte.map((b) => `<li>${link(b.link, esc(b.titel)) || esc(b.titel)}<br><span class="meta">${esc(b.herausgeber)}</span></li>`).join("")}</ul>
         <p class="hint">${esc(W.berichte_hinweis)}</p></section>
+      ${eigentumHtml()}
       <p class="hint">${esc(W.boris.attribution)}. ${esc(z.attribution)}.</p>`;
   }
+  function eigentumHtml() {
+    if (!eigentum) return "";
+    const zeile = (g) => `<tr><th scope="row">${esc(g.name)}${g.gegenstand ? `<br><span class="meta">${esc(g.gegenstand)}</span>` : ""}</th>
+      <td class="text">${esc(g.rechtsform || "–")}</td><td class="text">${esc(g.gesellschafter || "–")}</td></tr>`;
+    const tab = (liste, cap) => `<div class="table-wrap"><table class="compare"><caption class="visually-hidden">${esc(cap)}</caption>
+      <thead><tr><th scope="col">Unternehmen</th><th scope="col">Rechtsform</th><th scope="col">Gesellschafter laut Bericht</th></tr></thead>
+      <tbody>${liste.map(zeile).join("")}</tbody></table></div>`;
+    const pf = eigentum.gesellschaften.filter((g) => g.pflicht), fr = eigentum.gesellschaften.filter((g) => !g.pflicht);
+    return `<section class="stat-block"><h3>Gebäude und Eigentum</h3>
+      <p><button type="button" class="btn btn-soft" data-ebene-on="gebaeude">Gebäude für öffentliche Zwecke auf der Karte</button></p>
+      <p class="hint">Gebäudefunktion laut Liegenschaftskataster; sie beschreibt die Nutzung, nicht das Eigentum.</p>
+      ${pf.length ? `<h4>Beteiligungen und Eigenbetriebe der Stadt (Pflichtangaben, § 123a HGO)</h4>${tab(pf, "Beteiligungen und Eigenbetriebe")}` : ""}
+      ${fr.length ? `<details class="acc"><summary>Weitere Beteiligungen (freiwillige Angaben, ${fr.length})</summary>${tab(fr, "Weitere Beteiligungen")}</details>` : ""}
+      <p class="hint">${link(eigentum.bericht.url, `Beteiligungsbericht ${esc(String(eigentum.bericht.jahr))}`)}, ${esc(eigentum.bericht.stand)}. Personen (Geschäftsführung, Aufsichtsrat) werden nicht übernommen.</p>
+      <ul class="hint">${eigentum.grenzen.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></section>`;
+  }
   $("#wohnen").addEventListener("click", (e) => {
+    const eb = e.target.closest("[data-ebene-on]");
+    if (eb) {
+      umweltOn.add(eb.dataset.ebeneOn);
+      const box = document.querySelector(`.map-layers input[value="${CSS.escape(eb.dataset.ebeneOn)}"]`);
+      if (box) box.checked = true;
+      drawUmwelt(eb.dataset.ebeneOn);
+      syncUrl();
+      closePanel("panel-wohnen");
+      return;
+    }
     if (!e.target.closest("[data-brw-on]")) return;
     umweltOn.add("bodenrichtwerte");
     const cb = document.querySelector('.map-layers input[value="bodenrichtwerte"]');
@@ -953,7 +1010,10 @@
   // --- Start -----------------------------------------------------------------------------------------
   async function start() {
     const json = (url) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const [c, d, f, credits, w, wa] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json"), json(WOHNEN_URL), json(WAHLEN_URL)]);
+    const [c, d, f, credits, w, wa, be, ei] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json"),
+      json(WOHNEN_URL), json(WAHLEN_URL), json(BETEILIGUNG_URL), json(EIGENTUM_URL)]);
+    beteiligung = be;
+    eigentum = ei;
     wohnen = w;
     wahlen = wa;
     if (credits && credits.length) $("#credits").innerHTML = credits.map((a) => `<li>${link(a.link, esc(a.text)) || esc(a.text)} <span class="hint">(${esc(a.lizenz)})</span></li>`).join("");
