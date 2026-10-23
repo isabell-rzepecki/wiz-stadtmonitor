@@ -1,0 +1,4 @@
+{"_hinweis": "Erfundenes Testverfahren für den Browsertest, keine Daten der Stadt.", "generated_at": "2026-10-23", "seite": "https://www.witzenhausen.eu/offentlichkeitsbeteiligung/",
+ "verfahren": [{"nr": "999/2099", "veroeffentlicht": "2099-01-01", "pdf": "https://www.witzenhausen.eu/wp-content/uploads/test.pdf",
+  "plan": {"art": "bplan", "nr": "99", "aenderung": 0, "gemarkung": "Gertenbach", "name": "Testplan", "ortsteil": "Gertenbach", "key": "bplan:2151:99:0", "treffer": "eindeutig", "verfahren": "bplan:2151:99:0"},
+  "verfahren": null, "stufen": [{"stufe": "veroeff", "titel": "Beteiligung der Öffentlichkeit am Entwurf (§ 3 Abs. 2 BauGB)", "von": "2026-01-01", "bis": "2099-12-31"}]}]}

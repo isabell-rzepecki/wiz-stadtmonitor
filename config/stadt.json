@@ -294,8 +294,8 @@
       ],
       "gemarkung": "Witzenhausen",
       "gemarkung_nr": "2246",
-      "zuordnung_status": "Annahme",
-      "anmerkung": "Kernstadt ohne Ortsbeirat; Zugehörigkeit von Bischhausen prüfen"
+      "zuordnung_status": "kein Ortsbezirk (§ 6 Hauptsatzung nennt nur die 16 Stadtteile); Gemarkung Witzenhausen",
+      "anmerkung": "Kernstadt ohne Ortsbeirat; Bischhausen wird in § 6 nicht genannt und hat keinen eigenen Ortsbezirk"
     },
     {
       "slug": "albshausen",
@@ -305,7 +305,7 @@
       "stadtteilbeirat": true,
       "gemarkung": "Albshausen",
       "gemarkung_nr": "2113",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "berlepsch-ellerode",
@@ -320,8 +320,8 @@
       ],
       "gemarkung": "Berlepsch-Ellerode",
       "gemarkung_nr": "2121",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen",
-      "anmerkung": "Hübenthal liegt laut Wikidata als eigener Wohnplatz vor; Gemarkungszugehörigkeit prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet",
+      "anmerkung": "Hübenthal wird in § 6 nicht eigens genannt; ob es zum Gebiet der ehemaligen Gemeinde Berlepsch-Ellerode gehört, ist nicht geprüft"
     },
     {
       "slug": "blickershausen",
@@ -330,7 +330,7 @@
       "wikidata": "Q884011",
       "gemarkung": "Blickershausen",
       "gemarkung_nr": "2125",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "dohrenbach",
@@ -339,7 +339,7 @@
       "wikidata": "Q1234893",
       "gemarkung": "Dohrenbach",
       "gemarkung_nr": "2132",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "ellingerode",
@@ -348,7 +348,7 @@
       "wikidata": "Q1332184",
       "gemarkung": "Ellingerode",
       "gemarkung_nr": "2136",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "ermschwerd",
@@ -357,7 +357,7 @@
       "wikidata": "Q1292400",
       "gemarkung": "Ermschwerd",
       "gemarkung_nr": "2140",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "gertenbach",
@@ -366,7 +366,7 @@
       "wikidata": "Q1433972",
       "gemarkung": "Gertenbach",
       "gemarkung_nr": "2151",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "hubenrode",
@@ -376,7 +376,7 @@
       "stadtteilbeirat": true,
       "gemarkung": "Hubenrode",
       "gemarkung_nr": "2172",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "hundelshausen",
@@ -385,7 +385,7 @@
       "wikidata": "Q1637452",
       "gemarkung": "Hundelshausen",
       "gemarkung_nr": "2173",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "kleinalmerode",
@@ -394,7 +394,7 @@
       "wikidata": "Q1746285",
       "gemarkung": "Kleinalmerode",
       "gemarkung_nr": "2177",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "neuseesen",
@@ -403,7 +403,7 @@
       "wikidata": "Q1745254",
       "gemarkung": "Neuseesen",
       "gemarkung_nr": "2194",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "rossbach",
@@ -415,7 +415,7 @@
       ],
       "gemarkung": "Roßbach",
       "gemarkung_nr": "2214",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "unterrieden",
@@ -424,7 +424,7 @@
       "wikidata": "Q2498818",
       "gemarkung": "Unterrieden",
       "gemarkung_nr": "2227",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "wendershausen",
@@ -433,7 +433,7 @@
       "wikidata": "Q2559136",
       "gemarkung": "Wendershausen",
       "gemarkung_nr": "2241",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "werleshausen",
@@ -442,7 +442,7 @@
       "wikidata": "Q2560623",
       "gemarkung": "Werleshausen",
       "gemarkung_nr": "2242",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     },
     {
       "slug": "ziegenhagen",
@@ -451,7 +451,7 @@
       "wikidata": "Q198786",
       "gemarkung": "Ziegenhagen",
       "gemarkung_nr": "2251",
-      "zuordnung_status": "plausibel (17 Gemarkungen = 16 Ortsbezirke + Kernstadt), gegen § 6 Hauptsatzung prüfen"
+      "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet"
     }
   ],
   "texte": {
@@ -473,9 +473,8 @@
     }
   },
   "offene_punkte_raum": [
-    "Wortlaut § 6 Hauptsatzung (Ortsbezirke = Gemarkungen?) – Issue #3",
-    "Bischhausen: Kernstadt? – Issue #3",
-    "Hübenthal: Berlepsch-Ellerode? – Issue #3"
+    "Gemarkungsgrenzen und Grenzen der ehemaligen Gemeinden: Abweichungen nicht geprüft – Issue #3",
+    "Hübenthal: Teil der ehemaligen Gemeinde Berlepsch-Ellerode? – Issue #3"
   ],
   "verortung": {
     "ausschluss_namen": [
@@ -884,5 +883,43 @@
     "bund_attribution": "© Die Bundeswahlleiterin (im Auftrag der Herausgebergemeinschaft); Vervielfältigung und Verbreitung mit Quellenangabe gestattet",
     "bund_hinweis": "Summe der Wahlbezirke der Stadt einschließlich der Briefwahlbezirke (Wahlbezirksstatistik). Parteien unter 2 % in allen Wahlen sind unter „Sonstige“ zusammengefasst.",
     "gremien_hinweis": "Sitzverteilung laut Wahlergebnis. Änderungen während der Wahlperiode (Fraktionswechsel, Austritte, Nachrücken) sind nicht abgebildet; Koalitionen und Fraktionsvorsitze sind nicht amtlich veröffentlicht und werden nicht angezeigt."
+  },
+  "beteiligung": {
+    "_hinweis": "Beteiligungsverfahren der Bauleitplanung aus den amtlichen Bekanntmachungen (Stufe, Frist, Plan). Personenbezogene Angaben aus den Bekanntmachungen (Ansprechpersonen, E-Mail) werden nicht übernommen.",
+    "bekanntmachungen": "https://www.witzenhausen.eu/wp-json/wp/v2/bekanntmachungen?per_page=100&page={page}&_fields=id,date,title,meta",
+    "medien": "https://www.witzenhausen.eu/wp-json/wp/v2/media?mime_type=application/pdf&per_page=100&page={page}&_fields=id,date,source_url",
+    "seite": "https://www.witzenhausen.eu/offentlichkeitsbeteiligung/",
+    "titel_muster": "Bauleitplan|Bebauungsplan|Fl(?:ä|ae)chennutzungsplan",
+    "datei_muster": "(?i)^(?:\\d{3}[-_]\\d{4}|Amtl\\w*[-_]Bekanntm).*(?:Bauleit|BPl|BPlan|Bebauungsplan|FNP)",
+    "stufen": [
+      {
+        "id": "aufstellung",
+        "titel": "Aufstellungsbeschluss",
+        "muster": "Aufstellungsbeschluss"
+      },
+      {
+        "id": "frueh_oeff",
+        "titel": "Frühzeitige Beteiligung der Öffentlichkeit (§ 3 Abs. 1 BauGB)",
+        "muster": "frühzeitige[n]?\\s+Beteiligung\\s+der\\s+Öffentlichkeit|§\\s*3\\s*Abs\\.\\s*1\\s*BauGB",
+        "frist": true
+      },
+      {
+        "id": "veroeff",
+        "titel": "Beteiligung der Öffentlichkeit am Entwurf (§ 3 Abs. 2 BauGB)",
+        "muster": "Beteiligung\\s+der\\s+Öffentlichkeit\\s+gem(?:äß|\\.)\\s*§\\s*3\\s*Abs\\.\\s*2|§\\s*3\\s*(?:Abs\\.\\s*2|\\(2\\))\\s*BauGB",
+        "frist": true
+      },
+      {
+        "id": "satzung",
+        "titel": "Satzungsbeschluss und Inkrafttreten",
+        "muster": "Satzungsbeschluss|als\\s+Satzung\\s+beschlossen|in\\s+Kraft"
+      },
+      {
+        "id": "genehmigung",
+        "titel": "Genehmigung und Wirksamwerden",
+        "muster": "genehmigt|wird\\s+.{0,120}?wirksam"
+      }
+    ],
+    "verfahren_muster": "§\\s*13a\\s*BauGB|beschleunigten\\s+Verfahren|vereinfachten\\s+Verfahren|§\\s*13b"
   }
 }

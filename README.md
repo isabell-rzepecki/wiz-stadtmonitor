@@ -18,7 +18,7 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - **Zeitraum:** Einladungen sind ab Juli 2024 veröffentlicht; ältere Sitzungen fehlen.
 - **Ergebnisse:** Beschlüsse, Niederschriften und Vorlagentexte stehen nicht in den Bekanntmachungen. Die Prozesslinie zeigt je Station „Ergebnis nicht veröffentlicht“.
 - **Nichtöffentliche Sitzungen** erscheinen ohne Tagesordnung.
-- **Ortsbezirke:** Die Flächen sind aus den 17 Gemarkungen abgeleitet (HVBG, dl-de/zero-2.0, `data/geo/dl-de-zero/ortsbezirke.geojson`). Die Gleichsetzung Gemarkung = Ortsbezirk ist plausibel, aber noch nicht mit § 6 der Hauptsatzung abgeglichen; Bischhausen und Hübenthal sind offen (Issue #3).
+- **Ortsbezirke:** Die Flächen sind aus den 17 Gemarkungen abgeleitet (HVBG, dl-de/zero-2.0, `data/geo/dl-de-zero/ortsbezirke.geojson`). § 6 der Hauptsatzung (2014, selbst eingesehen) bestimmt für jeden der 16 Ortsbezirke „das Gebiet der ehemaligen Gemeinde“; die Kernstadt ist kein Ortsbezirk. Ob die Gemarkungsgrenzen überall den Grenzen der ehemaligen Gemeinden entsprechen und wohin Hübenthal gehört, ist nicht geprüft (Issue #3).
 - **Stufe B:** Straßennamen, die in mehreren Ortsteilen vorkommen, werden nur über das beratende Gremium, einen genannten Ortsteil, eine Gemarkung oder eine weitere eindeutige Straße im Titel eingegrenzt; sonst bleiben sie ohne Ort und stehen im Audit `verortung_stufe_b.tsv` als „mehrdeutig“. Hausnummern werden nicht ausgewertet.
 - **Verortung:** Stufe A ordnet den Ortsbezug des Gremiums zu, nicht zwingend den des Gegenstands. Plan-Abgleiche, deren Änderung noch nicht im Datensatz der Stadt steht, zeigen auf den Ursprungsplan und sind als „mittel“ gekennzeichnet.
 - **Bauleitplanung (Bebauungspläne, Flächennutzungsplan):**
@@ -39,6 +39,7 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - **Wahlen und Gremien:**
   - Nur amtliche Ergebnisse: 2026 aus den Bekanntmachungen Nr. 043 und 044/2026; 2016 und 2021 aus der Ergebnispräsentation der Gemeindewahlleitung (Stufe „Schnellmeldung“; 2016 mit 31 Sitzen, seit 2020 37); Bundestags- und Europawahlen aus der Wahlbezirksstatistik der Bundeswahlleiterin.
   - Keine Personennamen. Die Sitzverteilung folgt dem Wahlergebnis; Fraktionswechsel und Koalitionen sind nicht abgebildet.
+- **Beteiligung der Öffentlichkeit:** Stufen und Fristen der Bauleitplanung stammen aus den amtlichen Bekanntmachungen (ab 2024 als PDF, ab 10/2025 als eigener Inhaltstyp). Verknüpft wird über Plannummer, Änderung und Gemarkung; Ansprechpersonen und E-Mail-Adressen werden nicht übernommen.
 - **Einreicher:** Antrag oder Anfrage einer Fraktion wird aus dem TOP-Titel erkannt und als Angabe und Filter gezeigt, ohne Zählung je Fraktion. Eine fehlende Nennung im Titel sagt nichts über die Aktivität einer Fraktion.
 - **Quellen:**
   - Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv), lesbar in [`DATA_SOURCES.md`](DATA_SOURCES.md), erzeugt mit `python tools/datenquellen.py`.

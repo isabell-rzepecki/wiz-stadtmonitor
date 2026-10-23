@@ -18,17 +18,61 @@ Status laut Register: `verifiziert`, `teilweise`, `zu prüfen`, `zu verifizieren
 | [Bebauungspläne Stadt Witzenhausen (Umringe)](https://www.gdi-nordosthessen.de/ws/wfs/ds_plu_bplan_whs/ows.wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=lyr:witzenhausen_bplaene_umringe_feature&SRSNAME=EPSG:4326) (`bplan`) | Magistrat der Stadt Witzenhausen / GDI Nordosthessen | Nutzung ohne Vertrag nur nicht kommerziell | Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke | verifiziert, Nutzung nicht kommerziell, nicht weitergeben | GetFeature HTTP 200, 184 Umringe (EPSG:4326, Achsen Länge/Breite), Feld nutzungsrecht bestätigt | Abgleich Plannummer → Vorgang; Kartenebene der Seite mit Nutzungshinweis; Rohdaten nur im Build (data/geo/restricted/), nicht im Repository und nicht im Datenpaket |
 | [Flächennutzungspläne Stadt Witzenhausen](https://www.gdi-nordosthessen.de/ws/wfs/2f2bfc47-027f-051b/ds_lu_fplan_whs/ows.wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=lyr:witzenhausen_fplaene_umringe_feature&SRSNAME=EPSG:4326) (`fplan`) | Magistrat der Stadt Witzenhausen | Nutzung ohne Vertrag nur nicht kommerziell | Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke | verifiziert, Nutzung nicht kommerziell, nicht weitergeben | Proxy-URL des Geoportals liefert bei GetFeature einen Fehler; Dienst-URL aus den Capabilities: GetFeature HTTP 200, 45 Umringe mit Plandokumenten (PDF) | wie bplan; FNP-Änderungen im Titel abgleichen |
 
+## Beteiligung
+
+| Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
+|---|---|---|---|---|---|---|
+| [Seite Öffentlichkeitsbeteiligung (Bauleitplanung § 3 BauGB)](https://www.witzenhausen.eu/offentlichkeitsbeteiligung/) (`oeffentlichkeitsbeteiligung`) | Stadt Witzenhausen | amtliche Bekanntmachung | – | verifiziert, verlinkt | geprüft 23.10.2026 | Link „Planunterlagen der Stadt“ bei laufender Beteiligung |
+| [UVP-Portal der Länder (Hessen)](https://www.uvp-verbund.de) (`uvp_portal`) | UVP-Verbund | zu prüfen | – | zu prüfen | nicht geprüft | Planfeststellungen/Genehmigungen mit Öffentlichkeitsbeteiligung (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+
+## Beteiligung/Planung
+
+| Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
+|---|---|---|---|---|---|---|
+| [Stadtumbau ISEK Kernstadt](https://www.witzenhausen.eu/stadtumbau-isek/) (`isek_stadtumbau`) | Stadt Witzenhausen | amtliche Dokumente | – | verifiziert | geprüft 23.10.2026 | Beteiligungschronik; Untersuchungsgebiet nur als PDF (Digitalisierung nötig) (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+
+## Beteiligung/Sitzungen
+
+| Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
+|---|---|---|---|---|---|---|
+| [Amtliche Bekanntmachungen (eigener Inhaltstyp)](https://www.witzenhausen.eu/wp-json/wp/v2/bekanntmachungen?per_page=100&page=1&_fields=id,date,title,link) (`wp_bekanntmachungen`) | Stadt Witzenhausen | amtliche Bekanntmachungen | – | verifiziert, eingebunden | 160 Einträge (ab 10/2025), meta.dateilink_b = PDF; zusammen mit PDF-Dateinamen ab 2024: 9 Bekanntmachungen zur Bauleitplanung erkannt | Beteiligungsverfahren der Bauleitplanung (pipeline/beteiligung.py) |
+
 ## Bevölkerung
 
 | Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
 |---|---|---|---|---|---|---|
 | [Zensus 2022 Alter in 10er-Jahresgruppen in Gitterzellen](https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Zensus2022/_publikationen.html) (`zensus_alter_gitter`) | Statistische Ämter | DL-DE BY 2.0 | – | teilweise | nicht geprüft | Altersstruktur (aus Ergänzungsregister 10/2026, eigene Prüfung bei Nutzung) |
 
+## Denkmal
+
+| Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
+|---|---|---|---|---|---|---|
+| [Kulturdenkmäler Hessen (DenkXweb)](https://geodienste.denkx.de/geoserver/denkx/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities) (`denkmal_wfs`) | Landesamt für Denkmalpflege Hessen | dl-de/by-2.0 | – | verifiziert | geprüft 23.10.2026 (581 Baudenkmäler in BBOX, inkl. Nachbargemeinden) | Denkmäler als Ortsbezug für TOPs; mit Stadtgrenze clippen (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+
+## Eigentum
+
+| Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
+|---|---|---|---|---|---|---|
+| [Beteiligungsbericht der Stadt (2021–2024)](https://www.witzenhausen.eu/wp-content/uploads/2025/11/167-2025-Beteiligungsbericht-2024.pdf) (`beteiligungsbericht`) | Stadt Witzenhausen | amtliches Dokument | – | teilweise | nicht inhaltlich geprüft | städtische Gesellschaften/Eigenbetriebe; Liegenschaften nur soweit genannt (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+
 ## Finanzen
 
 | Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
 |---|---|---|---|---|---|---|
 | [Pläne/Berichte/Abschlüsse](https://www.witzenhausen.eu/plane-berichte-abschlusse/) (`haushalt_stadt`) | Stadt Witzenhausen | amtliche Dokumente | – | verifiziert | nicht geprüft | Haushaltskennzahlen (aus Ergänzungsregister 10/2026, eigene Prüfung bei Nutzung) |
+
+## Förderung
+
+| Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
+|---|---|---|---|---|---|---|
+| [Kohesio – EU-geförderte Projekte](https://kohesio.ec.europa.eu) (`kohesio`) | Europäische Kommission | zu prüfen | – | zu prüfen | nicht geprüft | Fördermittel mit Ortsbezug (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+
+## Gebäude
+
+| Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
+|---|---|---|---|---|---|---|
+| [ALKIS vereinfacht – GebaeudeBauwerk](https://www.gds.hessen.de/wfs2/aaa-suite/cgi-bin/alkis/vereinf/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities) (`alkis_gebaeude`) | HVBG | dl-de/zero-2.0 | – | verifiziert | geprüft 23.10.2026 (Feld funktion vorhanden; Rückgabe je Abfrage begrenzt) | Gebäudefunktion (öffentliche Gebäude); keine Eigentümerangaben (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+| [INSPIRE HE Gebäude 3D LoD2 (Atom-Download)](https://hvbg.hessen.de/registry/spatial/dataset/06184092-4b18-48e5-aa23-fb3a3ef572f7) (`lod2_he`) | HVBG | dl-de/zero-2.0 | – | teilweise | nicht geprüft | 3D-Ansicht optional (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
 
 ## Hintergrundkarte
 
@@ -53,6 +97,20 @@ Status laut Register: `verifiziert`, `teilweise`, `zu prüfen`, `zu verifizieren
 | Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
 |---|---|---|---|---|---|---|
 | [Schutzgebiete Hessen als OGC API](https://www.geoportal.hessen.de/spatial-objects/266) (`schutzgeb_ogcapi`) | HMLU/Geoportal Hessen | zu prüfen | – | verifiziert | nicht geprüft | GeoJSON-Alternative (aus Ergänzungsregister 10/2026, eigene Prüfung bei Nutzung) |
+
+## Planung
+
+| Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
+|---|---|---|---|---|---|---|
+| [Regionalplan Nordhessen (WFS)](https://geodatendienste-landesplanung-hessen.de/ows/services/org.3.fd8337b7-de57-4cc3-9393-e7c1d74120a4_wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities) (`rp_nordhessen_wfs`) | HMWVW | dl-de/by-2.0 | – | verifiziert | geprüft 23.10.2026 (GetFeature vorrang_wind: 9 Gebiete in BBOX, 3 im Stadtgebiet) | Windvorranggebiete, Siedlungs-/Vorranggebiete; Material: windvorranggebiete_witzenhausen.geojson (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+| [Regionalplan Nordhessen (WMS)](https://geodatendienste-landesplanung-hessen.de/ows/services/org.3.fd8337b7-de57-4cc3-9393-e7c1d74120a4_wms?SERVICE=WMS&REQUEST=GetCapabilities) (`rp_nordhessen_wms`) | HMWVW | dl-de/by-2.0 | – | verifiziert | geprüft 23.10.2026 | Darstellung (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+| [Regionalversammlung Nordhessen – Drucksachen](https://rim.ekom21.de/rp-kassel/) (`rp_kassel_rim`) | RP Kassel (ekom21 RIM) | amtliche Dokumente | – | zu prüfen | nicht geprüft | Neuaufstellung Regionalplan; OParl-Schnittstelle prüfen (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+
+## Planung/Energie
+
+| Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
+|---|---|---|---|---|---|---|
+| [Ermittlung von Solar-Potentialflächen (2022)](https://www.witzenhausen.eu/wp-content/uploads/2024/07/witzenhausen_-_ermittlung_von_solar-potentialflaechen_ueberarbeitung_20072022.pdf) (`solar_potential`) | Stadt Witzenhausen | amtliches Dokument | – | teilweise | nicht geprüft | Kontext zu PV-Anträgen; Karten nur als PDF (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
 
 ## Referenz
 
@@ -79,6 +137,14 @@ Status laut Register: `verifiziert`, `teilweise`, `zu prüfen`, `zu verifizieren
 | [Gemeindedatenblatt Witzenhausen (636016)](https://www.hessen-gemeindelexikon.de/gemeindelexikon_PDF/636016.pdf) (`gemeindelexikon`) | Hessen Agentur/HSL | zu prüfen | – | teilweise | Abruf fehlgeschlagen 23.10.2026 | Bevölkerung/Prognose (aus Ergänzungsregister 10/2026, eigene Prüfung bei Nutzung) |
 | [Gemeindeverzeichnis 06636016](https://www.statistikportal.de/de/gemeindeverzeichnis/06636016) (`gv_statistikportal`) | Statistische Ämter | zu prüfen | – | verifiziert | nicht geprüft | Fläche/Einwohner (aus Ergänzungsregister 10/2026, eigene Prüfung bei Nutzung) |
 
+## Trassen
+
+| Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
+|---|---|---|---|---|---|---|
+| [SuedLink Planfeststellungsabschnitt C2 (Neu-Eichenberg – Herleshausen)](https://www.netzausbau.de) (`suedlink_c2`) | Bundesnetzagentur / TransnetBW | zu prüfen | – | zu prüfen | nicht geprüft | Trassenverlauf durch das Stadtgebiet (Werratal); Bauinfo Witzenhausen (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+| [SuedLink – Information Baustart Stadt Witzenhausen](https://www.witzenhausen.eu/wp-content/uploads/2025/06/Witzenhausen_Anzeige_Baustart_C2.pdf) (`suedlink_baustart_wiz`) | TransnetBW (veröffentlicht über Stadt) | zu prüfen | – | verifiziert (URL) | nicht geprüft | Bauinfomärkte (z. B. Unterrieden 30.06.2025) (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+| [BVWP 2030 Projektinformationssystem (PRINS)](https://www.bvwp-projekte.de) (`bvwp_prins`) | BMDV | zu prüfen | – | zu prüfen | nicht geprüft | Straßenbauvorhaben im Stadtgebiet (Betroffenheit unbelegt) (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+
 ## Umwelt
 
 | Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
@@ -86,12 +152,15 @@ Status laut Register: `verifiziert`, `teilweise`, `zu prüfen`, `zu verifizieren
 | [Gebiete naturbedingter Risiken (ÜSG, HWRM)](https://geodienste-umwelt.hessen.de/arcgis/services/inspire/gebiete_naturbedingter_risiken/MapServer/WFSServer?SERVICE=WFS&REQUEST=GetCapabilities) (`uesg`) | HLNUG | CC BY 4.0 (HLNUG-Quellenvermerk) | Darstellung auf der Grundlage von Daten des Hessischen Landesamtes für Naturschutz, Umwelt und Geologie (HLNUG) | verifiziert, eingebunden | GetFeature HTTP 200 nur mit BBOX in urn:ogc:def:crs:EPSG::4326 (Breite zuerst); mit EPSG:25832 0 Objekte. Im Stadtgebiet: ÜSG 2, HQ häufig 20, HQ100 29, HQ extrem 16 Flächen | Kartenebene Hochwasser (pipeline/umwelt.py), räumliche Überschneidung mit Flurstücken und Geltungsbereichen |
 | [Trinkwasser- und Heilquellenschutzgebiete](https://geodienste-umwelt.hessen.de/arcgis/services/inspire/bewirtschaftungsgebiete/MapServer/WFSServer?SERVICE=WFS&REQUEST=GetCapabilities) (`tws`) | HLNUG | CC BY 4.0 (HLNUG-Quellenvermerk) | Darstellung auf der Grundlage von Daten des Hessischen Landesamtes für Naturschutz, Umwelt und Geologie (HLNUG) | verifiziert, eingebunden (Kartengrundlage zu klären) | GetFeature HTTP 200; im Stadtgebiet 62 Zonenflächen (ALK-Fassung). Nutzungsbedingung: keine Darstellung auf nicht zugeordneter Kartengrundlage (ALK bzw. TK25), siehe Issue #12 | Kartenebene Wasserschutz (nicht rechtsverbindlich), räumliche Überschneidung |
 | [Schutzgebiete Hessen](https://geodienste-umwelt.hessen.de/arcgis/services/inspire/schutzgebiete/MapServer/WFSServer?SERVICE=WFS&REQUEST=GetCapabilities) (`schutzgeb`) | HMLU / Natureg | frei für private, kommerzielle und Planungszwecke; keine Weiterveräußerung der Daten (Fees im Capabilities-Dokument) | Darstellung auf der Grundlage von Daten des Hessischen Ministeriums für Landwirtschaft und Umwelt, Weinbau, Forsten, Jagd und Heimat (HMLU); Naturparke: Landesbetrieb HessenForst | verifiziert, eingebunden | GetFeature HTTP 200; im Stadtgebiet NSG 6, FFH 5, LSG 4, Naturpark 1 (ganzes Stadtgebiet), Vogelschutzgebiet 0 | Kartenebene Schutzgebiete Natur, räumliche Überschneidung (ohne Naturpark) |
+| [Umgebungslärmkartierung Hessen 2022](https://geodienste-umwelt.hessen.de/arcgis/services/laerm/laerm_oden/MapServer/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities) (`laerm_wms`) | HLNUG | CC BY 4.0 | – | teilweise | nicht geprüft (Metadaten Geoportal) | Kontextlayer Lärm; WFS nicht gefunden (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
 
 ## Verwaltung
 
 | Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
 |---|---|---|---|---|---|---|
 | [Ortsbeiräte](https://www.witzenhausen.eu/ortsbeirate/) (`ortsbeiraete_seite`) | Stadt Witzenhausen | – | – | verifiziert | nicht geprüft | Verlinkung (aus Ergänzungsregister 10/2026, eigene Prüfung bei Nutzung) |
+| [Satzungen und Formulare (eigener Inhaltstyp)](https://www.witzenhausen.eu/wp-json/wp/v2/satzungen-formulare?per_page=100) (`wp_satzungen`) | Stadt Witzenhausen | amtliche Werke | – | verifiziert | geprüft 23.10.2026 | Ortsrecht mit Raumbezug (Hauptsatzung, Gebühren, Gestaltung) (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+| [Hauptsatzung 2014 mit 1.–7. Änderung](https://www.witzenhausen.eu/satzungen-formulare/hauptsatzung/) (`hauptsatzung`) | Stadt Witzenhausen | amtliches Werk | – | verifiziert, eingebunden | Scan selbst eingesehen 23.10.2026: § 6 Abs. 2 „Gebiet der ehemaligen Gemeinde“ je Ortsbezirk; Änderungssatzungen nicht selbst geprüft | § 6: Ortsbezirke = Gebiete der ehemaligen Gemeinden; StVV 31 Sitze (2014), 37 ab 3. Änderung (2020) (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
 
 ## Verwaltungsgrenzen
 

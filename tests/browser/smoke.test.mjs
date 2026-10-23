@@ -105,6 +105,7 @@ test("Termine: kommende Sitzungen mit Tagesordnung", async () => {
   // Sitzungen ab heute; die Testdaten enthalten zwei im November 2026
   const n = await page.locator("#termine .meeting").count();
   assert.ok(n <= 2);
+  assert.match(await page.locator("#termine").textContent(), /Laufende Beteiligung der Öffentlichkeit.*Testplan/s);
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.close();
