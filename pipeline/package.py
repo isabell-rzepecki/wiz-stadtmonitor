@@ -10,6 +10,8 @@ PAKET = config.EXPORT / "stadtmonitor-daten.zip"
 def package():
     with zipfile.ZipFile(PAKET, "w", zipfile.ZIP_DEFLATED) as z:
         z.write(config.VORGAENGE, "vorgaenge.json")
+        if (config.EXPORT / "eigentum.json").exists():  # städtische Gesellschaften und Eigenbetriebe
+            z.write(config.EXPORT / "eigentum.json", "eigentum.json")
         if (config.EXPORT / "beteiligung.json").exists():  # Beteiligungsverfahren (Plan, Stufen, Fristen)
             z.write(config.EXPORT / "beteiligung.json", "beteiligung.json")
         if (config.EXPORT / "wahlen.json").exists():  # Wahlergebnisse ohne Personennamen

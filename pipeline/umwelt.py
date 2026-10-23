@@ -55,6 +55,8 @@ def fetch():
     w, s, o, n = stadtgebiet().bounds
     bbox = (w - 0.005, s - 0.005, o + 0.005, n + 0.005)
     for g, e in ebenen():
+        if e.get("abruf"):  # eigener Abruf in einem anderen Modul (z. B. gebaeude.py)
+            continue
         ziel = RAW / f"{e['id']}.geojson"
         if ziel.exists() and time.time() - ziel.stat().st_mtime < 7 * 86400:
             continue
@@ -111,7 +113,7 @@ def build():
             feats.append({"type": "Feature", "properties": props, "geometry": geom})
         quelle = next(e for e in g["ebenen"])
         data = {"type": "FeatureCollection", "attribution": g["attribution"], "hinweis": g.get("hinweis", U["hinweis"]),
-                "source": quelle["url"].split("?")[0] if quelle.get("url") else U["dienst"].format(dienst=quelle["dienst"]), "retrieved": date.today().isoformat(),
+                "source": quelle["url"].split("?")[0] if quelle.get("url") else g.get("quelle_url") or U["dienst"].format(dienst=quelle["dienst"]), "retrieved": date.today().isoformat(),
                 "ebenen": {e["id"]: e["titel"] for e in g["ebenen"]}, "features": feats}
         (KARTE / f"umwelt_{g['id']}.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"Umweltebenen: {len(liste)} Flächen im Stadtgebiet")

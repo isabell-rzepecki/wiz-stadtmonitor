@@ -176,6 +176,8 @@ test("Wohnen und Boden: Stichtage, getrennte Mietbegriffe, Vergleich, Ortsbezirk
   assert.match(text, /Angebotsmiete/);
   assert.match(text, /Ortsübliche Vergleichsmiete/);
   assert.ok(await page.locator("#wohnen table.compare tbody tr").count() >= 5);
+  assert.match(text, /Gebäude und Eigentum/);
+  assert.match(text, /Pflichtangaben/);
   assert.deepEqual(await axe(page), []);
   await page.locator("[data-brw-on]").click();
   assert.match(page.url(), /ebenen=bodenrichtwerte/);

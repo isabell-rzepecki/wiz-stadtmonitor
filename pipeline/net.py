@@ -43,6 +43,19 @@ def post_form(url, fields, tries=4):
     return _open(req, tries)
 
 
+def post(url, body, content_type="text/xml; charset=UTF-8", tries=3):
+    """Bytes einer POST-Anfrage (etwa WFS GetFeature mit Filter im Rumpf)."""
+    req = urllib.request.Request(url, data=body, headers={"User-Agent": USER_AGENT, "Content-Type": content_type})
+    for i in range(tries):
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return r.read()
+        except Exception:
+            if i == tries - 1:
+                raise
+            time.sleep(2 ** (i + 1))
+
+
 def get(url, tries=5):
     """(Bytes, Header) einer Adresse; wiederholt bei Netzfehlern."""
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})

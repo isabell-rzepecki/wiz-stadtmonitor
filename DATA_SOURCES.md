@@ -53,7 +53,7 @@ Status laut Register: `verifiziert`, `teilweise`, `zu prüfen`, `zu verifizieren
 
 | Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
 |---|---|---|---|---|---|---|
-| [Beteiligungsbericht der Stadt (2021–2024)](https://www.witzenhausen.eu/wp-content/uploads/2025/11/167-2025-Beteiligungsbericht-2024.pdf) (`beteiligungsbericht`) | Stadt Witzenhausen | amtliches Dokument | – | teilweise | nicht inhaltlich geprüft | städtische Gesellschaften/Eigenbetriebe; Liegenschaften nur soweit genannt (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+| [Beteiligungsbericht der Stadt (2021–2024)](https://www.witzenhausen.eu/wp-content/uploads/2025/11/167-2025-Beteiligungsbericht-2024.pdf) (`beteiligungsbericht`) | Stadt Witzenhausen | amtliches Dokument | Beteiligungsbericht der Stadt Witzenhausen 2024 | verifiziert, eingebunden | Bericht 2024 (PDF, HTTP 200): 7 Pflichtangaben, 14 freiwillige Angaben | Liste der Unternehmen mit Rechtsform, Gegenstand und Gesellschaftern; ohne Personen |
 
 ## Finanzen
 
@@ -71,7 +71,7 @@ Status laut Register: `verifiziert`, `teilweise`, `zu prüfen`, `zu verifizieren
 
 | Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
 |---|---|---|---|---|---|---|
-| [ALKIS vereinfacht – GebaeudeBauwerk](https://www.gds.hessen.de/wfs2/aaa-suite/cgi-bin/alkis/vereinf/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities) (`alkis_gebaeude`) | HVBG | dl-de/zero-2.0 | – | verifiziert | geprüft 23.10.2026 (Feld funktion vorhanden; Rückgabe je Abfrage begrenzt) | Gebäudefunktion (öffentliche Gebäude); keine Eigentümerangaben (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+| [ALKIS vereinfacht – GebaeudeBauwerk](https://www.gds.hessen.de/wfs2/aaa-suite/cgi-bin/alkis/vereinf/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities) (`alkis_gebaeude`) | HVBG | Nutzung ohne Einschränkung (§ 18 HVGG, AccessConstraints) | Gebäude: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG), ALKIS vereinfacht; Darstellung verändert | verifiziert, eingebunden | GET liefert 10 Objekte bzw. bei Filter eine Sperrseite (HTTP 403); POST mit Filter gmdschl + funktion: 545 Gebäude für öffentliche Zwecke (von 21.924 Gebäuden der Gemeinde) | Kartenebene Gebäude für öffentliche Zwecke (Nutzung, nicht Eigentum) |
 | [INSPIRE HE Gebäude 3D LoD2 (Atom-Download)](https://hvbg.hessen.de/registry/spatial/dataset/06184092-4b18-48e5-aa23-fb3a3ef572f7) (`lod2_he`) | HVBG | dl-de/zero-2.0 | – | teilweise | nicht geprüft | 3D-Ansicht optional (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
 
 ## Hintergrundkarte

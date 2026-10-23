@@ -16,6 +16,8 @@
   const WAHLEN_URL = "data/export/wahlen.json";
   // Beteiligungsverfahren der Bauleitplanung (Stufen und Fristen aus den Bekanntmachungen)
   const BETEILIGUNG_URL = "data/export/beteiligung.json";
+  // Gebäude und Eigentum: städtische Gesellschaften (Beteiligungsbericht), ohne Personen
+  const EIGENTUM_URL = "data/export/eigentum.json";
   const BRW_URL = "data/export/karte/bodenrichtwerte.json";
   const DEFAULT_AREA = "stadt:alle";
   const RANK = { hoch: 3, mittel: 2, niedrig: 1 };
@@ -63,7 +65,7 @@
   const de = (n) => Number(n || 0).toLocaleString("de-DE");
   const get = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 
-  let wohnen = null, brwData = null, brwLayer = null, wahlen = null, beteiligung = null;
+  let wohnen = null, brwData = null, brwLayer = null, wahlen = null, beteiligung = null, eigentum = null;
   let cfg = null, data = null, flaechen = null, zeit = null, all = [], papers = [], area = null, selected = null, dataStand = null;
   let planData = null, planLayer = null, planOn = false, planShown = null;
   const umweltOn = new Set(), umweltData = {}, umweltLayers = {};
@@ -881,9 +883,36 @@
       <section class="stat-block"><h3>Begriffe</h3><dl class="glossar">${W.begriffe.map((b) => `<dt>${esc(b.begriff)}</dt><dd>${esc(b.text)}</dd>`).join("")}</dl></section>
       <section class="stat-block"><h3>Immobilienmarktberichte</h3><ul class="locs">${W.berichte.map((b) => `<li>${link(b.link, esc(b.titel)) || esc(b.titel)}<br><span class="meta">${esc(b.herausgeber)}</span></li>`).join("")}</ul>
         <p class="hint">${esc(W.berichte_hinweis)}</p></section>
+      ${eigentumHtml()}
       <p class="hint">${esc(W.boris.attribution)}. ${esc(z.attribution)}.</p>`;
   }
+  function eigentumHtml() {
+    if (!eigentum) return "";
+    const zeile = (g) => `<tr><th scope="row">${esc(g.name)}${g.gegenstand ? `<br><span class="meta">${esc(g.gegenstand)}</span>` : ""}</th>
+      <td class="text">${esc(g.rechtsform || "–")}</td><td class="text">${esc(g.gesellschafter || "–")}</td></tr>`;
+    const tab = (liste, cap) => `<div class="table-wrap"><table class="compare"><caption class="visually-hidden">${esc(cap)}</caption>
+      <thead><tr><th scope="col">Unternehmen</th><th scope="col">Rechtsform</th><th scope="col">Gesellschafter laut Bericht</th></tr></thead>
+      <tbody>${liste.map(zeile).join("")}</tbody></table></div>`;
+    const pf = eigentum.gesellschaften.filter((g) => g.pflicht), fr = eigentum.gesellschaften.filter((g) => !g.pflicht);
+    return `<section class="stat-block"><h3>Gebäude und Eigentum</h3>
+      <p><button type="button" class="btn btn-soft" data-ebene-on="gebaeude">Gebäude für öffentliche Zwecke auf der Karte</button></p>
+      <p class="hint">Gebäudefunktion laut Liegenschaftskataster; sie beschreibt die Nutzung, nicht das Eigentum.</p>
+      ${pf.length ? `<h4>Beteiligungen und Eigenbetriebe der Stadt (Pflichtangaben, § 123a HGO)</h4>${tab(pf, "Beteiligungen und Eigenbetriebe")}` : ""}
+      ${fr.length ? `<details class="acc"><summary>Weitere Beteiligungen (freiwillige Angaben, ${fr.length})</summary>${tab(fr, "Weitere Beteiligungen")}</details>` : ""}
+      <p class="hint">${link(eigentum.bericht.url, `Beteiligungsbericht ${esc(String(eigentum.bericht.jahr))}`)}, ${esc(eigentum.bericht.stand)}. Personen (Geschäftsführung, Aufsichtsrat) werden nicht übernommen.</p>
+      <ul class="hint">${eigentum.grenzen.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></section>`;
+  }
   $("#wohnen").addEventListener("click", (e) => {
+    const eb = e.target.closest("[data-ebene-on]");
+    if (eb) {
+      umweltOn.add(eb.dataset.ebeneOn);
+      const box = document.querySelector(`.map-layers input[value="${CSS.escape(eb.dataset.ebeneOn)}"]`);
+      if (box) box.checked = true;
+      drawUmwelt(eb.dataset.ebeneOn);
+      syncUrl();
+      closePanel("panel-wohnen");
+      return;
+    }
     if (!e.target.closest("[data-brw-on]")) return;
     umweltOn.add("bodenrichtwerte");
     const cb = document.querySelector('.map-layers input[value="bodenrichtwerte"]');
@@ -981,9 +1010,10 @@
   // --- Start -----------------------------------------------------------------------------------------
   async function start() {
     const json = (url) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const [c, d, f, credits, w, wa, be] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json"),
-      json(WOHNEN_URL), json(WAHLEN_URL), json(BETEILIGUNG_URL)]);
+    const [c, d, f, credits, w, wa, be, ei] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json"),
+      json(WOHNEN_URL), json(WAHLEN_URL), json(BETEILIGUNG_URL), json(EIGENTUM_URL)]);
     beteiligung = be;
+    eigentum = ei;
     wohnen = w;
     wahlen = wa;
     if (credits && credits.length) $("#credits").innerHTML = credits.map((a) => `<li>${link(a.link, esc(a.text)) || esc(a.text)} <span class="hint">(${esc(a.lizenz)})</span></li>`).join("");

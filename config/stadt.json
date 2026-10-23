@@ -700,6 +700,28 @@
             }
           }
         ]
+      },
+      {
+        "id": "gebaeude",
+        "titel": "Gebäude für öffentliche Zwecke",
+        "quelle": "alkis_gebaeude",
+        "farbe": "#1f5f5b",
+        "attribution": "Gebäude: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG), ALKIS vereinfacht; Darstellung verändert",
+        "attribution_kurz": "Gebäude: HVBG (ALKIS vereinfacht)",
+        "hinweis": "Gebäudefunktion laut Liegenschaftskataster („Gebäude für öffentliche Zwecke“). Sie beschreibt die Nutzung, nicht das Eigentum.",
+        "ebenen": [
+          {
+            "id": "gebaeude_oeffentlich",
+            "titel": "Gebäude für öffentliche Zwecke",
+            "abruf": "gebaeude",
+            "ueberschneidung": false,
+            "stil": {
+              "fill": 0.55,
+              "weight": 1
+            }
+          }
+        ],
+        "quelle_url": "https://www.gds.hessen.de/wfs2/aaa-suite/cgi-bin/alkis/vereinf/wfs"
       }
     ]
   },
@@ -980,5 +1002,20 @@
       }
     ],
     "verfahren_muster": "§\\s*13a\\s*BauGB|beschleunigten\\s+Verfahren|vereinfachten\\s+Verfahren|§\\s*13b"
+  },
+  "eigentum": {
+    "_hinweis": "Was zum Eigentum öffentlich darstellbar ist: Gebäudefunktion (ALKIS), städtische Gesellschaften und Eigenbetriebe (Beteiligungsbericht). Keine Privateigentümer (§ 12 GBO, DSGVO); keine Personen aus dem Bericht.",
+    "alkis_wfs": "https://www.gds.hessen.de/wfs2/aaa-suite/cgi-bin/alkis/vereinf/wfs",
+    "alkis_funktion": "Gebäude für öffentliche Zwecke",
+    "beteiligungsbericht": {
+      "jahr": 2024,
+      "url": "https://www.witzenhausen.eu/wp-content/uploads/2025/11/Beteiligungsbericht-2024.pdf",
+      "stand": "Bericht vom 08.10.2025, Stand 31.12.2024"
+    },
+    "grenzen": [
+      "Kommunale Liegenschaften (Flurstücke im Eigentum der Stadt) sind nicht online veröffentlicht.",
+      "Eigentum von Bund, Land und Kirchen ist nur lückenhaft belegt und wird nicht dargestellt.",
+      "Privateigentümer werden nicht dargestellt (Grundbuch nur bei berechtigtem Interesse, § 12 GBO)."
+    ]
   }
 }

@@ -22,6 +22,8 @@ cp tests/fixtures/wohnen.json "$TMP/test/data/export/wohnen.json"
 cp tests/fixtures/wahlen.json "$TMP/test/data/export/wahlen.json"
 # Beteiligung: erfundenes Testverfahren mit laufender Frist
 cp tests/fixtures/beteiligung_test.json "$TMP/test/data/export/beteiligung.json"
+# Eigentum: Unternehmen aus dem Beteiligungsbericht (ohne Personen)
+cp tests/fixtures/eigentum.json "$TMP/test/data/export/eigentum.json"
 python3 -m http.server 8765 --bind 127.0.0.1 --directory "$TMP/leer" >/dev/null 2>&1 &
 python3 -m http.server 8766 --bind 127.0.0.1 --directory "$TMP/test" >/dev/null 2>&1 &
 sleep 1

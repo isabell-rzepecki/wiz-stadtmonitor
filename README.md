@@ -40,6 +40,8 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
   - Nur amtliche Ergebnisse: 2026 aus den Bekanntmachungen Nr. 043 und 044/2026; 2016 und 2021 aus der Ergebnispräsentation der Gemeindewahlleitung (Stufe „Schnellmeldung“; 2016 mit 31 Sitzen, seit 2020 37); Bundestags- und Europawahlen aus der Wahlbezirksstatistik der Bundeswahlleiterin.
   - Keine Personennamen. Die Sitzverteilung folgt dem Wahlergebnis; Fraktionswechsel und Koalitionen sind nicht abgebildet.
 - **Beteiligung der Öffentlichkeit:** Stufen und Fristen der Bauleitplanung stammen aus den amtlichen Bekanntmachungen (ab 2024 als PDF, ab 10/2025 als eigener Inhaltstyp). Verknüpft wird über Plannummer, Änderung und Gemarkung; Ansprechpersonen und E-Mail-Adressen werden nicht übernommen.
+- **Gebäude und Eigentum:** Gezeigt werden nur die Gebäudefunktion „öffentliche Zwecke“ (ALKIS, Nutzung statt Eigentum) und die Unternehmen des Beteiligungsberichts. Kommunale Liegenschaften sind nicht online veröffentlicht; Privateigentum wird nicht dargestellt.
+- **Weitere Kartenebenen:** Windvorranggebiete (Regionalplan Nordhessen) und Kulturdenkmäler (DenkXweb, nicht flächendeckend erfasst) nur als Kartenebene; Bodendenkmäler nicht.
 - **Einreicher:** Antrag oder Anfrage einer Fraktion wird aus dem TOP-Titel erkannt und als Angabe und Filter gezeigt, ohne Zählung je Fraktion. Eine fehlende Nennung im Titel sagt nichts über die Aktivität einer Fraktion.
 - **Quellen:**
   - Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv), lesbar in [`DATA_SOURCES.md`](DATA_SOURCES.md), erzeugt mit `python tools/datenquellen.py`.
