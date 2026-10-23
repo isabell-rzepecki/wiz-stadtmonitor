@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mietmonitor Witzenhausen</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Mietmonitor Witzenhausen</h1>
+    <p class="untertitel">Sammlung von Mietdaten zu Wohnungen und Häusern in Witzenhausen und den Ortsteilen</p>
+  </header>
+
+  <main>
+    <section id="erfassung" class="karte">
+      <h2 id="formTitel">Neuen Eintrag erfassen</h2>
+      <form id="formular" novalidate>
+        <input type="hidden" name="id">
+        <div class="raster">
+          <label>Objektart*
+            <select name="objektart" required></select>
+          </label>
+          <label>Ortsteil*
+            <input name="ortsteil" list="ortsteilListe" required autocomplete="off">
+            <datalist id="ortsteilListe"></datalist>
+          </label>
+          <label>Straße (ohne Hausnummer)
+            <input name="strasse" autocomplete="off">
+          </label>
+          <label>Wohnfläche (m²)*
+            <input name="flaeche" inputmode="decimal" required>
+          </label>
+          <label>Zimmer
+            <input name="zimmer" inputmode="decimal">
+          </label>
+          <label>Kaltmiete (€/Monat)*
+            <input name="kaltmiete" inputmode="decimal" required>
+          </label>
+          <label>Nebenkosten (€/Monat)
+            <input name="nebenkosten" inputmode="decimal">
+          </label>
+          <label>Baujahr
+            <input name="baujahr" inputmode="numeric">
+          </label>
+          <label>Angebots-/Vertragsdatum
+            <input name="angebotsdatum" type="date">
+          </label>
+          <label>Quelle
+            <select name="quelle"></select>
+          </label>
+          <label class="breit">Link zum Inserat
+            <input name="link" type="url" placeholder="https://…">
+          </label>
+        </div>
+        <fieldset>
+          <legend>Merkmale</legend>
+          <div id="merkmale" class="merkmale"></div>
+        </fieldset>
+        <label class="breit">Notiz
+          <textarea name="notiz" rows="2"></textarea>
+        </label>
+        <p class="vorschau" id="vorschau"></p>
+        <ul class="fehler" id="fehler"></ul>
+        <div class="aktionen">
+          <button type="submit" id="speichern">Speichern</button>
+          <button type="button" id="abbrechen" class="sekundaer" hidden>Bearbeitung abbrechen</button>
+        </div>
+        <p class="hinweis">Bitte keine personenbezogenen Daten (Namen, Telefonnummern, Hausnummern) erfassen.</p>
+      </form>
+    </section>
+
+    <section id="auswertung" class="karte">
+      <h2>Auswertung</h2>
+      <div class="filter">
+        <label>Objektart <select id="filterArt"><option value="">alle</option></select></label>
+        <label>Ortsteil <select id="filterOrt"><option value="">alle</option></select></label>
+        <label>Ab Datum <input type="date" id="filterVon"></label>
+      </div>
+      <div class="kacheln" id="kacheln"></div>
+      <div class="tabellen">
+        <div>
+          <h3>Nach Ortsteil</h3>
+          <div class="tabelle-scroll"><table id="tabOrt"></table></div>
+        </div>
+        <div>
+          <h3>Nach Größe</h3>
+          <div class="tabelle-scroll"><table id="tabGroesse"></table></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="daten" class="karte">
+      <div class="kopfzeile">
+        <h2>Erfasste Einträge <span id="anzahl"></span></h2>
+        <div class="aktionen">
+          <button type="button" id="exportCsv">CSV exportieren</button>
+          <button type="button" id="exportJson" class="sekundaer">Sicherung (JSON)</button>
+          <label class="knopf sekundaer">Importieren (CSV/JSON)
+            <input type="file" id="import" accept=".csv,.json,text/csv,application/json" hidden>
+          </label>
+        </div>
+      </div>
+      <input type="search" id="suche" placeholder="Suchen (Straße, Notiz, Ortsteil …)">
+      <div class="tabelle-scroll">
+        <table id="tabEintraege"></table>
+      </div>
+      <p class="hinweis">Die Daten werden nur in diesem Browser gespeichert. Bitte regelmäßig als JSON sichern
+        oder als CSV exportieren.</p>
+    </section>
+  </main>
+
+  <script src="lib.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

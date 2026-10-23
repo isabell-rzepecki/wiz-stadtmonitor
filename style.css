@@ -1,0 +1,112 @@
+:root {
+  --bg: #f4f6f3;
+  --karte: #ffffff;
+  --text: #1f2a24;
+  --leise: #5d6b63;
+  --akzent: #2f6b4f;
+  --akzent-hell: #e3efe8;
+  --rand: #d5ddd8;
+  --fehler: #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141a17;
+    --karte: #1d2521;
+    --text: #e6ece8;
+    --leise: #9aa9a0;
+    --akzent: #6fbf95;
+    --akzent-hell: #24362c;
+    --rand: #33413a;
+    --fehler: #f2a39c;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header { padding: 24px 16px 8px; max-width: 1200px; margin: 0 auto; }
+h1 { margin: 0; font-size: 1.6rem; }
+h2 { margin: 0 0 12px; font-size: 1.2rem; }
+h3 { margin: 16px 0 8px; font-size: 1rem; }
+.untertitel { margin: 4px 0 0; color: var(--leise); }
+
+main { max-width: 1200px; margin: 0 auto; padding: 8px 16px 40px; display: grid; gap: 16px; }
+
+.karte { background: var(--karte); border: 1px solid var(--rand); border-radius: 10px; padding: 16px; min-width: 0; }
+
+.raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; color: var(--leise); }
+label.breit { grid-column: 1 / -1; margin-top: 12px; }
+
+input, select, textarea, button, .knopf {
+  font: inherit;
+  color: var(--text);
+  background: var(--karte);
+  border: 1px solid var(--rand);
+  border-radius: 6px;
+  padding: 7px 9px;
+}
+label > input:not([type=checkbox]), label > select, label > textarea { width: 100%; min-width: 0; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--akzent); outline-offset: -1px; }
+
+fieldset { border: 1px solid var(--rand); border-radius: 6px; margin: 12px 0 0; }
+legend { color: var(--leise); font-size: 0.9rem; }
+.merkmale { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.merkmale label { flex-direction: row; align-items: center; color: var(--text); }
+
+button, .knopf {
+  cursor: pointer;
+  background: var(--akzent);
+  color: #fff;
+  border-color: var(--akzent);
+  display: inline-flex;
+  align-items: center;
+}
+@media (prefers-color-scheme: dark) { button, .knopf { color: #0f1612; } }
+button.sekundaer, .knopf.sekundaer { background: transparent; color: var(--akzent); }
+button.klein { padding: 2px 8px; font-size: 0.85rem; }
+button.gefahr { background: transparent; color: var(--fehler); border-color: var(--fehler); }
+
+.aktionen { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.kopfzeile { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.kopfzeile .aktionen { margin-top: 0; }
+
+.vorschau { margin: 12px 0 0; font-weight: 600; color: var(--akzent); min-height: 1.5em; }
+.fehler { color: var(--fehler); margin: 8px 0 0; padding-left: 20px; }
+.fehler:empty { display: none; }
+.hinweis { font-size: 0.85rem; color: var(--leise); margin: 12px 0 0; }
+
+.filter { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+
+.kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.kachel { background: var(--akzent-hell); border-radius: 8px; padding: 10px 12px; }
+.kachel .wert { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kachel .titel { font-size: 0.85rem; color: var(--leise); }
+
+.tabellen { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 16px; }
+.tabelle-scroll { overflow-x: auto; }
+#daten .tabelle-scroll { margin-top: 12px; }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rand); white-space: nowrap; }
+th { color: var(--leise); font-weight: 600; }
+th[data-sort] { cursor: pointer; user-select: none; }
+td.zahl, th.zahl { text-align: right; font-variant-numeric: tabular-nums; }
+td.notiz { white-space: normal; min-width: 160px; }
+tr.leer td { color: var(--leise); text-align: center; padding: 16px; }
+
+#suche { width: 100%; margin-top: 12px; }
+
+@media (min-width: 960px) {
+  main { grid-template-columns: 420px 1fr; }
+  #erfassung { grid-row: span 2; align-self: start; }
+  #erfassung .raster { grid-template-columns: 1fr 1fr; }
+}

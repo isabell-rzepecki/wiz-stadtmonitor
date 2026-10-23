@@ -1,0 +1,10 @@
+{
+  "name": "wiz-stadtmonitor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mietmonitor Witzenhausen – Sammlung und Auswertung von Mietdaten",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "UNLICENSED"
+}
