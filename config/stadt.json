@@ -742,5 +742,147 @@
     ],
     "berichte_hinweis": "Nur verlinkt; eine tabellarische Übernahme setzt eine Prüfung der Nutzungsbedingungen voraus.",
     "bezug_titel": "(Bebauungsplan|Flächennutzungsplan|Bauleitplan|Wohn|Bauplatz|Bauplätze|Baugebiet|Baugrundstück|Grundstück|Bauantrag|Bauvoranfrage|Neubau|Bauvorhaben|Leerstand|Miete|Sanierung|Innenentwicklung|Baulücke)"
+  },
+  "einreicher": {
+    "_hinweis": "Einreicher von Anträgen und Anfragen aus den TOP-Titeln. Nur Fraktionen bzw. Wählergruppen; Einzelpersonen ohne Namen. Auf der Seite als Angabe und Filter, ohne Zählung je Fraktion (eine fehlende Nennung im Titel sagt nichts über Aktivität).",
+    "muster_typ": "(Änderungsantrag|Ergänzungsantrag|Dringlichkeitsantrag|Prüfauftrag|Resolutionsantrag|Resolution|Antrag|Anfrage)",
+    "muster": "(?P<typ>{typ})\\s+(?:der|des|von)\\s+(?P<einr>.+?)\\s+vom\\s+(?P<datum>\\d{{1,2}}\\.\\d{{1,2}}\\.\\d{{4}})",
+    "fraktionen": [
+      {
+        "id": "SPD",
+        "name": "SPD",
+        "muster": "\\bSPD\\b"
+      },
+      {
+        "id": "CDU",
+        "name": "CDU",
+        "muster": "\\bCDU\\b"
+      },
+      {
+        "id": "GRUENE",
+        "name": "BÜNDNIS 90/DIE GRÜNEN",
+        "muster": "B(?:ü|ue)ndnis\\s*90\\s*/\\s*Die\\s*Gr(?:ü|ue)nen|\\bGr(?:ü|ue)nen?\\b"
+      },
+      {
+        "id": "LINKE",
+        "name": "Die Linke",
+        "muster": "\\bDie\\s+Linke\\b"
+      },
+      {
+        "id": "FWG",
+        "name": "FWG",
+        "muster": "\\bFWG\\b|Freie\\s+W(?:ä|ae)hlergemeinschaft"
+      },
+      {
+        "id": "FDP",
+        "name": "FDP",
+        "muster": "\\bFDP\\b|Freie(?:n)?\\s+Demokraten"
+      },
+      {
+        "id": "AFW",
+        "name": "Bunte Liste/Klimaliste – Alternativen für Witzenhausen",
+        "muster": "Bunte\\s+Liste|\\bAfW\\b|Alternativen\\s+f(?:ü|ue)r\\s+Witzenhausen"
+      },
+      {
+        "id": "PARTEI",
+        "name": "Die PARTEI",
+        "muster": "\\bDie\\s+PARTEI\\b"
+      }
+    ],
+    "einzelperson": {
+      "id": "EINZEL",
+      "name": "einzelne Stadtverordnete",
+      "muster": "\\bStadtverordnete[nr]?\\b(?!nversammlung)"
+    }
+  },
+  "wahlen": {
+    "_hinweis": "Nur amtliche Ergebnisse; fehlt eine amtliche Quelle, bleibt die Wahl als Lücke sichtbar. Keine Personennamen (Kandidierende, Gewählte), nur Wahlvorschläge, Stimmen und Sitze.",
+    "kommunal": [
+      {
+        "id": "stvv2026",
+        "art": "stvv",
+        "titel": "Stadtverordnetenwahl",
+        "datum": "2026-03-15",
+        "quelle": "bekanntmachung",
+        "url": "https://www.witzenhausen.eu/wp-content/uploads/2026/03/043-2026-Bekanntmachung-Ergebnis-Stavo-15-03-2026.pdf",
+        "stufe": "endgültig",
+        "stufe_text": "Endgültiges Ergebnis, festgestellt vom Wahlausschuss am 25.03.2026 (Bekanntmachung Nr. 043/2026)"
+      },
+      {
+        "id": "ob2026",
+        "art": "ortsbeirat",
+        "titel": "Ortsbeiratswahlen",
+        "datum": "2026-03-15",
+        "quelle": "bekanntmachung",
+        "url": "https://www.witzenhausen.eu/wp-content/uploads/2026/03/044-2026-Bekanntmachung-Ergebnis-OB-15-03-2026.pdf",
+        "stufe": "endgültig",
+        "stufe_text": "Endgültiges Ergebnis, festgestellt vom Wahlausschuss am 25.03.2026 (Bekanntmachung Nr. 044/2026)"
+      },
+      {
+        "id": "stvv2021",
+        "art": "stvv",
+        "titel": "Stadtverordnetenwahl",
+        "datum": "2021-03-14",
+        "quelle": "votemanager",
+        "url": "https://votemanager-ks.ekom21cdn.de/2021-03-14/06636016/html5/Gemeindewahl_Hessen_363_Gemeinde_Stadt_Witzenhausen.html",
+        "stufe": "schnellmeldung",
+        "stufe_text": "Amtliche Ergebnispräsentation der Gemeindewahlleitung (votemanager), Stand „Alle Schnellmeldungen eingegangen“; die Feststellung durch den Wahlausschuss ist dort nicht ausgewiesen"
+      },
+      {
+        "id": "stvv2016",
+        "art": "stvv",
+        "titel": "Stadtverordnetenwahl",
+        "datum": "2016-03-06",
+        "quelle": "votemanager",
+        "stufe": "schnellmeldung",
+        "stufe_text": "Amtliche Ergebnispräsentation der Gemeindewahlleitung (votemanager), Stand „Alle Schnellmeldungen eingegangen“; die Feststellung durch den Wahlausschuss ist dort nicht ausgewiesen. Die Versammlung hatte damals 31 Sitze (Hauptsatzung; 37 Sitze seit der Änderung vom 25.02.2020)",
+        "url": "https://votemanager-ks.ekom21cdn.de/20160306/06636016/html5/Gemeindewahl_Hessen_66_Gemeinde_Stadt_Witzenhausen.html"
+      }
+    ],
+    "bund": [
+      {
+        "id": "btw2025",
+        "titel": "Bundestagswahl",
+        "datum": "2025-02-23",
+        "url": "https://www.bundeswahlleiterin.de/dam/jcr/e79a7bd3-0607-4e87-9752-8e601e299e00/btw25_wbz.zip",
+        "datei": "btw25_wbz_ergebnisse.csv",
+        "stimme": "Zweitstimmen"
+      },
+      {
+        "id": "ew2024",
+        "titel": "Europawahl",
+        "datum": "2024-06-09",
+        "url": "https://www.bundeswahlleiterin.de/dam/jcr/8d0e36e7-d9d2-400b-80f8-1e2005983971/ew24_wbz.zip",
+        "datei": "Wbz_EW24_Ergebnisse.csv",
+        "stimme": "Stimmen"
+      },
+      {
+        "id": "btw2021",
+        "titel": "Bundestagswahl",
+        "datum": "2021-09-26",
+        "url": "https://www.bundeswahlleiterin.de/dam/jcr/c2cd99e6-064e-4ebc-b634-f86b5c0e14b3/btw21_wbz.zip",
+        "datei": "btw21_wbz_ergebnisse.csv",
+        "stimme": "Zweitstimmen"
+      },
+      {
+        "id": "ew2019",
+        "titel": "Europawahl",
+        "datum": "2019-05-26",
+        "url": "https://www.bundeswahlleiterin.de/dam/jcr/3e04812d-44aa-4de0-a64a-ad474b13f9c9/ew19_wbz.zip",
+        "datei": "ew19_wbz_ergebnisse.csv",
+        "stimme": "Stimmen"
+      },
+      {
+        "id": "btw2017",
+        "titel": "Bundestagswahl",
+        "datum": "2017-09-24",
+        "url": "https://www.bundeswahlleiterin.de/dam/jcr/a2eef6bd-0225-447c-9943-7af0f46c94d1/btw17_wbz.zip",
+        "datei": "btw17_wbz_zweitstimmen.csv",
+        "stimme": "Zweitstimmen"
+      }
+    ],
+    "bund_attribution": "© Die Bundeswahlleiterin (im Auftrag der Herausgebergemeinschaft); Vervielfältigung und Verbreitung mit Quellenangabe gestattet",
+    "bund_hinweis": "Summe der Wahlbezirke der Stadt einschließlich der Briefwahlbezirke (Wahlbezirksstatistik). Parteien unter 2 % in allen Wahlen sind unter „Sonstige“ zusammengefasst.",
+    "gremien_hinweis": "Sitzverteilung laut Wahlergebnis. Änderungen während der Wahlperiode (Fraktionswechsel, Austritte, Nachrücken) sind nicht abgebildet; Koalitionen und Fraktionsvorsitze sind nicht amtlich veröffentlicht und werden nicht angezeigt."
   }
 }

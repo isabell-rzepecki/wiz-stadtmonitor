@@ -9,6 +9,7 @@
 - Ortsbezug Stufe B, Plan-Abgleich: „Bebauungsplan Nr. N Gemarkung G“ bzw. „N. Änderung des Flächennutzungsplanes“
   im Titel → Geltungsbereich der Stadt. Ergebnis ist die Plannummer; die Lage auf der Karte ist ein Punkt im
   Geltungsbereich. Stufe B für Straßen, Gemarkungen und Flurstücke: siehe verortung.py.
+- Einreicher (einreicher.py): Antrag oder Anfrage einer Fraktion laut TOP-Titel, ohne Zählung je Fraktion.
 - Räumliche Überschneidung mit Umweltebenen (umwelt.py): nur für Flurstückspunkte und Geltungsbereiche von Plänen,
   ohne inhaltliche Aussage; im Export nur Name und Ebene, keine Geometrie.
 """
@@ -16,7 +17,7 @@ import json
 import re
 from datetime import datetime, timezone
 
-from . import audit, bauleitplanung, config, fetch, geo, parse, umwelt, verortung
+from . import audit, bauleitplanung, config, einreicher, fetch, geo, parse, umwelt, verortung
 
 VERFAHREN = re.compile(
     r"^(Eröffnung|Begrüßung|Feststellung (der|des)|Genehmigung (der|des) (Tagesordnung|Niederschrift|Protokoll)|"
@@ -125,7 +126,7 @@ def build():
     for t in tops:
         key = t["vorlage"] or f"{t['sitzung']}-TOP{t['top']}"
         gruppen.setdefault(key, []).append(t)
-    vorgaenge, plan_audit, b_audit, u_audit = [], [], [], []
+    vorgaenge, plan_audit, b_audit, u_audit, e_audit = [], [], [], [], []
     for key, ts in gruppen.items():
         ts.sort(key=lambda t: (sitzungen[t["sitzung"]]["date"], [int(x) for x in t["top"].split(".")]))
         process = []
@@ -181,11 +182,19 @@ def build():
             u_audit += [{"vorgang": key, "ort": l["name"], "ort_ebene": l["level"], "ebene": u["ebene"], "flaeche": u.get("name", ""),
                          "zone": u.get("zone", "")} for u in treffer]
         first = ts[0]
+        # Einreicher (Antrag/Anfrage einer Fraktion) aus dem ersten TOP, der das Muster enthält
+        initiative = None
+        for t in ts:
+            r = einreicher.erkennen(t["titel"])
+            if r:
+                e_audit.append({"vorgang": key, "sitzung": t["sitzung"], "top": t["top"], "typ": r["typ"], "einreicher": ",".join(r["einreicher"]) or "nicht zugeordnet",
+                                "datum": r["datum"], "gemeinsam": "ja" if r["gemeinsam"] else "nein", "fundstelle": r["fundstelle"]})
+                initiative = initiative or r
         vorgaenge.append({"reference": key, "vorlage": first["vorlage"], "name": first["titel"], "date": process[0]["date"],
                           "verfahrenspunkt": all(t["verfahrenspunkt"] for t in ts),
                           "bezuege": sorted({b for t in ts for b in t["bezuege"]}),
                           "process": process, "locations": locations, "plans": verweise,
-                          **({"overlaps": overlaps} if overlaps else {})})
+                          **({"overlaps": overlaps} if overlaps else {}), **({"initiative": initiative} if initiative else {})})
     vorgaenge.sort(key=lambda v: (v["date"], v["reference"]), reverse=True)
     stand = datetime.now(timezone.utc).isoformat(timespec="seconds")
     daten = {"meta": {"generated_at": stand, "data_start": config.STADT["quelle"]["datenbeginn"],
@@ -204,6 +213,7 @@ def build():
     n_karte = bauleitplanung.karte(plaene)
 
     audit.tabelle("parserfehler.tsv", ["datei", "fehler", "url"], fehler)
+    audit.tabelle("einreicher.tsv", ["vorgang", "sitzung", "top", "typ", "einreicher", "datum", "gemeinsam", "fundstelle"], e_audit)
     audit.tabelle("verortung_stufe_b.tsv", ["vorgang", "sitzung", "top", "titel", "methode_detail", "mehrdeutig", "treffer",
                                             "ortsteil", "konfidenz", "fundstelle"], b_audit)
     audit.tabelle("ueberschneidung_umwelt.tsv", ["vorgang", "ort", "ort_ebene", "ebene", "flaeche", "zone"], u_audit)

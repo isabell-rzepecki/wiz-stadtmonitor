@@ -1,0 +1,787 @@
+{
+ "generated_at": "2026-10-23",
+ "kommunal": [
+  {
+   "id": "stvv2026",
+   "art": "stvv",
+   "titel": "Stadtverordnetenwahl",
+   "datum": "2026-03-15",
+   "stufe": "endgültig",
+   "stufe_text": "Endgültiges Ergebnis, festgestellt vom Wahlausschuss am 25.03.2026 (Bekanntmachung Nr. 043/2026)",
+   "quelle_url": "https://www.witzenhausen.eu/wp-content/uploads/2026/03/043-2026-Bekanntmachung-Ergebnis-Stavo-15-03-2026.pdf",
+   "ergebnisse": [
+    {
+     "gebiet": null,
+     "wahlberechtigte": 11976,
+     "waehlende": 7421,
+     "vorschlaege": [
+      {
+       "name": "Christlich Demokratische Union Deutschlands (CDU)",
+       "stimmen": 53361,
+       "anteil": 21.8,
+       "sitze": 8
+      },
+      {
+       "name": "Sozialdemokratische Partei Deutschlands (SPD)",
+       "stimmen": 67193,
+       "anteil": 27.45,
+       "sitze": 10
+      },
+      {
+       "name": "BÜNDNIS 90/DIE GRÜNEN (GRÜNE)",
+       "stimmen": 43031,
+       "anteil": 17.58,
+       "sitze": 7
+      },
+      {
+       "name": "Freie Demokratische Partei (FDP)",
+       "stimmen": 22226,
+       "anteil": 9.08,
+       "sitze": 3
+      },
+      {
+       "name": "Freie Wählergemeinschaft (FWG)",
+       "stimmen": 24631,
+       "anteil": 10.06,
+       "sitze": 4
+      },
+      {
+       "name": "Die Linke (Die Linke)",
+       "stimmen": 34352,
+       "anteil": 14.03,
+       "sitze": 5
+      }
+     ],
+     "beteiligung": 61.97,
+     "stimmzettel_gueltig": 7069,
+     "stimmzettel_ungueltig": 352,
+     "stimmen_gueltig": 244794,
+     "sitze": 37,
+     "pruefung": "ok"
+    }
+   ]
+  },
+  {
+   "id": "ob2026",
+   "art": "ortsbeirat",
+   "titel": "Ortsbeiratswahlen",
+   "datum": "2026-03-15",
+   "stufe": "endgültig",
+   "stufe_text": "Endgültiges Ergebnis, festgestellt vom Wahlausschuss am 25.03.2026 (Bekanntmachung Nr. 044/2026)",
+   "quelle_url": "https://www.witzenhausen.eu/wp-content/uploads/2026/03/044-2026-Bekanntmachung-Ergebnis-OB-15-03-2026.pdf",
+   "ergebnisse": [
+    {
+     "gebiet": "Wendershausen",
+     "wahlberechtigte": 515,
+     "waehlende": 346,
+     "vorschlaege": [
+      {
+       "name": "Gemeinsam für Wendershausen (GfW)",
+       "stimmen": 2089,
+       "anteil": 100.0,
+       "sitze": 7
+      }
+     ],
+     "beteiligung": 67.18,
+     "stimmzettel_gueltig": 332,
+     "stimmzettel_ungueltig": 14,
+     "stimmen_gueltig": 2089,
+     "sitze": 7,
+     "ortsteil": "wendershausen",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Dohrenbach",
+     "wahlberechtigte": 415,
+     "waehlende": 300,
+     "vorschlaege": [
+      {
+       "name": "BÜNDNIS 90/DIE GRÜNEN (GRÜNE)",
+       "stimmen": 569,
+       "anteil": 27.95,
+       "sitze": 2
+      },
+      {
+       "name": "Gemeinsam für Dohrenbach (GfDo)",
+       "stimmen": 1467,
+       "anteil": 72.05,
+       "sitze": 5
+      }
+     ],
+     "beteiligung": 72.29,
+     "stimmzettel_gueltig": 298,
+     "stimmzettel_ungueltig": 2,
+     "stimmen_gueltig": 2036,
+     "sitze": 7,
+     "ortsteil": "dohrenbach",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Hubenrode",
+     "wahlberechtigte": 146,
+     "waehlende": 100,
+     "vorschlaege": [
+      {
+       "name": "Hubenröder Wählerliste",
+       "stimmen": 292,
+       "anteil": 100.0,
+       "sitze": 3
+      }
+     ],
+     "beteiligung": 68.49,
+     "stimmzettel_gueltig": 98,
+     "stimmzettel_ungueltig": 2,
+     "stimmen_gueltig": 292,
+     "sitze": 3,
+     "ortsteil": "hubenrode",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Hundelshausen",
+     "wahlberechtigte": 827,
+     "waehlende": 509,
+     "vorschlaege": [
+      {
+       "name": "Gemeinsam für Hundelshausen (GfH)",
+       "stimmen": 3215,
+       "anteil": 100.0,
+       "sitze": 7
+      }
+     ],
+     "beteiligung": 61.55,
+     "stimmzettel_gueltig": 494,
+     "stimmzettel_ungueltig": 15,
+     "stimmen_gueltig": 3215,
+     "sitze": 7,
+     "ortsteil": "hundelshausen",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Unterrieden",
+     "wahlberechtigte": 708,
+     "waehlende": 507,
+     "vorschlaege": [
+      {
+       "name": "Grün-Bunte-Liste-Unterrieden",
+       "stimmen": 1174,
+       "anteil": 34.28,
+       "sitze": 2
+      },
+      {
+       "name": "Gemeinsam für Unterrieden (GfU)",
+       "stimmen": 2251,
+       "anteil": 65.72,
+       "sitze": 5
+      }
+     ],
+     "beteiligung": 71.61,
+     "stimmzettel_gueltig": 495,
+     "stimmzettel_ungueltig": 12,
+     "stimmen_gueltig": 3425,
+     "sitze": 7,
+     "ortsteil": "unterrieden",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Neuseesen",
+     "wahlberechtigte": 60,
+     "waehlende": 51,
+     "vorschlaege": [
+      {
+       "name": "Neuseeser Wählergemeinschaft (NWG)",
+       "stimmen": 150,
+       "anteil": 100.0,
+       "sitze": 3
+      }
+     ],
+     "beteiligung": 85.0,
+     "stimmzettel_gueltig": 50,
+     "stimmzettel_ungueltig": 1,
+     "stimmen_gueltig": 150,
+     "sitze": 3,
+     "ortsteil": "neuseesen",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Werleshausen",
+     "wahlberechtigte": 318,
+     "waehlende": 219,
+     "vorschlaege": [
+      {
+       "name": "Sozialdemokratische Partei Deutschlands (SPD)",
+       "stimmen": 616,
+       "anteil": 59.52,
+       "sitze": 3
+      },
+      {
+       "name": "BÜNDNIS 90/DIE GRÜNEN (GRÜNE)",
+       "stimmen": 419,
+       "anteil": 40.48,
+       "sitze": 2
+      }
+     ],
+     "beteiligung": 68.87,
+     "stimmzettel_gueltig": 214,
+     "stimmzettel_ungueltig": 5,
+     "stimmen_gueltig": 1035,
+     "sitze": 5,
+     "ortsteil": "werleshausen",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Albshausen",
+     "wahlberechtigte": 45,
+     "waehlende": 42,
+     "vorschlaege": [
+      {
+       "name": "Die Albshäuser Gemeinschaft (DAG)",
+       "stimmen": 119,
+       "anteil": 100.0,
+       "sitze": 3
+      }
+     ],
+     "beteiligung": 93.33,
+     "stimmzettel_gueltig": 40,
+     "stimmzettel_ungueltig": 2,
+     "stimmen_gueltig": 119,
+     "sitze": 3,
+     "ortsteil": "albshausen",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Berlepsch-Ellerode",
+     "wahlberechtigte": 84,
+     "waehlende": 44,
+     "vorschlaege": [
+      {
+       "name": "Miteinander für Berlepsch-Ellerode-Hübenthal",
+       "stimmen": 119,
+       "anteil": 100.0,
+       "sitze": 3
+      }
+     ],
+     "beteiligung": 52.38,
+     "stimmzettel_gueltig": 40,
+     "stimmzettel_ungueltig": 4,
+     "stimmen_gueltig": 119,
+     "sitze": 3,
+     "ortsteil": "berlepsch-ellerode",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Blickershausen",
+     "wahlberechtigte": 176,
+     "waehlende": 122,
+     "vorschlaege": [
+      {
+       "name": "Bürger für Blickershausen (BFB)",
+       "stimmen": 572,
+       "anteil": 100.0,
+       "sitze": 5
+      }
+     ],
+     "beteiligung": 69.32,
+     "stimmzettel_gueltig": 122,
+     "stimmzettel_ungueltig": 0,
+     "stimmen_gueltig": 572,
+     "sitze": 5,
+     "ortsteil": "blickershausen",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Ermschwerd",
+     "wahlberechtigte": 813,
+     "waehlende": 513,
+     "vorschlaege": [
+      {
+       "name": "Gemeinsam für Ermschwerd",
+       "stimmen": 3079,
+       "anteil": 100.0,
+       "sitze": 7
+      }
+     ],
+     "beteiligung": 63.1,
+     "stimmzettel_gueltig": 493,
+     "stimmzettel_ungueltig": 20,
+     "stimmen_gueltig": 3079,
+     "sitze": 7,
+     "ortsteil": "ermschwerd",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Ellingerode",
+     "wahlberechtigte": 233,
+     "waehlende": 168,
+     "vorschlaege": [
+      {
+       "name": "Christlich Demokratische Union Deutschlands (CDU)",
+       "stimmen": 449,
+       "anteil": 57.12,
+       "sitze": 3
+      },
+      {
+       "name": "BÜNDNIS 90/DIE GRÜNEN (GRÜNE)",
+       "stimmen": 337,
+       "anteil": 42.88,
+       "sitze": 2
+      }
+     ],
+     "beteiligung": 72.1,
+     "stimmzettel_gueltig": 159,
+     "stimmzettel_ungueltig": 9,
+     "stimmen_gueltig": 786,
+     "sitze": 5,
+     "ortsteil": "ellingerode",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Gertenbach",
+     "wahlberechtigte": 781,
+     "waehlende": 542,
+     "vorschlaege": [
+      {
+       "name": "Sozialdemokratische Partei Deutschlands (SPD)",
+       "stimmen": 916,
+       "anteil": 25.58,
+       "sitze": 2
+      },
+      {
+       "name": "BÜNDNIS 90/DIE GRÜNEN (GRÜNE)",
+       "stimmen": 889,
+       "anteil": 24.83,
+       "sitze": 2
+      },
+      {
+       "name": "Wählergruppe \"GEMEINSAM FÜR GERTENBACH\"",
+       "stimmen": 1776,
+       "anteil": 49.6,
+       "sitze": 3
+      }
+     ],
+     "beteiligung": 69.4,
+     "stimmzettel_gueltig": 527,
+     "stimmzettel_ungueltig": 15,
+     "stimmen_gueltig": 3581,
+     "sitze": 7,
+     "ortsteil": "gertenbach",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Kleinalmerode",
+     "wahlberechtigte": 599,
+     "waehlende": 362,
+     "vorschlaege": [
+      {
+       "name": "Gemeinsam für Kleinalmerode (GfK)",
+       "stimmen": 2113,
+       "anteil": 100.0,
+       "sitze": 7
+      }
+     ],
+     "beteiligung": 60.43,
+     "stimmzettel_gueltig": 351,
+     "stimmzettel_ungueltig": 11,
+     "stimmen_gueltig": 2113,
+     "sitze": 7,
+     "ortsteil": "kleinalmerode",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Roßbach",
+     "wahlberechtigte": 499,
+     "waehlende": 326,
+     "vorschlaege": [
+      {
+       "name": "Gemeinwohl (GeWo)",
+       "stimmen": 1987,
+       "anteil": 100.0,
+       "sitze": 7
+      }
+     ],
+     "beteiligung": 65.33,
+     "stimmzettel_gueltig": 311,
+     "stimmzettel_ungueltig": 15,
+     "stimmen_gueltig": 1987,
+     "sitze": 7,
+     "ortsteil": "rossbach",
+     "pruefung": "ok"
+    },
+    {
+     "gebiet": "Ziegenhagen",
+     "wahlberechtigte": 487,
+     "waehlende": 327,
+     "vorschlaege": [
+      {
+       "name": "Christlich Demokratische Union Deutschlands (CDU)",
+       "stimmen": 893,
+       "anteil": 41.1,
+       "sitze": 3
+      },
+      {
+       "name": "Sozialdemokratische Partei Deutschlands (SPD)",
+       "stimmen": 1280,
+       "anteil": 58.9,
+       "sitze": 4
+      }
+     ],
+     "beteiligung": 67.15,
+     "stimmzettel_gueltig": 317,
+     "stimmzettel_ungueltig": 10,
+     "stimmen_gueltig": 2173,
+     "sitze": 7,
+     "ortsteil": "ziegenhagen",
+     "pruefung": "ok"
+    }
+   ]
+  },
+  {
+   "id": "stvv2021",
+   "art": "stvv",
+   "titel": "Stadtverordnetenwahl",
+   "datum": "2021-03-14",
+   "stufe": "schnellmeldung",
+   "stufe_text": "Amtliche Ergebnispräsentation der Gemeindewahlleitung (votemanager), Stand „Alle Schnellmeldungen eingegangen“; die Feststellung durch den Wahlausschuss ist dort nicht ausgewiesen",
+   "quelle_url": "https://votemanager-ks.ekom21cdn.de/2021-03-14/06636016/html5/Gemeindewahl_Hessen_363_Gemeinde_Stadt_Witzenhausen.html",
+   "ergebnisse": [
+    {
+     "gebiet": null,
+     "wahlberechtigte": 12167,
+     "waehlende": 6857,
+     "beteiligung": 56.36,
+     "stimmen_gueltig": 229173,
+     "sitze": 37,
+     "vorschlaege": [
+      {
+       "name": "CDU",
+       "stimmen": 54883,
+       "anteil": 23.95,
+       "sitze": 9
+      },
+      {
+       "name": "GRÜNE",
+       "stimmen": 42568,
+       "anteil": 18.57,
+       "sitze": 7
+      },
+      {
+       "name": "SPD",
+       "stimmen": 65501,
+       "anteil": 28.58,
+       "sitze": 11
+      },
+      {
+       "name": "FDP",
+       "stimmen": 15457,
+       "anteil": 6.74,
+       "sitze": 2
+      },
+      {
+       "name": "DIE LINKE",
+       "stimmen": 8515,
+       "anteil": 3.72,
+       "sitze": 1
+      },
+      {
+       "name": "FWG",
+       "stimmen": 18941,
+       "anteil": 8.26,
+       "sitze": 3
+      },
+      {
+       "name": "AfW",
+       "stimmen": 16475,
+       "anteil": 7.19,
+       "sitze": 3
+      },
+      {
+       "name": "Die PARTEI",
+       "stimmen": 6833,
+       "anteil": 2.98,
+       "sitze": 1
+      }
+     ],
+     "pruefung": "ok"
+    }
+   ]
+  },
+  {
+   "id": "stvv2016",
+   "art": "stvv",
+   "titel": "Stadtverordnetenwahl",
+   "datum": "2016-03-06",
+   "stufe": "schnellmeldung",
+   "stufe_text": "Amtliche Ergebnispräsentation der Gemeindewahlleitung (votemanager), Stand „Alle Schnellmeldungen eingegangen“; die Feststellung durch den Wahlausschuss ist dort nicht ausgewiesen. Die Versammlung hatte damals 31 Sitze (Hauptsatzung; 37 Sitze seit der Änderung vom 25.02.2020)",
+   "quelle_url": "https://votemanager-ks.ekom21cdn.de/20160306/06636016/html5/Gemeindewahl_Hessen_66_Gemeinde_Stadt_Witzenhausen.html",
+   "ergebnisse": [
+    {
+     "gebiet": null,
+     "wahlberechtigte": 12295,
+     "waehlende": 6360,
+     "beteiligung": 51.73,
+     "stimmen_gueltig": 175856,
+     "sitze": 31,
+     "vorschlaege": [
+      {
+       "name": "CDU",
+       "stimmen": 47970,
+       "anteil": 27.28,
+       "sitze": 9
+      },
+      {
+       "name": "SPD",
+       "stimmen": 61634,
+       "anteil": 35.05,
+       "sitze": 11
+      },
+      {
+       "name": "GRÜNE",
+       "stimmen": 27988,
+       "anteil": 15.92,
+       "sitze": 5
+      },
+      {
+       "name": "DIE LINKE",
+       "stimmen": 7990,
+       "anteil": 4.54,
+       "sitze": 1
+      },
+      {
+       "name": "FDP",
+       "stimmen": 8196,
+       "anteil": 4.66,
+       "sitze": 1
+      },
+      {
+       "name": "FWG",
+       "stimmen": 13660,
+       "anteil": 7.77,
+       "sitze": 2
+      },
+      {
+       "name": "AfW",
+       "stimmen": 8418,
+       "anteil": 4.79,
+       "sitze": 2
+      }
+     ],
+     "pruefung": "ok"
+    }
+   ]
+  }
+ ],
+ "bund": [
+  {
+   "id": "btw2025",
+   "titel": "Bundestagswahl",
+   "datum": "2025-02-23",
+   "stimme": "Zweitstimmen",
+   "quelle_url": "https://www.bundeswahlleiterin.de/dam/jcr/e79a7bd3-0607-4e87-9752-8e601e299e00/btw25_wbz.zip",
+   "ergebnis": {
+    "wahlberechtigte": 11847,
+    "waehlende": 9985,
+    "gueltig": 9917,
+    "wahlbezirke": 22,
+    "beteiligung": 84.28,
+    "pruefung": "ok",
+    "parteien": {
+     "CDU": 2392,
+     "SPD": 2101,
+     "AfD": 1726,
+     "GRÜNE": 1357,
+     "Die Linke": 1220,
+     "BSW": 409,
+     "FDP": 330,
+     "FREIE WÄHLER": 127,
+     "Tierschutzpartei": 117,
+     "Volt": 69,
+     "Die PARTEI": 52,
+     "BÜNDNIS DEUTSCHLAND": 8,
+     "PdH": 6,
+     "MLPD": 3
+    }
+   }
+  },
+  {
+   "id": "ew2024",
+   "titel": "Europawahl",
+   "datum": "2024-06-09",
+   "stimme": "Stimmen",
+   "quelle_url": "https://www.bundeswahlleiterin.de/dam/jcr/8d0e36e7-d9d2-400b-80f8-1e2005983971/ew24_wbz.zip",
+   "ergebnis": {
+    "wahlberechtigte": 12117,
+    "waehlende": 7758,
+    "gueltig": 7704,
+    "wahlbezirke": 22,
+    "beteiligung": 64.03,
+    "pruefung": "ok",
+    "parteien": {
+     "CDU": 1991,
+     "SPD": 1518,
+     "GRÜNE": 1156,
+     "AfD": 999,
+     "DIE LINKE": 519,
+     "FDP": 317,
+     "BSW": 316,
+     "Die PARTEI": 187,
+     "Volt": 139,
+     "FREIE WÄHLER": 131,
+     "Tierschutzpartei": 110,
+     "LETZTE GENERATION": 56,
+     "ÖDP": 42,
+     "TIERSCHUTZ hier!": 28,
+     "MERA25": 26,
+     "FAMILIE": 25,
+     "PdF": 23,
+     "DieBasis": 22,
+     "PIRATEN": 19,
+     "BÜNDNIS DEUTSCHLAND": 16,
+     "MENSCHLICHE WELT": 11,
+     "PdH": 10,
+     "KLIMALISTE": 8,
+     "V-Partei³": 8,
+     "HEIMAT": 6,
+     "Bündnis C": 6,
+     "DAVA": 5,
+     "MLPD": 4,
+     "DKP": 2,
+     "PDV": 2,
+     "Verjüngungsforschung": 1,
+     "ABG": 1
+    }
+   }
+  },
+  {
+   "id": "btw2021",
+   "titel": "Bundestagswahl",
+   "datum": "2021-09-26",
+   "stimme": "Zweitstimmen",
+   "quelle_url": "https://www.bundeswahlleiterin.de/dam/jcr/c2cd99e6-064e-4ebc-b634-f86b5c0e14b3/btw21_wbz.zip",
+   "ergebnis": {
+    "wahlberechtigte": 12053,
+    "waehlende": 9295,
+    "gueltig": 9180,
+    "wahlbezirke": 22,
+    "beteiligung": 77.12,
+    "pruefung": "ok",
+    "parteien": {
+     "SPD": 3133,
+     "CDU": 1829,
+     "GRÜNE": 1598,
+     "FDP": 695,
+     "AfD": 689,
+     "DIE LINKE": 583,
+     "dieBasis": 187,
+     "Tierschutzpartei": 134,
+     "FREIE WÄHLER": 130,
+     "Die PARTEI": 88,
+     "ÖDP": 29,
+     "Volt": 22,
+     "PIRATEN": 17,
+     "Gesundheitsforschung": 9,
+     "NPD": 8,
+     "Die Humanisten": 6,
+     "Bündnis21": 6,
+     "Team Todenhöfer": 6,
+     "V-Partei³": 3,
+     "DKP": 3,
+     "MLPD": 2,
+     "Bündnis C": 2,
+     "LKR": 1
+    }
+   }
+  },
+  {
+   "id": "ew2019",
+   "titel": "Europawahl",
+   "datum": "2019-05-26",
+   "stimme": "Stimmen",
+   "quelle_url": "https://www.bundeswahlleiterin.de/dam/jcr/3e04812d-44aa-4de0-a64a-ad474b13f9c9/ew19_wbz.zip",
+   "ergebnis": {
+    "wahlberechtigte": 12185,
+    "waehlende": 7076,
+    "gueltig": 7012,
+    "wahlbezirke": 19,
+    "beteiligung": 58.07,
+    "pruefung": "ok",
+    "parteien": {
+     "GRÜNE": 1782,
+     "SPD": 1614,
+     "CDU": 1421,
+     "AfD": 645,
+     "DIE LINKE": 377,
+     "FDP": 295,
+     "Die PARTEI": 214,
+     "FREIE WÄHLER": 129,
+     "Tierschutzpartei": 93,
+     "ÖDP": 79,
+     "ÖkoLinX": 47,
+     "Volt": 37,
+     "FAMILIE": 32,
+     "PIRATEN": 30,
+     "DiEM25": 29,
+     "TIERSCHUTZ hier!": 21,
+     "BGE": 21,
+     "DIE DIREKTE!": 17,
+     "Tierschutzallianz": 13,
+     "Die Humanisten": 13,
+     "Die Grauen": 11,
+     "LKR": 11,
+     "NPD": 9,
+     "DIE FRAUEN": 9,
+     "DIE VIOLETTEN": 7,
+     "MENSCHLICHE WELT": 7,
+     "Volksabstimmung": 6,
+     "LIEBE": 6,
+     "Graue Panther": 6,
+     "MLPD": 4,
+     "SGP": 4,
+     "Bündnis C": 4,
+     "PARTEI FÜR DIE TIERE": 4,
+     "DKP": 3,
+     "BIG": 3,
+     "Gesundheitsforschung": 3,
+     "BP": 2,
+     "NL": 2,
+     "III. Weg": 1,
+     "DIE RECHTE": 1
+    }
+   }
+  },
+  {
+   "id": "btw2017",
+   "titel": "Bundestagswahl",
+   "datum": "2017-09-24",
+   "stimme": "Zweitstimmen",
+   "quelle_url": "https://www.bundeswahlleiterin.de/dam/jcr/a2eef6bd-0225-447c-9943-7af0f46c94d1/btw17_wbz.zip",
+   "ergebnis": {
+    "wahlberechtigte": 12197,
+    "waehlende": 9448,
+    "gueltig": 9215,
+    "wahlbezirke": 19,
+    "beteiligung": 77.46,
+    "pruefung": "ok",
+    "parteien": {
+     "SPD": 2912,
+     "CDU": 2409,
+     "GRÜNE": 1084,
+     "DIE LINKE": 863,
+     "AfD": 855,
+     "FDP": 621,
+     "Die PARTEI": 124,
+     "FREIE WÄHLER": 101,
+     "Tierschutzpartei": 64,
+     "BGE": 47,
+     "PIRATEN": 41,
+     "ÖDP": 30,
+     "DM": 23,
+     "NPD": 18,
+     "V-Partei³": 13,
+     "MLPD": 5,
+     "BüSo": 3,
+     "DKP": 2
+    }
+   }
+  }
+ ],
+ "bund_attribution": "© Die Bundeswahlleiterin (im Auftrag der Herausgebergemeinschaft); Vervielfältigung und Verbreitung mit Quellenangabe gestattet"
+}
