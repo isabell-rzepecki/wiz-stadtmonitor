@@ -26,7 +26,14 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
   - Der Stadtmonitor nutzt sie deshalb nur im Build. Die Rohgeometrien liegen in `data/geo/restricted/`; der Ordner ist von der Versionierung ausgeschlossen.
   - Ausgeliefert werden sie nur als Kartenebene mit dem Hinweis „Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke“. Es gibt keinen GeoJSON-Export, keinen Download in der Oberfläche und keine Flächen im Datenpaket.
   - Im Repository und im Datenpaket bleibt nur die Zuordnung Vorgang → Plannummer (`audit/verortung_bauleitplanung.tsv`). Sie enthält keine Geometrie der Stadt.
-- **Quellen:** Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv).
+- **Wohnen und Boden (geplant, Arbeitspaket D):**
+  - Es gibt keinen Mietspiegel für Witzenhausen, also keine ortsübliche Vergleichsmiete. Angebotsmieten privater Portale werden nicht übernommen.
+  - Mietwerte stammen nur aus dem Zensus 2022 (Bestandsmiete, Stichtag 15.05.2022).
+  - Bodenrichtwerte werden stets mit ihrem Stichtag ausgewiesen (2024; 2026 nach Prüfung des neuen Dienstes, Issue #4).
+  - Werte je Ortsbezirk aus Gitterzellen sind Näherungen: Die Zellen werden über ihren Mittelpunkt einer Gemarkung zugeordnet, und geheim gehaltene Zellen zählen nicht als null.
+- **Quellen:**
+  - Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv), lesbar in [`DATA_SOURCES.md`](DATA_SOURCES.md), erzeugt mit `python tools/datenquellen.py`.
+  - Die Namensnennungen auf der Seite kommen aus [`data/attribution.tsv`](data/attribution.tsv), nur für die tatsächlich genutzten Quellen.
 
 ## Aktualisierung
 

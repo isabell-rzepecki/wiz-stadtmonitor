@@ -17,7 +17,8 @@
     "site_url": "https://isabell-rzepecki.github.io/wiz-stadtmonitor/",
     "kontakt": "",
     "impressum": "",
-    "user_agent": "wiz-stadtmonitor/0.1 (+https://github.com/isabell-rzepecki/wiz-stadtmonitor)"
+    "user_agent": "wiz-stadtmonitor/0.1 (+https://github.com/isabell-rzepecki/wiz-stadtmonitor)",
+    "datenquellen": "https://github.com/isabell-rzepecki/wiz-stadtmonitor/blob/HEAD/DATA_SOURCES.md"
   },
   "quelle": {
     "name": "Amtliche Bekanntmachungen der Stadt Witzenhausen",

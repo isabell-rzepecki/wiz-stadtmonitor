@@ -697,7 +697,8 @@
   // --- Start -----------------------------------------------------------------------------------------
   async function start() {
     const json = (url) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const [c, d, f] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL)]);
+    const [c, d, f, credits] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json")]);
+    if (credits && credits.length) $("#credits").innerHTML = credits.map((a) => `<li>${link(a.link, esc(a.text)) || esc(a.text)} <span class="hint">(${esc(a.lizenz)})</span></li>`).join("");
     if (!c) throw new Error("Konfiguration (stadt.json) fehlt");
     cfg = c;
     data = d || { meta: { sources: [] }, sitzungen: [], vorgaenge: [] };
