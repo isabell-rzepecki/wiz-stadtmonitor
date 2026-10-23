@@ -55,33 +55,6 @@
   --font-body: "Space Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   color-scheme: light;
 }
-/* Dunkelmodus: gleiche Tokens, geprüfte Paare (tools/kontrast.py) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1c1a1b;
-    --bg-gradient: radial-gradient(at 15% 0%, #3a2524 0%, transparent 50%), radial-gradient(at 85% 100%, #2c2322 0%, transparent 50%);
-    --surface: rgba(36, 33, 34, 0.75);
-    --surface-strong: rgba(36, 33, 34, 0.96);
-    --solid: #242122;
-    --text: #ece6e7;
-    --text-muted: #b8adb0;
-    --border: rgba(255, 255, 255, 0.08);
-    --border-alt: rgba(236, 230, 231, 0.16);
-    --accent-soft: #7a3a36;
-    --accent-tint: rgba(244, 114, 107, 0.14);
-    --accent-tint-strong: rgba(244, 114, 107, 0.26);
-    --accent-ink: #f8a29d;
-    --accent-fill: #f4726b;
-    --on-accent-fill: #1a1a1a;
-    --hoch: #7fd1a5;
-    --mittel: #f0b060;
-    --niedrig: #a9b8f0;
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    --cta-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-    color-scheme: dark;
-  }
-}
 h1, h2, h3, .brand, .card-title, .site-title { font-synthesis: none; }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -104,6 +77,8 @@ button, select, input { font: inherit; color: inherit; }
 .leaflet-control-attribution { background: var(--surface-strong) !important; border-radius: 10px 0 0 0; }
 .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: rgba(251, 196, 191, 0.55) !important; }
 .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: rgba(244, 114, 107, 0.92) !important; color: var(--on-accent); font-weight: 700; }
+/* Ring in der dunklen Akzentfarbe: Kontrast zur hellen Karte mindestens 3:1 (tools/kontrast_karte.py) */
+.marker-cluster div { box-shadow: 0 0 0 2px #b8352e; }
 
 /* Glasflächen */
 .glass {
@@ -384,6 +359,15 @@ body.detail-closed #timeline-wrap { right: 16px; }
 .map-style.map-menu { display: none; }
 .map-style.map-menu[aria-expanded="true"] { background: var(--accent-fill); color: var(--on-accent-fill); border-color: transparent; }
 .map-style[aria-pressed="true"] { background: var(--accent-fill); color: var(--on-accent-fill); border-color: transparent; }
+/* Umweltebenen: aufklappbare Auswahl unter den Kartenschaltflächen */
+.map-style.map-layers { cursor: default; padding: 0; }
+.map-layers summary { cursor: pointer; padding: 8px 12px; }
+.map-layers fieldset { border: 0; margin: 0; padding: 0 12px 8px; display: grid; gap: 4px; }
+.map-layers label { display: flex; align-items: center; gap: 8px; min-height: 24px; cursor: pointer; line-height: 1.3; }
+.map-layers input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent-fill); }
+.map-legend .swatch-area { border-radius: 2px; border-width: 2px; box-shadow: none; }
+.map-legend .legend-group { margin: 8px 0 0; font-weight: 600; }
+.map-legend[open] { max-height: calc(100vh - 220px); overflow: auto; }
 
 /* Kartensteuerung und Namensnennung neben den Flächen, nicht darunter */
 .leaflet-right { transition: right .35s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -486,14 +470,11 @@ html { font-synthesis: none; }
 .leaflet-tooltip { font-family: var(--font-body); background: var(--surface-strong); color: var(--text); border-color: var(--border-alt); }
 .leaflet-control-attribution, .leaflet-control-attribution a { color: var(--text); }
 .leaflet-control-attribution a { text-decoration: underline; }
-@media (prefers-color-scheme: dark) {
-  .leaflet-bar a { background: var(--solid); color: var(--text); border-color: var(--border-alt); }
-}
 .toggle[hidden], .intro-actions .btn[hidden] { display: none; }
 .intro .intro-lead { font: 400 20px/1.35 var(--font-display); margin: 2px 0 14px; }
 .intro .intro-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
-.map-legend .swatch-plan { border-radius: 2px; background: rgba(244, 114, 107, 0.25); border: 1.5px solid var(--accent-ink); box-shadow: none; }
-.map-legend .swatch-fplan { border-radius: 2px; background: rgba(74, 90, 138, 0.2); border: 1.5px dashed var(--niedrig); box-shadow: none; }
+.map-legend .swatch-plan { border-radius: 2px; background: rgba(244, 114, 107, 0.25); border: 1.5px solid #b8352e; box-shadow: none; }
+.map-legend .swatch-fplan { border-radius: 2px; background: rgba(74, 90, 138, 0.2); border: 1.5px dashed #4a5a8a; box-shadow: none; }
 .map-legend .hint { max-width: 240px; }
 .credits { margin: 0 0 8px; padding-left: 18px; font-size: 14px; }
 .credits li { margin-bottom: 4px; }

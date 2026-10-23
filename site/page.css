@@ -3,9 +3,6 @@
 @font-face { font-family: "Space Mono"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/space-mono-latin-700-normal.woff2") format("woff2"); }
 @font-face { font-family: "Lilita One"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/lilita-one-latin-400-normal.woff2") format("woff2"); }
 :root { --bg: #fdf6f4; --surface: #ffffff; --text: #1a1a1a; --muted: #5c5458; --accent-ink: #b8352e; --accent-tint: rgba(244, 114, 107, 0.12); --line: rgba(26, 26, 26, 0.12); color-scheme: light; }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #1c1a1b; --surface: #242122; --text: #ece6e7; --muted: #b8adb0; --accent-ink: #f8a29d; --accent-tint: rgba(244, 114, 107, 0.14); --line: rgba(236, 230, 231, 0.16); color-scheme: dark; }
-}
 * { box-sizing: border-box; }
 html { font-synthesis: none; }
 body { margin: 0; font: 400 16px/1.6 "Space Mono", ui-monospace, Menlo, Consolas, monospace; color: var(--text); background: var(--bg); }
