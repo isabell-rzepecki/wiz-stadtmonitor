@@ -1,6 +1,7 @@
 """HTTP-Abruf mit Wiederholung; nur Standardbibliothek."""
 import json
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -40,3 +41,20 @@ def post_form(url, fields, tries=4):
     body = urllib.parse.urlencode(fields).encode()
     req = urllib.request.Request(url, data=body, headers={"User-Agent": USER_AGENT})
     return _open(req, tries)
+
+
+def get(url, tries=5):
+    """(Bytes, Header) einer Adresse; wiederholt bei Netzfehlern."""
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    for i in range(tries):
+        try:
+            with urllib.request.urlopen(req, timeout=90) as r:
+                return r.read(), dict(r.headers)
+        except urllib.error.HTTPError as e:
+            if e.code < 500 or i == tries - 1:
+                raise
+            time.sleep(2 ** (i + 1))
+        except Exception:
+            if i == tries - 1:
+                raise
+            time.sleep(2 ** (i + 1))

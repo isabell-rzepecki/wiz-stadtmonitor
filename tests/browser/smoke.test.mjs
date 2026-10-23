@@ -111,6 +111,18 @@ test("Dunkelmodus: Vorgang ohne Verstöße", async () => {
   await page.close();
 });
 
+test("Kartenebene Bauleitplanung: Nutzungshinweis in Legende und Namensnennung, ohne Verstöße", async () => {
+  const page = await open(SITE);
+  await page.locator(".map-plans").click();
+  await page.waitForFunction(() => document.querySelectorAll(".leaflet-overlay-pane path").length > 0);
+  assert.match(await page.locator(".map-legend").textContent(), /nur für nicht kommerzielle Zwecke/);
+  assert.match(await page.locator(".leaflet-control-attribution").textContent(), /Magistrat der Stadt Witzenhausen/);
+  assert.match(page.url(), /plaene=1/);
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 test("Mobil: Kartenoptionen in einem Menü, ohne Verstöße", async () => {
   const page = await open(SITE, "", { width: 390, height: 844 });
   await page.locator('.toggle[data-panel="panel-detail"]').click();

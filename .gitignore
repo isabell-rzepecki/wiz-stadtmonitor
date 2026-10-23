@@ -7,3 +7,6 @@ __pycache__/
 _site/
 data/raw/
 data/build/
+# Erzeugte Daten (Workflow) und Rohgeometrien mit Nutzungsbeschränkung (Bauleitplanung, nur nicht kommerziell)
+data/geo/restricted/
+data/export/

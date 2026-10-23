@@ -5,7 +5,9 @@
   "use strict";
   const CONFIG_URL = "stadt.json";
   const DATA_URL = "data/export/vorgaenge.json";
-  const FLAECHEN_URL = "data/export/flaechen.json";  // Ortsbezirke als Flächen (optional, ab Phase 2)
+  const FLAECHEN_URL = "data/export/flaechen.json";  // Ortsbezirke als Flächen (optional, ab Phase 3)
+  // Geltungsbereiche der Bauleitplanung: nur als Kartenebene, Nutzung nur nicht kommerziell (siehe stadt.json)
+  const PLAENE_URL = "data/export/karte/bauleitplanung.json";
   const DEFAULT_AREA = "stadt:alle";
   const RANK = { hoch: 3, mittel: 2, niedrig: 1 };
   const LIST_STEP = 200;
@@ -21,6 +23,7 @@
     strasse_mehrdeutig: "Straßenname im Titel, mehrere Lagen", gemarkung: "Gemarkung im Titel",
     flurstueck: "Flurstücksangabe im Titel, Lage laut Liegenschaftskataster", bebauungsplan: "Bebauungsplan im Titel, Geltungsbereich der Stadt",
     objekt_name: "Name eines Gebäudes oder einer Anlage im Titel",
+    flaechennutzungsplan: "Änderung des Flächennutzungsplans im Titel, Geltungsbereich der Stadt",
     llm: "Mit einem Sprachmodell aus dem Titel erkannt und mit dem Straßen- und Ortsverzeichnis abgeglichen",
   };
   const STATUS = { belegt: "belegt", abgeleitet: "abgeleitet", "nicht_öffentlich": "nicht öffentlich", unklar: "unklar", soll: "soll" };
@@ -52,6 +55,7 @@
   const get = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 
   let cfg = null, data = null, flaechen = null, zeit = null, all = [], papers = [], area = null, selected = null, dataStand = null;
+  let planData = null, planLayer = null, planOn = false, planShown = null;
   let map, cluster, outline, navLayer = null, markers = new Map(), tl = null, range = null, shown = LIST_STEP, legendEl = null;
 
   // --- Konfiguration in die Seite einsetzen ----------------------------------------------------------
@@ -288,6 +292,8 @@
       try { localStorage.setItem("sm-karte-farbig", colored ? "1" : "0"); } catch (e) { /* nicht speicherbar */ }
       setBase();
     }, () => colored))().addTo(map);
+    planOn = new URLSearchParams(location.search).get("plaene") === "1";
+    new (button("map-plans", "Bauleitplanung", () => { planOn = !planOn; drawPlans(); syncUrl(); }, () => planOn))().addTo(map);
     new (button("map-whole", `Ganz ${cfg.stadt.name} ansehen`, () => map.fitBounds(cityBounds(), mapPadding())))().addTo(map);
     // mobil: die Schaltflächen unten rechts hinter „Kartenoptionen“, damit sie die Karte nicht verdecken
     const MapMenu = L.Control.extend({
@@ -362,8 +368,52 @@
     const rows = [[color("hoch"), "Ort gesichert (Gremium des Ortsteils oder eindeutiger Plan)"], [color("mittel"), "Ort erschlossen (Name im Titel)"], [color("niedrig"), "Ort unsicher (mehrdeutig oder Sprachmodell)"]];
     legendEl.innerHTML = `<summary>Legende: Sicherheit des Orts</summary><ul>${rows
       .map(([c, t]) => `<li><span class="swatch" style="background:${c}" aria-hidden="true"></span>${esc(t)}</li>`).join("")}</ul>
-      <p class="hint">Vorgänge, die nur einem Ortsteil zugeordnet sind, stehen in der Liste, nicht als Punkt.</p>`;
+      <p class="hint">Vorgänge, die nur einem Ortsteil zugeordnet sind, stehen in der Liste, nicht als Punkt.</p>
+      ${planOn ? `<ul><li><span class="swatch swatch-plan" aria-hidden="true"></span>Geltungsbereich eines Bebauungsplans</li>
+        <li><span class="swatch swatch-fplan" aria-hidden="true"></span>Änderung des Flächennutzungsplans</li></ul>
+        <p class="hint">${esc(cfg.bauleitplanung.attribution)}. Nicht rechtsverbindlich.</p>` : ""}`;
   }
+  // Kartenebene Bauleitplanung: erst beim Einschalten geladen; Hinweis zur Nutzung in Legende und Namensnennung
+  const loadPlans = () => (planData ||= fetch(PLAENE_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  const planStyle = (f) => ({ color: f.properties.art === "fplan" ? color("niedrig") : color("accent-ink"), weight: 1.5,
+    dashArray: f.properties.art === "fplan" ? "5 4" : null, fillColor: f.properties.art === "fplan" ? color("niedrig") : color("accent"), fillOpacity: 0.1 });
+  async function drawPlans() {
+    if (legendEl) drawLegend();
+    if (!planOn) { if (planLayer) { planLayer.remove(); planLayer = null; } return; }
+    const d = await loadPlans();
+    if (!planOn || planLayer || !d) return;
+    planLayer = L.geoJSON(d, {
+      style: planStyle, attribution: esc(d.attribution),
+      onEachFeature: (f, layer) => layer.bindTooltip(`${esc(planName(f.properties))}${f.properties.gueltig_ab ? `<br>rechtskräftig seit ${fmtDate(f.properties.gueltig_ab)}` : ""}`, { sticky: true })
+        .on("click", () => showPlan(f.properties.key)),
+    }).addTo(map);
+    planLayer.bringToBack();
+    if (legendEl) drawLegend();
+  }
+  const planName = (p) => `${p.art === "fplan" ? "" : "Bebauungsplan "}${p.titel}`;
+  async function showPlan(key) {
+    const d = await loadPlans();
+    const f = d && d.features.find((x) => x.properties.key === key);
+    if (!f) return;
+    selected = null;
+    planShown = key;
+    highlight();
+    const list = all.filter((v) => (v.plans || []).some((p) => p.key === key));
+    const docs = (f.properties.dokumente || []).map((u) => link(u, esc(decodeURIComponent(u.split("/").pop())))).filter(Boolean);
+    $("#detail-heading").textContent = f.properties.art === "fplan" ? "Flächennutzungsplan" : "Bebauungsplan";
+    $("#detail").innerHTML = `<h3 tabindex="-1">${esc(planName(f.properties))}</h3>
+      <dl class="facts">${f.properties.gueltig_ab ? `<dt>Rechtskräftig seit</dt><dd>${fmtDate(f.properties.gueltig_ab)}</dd>` : ""}
+        ${f.properties.nr ? `<dt>Plannummer</dt><dd>${esc(f.properties.nr)}${f.properties.aenderung ? `, ${f.properties.aenderung}. Änderung` : ""}</dd>` : ""}</dl>
+      ${docs.length ? `<h4>Plandokumente der Stadt</h4><ul class="related">${docs.map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
+      <h4>Vorgänge mit dieser Plannummer (${list.length})</h4>
+      ${list.length ? `<ul class="related">${list.map((v) => `<li><button type="button" class="link-btn" data-open-ref="${esc(v.reference)}">${esc(v.name)}</button> · ${fmtDate(v.date)}</li>`).join("")}</ul>`
+        : "<p>Kein Tagesordnungspunkt seit Juli 2024 nennt diesen Plan.</p>"}
+      <p class="hint">${esc(cfg.bauleitplanung.attribution)}. Nicht rechtsverbindlich; maßgeblich sind die Unterlagen der Stadt.</p>`;
+    if (MOBILE.matches || $("#panel-detail").hidden) setPanel("panel-detail", true);
+    $("#detail").scrollTop = 0;
+    syncUrl();
+  }
+
   function drawMarkers(list) {
     if (legendEl) drawLegend();
     cluster.clearLayers();
@@ -475,6 +525,7 @@
   }
   function select(p, fromMap) {
     selected = p;
+    planShown = null;
     document.querySelectorAll(".papers button[data-ref]").forEach((b) => b.setAttribute("aria-current", String(b.dataset.ref === p.reference)));
     syncUrl();
     if (tl) tl.select(p);
@@ -503,6 +554,10 @@
       <ol class="steps">${p.process.map(stepHtml).join("")}</ol>
       ${legend()}
       <h4>Ortsbezug</h4><ul class="locs">${locs}</ul>
+      ${(p.plans || []).length ? `<h4>Bauleitplanung</h4><ul class="locs">${p.plans.map((x) => `<li><button type="button" class="link-btn" data-open-plan="${esc(x.key)}">${esc(x.titel)}</button>
+        <br><span class="meta">${esc(x.treffer)} · Fundstelle: „${esc(x.evidence)}“</span></li>`).join("")}</ul>
+        <p class="hint">${esc(cfg.bauleitplanung.attribution)}.</p>` : ""}
+      ${(p.bezuege || []).length ? `<p class="hint">Im Titel genannt: ${p.bezuege.map(esc).join(", ")} <span class="derived">Verweis, nicht verknüpft</span></p>` : ""}
       <p class="links">${link(reportLink(p), "Verortung falsch? Hinweis geben", "btn btn-secondary")}</p>
       <details class="acc"><summary>Quellen dieses Vorgangs</summary><ul>
         ${p.process.map((s) => `<li>${link(s.pdf, `Bekanntmachung Nr. ${esc(s.bekanntmachung)}`) || esc(s.bekanntmachung)} · ${esc(s.gremium)}, ${fmtDate(s.date)}, TOP ${esc(s.top)}</li>`).join("")}
@@ -521,6 +576,10 @@
     }
   }
   $("#detail").addEventListener("click", (e) => {
+    const pl = e.target.closest("[data-open-plan]");
+    if (pl) { if (!planOn) { planOn = true; document.querySelector(".map-plans")?.setAttribute("aria-pressed", "true"); drawPlans(); } showPlan(pl.dataset.openPlan); return; }
+    const r = e.target.closest("[data-open-ref]");
+    if (r) { const v = all.find((x) => x.reference === r.dataset.openRef); if (v) { if (!papers.includes(v)) loadArea(DEFAULT_AREA, true); select(v); } return; }
     const b = e.target.closest(".jump");
     if (b && tl) { if ($("#timeline-wrap").hidden) setPanel("timeline-wrap", true); tl.center(b.dataset.date); }
   });
@@ -540,7 +599,7 @@
       month = m.date.slice(0, 7);
       const ps = onAgenda(m);
       return `${head}<div class="meeting">
-        <div class="meeting-head"><span class="meeting-date">${fmtDay(m.date)}${m.time ? `, ${esc(m.time)} Uhr` : ""}</span>
+        <div class="meeting-head"><span class="meeting-date">${(m.termine || [{ date: m.date, time: m.time }]).map((t) => `${fmtDay(t.date)}${t.time ? `, ${esc(t.time)} Uhr` : ""}`).join(" und ")}</span>
           <strong>${esc(m.gremium)}</strong>${m.oeffentlich === false ? ' <span class="badge">nicht öffentlich</span>' : ""}</div>
         <div class="meta">${esc(m.ort || "")}${m.ort ? " · " : ""}${link(m.pdf, "Einladung (PDF)") || "Einladung"}</div>
         ${ps.length ? `<div class="agenda"><span>Auf der Tagesordnung${area.kind === "ortsteil" ? ` (${esc(area.name)})` : ""}:</span><ul>${ps.map((p) => `<li><button type="button" class="linkish" data-ref="${esc(p.reference)}">${esc(p.name)}</button></li>`).join("")}</ul></div>` : ""}
@@ -612,7 +671,7 @@
     }
     const ids = new Map(cfg.gremien.map((g) => [g.name, g.id]));
     return { months, categories: Object.keys(vorlage), density: { vorlage, sitzung },
-      meetings: (data.sitzungen || []).map((m) => ({ date: m.date, gremium: m.gremium, gremium_id: ids.get(m.gremium) })),
+      meetings: (data.sitzungen || []).map((m) => ({ date: m.date, gremium: m.gremium, gremium_id: m.gremium_id || ids.get(m.gremium) })),
       terms: cfg.wahlperioden, dataStart: `${start}-01`, dataStand };
   }
 
@@ -625,6 +684,8 @@
     else for (const k of ["von", "bis", "zoom", "achse"]) url.searchParams.delete(k);
     const g = $("#f-gremium").value;
     if (g) url.searchParams.set("gremium", g); else url.searchParams.delete("gremium");
+    if (planOn) url.searchParams.set("plaene", "1"); else url.searchParams.delete("plaene");
+    if (!selected && planShown) url.searchParams.set("plan", planShown); else url.searchParams.delete("plan");
     url.hash = selected ? encodeURIComponent(selected.reference) : "";
     history.replaceState(null, "", url);
   }
@@ -647,7 +708,7 @@
     if (all.length) {
       zeit = buildZeit();
       tl = Timeline.create($("#timeline-wrap"), {
-        rows: cfg.zeitleiste_gremien.map((id) => { const g = cfg.gremien.find((x) => x.id === id); return { id, label: g ? g.kurz : id }; }),
+        rows: cfg.zeitleiste_gremien.map((r) => ({ id: r.label, ids: r.ids, label: r.label })),
         limits: ["Sitzungen vor dem Beginn des Datenbestands (Einladungen erst ab Juli 2024 veröffentlicht).", "Beschlussergebnisse: Sie sind in den Bekanntmachungen nicht enthalten.", "Nichtöffentliche Beratungen."],
         unit: "Vorgänge",
         onRange(a, b) { range = [a, b]; shown = LIST_STEP; render(); syncUrl(); },
@@ -694,8 +755,9 @@
       range = [von, bis];
       render();
     }
+    if (planOn) drawPlans();
     const initial = papers.find((p) => p.reference === ref);
-    if (initial) select(initial); else showIntro();
+    if (initial) select(initial); else if (params.get("plan")) await showPlan(params.get("plan")); else showIntro();
     syncUrl();
   }
 

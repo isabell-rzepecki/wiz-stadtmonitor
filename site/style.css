@@ -492,3 +492,6 @@ html { font-synthesis: none; }
 .toggle[hidden], .intro-actions .btn[hidden] { display: none; }
 .intro .intro-lead { font: 400 20px/1.35 var(--font-display); margin: 2px 0 14px; }
 .intro .intro-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.map-legend .swatch-plan { border-radius: 2px; background: rgba(244, 114, 107, 0.25); border: 1.5px solid var(--accent-ink); box-shadow: none; }
+.map-legend .swatch-fplan { border-radius: 2px; background: rgba(74, 90, 138, 0.2); border: 1.5px dashed var(--niedrig); box-shadow: none; }
+.map-legend .hint { max-width: 240px; }

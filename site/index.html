@@ -107,7 +107,11 @@
         <a class="card" href="data/export/vorgaenge.json" download>
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></span>
           <span class="card-title">Vorgänge (JSON)</span>
-          <span class="card-text">Sitzungen, Tagesordnungspunkte und Ortsbezüge mit Fundstelle.</span></a>
+          <span class="card-text">Sitzungen, Tagesordnungspunkte und Ortsbezüge mit Fundstelle (ohne Flächen der Bauleitplanung).</span></a>
+        <a class="card" href="data/export/stadtmonitor-daten.zip" download>
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></span>
+          <span class="card-title">Datenpaket (Zip)</span>
+          <span class="card-text">Vorgänge, Audit-Protokolle (TSV), Quellenregister und Lizenzen.</span></a>
         <a class="card" data-cfg-href="stadt.bekanntmachungen" href="#" target="_blank" rel="noopener">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg></span>
           <span class="card-title">Amtliche Bekanntmachungen</span>
@@ -116,7 +120,7 @@
       <details class="acc" id="sources">
         <summary>Quellen, Lizenzen und Datenstand</summary>
         <div>
-          <p>Einladungen aus den amtlichen Bekanntmachungen der Stadt (PDF; Tagesordnungen als amtliche Werke, Prüfung offen) · Kartenhintergrund © basemap.de / BKG (CC BY 4.0), Datenquellen © GeoBasis-DE. Abgeleitete Angaben sind gekennzeichnet.</p>
+          <p>Einladungen aus den amtlichen Bekanntmachungen der Stadt (PDF; Tagesordnungen als amtliche Werke, Prüfung offen) · Kartenhintergrund © basemap.de / BKG (CC BY 4.0), Datenquellen © GeoBasis-DE · <span data-cfg="bauleitplanung.attribution"></span> (nur als Kartenebene, nicht im Datenpaket). Abgeleitete Angaben sind gekennzeichnet.</p>
           <p id="stand"></p>
           <p><a href="data/LICENSE-DATA.md">Lizenzen der Daten</a> · <a data-cfg-href="projekt.repo" href="#">Quellcode</a> · <a href="datenschutz.html">Datenschutz</a></p>
         </div>
