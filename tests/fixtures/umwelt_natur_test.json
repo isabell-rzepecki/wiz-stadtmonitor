@@ -1,0 +1,5 @@
+{"type":"FeatureCollection","attribution":"Darstellung auf der Grundlage von Daten des Hessischen Ministeriums für Landwirtschaft und Umwelt, Weinbau, Forsten, Jagd und Heimat (HMLU); Naturparke: Landesbetrieb HessenForst","hinweis":"Nicht rechtsverbindlich; maßgeblich sind die Verordnungen und Karten der zuständigen Behörden.","_hinweis":"Erfundene Testflächen für den Browsertest, keine Daten des Landes.",
+ "features":[{"type":"Feature","properties":{"ebene":"nsg","name":"Testgebiet (keine Landesdaten)","vo_gueltig":"2000-01-01"},
+  "geometry":{"type":"Polygon","coordinates":[[[9.83,51.33],[9.85,51.33],[9.85,51.34],[9.83,51.34],[9.83,51.33]]]}},
+  {"type":"Feature","properties":{"ebene":"lsg","name":"Testlandschaft (keine Landesdaten)"},
+  "geometry":{"type":"Polygon","coordinates":[[[9.86,51.33],[9.88,51.33],[9.88,51.34],[9.86,51.34],[9.86,51.33]]]}}]}

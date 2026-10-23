@@ -14,6 +14,8 @@ cp tests/fixtures/vorgaenge.json "$TMP/test/data/export/vorgaenge.json"
 # Ortsbezirksflächen (Gemarkungen, HVBG, dl-de/zero-2.0; im Repository)
 cp data/geo/dl-de-zero/ortsbezirke.geojson "$TMP/test/data/export/flaechen.json"
 mkdir -p "$TMP/test/data/export/karte" && cp tests/fixtures/bauleitplanung_test.json "$TMP/test/data/export/karte/bauleitplanung.json"
+# Umweltebene Schutzgebiete Natur: erfundene Testflächen
+cp tests/fixtures/umwelt_natur_test.json "$TMP/test/data/export/karte/umwelt_natur.json"
 python3 -m http.server 8765 --bind 127.0.0.1 --directory "$TMP/leer" >/dev/null 2>&1 &
 python3 -m http.server 8766 --bind 127.0.0.1 --directory "$TMP/test" >/dev/null 2>&1 &
 sleep 1

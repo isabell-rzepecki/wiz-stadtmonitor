@@ -58,6 +58,7 @@ test("Gebiet aus dem Link: Vorgang mit zwei Stationen, Ergebnis als Lücke, ohne
   assert.equal(await page.locator("#detail .steps li").count(), 2, "HFR und StVV");
   assert.equal(await page.locator("#detail .blackbox").count(), 2, "je Station „Ergebnis nicht veröffentlicht“");
   assert.match(await page.locator("#detail").textContent(), /Stufe B/);
+  assert.match(await page.locator("#detail").textContent(), /Räumliche Überschneidung.*kein inhaltlicher Bezug/s);
   assert.ok(page.url().endsWith("#STV%2F066%2F2026"), page.url());
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
@@ -122,9 +123,10 @@ test("Zeitleiste und Kennzahlen, ohne Verstöße", async () => {
   await page.close();
 });
 
-test("Dunkelmodus: Vorgang ohne Verstöße", async () => {
+test("Systemeinstellung dunkel: Seite bleibt hell, Vorgang ohne Verstöße", async () => {
   const page = await open(SITE, "#STV%2F066%2F2026", { dark: true });
   await page.waitForFunction(() => document.querySelector("#detail-heading").textContent === "Vorgang");
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).color), "rgb(26, 26, 26)");
   assert.deepEqual(await axe(page), []);
   await page.locator('.toggle[data-panel="panel-list"]').click();
   assert.deepEqual(await axe(page), []);
@@ -140,6 +142,23 @@ test("Kartenebene Bauleitplanung: Nutzungshinweis in Legende und Namensnennung, 
   assert.match(await page.locator(".leaflet-control-attribution").textContent(), /Magistrat der Stadt Witzenhausen/);
   assert.match(page.url(), /plaene=1/);
   assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+test("Umweltebenen: zuschaltbar, Legende mit Hinweis und Quelle, Zustand im Link, ohne Verstöße", async () => {
+  const page = await open(SITE);
+  await page.locator(".map-layers summary").click();
+  await page.getByLabel("Schutzgebiete Natur").check();
+  await page.waitForFunction(() => document.querySelectorAll(".leaflet-overlay-pane path").length >= 2);
+  const legende = await page.locator(".map-legend").textContent();
+  assert.match(legende, /Naturschutzgebiet/);
+  assert.match(legende, /Nicht rechtsverbindlich/);
+  assert.match(legende, /HMLU/);
+  assert.match(await page.locator(".leaflet-control-attribution").textContent(), /Schutzgebiete: HMLU/);
+  assert.match(page.url(), /ebenen=natur/);
+  assert.deepEqual(await axe(page), []);
+  await page.getByLabel("Hochwasser").check();  // ohne Datei: keine Fläche, kein Fehler
   assert.deepEqual(page.errors, []);
   await page.close();
 });

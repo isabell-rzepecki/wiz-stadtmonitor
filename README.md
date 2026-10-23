@@ -2,7 +2,7 @@
 
 Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in drei Dimensionen: **räumlich** (Karte und Liste nach Ortsbezirk), **zeitlich** (Sitzungskalender, Zeitleiste, Prozesslinie über die Vorlagennummer) und **nach Gremien**. Jede Angabe ist auf ein Quelldokument rückführbar.
 
-**Stand: Phase 2 (Datenpipeline).** Die Pipeline ruft täglich alle Einladungen ab, liest Kopf und Tagesordnung, fasst TOPs über die Vorlagennummer zu Vorgängen zusammen und verortet nach Stufe A (Ortsbeirat → Ortsteil) sowie über Plannummern der Bauleitplanung. Straßen und Flurstücke (Stufe B) folgen mit den Gemarkungsflächen in Phase 3.
+**Stand: Phase 2 (Datenpipeline).** Die Pipeline ruft täglich alle Einladungen ab, liest Kopf und Tagesordnung, fasst TOPs über die Vorlagennummer zu Vorgängen zusammen und verortet nach Stufe A (Ortsbeirat → Ortsteil) sowie über Plannummern der Bauleitplanung. Stufe B gleicht die Titel mit Straßen- und Lagenamen (Hauskoordinaten und Lagebezeichnungen der HVBG), Gemarkungen, Ortsteilnamen und Flurstücksangaben ab.
 
 ## Quellen und Grenzen
 
@@ -19,13 +19,25 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - **Ergebnisse:** Beschlüsse, Niederschriften und Vorlagentexte stehen nicht in den Bekanntmachungen. Die Prozesslinie zeigt je Station „Ergebnis nicht veröffentlicht“.
 - **Nichtöffentliche Sitzungen** erscheinen ohne Tagesordnung.
 - **Ortsbezirke:** Die Flächen sind aus den 17 Gemarkungen abgeleitet (HVBG, dl-de/zero-2.0, `data/geo/dl-de-zero/ortsbezirke.geojson`). Die Gleichsetzung Gemarkung = Ortsbezirk ist plausibel, aber noch nicht mit § 6 der Hauptsatzung abgeglichen; Bischhausen und Hübenthal sind offen (Issue #3).
+- **Stufe B:** Straßennamen, die in mehreren Ortsteilen vorkommen, werden nur über das beratende Gremium, einen genannten Ortsteil, eine Gemarkung oder eine weitere eindeutige Straße im Titel eingegrenzt; sonst bleiben sie ohne Ort und stehen im Audit `verortung_stufe_b.tsv` als „mehrdeutig“. Hausnummern werden nicht ausgewertet.
 - **Verortung:** Stufe A ordnet den Ortsbezug des Gremiums zu, nicht zwingend den des Gegenstands. Plan-Abgleiche, deren Änderung noch nicht im Datensatz der Stadt steht, zeigen auf den Ursprungsplan und sind als „mittel“ gekennzeichnet.
 - **Bauleitplanung (Bebauungspläne, Flächennutzungsplan):**
   - Die Umringe der Stadt stehen unter der Nutzungsbedingung „Die Nutzung ohne vertragliche Vereinbarung mit der Stadt Witzenhausen ist nur für nicht kommerzielle Zwecke erlaubt.“ Eine gesonderte Freigabe gibt es nicht.
   - Der Stadtmonitor nutzt sie deshalb nur im Build. Die Rohgeometrien liegen in `data/geo/restricted/`; der Ordner ist von der Versionierung ausgeschlossen.
   - Ausgeliefert werden sie nur als Kartenebene mit dem Hinweis „Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke“. Es gibt keinen GeoJSON-Export, keinen Download in der Oberfläche und keine Flächen im Datenpaket.
   - Im Repository und im Datenpaket bleibt nur die Zuordnung Vorgang → Plannummer (`audit/verortung_bauleitplanung.tsv`). Sie enthält keine Geometrie der Stadt.
-- **Quellen:** Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv).
+- **Umweltebenen (Hochwasser, Wasserschutz, Schutzgebiete):**
+  - Zuschaltbare Kartenebenen aus den INSPIRE-Diensten des Landes (HLNUG, CC BY 4.0; HMLU, frei nutzbar ohne Weiterveräußerung), zugeschnitten auf das Stadtgebiet. Sie sind nicht rechtsverbindlich.
+  - Eine „räumliche Überschneidung“ wird nur für Flurstückspunkte und Geltungsbereiche von Plänen (mindestens 1 % der Fläche) angegeben, nicht für Straßen oder Ortsteile. Sie sagt nichts über den Inhalt eines Vorgangs aus (`audit/ueberschneidung_umwelt.tsv`).
+  - Der Naturpark umfasst das ganze Stadtgebiet und wird daher nicht als Überschneidung ausgewiesen.
+- **Wohnen und Boden (geplant, Arbeitspaket D):**
+  - Es gibt keinen Mietspiegel für Witzenhausen, also keine ortsübliche Vergleichsmiete. Angebotsmieten privater Portale werden nicht übernommen.
+  - Mietwerte stammen nur aus dem Zensus 2022 (Bestandsmiete, Stichtag 15.05.2022).
+  - Bodenrichtwerte werden stets mit ihrem Stichtag ausgewiesen (2024; 2026 nach Prüfung des neuen Dienstes, Issue #4).
+  - Werte je Ortsbezirk aus Gitterzellen sind Näherungen: Die Zellen werden über ihren Mittelpunkt einer Gemarkung zugeordnet, und geheim gehaltene Zellen zählen nicht als null.
+- **Quellen:**
+  - Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv), lesbar in [`DATA_SOURCES.md`](DATA_SOURCES.md), erzeugt mit `python tools/datenquellen.py`.
+  - Die Namensnennungen auf der Seite kommen aus [`data/attribution.tsv`](data/attribution.tsv), nur für die tatsächlich genutzten Quellen.
 
 ## Aktualisierung
 
@@ -59,7 +71,8 @@ mietmonitor/        Früherer Inhalt des Repositorys (Mietdaten-Erfassung), unve
 
 ```
 python3 -m unittest discover -s tests -t .     # Konfiguration, Kontrast, Zusammenstellen
-python3 tools/kontrast.py                       # Kontraste hell und dunkel
+python3 tools/kontrast.py                       # Kontraste der Farbwerte (nur heller Modus)
+python3 tools/kontrast_karte.py                 # Nicht-Text-Kontrast der Kartengrafik (Pillow nötig)
 npm install --prefix tests/browser && bash tests/browser/run.sh   # Browser und Barrierefreiheit
 ```
 

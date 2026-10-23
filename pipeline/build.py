@@ -8,13 +8,15 @@
 - Ortsbezug Stufe A: Ortsbeirat bzw. Stadtteilbeirat X → Ortsteil X (Ortsbezug des Gremiums).
 - Ortsbezug Stufe B, Plan-Abgleich: „Bebauungsplan Nr. N Gemarkung G“ bzw. „N. Änderung des Flächennutzungsplanes“
   im Titel → Geltungsbereich der Stadt. Ergebnis ist die Plannummer; die Lage auf der Karte ist ein Punkt im
-  Geltungsbereich. Stufe B für Straßen und Flurstücke folgt mit Arbeitspaket B.
+  Geltungsbereich. Stufe B für Straßen, Gemarkungen und Flurstücke: siehe verortung.py.
+- Räumliche Überschneidung mit Umweltebenen (umwelt.py): nur für Flurstückspunkte und Geltungsbereiche von Plänen,
+  ohne inhaltliche Aussage; im Export nur Name und Ebene, keine Geometrie.
 """
 import json
 import re
 from datetime import datetime, timezone
 
-from . import audit, bauleitplanung, config, fetch, geo, parse
+from . import audit, bauleitplanung, config, fetch, geo, parse, umwelt, verortung
 
 VERFAHREN = re.compile(
     r"^(Eröffnung|Begrüßung|Feststellung (der|des)|Genehmigung (der|des) (Tagesordnung|Niederschrift|Protokoll)|"
@@ -31,6 +33,9 @@ GLIEDERUNG = re.compile(r"^(Anträge|Anfragen|Grundstücksangelegenheiten|Über-
                         r"Darlehensangelegenheiten|Personalangelegenheiten|Mitteilungen|Berichte)$", re.I)
 BPLAN = re.compile(r"(?:(\d+)\.\s*Änderung\s+(?:und\s+Erweiterung\s+)?des\s+)?Bebauungsplan(?:es|s)?\s+Nr\.\s*(\d+)"
                    r"(?:\s*,?\s*Gemarkung\s+([A-ZÄÖÜ][\wäöüß-]+))?")
+DETAIL = {"gremium_ortsbeirat": "A-gremium", "gremium_stadtteilbeirat": "A-gremium", "strasse": "B-strasse",
+          "strasse+ortsteil": "B-strasse", "gemarkung": "B-gemarkung", "flurstueck": "B-flurstueck", "ortsteil_name": "B-ortsteil",
+          "bebauungsplan": "B-bplan", "flaechennutzungsplan": "B-fplan"}
 FPLAN = re.compile(r"(\d+)\.\s*Änderung\s+des\s+Flächennutzungsplan(?:es|s)?")
 
 
@@ -88,6 +93,8 @@ def build():
     medien = json.loads(fetch.MEDIEN.read_text(encoding="utf-8"))
     plaene = bauleitplanung.plaene()
     flaechen = geo.Ortsteile() if config.ORTSBEZIRKE.exists() else None
+    verz = verortung.Verzeichnis()
+    umweltflaechen = umwelt.flaechen() if config.ORTSBEZIRKE.exists() else []
     sitzungen, tops, fehler = {}, [], []
     for m in medien["medien"]:
         name = fetch.dateiname(m["source_url"])
@@ -118,7 +125,7 @@ def build():
     for t in tops:
         key = t["vorlage"] or f"{t['sitzung']}-TOP{t['top']}"
         gruppen.setdefault(key, []).append(t)
-    vorgaenge, plan_audit = [], []
+    vorgaenge, plan_audit, b_audit, u_audit = [], [], [], []
     for key, ts in gruppen.items():
         ts.sort(key=lambda t: (sitzungen[t["sitzung"]]["date"], [int(x) for x in t["top"].split(".")]))
         process = []
@@ -150,11 +157,35 @@ def build():
                                       "confidence": "hoch" if treffer == "eindeutig" else "mittel",
                                       "evidence": v["evidence"], "plan": p["key"], "lon": round(pt.x, 6), "lat": round(pt.y, 6),
                                       "source_pdf": sitzungen[t["sitzung"]]["pdf"]})
+        # Stufe B aus den Titeln (nicht für Verfahrenspunkte)
+        for t in ts:
+            if t["verfahrenspunkt"]:
+                continue
+            s = sitzungen[t["sitzung"]]
+            locs_b, aud = verortung.stufe_b(t["titel"], s, verz, s["pdf"])
+            for l in locs_b:
+                if not any(x["level"] == l["level"] and x["name"] == l["name"] for x in locations):
+                    locations.append(l)
+            b_audit += [{"vorgang": key, "sitzung": t["sitzung"], "top": t["top"], "titel": t["titel"], **a} for a in aud]
+        # räumliche Überschneidung mit Umweltebenen: Flurstückspunkte und Geltungsbereiche, nicht Straßen oder Ortsteile
+        overlaps = []
+        for l in locations:
+            if l["level"] == "flurstueck":
+                treffer = umwelt.ueberschneidungen(umweltflaechen, punkt=(l["lon"], l["lat"]))
+            elif l["level"] == "bebauungsplan":
+                p = next((x for x in plaene if x["key"] == l["plan"]), None)
+                treffer = umwelt.ueberschneidungen(umweltflaechen, flaeche=p["geometry"]) if p else []
+            else:
+                continue
+            overlaps += [{**u, "ort": l["name"]} for u in treffer]
+            u_audit += [{"vorgang": key, "ort": l["name"], "ort_ebene": l["level"], "ebene": u["ebene"], "flaeche": u.get("name", ""),
+                         "zone": u.get("zone", "")} for u in treffer]
         first = ts[0]
         vorgaenge.append({"reference": key, "vorlage": first["vorlage"], "name": first["titel"], "date": process[0]["date"],
                           "verfahrenspunkt": all(t["verfahrenspunkt"] for t in ts),
                           "bezuege": sorted({b for t in ts for b in t["bezuege"]}),
-                          "process": process, "locations": locations, "plans": verweise})
+                          "process": process, "locations": locations, "plans": verweise,
+                          **({"overlaps": overlaps} if overlaps else {})})
     vorgaenge.sort(key=lambda v: (v["date"], v["reference"]), reverse=True)
     stand = datetime.now(timezone.utc).isoformat(timespec="seconds")
     daten = {"meta": {"generated_at": stand, "data_start": config.STADT["quelle"]["datenbeginn"],
@@ -163,7 +194,9 @@ def build():
                       "source": config.SOURCES["bekanntmachungen"]["url"], "retrieved": medien["abruf"],
                       "sources": [{"name": "Amtliche Bekanntmachungen (Einladungen)", "license": config.SOURCES["bekanntmachungen"]["license"],
                                    "retrieved_at": medien["abruf"]},
-                                  {"name": "Bauleitplanung (Plannummer und Lage im Geltungsbereich)", "license": config.STADT["bauleitplanung"]["nutzung"]}],
+                                  {"name": "Bauleitplanung (Plannummer und Lage im Geltungsbereich)", "license": config.STADT["bauleitplanung"]["nutzung"]},
+                                  *[{"name": f"{g['titel']} (räumliche Überschneidung)", "license": g["attribution"]}
+                                    for g in config.STADT["umwelt"]["gruppen"]]],
                       "parserfehler": len(fehler), "einladungen": len(medien["medien"])},
              "sitzungen": sorted(sitzungen.values(), key=lambda s: s["date"]), "vorgaenge": vorgaenge}
     config.EXPORT.mkdir(parents=True, exist_ok=True)
@@ -171,8 +204,12 @@ def build():
     n_karte = bauleitplanung.karte(plaene)
 
     audit.tabelle("parserfehler.tsv", ["datei", "fehler", "url"], fehler)
+    audit.tabelle("verortung_stufe_b.tsv", ["vorgang", "sitzung", "top", "titel", "methode_detail", "mehrdeutig", "treffer",
+                                            "ortsteil", "konfidenz", "fundstelle"], b_audit)
+    audit.tabelle("ueberschneidung_umwelt.tsv", ["vorgang", "ort", "ort_ebene", "ebene", "flaeche", "zone"], u_audit)
     audit.tabelle("verortung_bauleitplanung.tsv", ["vorgang", "sitzung", "top", "art", "nr", "aenderung", "gemarkung_nr",
                                                    "treffer", "plan_key", "plan_titel", "fundstelle"], plan_audit)
+    mehrdeutig = {(a["vorgang"], a["sitzung"], a["top"]) for a in b_audit if a["mehrdeutig"] == "ja"}
     zeilen = []
     for v in vorgaenge:
         for s in v["process"]:
@@ -183,9 +220,13 @@ def build():
                            "stufe": "/".join(sorted({l["stage"] for l in ls})) or "-",
                            "treffer": "; ".join(l["name"] for l in ls), "konfidenz": "; ".join(l["confidence"] for l in ls),
                            "methode": "; ".join(l["method"] for l in ls), "fundstelle": "; ".join(l["evidence"] for l in ls),
+                           "methode_detail": "; ".join(DETAIL.get(l["method"], l["method"]) for l in ls),
+                           "mehrdeutig": "ja" if (v["reference"], s["sitzung"], s["top"]) in mehrdeutig else "nein",
                            "quelle_pdf": s["pdf"], "pruefstatus": "ungeprüft"})
     audit.tabelle("tops.tsv", ["bekanntmachung", "gremium", "datum", "top", "titel", "vorlage", "vorgang", "verfahrenspunkt",
-                               "stufe", "treffer", "konfidenz", "methode", "fundstelle", "quelle_pdf", "pruefstatus"], zeilen)
+                               "stufe", "treffer", "konfidenz", "methode", "methode_detail", "mehrdeutig", "fundstelle",
+                               "quelle_pdf", "pruefstatus"], zeilen)
     print(f"{len(sitzungen)} Sitzungen, {len(tops)} TOPs, {len(vorgaenge)} Vorgänge, {len(fehler)} Parserfehler, "
-          f"{len(plan_audit)} Planverweise, {n_karte} Flächen der Bauleitplanung")
+          f"{len(plan_audit)} Planverweise, {n_karte} Flächen der Bauleitplanung, "
+          f"{sum(1 for v in vorgaenge if v.get('overlaps'))} Vorgänge mit räumlicher Überschneidung")
     return daten

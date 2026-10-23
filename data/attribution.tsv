@@ -1,0 +1,12 @@
+quellen	lizenz	text	link	auf_seite
+wp_media	amtliche Werke (Bestätigung ausstehend)	Quelle: Amtliche Bekanntmachungen der Stadt Witzenhausen, witzenhausen.eu	https://www.witzenhausen.eu/amtliche-bekanntmachungen/	ja
+vg_shp,hako_lage	dl-de/zero-2.0	Geobasisdaten: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG), dl-de/zero-2.0 (freiwillig)	https://www.govdata.de/dl-de/zero-2-0	ja
+basemap	CC BY 4.0	© basemap.de / BKG (Jahr) – Datenquellen: © GeoBasis-DE	https://basemap.de	ja
+bplan,fplan	nur nicht kommerziell	Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke		ja
+boris,boris2026_feed	dl-de/zero-2.0	Bodenrichtwerte: Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH, Stichtag angeben		nein
+uesg,tws	CC BY 4.0	Darstellung auf der Grundlage von Daten des Hessischen Landesamtes für Naturschutz, Umwelt und Geologie (HLNUG)	https://creativecommons.org/licenses/by/4.0/deed.de	ja
+schutzgeb	frei nutzbar, keine Weiterveräußerung	Darstellung auf der Grundlage von Daten des Hessischen Ministeriums für Landwirtschaft und Umwelt, Weinbau, Forsten, Jagd und Heimat (HMLU); Naturparke: Landesbetrieb HessenForst		ja
+zensus_gem,zensus_gitter,zensus_miete_gitter,zensus_eigentum_gitter,zensus_leerstand_gitter	dl-de/by-2.0	© Statistische Ämter des Bundes und der Länder, (Jahr), dl-de/by-2-0	https://www.govdata.de/dl-de/by-2-0	nein
+vg250	dl-de/by-2.0	© BKG (Jahr) dl-de/by-2-0	https://www.bkg.bund.de	nein
+osm	ODbL 1.0	© OpenStreetMap-Mitwirkende, ODbL	https://www.openstreetmap.org/copyright	nein
+wikidata	CC0	Daten: Wikidata (CC0) (freiwillig)	https://www.wikidata.org	nein

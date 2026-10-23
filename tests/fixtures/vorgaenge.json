@@ -20,7 +20,8 @@
         {"sitzung": "166/2026", "bekanntmachung": "166/2026", "gremium": "Haupt-, Finanz-, Rechts-, Digitalisierungs- und Wirtschaftsausschuss", "date": "2026-11-04", "time": "19:00", "ort": "Rathaussaal, Am Markt 1", "top": "6.2", "oeffentlich": true, "result": null, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/166-2026-Einladung-HFR-04-11-2026.pdf"},
         {"sitzung": "167/2026", "bekanntmachung": "167/2026", "gremium": "Stadtverordnetenversammlung", "date": "2026-11-10", "time": "19:00", "ort": "Rathaussaal, Am Markt 1", "top": "13.2", "oeffentlich": true, "result": null, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/167-2026-Einladung-STVV-10-11-2026.pdf"}
       ],
-      "locations": [{"level": "ortsteil", "name": "Gertenbach", "ortsteil": "Gertenbach", "stage": "B", "method": "ortsteil_name", "confidence": "mittel", "evidence": "Mehrzweckhalle Gertenbach", "source_pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/166-2026-Einladung-HFR-04-11-2026.pdf"}]
+      "locations": [{"level": "ortsteil", "name": "Gertenbach", "ortsteil": "Gertenbach", "stage": "B", "method": "ortsteil_name", "confidence": "mittel", "evidence": "Mehrzweckhalle Gertenbach", "source_pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/166-2026-Einladung-HFR-04-11-2026.pdf"}],
+      "overlaps": [{"gruppe": "natur", "ebene": "nsg", "titel": "Naturschutzgebiet", "name": "Testgebiet (keine Landesdaten)", "ort": "Testort (erfunden)"}]
     },
     {
       "reference": "STV/488/2025", "vorlage": "STV/488/2025",

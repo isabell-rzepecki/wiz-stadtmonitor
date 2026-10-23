@@ -8,6 +8,8 @@
   const FLAECHEN_URL = "data/export/flaechen.json";  // Ortsbezirke als Flächen (optional, ab Phase 3)
   // Geltungsbereiche der Bauleitplanung: nur als Kartenebene, Nutzung nur nicht kommerziell (siehe stadt.json)
   const PLAENE_URL = "data/export/karte/bauleitplanung.json";
+  // Umweltebenen (Hochwasser, Wasserschutz, Schutzgebiete Natur) je Gruppe aus stadt.json (umwelt.gruppen)
+  const UMWELT_URL = (id) => `data/export/karte/umwelt_${id}.json`;
   const DEFAULT_AREA = "stadt:alle";
   const RANK = { hoch: 3, mittel: 2, niedrig: 1 };
   const LIST_STEP = 200;
@@ -19,7 +21,7 @@
   const METHOD = {
     gremium_ortsbeirat: "Ortsbeirat des Ortsteils (Ortsbezug des Gremiums, nicht zwingend des Gegenstands)",
     gremium_stadtteilbeirat: "Stadtteilbeirat des Ortsteils (Ortsbezug des Gremiums, nicht zwingend des Gegenstands)",
-    ortsteil_name: "Ortsteilname im Titel", strasse: "Straßenname im Titel", "strasse+ortsteil": "Straßen- und Ortsteilname im Titel",
+    ortsteil_name: "Ortsteilname im Titel", strasse: "Straßen- oder Lagename im Titel, Lage laut Hauskoordinaten und Lagebezeichnungen (HVBG)", "strasse+ortsteil": "Straßenname im Titel, in mehreren Ortsteilen vorhanden; eingegrenzt über Gremium, Ortsteil, Gemarkung oder eine weitere Straße im Titel",
     strasse_mehrdeutig: "Straßenname im Titel, mehrere Lagen", gemarkung: "Gemarkung im Titel",
     flurstueck: "Flurstücksangabe im Titel, Lage laut Liegenschaftskataster", bebauungsplan: "Bebauungsplan im Titel, Geltungsbereich der Stadt",
     objekt_name: "Name eines Gebäudes oder einer Anlage im Titel",
@@ -56,6 +58,7 @@
 
   let cfg = null, data = null, flaechen = null, zeit = null, all = [], papers = [], area = null, selected = null, dataStand = null;
   let planData = null, planLayer = null, planOn = false, planShown = null;
+  const umweltOn = new Set(), umweltData = {}, umweltLayers = {};
   let map, cluster, outline, navLayer = null, markers = new Map(), tl = null, range = null, shown = LIST_STEP, legendEl = null;
 
   // --- Konfiguration in die Seite einsetzen ----------------------------------------------------------
@@ -294,6 +297,28 @@
     }, () => colored))().addTo(map);
     planOn = new URLSearchParams(location.search).get("plaene") === "1";
     new (button("map-plans", "Bauleitplanung", () => { planOn = !planOn; drawPlans(); syncUrl(); }, () => planOn))().addTo(map);
+    if (cfg.umwelt) {
+      const wanted = (new URLSearchParams(location.search).get("ebenen") || "").split(",");
+      for (const g of cfg.umwelt.gruppen) if (wanted.includes(g.id)) umweltOn.add(g.id);
+      const Layers = L.Control.extend({
+        options: { position: "bottomright" },
+        onAdd() {
+          const d = L.DomUtil.create("details", "map-style map-layers");
+          d.innerHTML = `<summary>Umweltebenen</summary><fieldset aria-label="Umweltebenen einblenden">${cfg.umwelt.gruppen.map((g) =>
+            `<label><input type="checkbox" value="${esc(g.id)}"${umweltOn.has(g.id) ? " checked" : ""}> ${esc(g.titel)}</label>`).join("")}</fieldset>`;
+          d.addEventListener("change", (e) => {
+            const id = e.target.value;
+            if (e.target.checked) umweltOn.add(id); else umweltOn.delete(id);
+            drawUmwelt(id);
+            syncUrl();
+          });
+          L.DomEvent.disableClickPropagation(d);
+          L.DomEvent.disableScrollPropagation(d);
+          return d;
+        },
+      });
+      new Layers().addTo(map);
+    }
     new (button("map-whole", `Ganz ${cfg.stadt.name} ansehen`, () => map.fitBounds(cityBounds(), mapPadding())))().addTo(map);
     // mobil: die Schaltflächen unten rechts hinter „Kartenoptionen“, damit sie die Karte nicht verdecken
     const MapMenu = L.Control.extend({
@@ -375,7 +400,38 @@
       ${navLayer ? '<p class="hint">Grenzen: Gemarkungen (HVBG). Die Gleichsetzung mit den Ortsbezirken ist plausibel, aber noch nicht mit § 6 der Hauptsatzung abgeglichen.</p>' : ""}
       ${planOn ? `<ul><li><span class="swatch swatch-plan" aria-hidden="true"></span>Geltungsbereich eines Bebauungsplans</li>
         <li><span class="swatch swatch-fplan" aria-hidden="true"></span>Änderung des Flächennutzungsplans</li></ul>
-        <p class="hint">${esc(cfg.bauleitplanung.attribution)}. Nicht rechtsverbindlich.</p>` : ""}`;
+        <p class="hint">${esc(cfg.bauleitplanung.attribution)}. Nicht rechtsverbindlich.</p>` : ""}
+      ${umweltLegend()}`;
+  }
+  // Umweltebenen: erst beim Einschalten geladen; Flächen ohne Klickziel, nur mit Hinweis beim Überfahren
+  const umweltGruppe = (id) => cfg.umwelt.gruppen.find((g) => g.id === id);
+  const umweltEbene = (g, id) => g.ebenen.find((e) => e.id === id) || { stil: {} };
+  const umweltStyle = (g, e) => ({ color: g.farbe, weight: e.stil.weight || 1.5, opacity: 0.9, dashArray: e.stil.dash || null,
+    fill: Boolean(e.stil.fill), fillColor: g.farbe, fillOpacity: e.stil.fill || 0 });
+  const loadUmwelt = (id) => (umweltData[id] ||= fetch(UMWELT_URL(id)).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  async function drawUmwelt(id) {
+    const g = umweltGruppe(id);
+    if (!g) return;
+    if (!umweltOn.has(id)) { if (umweltLayers[id]) { umweltLayers[id].remove(); delete umweltLayers[id]; } if (legendEl) drawLegend(); return; }
+    const d = await loadUmwelt(id);
+    if (!umweltOn.has(id) || umweltLayers[id] || !d) { if (legendEl) drawLegend(); return; }
+    umweltLayers[id] = L.geoJSON(d, {
+      style: (f) => umweltStyle(g, umweltEbene(g, f.properties.ebene)), attribution: esc(g.attribution_kurz || d.attribution),
+      onEachFeature: (f, layer) => layer.bindTooltip(umweltText(g, f.properties), { sticky: true }),
+    }).addTo(map);
+    umweltLayers[id].bringToBack();
+    if (legendEl) drawLegend();
+  }
+  const umweltText = (g, p) => `<strong>${esc(umweltEbene(g, p.ebene).titel)}</strong>${p.name ? `<br>${esc(p.name)}` : ""}${p.zone ? `, ${esc(p.zone)}` : ""}
+    ${p.status ? `<br>Status: ${esc(p.status)}` : ""}${p.vo_gueltig ? `<br>Verordnung: ${esc(p.vo_gueltig)}` : ""}<br><span class="nav-dim">Nicht rechtsverbindlich</span>`;
+  function umweltLegend() {
+    if (!cfg.umwelt || !umweltOn.size) return "";
+    return cfg.umwelt.gruppen.filter((g) => umweltOn.has(g.id) && umweltData[g.id]).map((g) => {
+      const vorhanden = new Set(((umweltLayers[g.id] && umweltLayers[g.id].toGeoJSON().features) || []).map((f) => f.properties.ebene));
+      const rows = g.ebenen.filter((e) => vorhanden.has(e.id)).map((e) => `<li><span class="swatch swatch-area" aria-hidden="true"
+        style="border-color:${g.farbe};border-style:${e.stil.dash ? (e.stil.dash.startsWith("1 ") || e.stil.dash.startsWith("2 ") ? "dotted" : "dashed") : "solid"};background:${e.stil.fill ? `color-mix(in srgb, ${g.farbe} ${Math.round(e.stil.fill * 100)}%, transparent)` : "transparent"}"></span>${esc(e.titel)}</li>`).join("");
+      return `<p class="legend-group">${esc(g.titel)}</p><ul>${rows || "<li>keine Fläche im Stadtgebiet</li>"}</ul><p class="hint">${esc(g.attribution)}.</p>`;
+    }).join("") + `<p class="hint">${esc(cfg.umwelt.hinweis)}</p>`;
   }
   // Kartenebene Bauleitplanung: erst beim Einschalten geladen; Hinweis zur Nutzung in Legende und Namensnennung
   const loadPlans = () => (planData ||= fetch(PLAENE_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null));
@@ -561,6 +617,9 @@
       ${(p.plans || []).length ? `<h4>Bauleitplanung</h4><ul class="locs">${p.plans.map((x) => `<li><button type="button" class="link-btn" data-open-plan="${esc(x.key)}">${esc(x.titel)}</button>
         <br><span class="meta">${esc(x.treffer)} · Fundstelle: „${esc(x.evidence)}“</span></li>`).join("")}</ul>
         <p class="hint">${esc(cfg.bauleitplanung.attribution)}.</p>` : ""}
+      ${(p.overlaps || []).length && cfg.umwelt ? `<h4>Räumliche Überschneidung</h4><ul class="locs">${p.overlaps.map((u) => `<li>${esc(u.titel)}${u.name ? `: ${esc(u.name)}` : ""}${u.zone ? `, ${esc(u.zone)}` : ""}
+        <br><span class="meta">Ort: ${esc(u.ort)}</span></li>`).join("")}</ul>
+        <p class="hint">${esc(cfg.umwelt.ueberschneidung_hinweis)} ${esc(cfg.umwelt.hinweis)}</p>` : ""}
       ${(p.bezuege || []).length ? `<p class="hint">Im Titel genannt: ${p.bezuege.map(esc).join(", ")} <span class="derived">Verweis, nicht verknüpft</span></p>` : ""}
       <p class="links">${link(reportLink(p), "Verortung falsch? Hinweis geben", "btn btn-secondary")}</p>
       <details class="acc"><summary>Quellen dieses Vorgangs</summary><ul>
@@ -689,6 +748,7 @@
     const g = $("#f-gremium").value;
     if (g) url.searchParams.set("gremium", g); else url.searchParams.delete("gremium");
     if (planOn) url.searchParams.set("plaene", "1"); else url.searchParams.delete("plaene");
+    if (umweltOn.size) url.searchParams.set("ebenen", [...umweltOn].join(",")); else url.searchParams.delete("ebenen");
     if (!selected && planShown) url.searchParams.set("plan", planShown); else url.searchParams.delete("plan");
     url.hash = selected ? encodeURIComponent(selected.reference) : "";
     history.replaceState(null, "", url);
@@ -697,7 +757,8 @@
   // --- Start -----------------------------------------------------------------------------------------
   async function start() {
     const json = (url) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const [c, d, f] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL)]);
+    const [c, d, f, credits] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json")]);
+    if (credits && credits.length) $("#credits").innerHTML = credits.map((a) => `<li>${link(a.link, esc(a.text)) || esc(a.text)} <span class="hint">(${esc(a.lizenz)})</span></li>`).join("");
     if (!c) throw new Error("Konfiguration (stadt.json) fehlt");
     cfg = c;
     data = d || { meta: { sources: [] }, sitzungen: [], vorgaenge: [] };
@@ -760,6 +821,7 @@
       render();
     }
     if (planOn) drawPlans();
+    for (const id of umweltOn) drawUmwelt(id);
     const initial = papers.find((p) => p.reference === ref);
     if (initial) select(initial); else if (params.get("plan")) await showPlan(params.get("plan")); else showIntro();
     syncUrl();

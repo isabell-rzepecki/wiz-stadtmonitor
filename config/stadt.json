@@ -17,7 +17,8 @@
     "site_url": "https://isabell-rzepecki.github.io/wiz-stadtmonitor/",
     "kontakt": "",
     "impressum": "",
-    "user_agent": "wiz-stadtmonitor/0.1 (+https://github.com/isabell-rzepecki/wiz-stadtmonitor)"
+    "user_agent": "wiz-stadtmonitor/0.1 (+https://github.com/isabell-rzepecki/wiz-stadtmonitor)",
+    "datenquellen": "https://github.com/isabell-rzepecki/wiz-stadtmonitor/blob/HEAD/DATA_SOURCES.md"
   },
   "quelle": {
     "name": "Amtliche Bekanntmachungen der Stadt Witzenhausen",
@@ -78,20 +79,6 @@
         "hoch": "#1f7a4d",
         "mittel": "#9a5200",
         "niedrig": "#4a5a8a"
-      },
-      "dunkel": {
-        "bg": "#1c1a1b",
-        "surface": "#242122",
-        "text": "#ece6e7",
-        "text_muted": "#b8adb0",
-        "accent": "#f4726b",
-        "on_accent": "#1a1a1a",
-        "accent_ink": "#f8a29d",
-        "accent_fill": "#f4726b",
-        "on_accent_fill": "#1a1a1a",
-        "hoch": "#7fd1a5",
-        "mittel": "#f0b060",
-        "niedrig": "#a9b8f0"
       }
     },
     "kontrast_paare": [
@@ -488,5 +475,173 @@
     "Wortlaut § 6 Hauptsatzung (Ortsbezirke = Gemarkungen?) – Issue #3",
     "Bischhausen: Kernstadt? – Issue #3",
     "Hübenthal: Berlepsch-Ellerode? – Issue #3"
-  ]
+  ],
+  "verortung": {
+    "ausschluss_namen": [
+      "In der Stadt",
+      "Radweg"
+    ],
+    "_hinweis": "Lagebezeichnungen, die als allgemeine Wendung in Titeln vorkommen und deshalb nicht als Ort gelten (aus der Prüfung des Audits verortung_stufe_b.tsv)"
+  },
+  "umwelt": {
+    "_hinweis": "Zuschaltbare Umweltebenen (HLNUG, HMLU). Nicht rechtsverbindlich; maßgeblich sind die Verordnungen und Karten der zuständigen Behörden. Überschneidungen mit verorteten Vorgängen sind rein räumlich.",
+    "dienst": "https://geodienste-umwelt.hessen.de/arcgis/services/inspire/{dienst}/MapServer/WFSServer",
+    "hinweis": "Nicht rechtsverbindlich; maßgeblich sind die Verordnungen und Karten der zuständigen Behörden.",
+    "ueberschneidung_hinweis": "Räumliche Überschneidung des Orts mit der Fläche – kein inhaltlicher Bezug des Vorgangs.",
+    "gruppen": [
+      {
+        "id": "hochwasser",
+        "titel": "Hochwasser",
+        "quelle": "uesg",
+        "farbe": "#1d5c9e",
+        "attribution": "Darstellung auf der Grundlage von Daten des Hessischen Landesamtes für Naturschutz, Umwelt und Geologie (HLNUG), CC BY 4.0",
+        "attribution_kurz": "Hochwasser: © HLNUG, CC BY 4.0",
+        "ebenen": [
+          {
+            "id": "uesg",
+            "titel": "Überschwemmungsgebiet (HQ100, festgesetzt)",
+            "dienst": "gebiete_naturbedingter_risiken",
+            "typ": "Ueberschwemmungsgebiete_HQ100_nach_HWG",
+            "name": "NAME",
+            "status": "STATUS",
+            "stil": {
+              "fill": 0,
+              "dash": "6 4",
+              "weight": 2
+            }
+          },
+          {
+            "id": "hq_hoch",
+            "titel": "Hochwasser mit hoher Wahrscheinlichkeit (HQ häufig)",
+            "dienst": "gebiete_naturbedingter_risiken",
+            "typ": "Hochwasser_mit_hoher_Wahrscheinlichkeit",
+            "name": "GEWAESSER",
+            "stil": {
+              "fill": 0.35
+            }
+          },
+          {
+            "id": "hq_mittel",
+            "titel": "Hochwasser mit mittlerer Wahrscheinlichkeit (HQ100)",
+            "dienst": "gebiete_naturbedingter_risiken",
+            "typ": "Hochwasser_mit_mittlerer_Wahrscheinlichkeit",
+            "name": "GEWAESSER",
+            "stil": {
+              "fill": 0.2
+            }
+          },
+          {
+            "id": "hq_niedrig",
+            "titel": "Hochwasser mit niedriger Wahrscheinlichkeit (HQ extrem)",
+            "dienst": "gebiete_naturbedingter_risiken",
+            "typ": "Hochwasser_mit_niedriger_Wahrscheinlichkeit",
+            "name": "GEWAESSER",
+            "stil": {
+              "fill": 0.08
+            }
+          }
+        ]
+      },
+      {
+        "id": "wasserschutz",
+        "titel": "Trinkwasser- und Heilquellenschutz",
+        "quelle": "tws",
+        "farbe": "#0b6870",
+        "attribution": "Darstellung auf der Grundlage von Daten des Hessischen Landesamtes für Naturschutz, Umwelt und Geologie (HLNUG), CC BY 4.0",
+        "attribution_kurz": "Wasserschutzgebiete: © HLNUG, CC BY 4.0",
+        "ebenen": [
+          {
+            "id": "tws",
+            "titel": "Trinkwasser- und Heilquellenschutzgebiet (Zone)",
+            "dienst": "bewirtschaftungsgebiete",
+            "typ": "TWS_HQS_ALK",
+            "name": "WSG_KURZNAME",
+            "zone": "ZONE",
+            "status": "STATUS_RPU",
+            "stil": {
+              "fill": 0.15
+            }
+          }
+        ]
+      },
+      {
+        "id": "natur",
+        "titel": "Schutzgebiete Natur",
+        "quelle": "schutzgeb",
+        "farbe": "#2e6b1c",
+        "attribution": "Darstellung auf der Grundlage von Daten des Hessischen Ministeriums für Landwirtschaft und Umwelt, Weinbau, Forsten, Jagd und Heimat (HMLU); Naturparke: Landesbetrieb HessenForst",
+        "attribution_kurz": "Schutzgebiete: HMLU, Naturparke: HessenForst",
+        "ebenen": [
+          {
+            "id": "nsg",
+            "titel": "Naturschutzgebiet",
+            "dienst": "schutzgebiete",
+            "typ": "Naturschutzgebiete",
+            "name": "NAME",
+            "status": "OBJEKTSTATUS",
+            "vo_gueltig": "VO_GUELTIG",
+            "link": "VO_LINK",
+            "stil": {
+              "fill": 0.3
+            }
+          },
+          {
+            "id": "ffh",
+            "titel": "FFH-Gebiet (Natura 2000)",
+            "dienst": "schutzgebiete",
+            "typ": "Fauna-Flora-Habitate",
+            "name": "NAME",
+            "vo_gueltig": "VO_GUELTIG",
+            "link": "VO_LINK",
+            "stil": {
+              "fill": 0.12,
+              "dash": "6 4"
+            }
+          },
+          {
+            "id": "vsg",
+            "titel": "Vogelschutzgebiet (Natura 2000)",
+            "dienst": "schutzgebiete",
+            "typ": "Vogelschutzgebiete",
+            "name": "NAME",
+            "vo_gueltig": "VO_GUELTIG",
+            "link": "VO_LINK",
+            "stil": {
+              "fill": 0.12,
+              "dash": "2 4"
+            }
+          },
+          {
+            "id": "lsg",
+            "titel": "Landschaftsschutzgebiet",
+            "dienst": "schutzgebiete",
+            "typ": "Landschaftsschutzgebiete",
+            "name": "NAME",
+            "status": "OBJEKTSTATUS",
+            "vo_gueltig": "VO_GUELTIG",
+            "link": "VO_LINK",
+            "stil": {
+              "fill": 0.06,
+              "dash": "1 4",
+              "weight": 2
+            }
+          },
+          {
+            "id": "naturpark",
+            "titel": "Naturpark",
+            "dienst": "schutzgebiete",
+            "typ": "Naturparke",
+            "name": "NAME",
+            "vo_gueltig": "VO_GUELTIG",
+            "link": "VO_LINK",
+            "ueberschneidung": false,
+            "stil": {
+              "fill": 0,
+              "weight": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
 }

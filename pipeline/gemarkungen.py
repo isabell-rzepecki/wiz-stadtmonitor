@@ -31,7 +31,8 @@ GMDE_NR = config.STADT["stadt"]["gemeindeschluessel"][-6:]
 
 
 def fetch():
-    """Shapefile-Archiv laden (rund 68 MB); aus dem Zwischenspeicher, solange es jünger als 30 Tage ist."""
+    """Shapefile-Archiv laden (rund 68 MB); aus dem Zwischenspeicher, solange es jünger als 30 Tage ist. Scheitert der
+    Abruf, bleiben die Ortsbezirksflächen im Repository auf dem letzten Stand."""
     if ZIP.exists() and time.time() - ZIP.stat().st_mtime < 30 * 86400:
         return
     ZIP.parent.mkdir(parents=True, exist_ok=True)
@@ -39,7 +40,8 @@ def fetch():
         body, _ = net.get(URL)
     except Exception as e:
         audit.abruf("vg_shp", URL, getattr(e, "code", ""), "", "", "", str(e)[:200])
-        raise
+        print(f"Verwaltungsgrenzen nicht abrufbar ({e}); Ortsbezirksflächen bleiben auf dem letzten Stand")
+        return
     ZIP.write_bytes(body)
     audit.abruf("vg_shp", URL, 200, len(body), hashlib.sha256(body).hexdigest(), "", "")
 
@@ -88,6 +90,17 @@ def kopf(erzeugt_am):
 
 
 def build():
+    if not ZIP.exists():
+        print("Kein Shapefile-Archiv; Ortsbezirksflächen aus dem Repository, Seitenflächen daraus abgeleitet")
+        voll = json.loads(config.ORTSBEZIRKE.read_text(encoding="utf-8"))
+        gem = [{"gmk_nr": f["properties"]["gmk_nr"], "gemarkung": f["properties"]["gemarkung"], "geometry": shape(f["geometry"])}
+               for f in voll["features"]]
+        stadt = unary_union([g["geometry"] for g in gem])
+        site = {"type": "FeatureCollection", **{k: voll[k] for k in ("license", "attribution", "source", "retrieved", "erzeugt_am_quelle")},
+                "features": features(gem, 0.00002), "stadtgrenze": _runden(stadt.simplify(0.00002, preserve_topology=True))}
+        OUT_SITE.parent.mkdir(parents=True, exist_ok=True)
+        OUT_SITE.write_text(json.dumps(site, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        return
     gem, stadt = lesen()
     if len(gem) != len(config.STADT["ortsteile"]):
         raise SystemExit(f"{len(gem)} Gemarkungen, erwartet {len(config.STADT['ortsteile'])} (Konfiguration prüfen)")

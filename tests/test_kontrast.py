@@ -21,8 +21,12 @@ class Kontrast(unittest.TestCase):
     def test_css_nutzt_die_werte_der_konfiguration(self):
         css = (Path(__file__).resolve().parent.parent / "site" / "style.css").read_text(encoding="utf-8")
         for k in ("accent_ink", "accent_fill", "text", "text_muted", "hoch", "mittel", "niedrig"):
-            for modus in ("hell", "dunkel"):
-                self.assertIn(f"--{k.replace('_', '-')}: {STADT['gestaltung']['farben'][modus][k]};", css, (modus, k))
+            self.assertIn(f"--{k.replace('_', '-')}: {STADT['gestaltung']['farben']['hell'][k]};", css, k)
+
+    def test_nur_heller_modus(self):
+        for name in ("style.css", "page.css", "404.html"):
+            text = (Path(__file__).resolve().parent.parent / "site" / name).read_text(encoding="utf-8")
+            self.assertNotIn("prefers-color-scheme: dark", text, name)
 
 
 if __name__ == "__main__":

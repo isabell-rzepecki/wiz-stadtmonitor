@@ -1,4 +1,4 @@
-"""Kontrastprüfung (WCAG 2.1) der Farb-Tokens aus config/stadt.json, hell und dunkel.
+"""Kontrastprüfung (WCAG 2.1) der Farb-Tokens aus config/stadt.json (nur heller Modus).
 
 Aufruf: python tools/kontrast.py  – gibt je Paar das Verhältnis aus; Rückgabewert 1, wenn ein Paar die Schwelle verfehlt.
 """
