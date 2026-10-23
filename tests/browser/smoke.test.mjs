@@ -182,6 +182,22 @@ test("Wohnen und Boden: Stichtage, getrennte Mietbegriffe, Vergleich, Ortsbezirk
   await page.close();
 });
 
+test("Wahlen und Gremien: amtliche Ergebnisse, Lücke 2016, Ortsbeirat des Gebiets, ohne Verstöße", async () => {
+  const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
+  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator("#cta-wahlen").click();
+  const text = await page.locator("#wahlen").textContent();
+  assert.match(text, /Stadtverordnetenwahl 15\.03\.2026/);
+  assert.match(text, /Schnellmeldung/);
+  assert.match(text, /Stadtverordnetenwahl 06\.03\.2016/);
+  assert.match(text, /Gertenbach/);
+  assert.equal(await page.locator("#wahlen h3:has-text('Ortsbeiräte') ~ .table-wrap tbody tr").count(), 1);
+  assert.ok(await page.locator("#wahlen table").count() >= 4);
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 test("Mobil: Kartenoptionen in einem Menü, ohne Verstöße", async () => {
   const page = await open(SITE, "", { width: 390, height: 844 });
   await page.locator('.toggle[data-panel="panel-detail"]').click();

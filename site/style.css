@@ -337,6 +337,8 @@ table.compare th, table.compare td { padding: 3px 6px; text-align: right; border
 table.compare th[scope=row], table.compare thead th:first-child { text-align: left; font-weight: 400; }
 table.compare tr.own th, table.compare tr.own td { font-weight: 700; }
 dl.glossar dt { font-weight: 700; margin-top: 6px; } dl.glossar dd { margin: 0; }
+table.compare td.text { text-align: left; }
+.stat-block h4 { font: 600 14px/1.3 var(--font-body); margin: 12px 0 6px; }
 .bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
 .bar { width: 100%; display: grid; grid-template-columns: minmax(120px, 34%) 1fr 48px; align-items: center; gap: 10px; border: 0; background: transparent; padding: 4px 6px; border-radius: 10px; cursor: pointer; text-align: left; font-size: 14px; }
 .bar:hover { background: rgba(244, 114, 107, 0.06); }

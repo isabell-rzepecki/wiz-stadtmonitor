@@ -11,6 +11,8 @@ Die Daten stehen nicht unter der MIT-Lizenz des Codes.
 | `geo/dl-de-zero/bodenrichtwerte_2024.geojson`, `export/karte/bodenrichtwerte.json`, `export/wohnen.json` (Bodenrichtwerte) | BORIS Hessen, Stichtag 01.01.2024, Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH | Nutzung ohne Einschränkung oder Bedingung (AccessConstraints des Dienstes) |
 | `wohnen/zensus2022.json`, `export/wohnen.json` (Zensus) | Zensus 2022: Regionaltabelle Gebäude und Wohnungen; 100-m-Gitter Nettokaltmiete und Eigentümerquote, je Gemarkung aggregiert | dl-de/by-2.0; „© Statistische Ämter des Bundes und der Länder, 2024“ |
 | `export/karte/umwelt_*.json` | Hochwasser und Wasserschutzgebiete (HLNUG); Schutzgebiete (HMLU, Naturparke: HessenForst) | HLNUG: CC BY 4.0; HMLU: frei nutzbar, keine Weiterveräußerung |
+| `wahlen/wahlen.json`, `export/wahlen.json` (Kommunalwahlen) | Amtliche Bekanntmachungen der Ergebnisse (Nr. 043/2026, 044/2026) und amtliche Ergebnispräsentation 2021 (votemanager); nur Wahlvorschläge, Stimmen und Sitze, keine Personennamen | amtliche Werke (§ 5 Abs. 1 UrhG); Quelle angeben |
+| `wahlen/wahlen.json`, `export/wahlen.json` (Bundestags- und Europawahlen) | Wahlbezirksstatistik der Bundeswahlleiterin, summiert für die Gemeinde | „Vervielfältigung und Verbreitung, auch auszugsweise, mit Quellenangabe gestattet“; © Die Bundeswahlleiterin |
 | Kartenhintergrund (nur angezeigt, nicht gespeichert) | basemap.de Web Raster, BKG | CC BY 4.0; „© basemap.de / BKG \| Datenquellen: © GeoBasis-DE“ |
 | `../phase0/stichprobe_20_einladungen.tsv` | 20 Einladungen (wie oben), Stufen vorläufig abgeleitet | wie oben |
 | `../tests/fixtures/vorgaenge.json`, `../tests/fixtures/einladungen/` | Einladungen (wie oben), nur für Tests | wie oben |

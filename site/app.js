@@ -12,6 +12,8 @@
   const UMWELT_URL = (id) => `data/export/karte/umwelt_${id}.json`;
   // Wohnen und Boden: Kennzahlen (Bodenrichtwerte, Zensus 2022) und Zonen der Bodenrichtwerte als Kartenebene
   const WOHNEN_URL = "data/export/wohnen.json";
+  // Wahlen: nur amtliche Ergebnisse, ohne Personennamen (stadt.json, wahlen._hinweis)
+  const WAHLEN_URL = "data/export/wahlen.json";
   const BRW_URL = "data/export/karte/bodenrichtwerte.json";
   const DEFAULT_AREA = "stadt:alle";
   const RANK = { hoch: 3, mittel: 2, niedrig: 1 };
@@ -59,7 +61,7 @@
   const de = (n) => Number(n || 0).toLocaleString("de-DE");
   const get = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 
-  let wohnen = null, brwData = null, brwLayer = null;
+  let wohnen = null, brwData = null, brwLayer = null, wahlen = null;
   let cfg = null, data = null, flaechen = null, zeit = null, all = [], papers = [], area = null, selected = null, dataStand = null;
   let planData = null, planLayer = null, planOn = false, planShown = null;
   const umweltOn = new Set(), umweltData = {}, umweltLayers = {};
@@ -76,8 +78,8 @@
   const gremiumShort = (name) => (cfg.gremien.find((g) => g.name === name) || {}).kurz || name;
 
   // --- Flächen ein- und ausklappen ---------------------------------------------------------------
-  const SHEETS = ["panel-list", "panel-detail", "panel-auswertung", "panel-termine", "panel-wohnen", "timeline-wrap"];
-  const OVERLAYS = ["panel-auswertung", "panel-termine", "panel-wohnen"];
+  const SHEETS = ["panel-list", "panel-detail", "panel-auswertung", "panel-termine", "panel-wohnen", "panel-wahlen", "timeline-wrap"];
+  const OVERLAYS = ["panel-auswertung", "panel-termine", "panel-wohnen", "panel-wahlen"];
   const toggleFor = (id) => document.querySelector(`.toggle[data-panel="${id}"]`);
   function setPanel(id, open) {
     const el = document.getElementById(id);
@@ -263,6 +265,7 @@
     if (!$("#panel-termine").hidden) showTermine();
     if (!$("#panel-auswertung").hidden) showStats();
     if (!$("#panel-wohnen").hidden) showWohnen(null);
+    if (!$("#panel-wahlen").hidden) showWahlen();
     render();
     syncUrl();
   }
@@ -537,6 +540,23 @@
     const names = [...new Set(papers.flatMap((p) => p.process.map((s) => s.gremium)))].sort((a, b) => a.localeCompare(b, "de"));
     sel.innerHTML = '<option value="">alle</option>' + names.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
     if (names.includes(cur)) sel.value = cur;
+    fillEinreicher();
+  }
+  // Einreicher: nur als Angabe und Filter, ohne Zählung je Fraktion (stadt.json, einreicher._hinweis)
+  const einreicherListe = () => (cfg.einreicher ? [...cfg.einreicher.fraktionen, cfg.einreicher.einzelperson] : []);
+  const einreicherName = (id) => (einreicherListe().find((f) => f.id === id) || { name: id }).name;
+  function fillEinreicher() {
+    const sel = $("#f-einreicher"), cur = sel.value;
+    const da = new Set(all.flatMap((p) => (p.initiative ? p.initiative.einreicher : [])));
+    const opts = einreicherListe().filter((f) => da.has(f.id));
+    sel.innerHTML = '<option value="">alle</option>' + opts.map((f) => `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join("");
+    if (opts.some((f) => f.id === cur)) sel.value = cur;
+  }
+  function initiativeText(i) {
+    const namen = i.einreicher.map(einreicherName);
+    const wer = i.einreicher[0] === cfg.einreicher.einzelperson.id ? namen[0]
+      : `${namen.length > 1 ? "Fraktionen" : "Fraktion"} ${namen.join(", ")}`;
+    return `${esc(i.typ)} ${i.einreicher[0] === cfg.einreicher.einzelperson.id ? "von" : "der"} ${esc(wer)} vom ${fmtDate(i.datum)}`;
   }
   function inRange(p) {
     if (!range) return true;
@@ -546,10 +566,10 @@
   }
   function filtered(withRange = true) {
     const text = $("#f-text").value.trim().toLowerCase(), gremium = $("#f-gremium").value, art = $("#f-art").value;
-    const proc = $("#f-verfahren").checked;
+    const proc = $("#f-verfahren").checked, einr = $("#f-einreicher").value;
     const confs = new Set([...document.querySelectorAll("#f-conf input:checked")].map((i) => i.value));
     return papers.filter((p) => (proc || !p.verfahrenspunkt) && (!gremium || p.process.some((s) => s.gremium === gremium)) &&
-      (!art || (art === "vorlage") === Boolean(p.vorlage)) &&
+      (!art || (art === "vorlage") === Boolean(p.vorlage)) && (!einr || (p.initiative && p.initiative.einreicher.includes(einr))) &&
       (area.kind !== "ortsteil" || confs.has(bestConfidence(p))) && (!withRange || inRange(p)) &&
       (!text || (p.name + " " + p.reference).toLowerCase().includes(text)));
   }
@@ -577,7 +597,7 @@
     const where = area.kind === "stadt" ? area.name : area.kind === "ohne" ? "ohne Ortsbezug" : area.name;
     const span = range ? ` · ${fmtDate(range[0])}–${fmtDate(range[1])}` : "";
     $("#count").textContent = all.length ? `${list.length} von ${papers.length} Vorgängen · ${where}${span}` : "Noch keine Daten veröffentlicht.";
-    const active = [$("#f-verfahren").checked].filter(Boolean).length + (area.kind === "ortsteil" ? document.querySelectorAll("#f-conf input:not(:checked)").length : 0);
+    const active = [$("#f-verfahren").checked, $("#f-einreicher").value].filter(Boolean).length + (area.kind === "ortsteil" ? document.querySelectorAll("#f-conf input:not(:checked)").length : 0);
     $("#active-filters").textContent = active ? ` (${active} aktiv)` : "";
     let html = list.slice(0, shown).map(itemHtml).join("");
     if (list.length > shown) html += `<li class="more"><button type="button" class="btn btn-secondary" id="more">Weitere ${Math.min(LIST_STEP, list.length - shown)} von ${list.length - shown} anzeigen</button></li>`;
@@ -640,6 +660,7 @@
         <dt>Erste Beratung</dt><dd>${fmtDate(p.date)}</dd>
         <dt>Gremien</dt><dd>${esc(gremien.join(", "))}</dd>
         ${p.verfahrenspunkt ? '<dt>Art</dt><dd>Verfahrenspunkt <span class="derived">abgeleitet</span></dd>' : ""}
+        ${p.initiative && cfg.einreicher ? `<dt>Eingebracht</dt><dd>${initiativeText(p.initiative)} <span class="derived">laut TOP-Titel</span></dd>` : ""}
       </dl>
       <div class="links">${link(p.process[0] && p.process[0].pdf, "Einladung (PDF)", "btn btn-primary")}
         ${link(cfg.stadt.sessionnet, "Bürgerinformationssystem", "btn btn-secondary")}</div>
@@ -725,6 +746,63 @@
     return `<section class="stat-block"><h3>${esc(title)}</h3><ul class="bars">${rows.map((r) => `<li><button type="button" class="bar" ${attr}="${esc(r.key)}" aria-label="${esc(r.label)}: ${r.n} Vorgänge – Liste danach filtern">
       <span>${esc(r.label)}</span><span class="bar-track" aria-hidden="true"><span class="bar-fill" style="width:${(100 * r.n / max).toFixed(1)}%"></span></span><span class="bar-n">${r.n}</span></button></li>`).join("")}</ul></section>`;
   }
+  // --- Wahlen und Gremien: amtliche Ergebnisse mit Ergebnisstufe und Quelle; fehlende Wahlen als Lücke -----------
+  const STUFE = { "endgültig": "endgültig", schnellmeldung: "Schnellmeldung", luecke: "Lücke" };
+  const pct = (v) => `${num(v, 2)} %`;
+  function kommunalTabelle(r, caption) {
+    const rows = [...r.vorschlaege].sort((a, b) => b.stimmen - a.stimmen);
+    return `<div class="table-wrap"><table class="compare"><caption class="visually-hidden">${esc(caption)}</caption>
+      <thead><tr><th scope="col">Wahlvorschlag</th><th scope="col">Stimmen&shy;anteil</th><th scope="col">Sitze</th></tr></thead>
+      <tbody>${rows.map((v) => `<tr><th scope="row">${esc(v.name)}</th><td>${pct(v.anteil)}</td><td>${v.sitze}</td></tr>`).join("")}
+      <tr class="own"><th scope="row">zusammen</th><td></td><td>${r.sitze}</td></tr></tbody></table></div>`;
+  }
+  function wahlKopf(e) {
+    const s = e.stufe === "endgültig" ? "" : ` <span class="derived">${esc(STUFE[e.stufe] || e.stufe)}</span>`;
+    return `<h4>${esc(e.titel)} ${fmtDate(e.datum)}${s}</h4>`;
+  }
+  function bundTabelle(liste) {
+    const da = liste.filter((b) => b.ergebnis);
+    if (!da.length) return "";
+    const key = (n) => n.toUpperCase();
+    const anteil = (b, k) => { const e = Object.entries(b.ergebnis.parteien).find(([n]) => key(n) === k); return e ? 100 * e[1] / b.ergebnis.gueltig : 0; };
+    const namen = new Map();
+    for (const b of [...da].reverse()) for (const n of Object.keys(b.ergebnis.parteien)) namen.set(key(n), n);
+    const zeilen = [...namen.keys()].filter((k) => da.some((b) => anteil(b, k) >= 2)).sort((a, b) => anteil(da[0], b) - anteil(da[0], a));
+    const sonst = (b) => 100 - zeilen.reduce((s, k) => s + anteil(b, k), 0);
+    return `<div class="table-wrap"><table class="compare"><caption class="visually-hidden">Zweitstimmen bzw. Stimmen in Prozent je Wahl</caption>
+      <thead><tr><th scope="col">Partei</th>${da.map((b) => `<th scope="col">${esc(b.titel === "Bundestagswahl" ? "BTW" : "EW")} ${b.datum.slice(0, 4)}</th>`).join("")}</tr></thead>
+      <tbody>${zeilen.map((k) => `<tr><th scope="row">${esc(namen.get(k))}</th>${da.map((b) => `<td>${anteil(b, k) ? num(anteil(b, k), 1) : "–"}</td>`).join("")}</tr>`).join("")}
+      <tr><th scope="row">Sonstige</th>${da.map((b) => `<td>${num(sonst(b), 1)}</td>`).join("")}</tr>
+      <tr class="own"><th scope="row">Wahlbeteiligung</th>${da.map((b) => `<td>${num(b.ergebnis.beteiligung, 1)}</td>`).join("")}</tr></tbody></table></div>`;
+  }
+  function showWahlen() {
+    const box = $("#wahlen");
+    const W = cfg.wahlen;
+    if (!W || !wahlen) { box.innerHTML = '<p class="hint">Noch keine Wahldaten.</p>'; return; }
+    const stvv = wahlen.kommunal.filter((e) => e.art === "stvv");
+    const ob = wahlen.kommunal.find((e) => e.art === "ortsbeirat");
+    const slug = area.kind === "ortsteil" ? area.key : null;
+    const obListe = ob && ob.ergebnisse ? (slug ? ob.ergebnisse.filter((r) => r.ortsteil === slug) : ob.ergebnisse) : [];
+    const obName = (r) => (cfg.ortsteile.find((o) => o.slug === r.ortsteil) || { name: r.gebiet }).name;
+    box.innerHTML = `<p class="hint">Nur amtliche Ergebnisse. Namen von Kandidierenden und Gewählten werden nicht übernommen; maßgeblich sind die verlinkten Quellen.</p>
+      <section class="stat-block"><h3>Stadtverordnetenversammlung</h3>
+        ${stvv.map((e) => `${wahlKopf(e)}
+          ${e.ergebnisse ? `${kommunalTabelle(e.ergebnisse[0], `${e.titel} ${fmtDate(e.datum)}: Stimmenanteile und Sitze`)}
+            <p class="hint">Wahlbeteiligung ${num(e.ergebnisse[0].beteiligung, 2)} %. ${esc(e.stufe_text)}. ${link(e.quelle_url, "Quelle")}</p>`
+            : `<p class="blackbox">${esc(e.stufe_text)}.</p>`}`).join("")}
+        <p class="hint">${esc(W.gremien_hinweis)}</p></section>
+      ${ob ? `<section class="stat-block"><h3>Ortsbeiräte</h3>${wahlKopf(ob)}
+        ${obListe.length ? `<div class="table-wrap"><table class="compare"><caption class="visually-hidden">Ortsbeiratswahlen ${fmtDate(ob.datum)}: Sitze je Wahlvorschlag und Wahlbeteiligung</caption>
+          <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Wahlvorschläge (Sitze)</th><th scope="col">Beteiligung</th></tr></thead>
+          <tbody>${obListe.map((r) => `<tr><th scope="row">${esc(obName(r))}</th><td class="text">${[...r.vorschlaege].sort((a, b) => b.sitze - a.sitze).map((v) => `${esc(v.name)} (${v.sitze})`).join("; ")}</td><td>${pct(r.beteiligung)}</td></tr>`).join("")}</tbody></table></div>`
+          : '<p>Für dieses Gebiet gibt es keinen Ortsbeirat.</p>'}
+        <p class="hint">${esc(ob.stufe_text)}. ${link(ob.quelle_url, "Quelle")}</p></section>` : ""}
+      <section class="stat-block"><h3>Bundestags- und Europawahlen in ${esc(cfg.stadt.name)}</h3>
+        <p class="hint">Bundestagswahl: Zweitstimmen; Europawahl: Stimmen; Anteile in Prozent der gültigen Stimmen.</p>
+        ${bundTabelle(wahlen.bund)}
+        <p class="hint">${esc(W.bund_hinweis)} ${esc(wahlen.bund_attribution)}.</p></section>`;
+  }
+
   // --- Wohnen und Boden: Kennzahlen mit Stichtag und Quelle; Bestands-, Angebots- und Vergleichsmiete getrennt ------
   const num = (v, d) => Number(v).toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
   const slugOf = (name) => (cfg.ortsteile.find((o) => o.name === name) || {}).slug;
@@ -863,6 +941,8 @@
     else for (const k of ["von", "bis", "zoom", "achse"]) url.searchParams.delete(k);
     const g = $("#f-gremium").value;
     if (g) url.searchParams.set("gremium", g); else url.searchParams.delete("gremium");
+    const ei = $("#f-einreicher").value;
+    if (ei) url.searchParams.set("einreicher", ei); else url.searchParams.delete("einreicher");
     if (planOn) url.searchParams.set("plaene", "1"); else url.searchParams.delete("plaene");
     if (umweltOn.size) url.searchParams.set("ebenen", [...umweltOn].join(",")); else url.searchParams.delete("ebenen");
     if (!selected && planShown) url.searchParams.set("plan", planShown); else url.searchParams.delete("plan");
@@ -873,8 +953,9 @@
   // --- Start -----------------------------------------------------------------------------------------
   async function start() {
     const json = (url) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const [c, d, f, credits, w] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json"), json(WOHNEN_URL)]);
+    const [c, d, f, credits, w, wa] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json"), json(WOHNEN_URL), json(WAHLEN_URL)]);
     wohnen = w;
+    wahlen = wa;
     if (credits && credits.length) $("#credits").innerHTML = credits.map((a) => `<li>${link(a.link, esc(a.text)) || esc(a.text)} <span class="hint">(${esc(a.lizenz)})</span></li>`).join("");
     if (!c) throw new Error("Konfiguration (stadt.json) fehlt");
     cfg = c;
@@ -926,11 +1007,13 @@
     $("#papers").addEventListener("mouseleave", () => tl && tl.select(selected));
     $("#cta-termine").addEventListener("click", () => { setPanel("panel-termine", true); showTermine(); focusPanel("panel-termine"); });
     $("#cta-stats").addEventListener("click", () => { setPanel("panel-auswertung", true); showStats(); focusPanel("panel-auswertung"); });
+    $("#cta-wahlen").addEventListener("click", () => { setPanel("panel-wahlen", true); showWahlen(); focusPanel("panel-wahlen"); });
     $("#cta-wohnen").addEventListener("click", () => { setPanel("panel-wohnen", true); showWohnen(null); focusPanel("panel-wohnen"); });
     const params = new URLSearchParams(location.search);
     const ref = decodeURIComponent(location.hash.slice(1));
     loadArea(params.get("gebiet") || DEFAULT_AREA, true);
     if (params.get("gremium")) { $("#f-gremium").value = params.get("gremium"); setPanel("panel-list", true); render(); }
+    if (params.get("einreicher")) { $("#f-einreicher").value = params.get("einreicher"); setPanel("panel-list", true); render(); }
     const von = params.get("von"), bis = params.get("bis");
     if (tl && ISO_DAY.test(von || "") && ISO_DAY.test(bis || "")) {
       setPanel("timeline-wrap", true);

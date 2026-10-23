@@ -36,6 +36,10 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
   - Bodenrichtwerte stehen immer mit ihrem Stichtag (01.01.2024). Ein Dienst mit Stichtag 2026 war am 23.10.2026 nicht auffindbar (Issue #4).
   - Werte je Ortsbezirk aus Gitterzellen sind Näherungen. Die Zellen werden über ihren Mittelpunkt einer Gemarkung zugeordnet; geheim gehaltene Zellen zählen nicht als null; unter 5 Zellen mit Wert wird nichts ausgewiesen. Die Leerstandsquote steht nur für die Gemeinde.
   - Rechtlicher Kontext (Mietenstufe, Mieterschutzverordnung, KdU) ist datierter Text mit Quelle, kein Datensatz. KdU-Beträge werden nicht genannt, weil kein aktueller Stand belegt ist.
+- **Wahlen und Gremien:**
+  - Nur amtliche Ergebnisse: 2026 aus den Bekanntmachungen Nr. 043 und 044/2026; 2016 und 2021 aus der Ergebnispräsentation der Gemeindewahlleitung (Stufe „Schnellmeldung“; 2016 mit 31 Sitzen, seit 2020 37); Bundestags- und Europawahlen aus der Wahlbezirksstatistik der Bundeswahlleiterin.
+  - Keine Personennamen. Die Sitzverteilung folgt dem Wahlergebnis; Fraktionswechsel und Koalitionen sind nicht abgebildet.
+- **Einreicher:** Antrag oder Anfrage einer Fraktion wird aus dem TOP-Titel erkannt und als Angabe und Filter gezeigt, ohne Zählung je Fraktion. Eine fehlende Nennung im Titel sagt nichts über die Aktivität einer Fraktion.
 - **Quellen:**
   - Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv), lesbar in [`DATA_SOURCES.md`](DATA_SOURCES.md), erzeugt mit `python tools/datenquellen.py`.
   - Die Namensnennungen auf der Seite kommen aus [`data/attribution.tsv`](data/attribution.tsv), nur für die tatsächlich genutzten Quellen.
