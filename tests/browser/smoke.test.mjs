@@ -148,7 +148,7 @@ test("Kartenebene Bauleitplanung: Nutzungshinweis in Legende und Namensnennung, 
 
 test("Umweltebenen: zuschaltbar, Legende mit Hinweis und Quelle, Zustand im Link, ohne Verstöße", async () => {
   const page = await open(SITE);
-  await page.locator(".map-layers summary").click();
+  await page.locator(".map-layers summary").click();  // „Weitere Ebenen“
   await page.getByLabel("Schutzgebiete Natur").check();
   await page.waitForFunction(() => document.querySelectorAll(".leaflet-overlay-pane path").length >= 2);
   const legende = await page.locator(".map-legend").textContent();
@@ -159,6 +159,25 @@ test("Umweltebenen: zuschaltbar, Legende mit Hinweis und Quelle, Zustand im Link
   assert.match(page.url(), /ebenen=natur/);
   assert.deepEqual(await axe(page), []);
   await page.getByLabel("Hochwasser").check();  // ohne Datei: keine Fläche, kein Fehler
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+test("Wohnen und Boden: Stichtage, getrennte Mietbegriffe, Vergleich, Ortsbezirk als Näherung, ohne Verstöße", async () => {
+  const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
+  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator("#cta-wohnen").click();
+  const text = await page.locator("#wohnen").textContent();
+  assert.match(text, /Stichtag 01\.01\.2024/);
+  assert.match(text, /Stichtag 15\.05\.2022/);
+  assert.match(text, /Bestandsmiete Gertenbach/);
+  assert.match(text, /Näherung/);
+  assert.match(text, /Angebotsmiete/);
+  assert.match(text, /Ortsübliche Vergleichsmiete/);
+  assert.ok(await page.locator("#wohnen table.compare tbody tr").count() >= 5);
+  assert.deepEqual(await axe(page), []);
+  await page.locator("[data-brw-on]").click();
+  assert.match(page.url(), /ebenen=bodenrichtwerte/);
   assert.deepEqual(page.errors, []);
   await page.close();
 });

@@ -10,6 +10,9 @@
   const PLAENE_URL = "data/export/karte/bauleitplanung.json";
   // Umweltebenen (Hochwasser, Wasserschutz, Schutzgebiete Natur) je Gruppe aus stadt.json (umwelt.gruppen)
   const UMWELT_URL = (id) => `data/export/karte/umwelt_${id}.json`;
+  // Wohnen und Boden: Kennzahlen (Bodenrichtwerte, Zensus 2022) und Zonen der Bodenrichtwerte als Kartenebene
+  const WOHNEN_URL = "data/export/wohnen.json";
+  const BRW_URL = "data/export/karte/bodenrichtwerte.json";
   const DEFAULT_AREA = "stadt:alle";
   const RANK = { hoch: 3, mittel: 2, niedrig: 1 };
   const LIST_STEP = 200;
@@ -56,6 +59,7 @@
   const de = (n) => Number(n || 0).toLocaleString("de-DE");
   const get = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 
+  let wohnen = null, brwData = null, brwLayer = null;
   let cfg = null, data = null, flaechen = null, zeit = null, all = [], papers = [], area = null, selected = null, dataStand = null;
   let planData = null, planLayer = null, planOn = false, planShown = null;
   const umweltOn = new Set(), umweltData = {}, umweltLayers = {};
@@ -72,8 +76,8 @@
   const gremiumShort = (name) => (cfg.gremien.find((g) => g.name === name) || {}).kurz || name;
 
   // --- Flächen ein- und ausklappen ---------------------------------------------------------------
-  const SHEETS = ["panel-list", "panel-detail", "panel-auswertung", "panel-termine", "timeline-wrap"];
-  const OVERLAYS = ["panel-auswertung", "panel-termine"];
+  const SHEETS = ["panel-list", "panel-detail", "panel-auswertung", "panel-termine", "panel-wohnen", "timeline-wrap"];
+  const OVERLAYS = ["panel-auswertung", "panel-termine", "panel-wohnen"];
   const toggleFor = (id) => document.querySelector(`.toggle[data-panel="${id}"]`);
   function setPanel(id, open) {
     const el = document.getElementById(id);
@@ -258,6 +262,7 @@
     if (tl && zeit) { tl.setData(zeit); tl.select(null); }
     if (!$("#panel-termine").hidden) showTermine();
     if (!$("#panel-auswertung").hidden) showStats();
+    if (!$("#panel-wohnen").hidden) showWohnen(null);
     render();
     syncUrl();
   }
@@ -300,16 +305,18 @@
     if (cfg.umwelt) {
       const wanted = (new URLSearchParams(location.search).get("ebenen") || "").split(",");
       for (const g of cfg.umwelt.gruppen) if (wanted.includes(g.id)) umweltOn.add(g.id);
+      if (wanted.includes("bodenrichtwerte")) umweltOn.add("bodenrichtwerte");
       const Layers = L.Control.extend({
         options: { position: "bottomright" },
         onAdd() {
           const d = L.DomUtil.create("details", "map-style map-layers");
-          d.innerHTML = `<summary>Umweltebenen</summary><fieldset aria-label="Umweltebenen einblenden">${cfg.umwelt.gruppen.map((g) =>
+          const ebenen = [...cfg.umwelt.gruppen, ...(cfg.wohnen ? [{ id: "bodenrichtwerte", titel: "Bodenrichtwerte" }] : [])];
+          d.innerHTML = `<summary>Weitere Ebenen</summary><fieldset aria-label="Weitere Kartenebenen einblenden">${ebenen.map((g) =>
             `<label><input type="checkbox" value="${esc(g.id)}"${umweltOn.has(g.id) ? " checked" : ""}> ${esc(g.titel)}</label>`).join("")}</fieldset>`;
           d.addEventListener("change", (e) => {
             const id = e.target.value;
             if (e.target.checked) umweltOn.add(id); else umweltOn.delete(id);
-            drawUmwelt(id);
+            if (id === "bodenrichtwerte") drawBrw(); else drawUmwelt(id);
             syncUrl();
           });
           L.DomEvent.disableClickPropagation(d);
@@ -401,7 +408,35 @@
       ${planOn ? `<ul><li><span class="swatch swatch-plan" aria-hidden="true"></span>Geltungsbereich eines Bebauungsplans</li>
         <li><span class="swatch swatch-fplan" aria-hidden="true"></span>Änderung des Flächennutzungsplans</li></ul>
         <p class="hint">${esc(cfg.bauleitplanung.attribution)}. Nicht rechtsverbindlich.</p>` : ""}
-      ${umweltLegend()}`;
+      ${umweltLegend()}${brwLegend()}`;
+  }
+  // Bodenrichtwerte: Zonen für baureifes Land, Klassen laut stadt.json (wohnen.boris.klassen), Stichtag immer sichtbar
+  const BRW_FILL = [0.08, 0.18, 0.3, 0.44, 0.6];
+  const brwStichtag = () => fmtDate(cfg.wohnen.boris.stichtag);
+  const eur = (v, d = 0) => `${Number(v).toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d })} €/m²`;
+  function brwKlassen() {
+    const k = cfg.wohnen.boris.klassen;
+    return k.map((v, i) => (i === 0 ? `unter ${v}` : `${k[i - 1]} bis unter ${v}`)).concat(`ab ${k[k.length - 1]}`);
+  }
+  async function drawBrw() {
+    if (!umweltOn.has("bodenrichtwerte")) { if (brwLayer) { brwLayer.remove(); brwLayer = null; } if (legendEl) drawLegend(); return; }
+    brwData ||= fetch(BRW_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    const d = await brwData;
+    if (!umweltOn.has("bodenrichtwerte") || brwLayer || !d) { if (legendEl) drawLegend(); return; }
+    brwLayer = L.geoJSON(d, {
+      style: (f) => ({ color: color("accent-ink"), weight: 1, opacity: 0.8, fillColor: color("accent-ink"), fillOpacity: BRW_FILL[f.properties.klasse] ?? 0.1 }),
+      attribution: esc(cfg.wohnen.boris.attribution),
+      onEachFeature: (f, layer) => layer.bindTooltip(`<strong>Bodenrichtwert ${esc(eur(f.properties.wert))}</strong><br>${esc(f.properties.art || "")} · Gemarkung ${esc(f.properties.gemarkung || "")}
+        <br><span class="nav-dim">Stichtag ${brwStichtag()}</span>`, { sticky: true }),
+    }).addTo(map);
+    brwLayer.bringToBack();
+    if (legendEl) drawLegend();
+  }
+  function brwLegend() {
+    if (!brwLayer) return "";
+    return `<p class="legend-group">Bodenrichtwerte, Stichtag ${brwStichtag()}</p><ul>${brwKlassen().map((t, i) => `<li><span class="swatch swatch-area" aria-hidden="true"
+      style="border-color:${color("accent-ink")};background:color-mix(in srgb, ${color("accent-ink")} ${Math.round(BRW_FILL[i] * 100)}%, transparent)"></span>${esc(t)} €/m²</li>`).join("")}</ul>
+      <p class="hint">Baureifes Land. ${esc(cfg.wohnen.boris.attribution)}.</p>`;
   }
   // Umweltebenen: erst beim Einschalten geladen; Flächen ohne Klickziel, nur mit Hinweis beim Überfahren
   const umweltGruppe = (id) => cfg.umwelt.gruppen.find((g) => g.id === id);
@@ -617,6 +652,7 @@
       ${(p.plans || []).length ? `<h4>Bauleitplanung</h4><ul class="locs">${p.plans.map((x) => `<li><button type="button" class="link-btn" data-open-plan="${esc(x.key)}">${esc(x.titel)}</button>
         <br><span class="meta">${esc(x.treffer)} · Fundstelle: „${esc(x.evidence)}“</span></li>`).join("")}</ul>
         <p class="hint">${esc(cfg.bauleitplanung.attribution)}.</p>` : ""}
+      ${wohnenKasten(p)}
       ${(p.overlaps || []).length && cfg.umwelt ? `<h4>Räumliche Überschneidung</h4><ul class="locs">${p.overlaps.map((u) => `<li>${esc(u.titel)}${u.name ? `: ${esc(u.name)}` : ""}${u.zone ? `, ${esc(u.zone)}` : ""}
         <br><span class="meta">Ort: ${esc(u.ort)}</span></li>`).join("")}</ul>
         <p class="hint">${esc(cfg.umwelt.ueberschneidung_hinweis)} ${esc(cfg.umwelt.hinweis)}</p>` : ""}
@@ -639,6 +675,8 @@
     }
   }
   $("#detail").addEventListener("click", (e) => {
+    const ow = e.target.closest("[data-open-wohnen]");
+    if (ow) { setPanel("panel-wohnen", true); showWohnen(ow.dataset.openWohnen); focusPanel("panel-wohnen"); return; }
     const pl = e.target.closest("[data-open-plan]");
     if (pl) { if (!planOn) { planOn = true; document.querySelector(".map-plans")?.setAttribute("aria-pressed", "true"); drawPlans(); } showPlan(pl.dataset.openPlan); return; }
     const r = e.target.closest("[data-open-ref]");
@@ -687,6 +725,84 @@
     return `<section class="stat-block"><h3>${esc(title)}</h3><ul class="bars">${rows.map((r) => `<li><button type="button" class="bar" ${attr}="${esc(r.key)}" aria-label="${esc(r.label)}: ${r.n} Vorgänge – Liste danach filtern">
       <span>${esc(r.label)}</span><span class="bar-track" aria-hidden="true"><span class="bar-fill" style="width:${(100 * r.n / max).toFixed(1)}%"></span></span><span class="bar-n">${r.n}</span></button></li>`).join("")}</ul></section>`;
   }
+  // --- Wohnen und Boden: Kennzahlen mit Stichtag und Quelle; Bestands-, Angebots- und Vergleichsmiete getrennt ------
+  const num = (v, d) => Number(v).toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const slugOf = (name) => (cfg.ortsteile.find((o) => o.name === name) || {}).slug;
+  let wohnenGebiet = null;  // Ortsteil-Slug, wenn das Panel aus einem Vorgang heraus geöffnet wurde
+  function zensusWert(e, d, einheit) {
+    if (!e) return "–";
+    if (e.wert == null) return `nicht ausgewiesen <span class="meta">(${esc(e.grund || "keine Zelle mit Wert")})</span>`;
+    return `${num(e.wert, d)} ${einheit} <span class="derived">Näherung</span> <span class="meta">(${e.wohnungen != null ? `${de(e.wohnungen)} vermietete Wohnungen, ` : ""}${de(e.zellen)} Zellen; ${de(e.zellen_ohne_wert)} ohne Wert)</span>`;
+  }
+  function showWohnen(slug) {
+    const box = $("#wohnen");
+    const W = cfg.wohnen;
+    if (!W || !wohnen) { box.innerHTML = '<p class="hint">Noch keine Daten zu Wohnen und Boden.</p>'; return; }
+    if (slug !== undefined) wohnenGebiet = slug;
+    const key = wohnenGebiet || (area.kind === "ortsteil" ? area.key : null);
+    const o = key && cfg.ortsteile.find((x) => x.slug === key);
+    const name = o ? o.name : cfg.stadt.name;
+    const sp = wohnen.boris.spannen[key || "stadt"];
+    const z = wohnen.zensus;
+    const gem = z && z.gemeinden.find((g) => g.ars === cfg.stadt.ars);
+    const ob = key && z && z.ortsbezirke[key];
+    const eing = (g, k) => (g.eingeschraenkt || []).includes(k);
+    const zelle = (g, k, d) => (g[k] == null ? "–" : eing(g, k) ? `(${num(g[k], d)})` : num(g[k], d));
+    box.innerHTML = `<p class="hint">Gebiet: <strong>${esc(name)}</strong>${o ? ` (Gemarkung ${esc(o.gemarkung)})` : ""}. Die Werte beschreiben den Ort, nicht einzelne Vorgänge.</p>
+      <section class="stat-block"><h3>Bodenrichtwerte</h3>
+        <p class="stichtag">Stichtag ${brwStichtag()}</p>
+        ${sp ? `<dl class="facts"><dt>Spanne</dt><dd>${num(sp.min, 0)} bis ${num(sp.max, 0)} €/m²</dd><dt>Zonen</dt><dd>${de(sp.zonen)} (${esc(sp.arten.join(", "))})</dd></dl>`
+          : "<p>Keine Bodenrichtwertzone für baureifes Wohn- oder Mischbauland.</p>"}
+        <p class="hint">Filter: ${esc(W.boris.filter)}. ${esc(W.boris.stichtag_hinweis)}</p>
+        <p><button type="button" class="btn btn-soft" data-brw-on>Zonen auf der Karte zeigen</button></p></section>
+      <section class="stat-block"><h3>Bestandsmiete und Eigentum (Zensus 2022)</h3>
+        <p class="stichtag">Stichtag ${fmtDate(z.stichtag)}</p>
+        ${o ? `<dl class="facts"><dt>Bestandsmiete ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.miete, 2, "€/m²")}</dd>
+          <dt>Eigentümerquote ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.eigentuemerquote, 1, "%")}</dd></dl>
+          <p class="hint">${esc(z.naeherung)}</p>` : ""}
+        ${gem ? `<dl class="facts"><dt>Bestandsmiete ${esc(cfg.stadt.name)}</dt><dd>${num(gem.nettokaltmiete_eur_m2, 2)} €/m²</dd>
+          <dt>Leerstandsquote</dt><dd>${num(gem.leerstandsquote_pct, 1)} %</dd><dt>Eigentümerquote</dt><dd>${num(gem.eigentuemerquote_pct, 1)} %</dd></dl>
+          <p class="hint">Gemeindewerte: Regionaltabelle Gebäude und Wohnungen des Zensus 2022.</p>` : ""}
+        <p class="hint">Angebotsmieten und eine ortsübliche Vergleichsmiete stehen hier nicht: siehe Begriffe.</p></section>
+      ${z.gemeinden.length ? `<section class="stat-block"><h3>Vergleich mit Nachbargemeinden (Zensus 2022)</h3>
+        <div class="table-wrap"><table class="compare"><caption class="visually-hidden">Bestandsmiete, Leerstands- und Eigentümerquote je Gemeinde, Stichtag 15.05.2022</caption>
+        <thead><tr><th scope="col">Gemeinde</th><th scope="col">Bestands&shy;miete €/m²</th><th scope="col">Leer&shy;stand %</th><th scope="col">Eigen&shy;tümer %</th></tr></thead>
+        <tbody>${z.gemeinden.map((g) => `<tr${g.ars === cfg.stadt.ars ? ' class="own"' : ""}><th scope="row">${esc(g.name)}</th><td>${zelle(g, "nettokaltmiete_eur_m2", 2)}</td>
+          <td>${zelle(g, "leerstandsquote_pct", 1)}</td><td>${zelle(g, "eigentuemerquote_pct", 1)}</td></tr>`).join("")}</tbody></table></div>
+        <p class="hint">Werte in Klammern: Aussagewert eingeschränkt. Gemeinden in Hessen, Niedersachsen und Thüringen.</p></section>` : ""}
+      <section class="stat-block"><h3>Rechtlicher Rahmen</h3><ul class="locs">${W.kontext.map((k) => `<li><strong>${esc(k.thema)}:</strong> ${esc(k.aussage)}
+        <br><span class="meta">Stand: ${esc(k.stand)}${k.link ? ` · ${link(k.link, "Quelle")}` : ""}</span></li>`).join("")}</ul></section>
+      <section class="stat-block"><h3>Begriffe</h3><dl class="glossar">${W.begriffe.map((b) => `<dt>${esc(b.begriff)}</dt><dd>${esc(b.text)}</dd>`).join("")}</dl></section>
+      <section class="stat-block"><h3>Immobilienmarktberichte</h3><ul class="locs">${W.berichte.map((b) => `<li>${link(b.link, esc(b.titel)) || esc(b.titel)}<br><span class="meta">${esc(b.herausgeber)}</span></li>`).join("")}</ul>
+        <p class="hint">${esc(W.berichte_hinweis)}</p></section>
+      <p class="hint">${esc(W.boris.attribution)}. ${esc(z.attribution)}.</p>`;
+  }
+  $("#wohnen").addEventListener("click", (e) => {
+    if (!e.target.closest("[data-brw-on]")) return;
+    umweltOn.add("bodenrichtwerte");
+    const cb = document.querySelector('.map-layers input[value="bodenrichtwerte"]');
+    if (cb) cb.checked = true;
+    drawBrw();
+    syncUrl();
+    closePanel("panel-wohnen");
+  });
+  // Kasten im Vorgang: nur bei Titeln mit Bezug zu Bauen und Wohnen (wohnen.bezug_titel) und mit Ortsbezug
+  function wohnenKasten(p) {
+    if (!cfg.wohnen || !wohnen || !new RegExp(cfg.wohnen.bezug_titel, "i").test(p.name)) return "";
+    const slugs = [...new Set(p.locations.map((l) => slugOf(l.ortsteil)).filter(Boolean))];
+    if (!slugs.length) return "";
+    const z = wohnen.zensus;
+    const rows = slugs.map((s) => {
+      const o = cfg.ortsteile.find((x) => x.slug === s);
+      const sp = wohnen.boris.spannen[s];
+      const m = z && z.ortsbezirke[s] && z.ortsbezirke[s].miete;
+      return `<li><strong>${esc(o.name)}</strong>: Bodenrichtwerte ${sp ? `${num(sp.min, 0)} bis ${num(sp.max, 0)} €/m²` : "–"} (Stichtag ${brwStichtag()})
+        · Bestandsmiete ${m && m.wert != null ? `${num(m.wert, 2)} €/m² <span class="derived">Näherung</span>` : "nicht ausgewiesen"} (Zensus 2022)
+        <br><button type="button" class="link-btn" data-open-wohnen="${esc(s)}">Mehr zu Wohnen und Boden in ${esc(o.name)}</button></li>`;
+    }).join("");
+    return `<h4>Wohnen und Boden</h4><ul class="locs">${rows}</ul><p class="hint">Kontext zum Ort, kein Bezug zum Inhalt des Vorgangs.</p>`;
+  }
+
   function showStats() {
     const list = papers.filter((p) => !p.verfahrenspunkt);
     const count = (f) => { const c = new Map(); for (const p of list) for (const k of f(p)) c.set(k, (c.get(k) || 0) + 1); return c; };
@@ -757,7 +873,8 @@
   // --- Start -----------------------------------------------------------------------------------------
   async function start() {
     const json = (url) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const [c, d, f, credits] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json")]);
+    const [c, d, f, credits, w] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json"), json(WOHNEN_URL)]);
+    wohnen = w;
     if (credits && credits.length) $("#credits").innerHTML = credits.map((a) => `<li>${link(a.link, esc(a.text)) || esc(a.text)} <span class="hint">(${esc(a.lizenz)})</span></li>`).join("");
     if (!c) throw new Error("Konfiguration (stadt.json) fehlt");
     cfg = c;
@@ -809,6 +926,7 @@
     $("#papers").addEventListener("mouseleave", () => tl && tl.select(selected));
     $("#cta-termine").addEventListener("click", () => { setPanel("panel-termine", true); showTermine(); focusPanel("panel-termine"); });
     $("#cta-stats").addEventListener("click", () => { setPanel("panel-auswertung", true); showStats(); focusPanel("panel-auswertung"); });
+    $("#cta-wohnen").addEventListener("click", () => { setPanel("panel-wohnen", true); showWohnen(null); focusPanel("panel-wohnen"); });
     const params = new URLSearchParams(location.search);
     const ref = decodeURIComponent(location.hash.slice(1));
     loadArea(params.get("gebiet") || DEFAULT_AREA, true);
@@ -821,7 +939,7 @@
       render();
     }
     if (planOn) drawPlans();
-    for (const id of umweltOn) drawUmwelt(id);
+    for (const id of umweltOn) if (id === "bodenrichtwerte") drawBrw(); else drawUmwelt(id);
     const initial = papers.find((p) => p.reference === ref);
     if (initial) select(initial); else if (params.get("plan")) await showPlan(params.get("plan")); else showIntro();
     syncUrl();

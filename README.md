@@ -30,11 +30,12 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
   - Zuschaltbare Kartenebenen aus den INSPIRE-Diensten des Landes (HLNUG, CC BY 4.0; HMLU, frei nutzbar ohne Weiterveräußerung), zugeschnitten auf das Stadtgebiet. Sie sind nicht rechtsverbindlich.
   - Eine „räumliche Überschneidung“ wird nur für Flurstückspunkte und Geltungsbereiche von Plänen (mindestens 1 % der Fläche) angegeben, nicht für Straßen oder Ortsteile. Sie sagt nichts über den Inhalt eines Vorgangs aus (`audit/ueberschneidung_umwelt.tsv`).
   - Der Naturpark umfasst das ganze Stadtgebiet und wird daher nicht als Überschneidung ausgewiesen.
-- **Wohnen und Boden (geplant, Arbeitspaket D):**
-  - Es gibt keinen Mietspiegel für Witzenhausen, also keine ortsübliche Vergleichsmiete. Angebotsmieten privater Portale werden nicht übernommen.
+- **Wohnen und Boden:**
+  - Es gibt keinen Mietspiegel für Witzenhausen, also keine ortsübliche Vergleichsmiete. Angebotsmieten privater Portale werden nicht übernommen. Die drei Begriffe stehen getrennt im Glossar und nie in einer Zahl.
   - Mietwerte stammen nur aus dem Zensus 2022 (Bestandsmiete, Stichtag 15.05.2022).
-  - Bodenrichtwerte werden stets mit ihrem Stichtag ausgewiesen (2024; 2026 nach Prüfung des neuen Dienstes, Issue #4).
-  - Werte je Ortsbezirk aus Gitterzellen sind Näherungen: Die Zellen werden über ihren Mittelpunkt einer Gemarkung zugeordnet, und geheim gehaltene Zellen zählen nicht als null.
+  - Bodenrichtwerte stehen immer mit ihrem Stichtag (01.01.2024). Ein Dienst mit Stichtag 2026 war am 23.10.2026 nicht auffindbar (Issue #4).
+  - Werte je Ortsbezirk aus Gitterzellen sind Näherungen. Die Zellen werden über ihren Mittelpunkt einer Gemarkung zugeordnet; geheim gehaltene Zellen zählen nicht als null; unter 5 Zellen mit Wert wird nichts ausgewiesen. Die Leerstandsquote steht nur für die Gemeinde.
+  - Rechtlicher Kontext (Mietenstufe, Mieterschutzverordnung, KdU) ist datierter Text mit Quelle, kein Datensatz. KdU-Beträge werden nicht genannt, weil kein aktueller Stand belegt ist.
 - **Quellen:**
   - Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv), lesbar in [`DATA_SOURCES.md`](DATA_SOURCES.md), erzeugt mit `python tools/datenquellen.py`.
   - Die Namensnennungen auf der Seite kommen aus [`data/attribution.tsv`](data/attribution.tsv), nur für die tatsächlich genutzten Quellen.

@@ -10,6 +10,8 @@ PAKET = config.EXPORT / "stadtmonitor-daten.zip"
 def package():
     with zipfile.ZipFile(PAKET, "w", zipfile.ZIP_DEFLATED) as z:
         z.write(config.VORGAENGE, "vorgaenge.json")
+        if (config.EXPORT / "wohnen.json").exists():  # Bodenrichtwert-Spannen und Zensuswerte (ohne Geometrie)
+            z.write(config.EXPORT / "wohnen.json", "wohnen.json")
         for p in sorted((config.EXPORT / "audit").glob("*.tsv")):
             z.write(p, f"audit/{p.name}")
         for p in (config.ROOT / "data" / "LICENSE-DATA.md", config.ROOT / "data" / "quellen_register.tsv"):
