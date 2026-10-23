@@ -21,7 +21,9 @@ from . import config, lage, net
 STRASSENWORT = re.compile(r"(straße|weg|gasse|platz|allee|ring|pfad|steig|stieg|ufer|brücke|tor|markt|hof)$", re.I)
 FLST = re.compile(r"Gem(?:arkung|\.)\s+([A-ZÄÖÜ][\wäöüß-]+(?:-[A-ZÄÖÜ][\wäöüß-]+)?),?\s+Fl(?:ur|\.)\s*(\d+),?\s+Fl(?:urstück|st\.?)\s*(\d+)(?:/(\d+))?")
 GEMARKUNG = re.compile(r"Gem(?:arkung|\.)\s+([A-ZÄÖÜ][\wäöüß]+(?:-[A-ZÄÖÜ][\wäöüß]+)?)")
-FLST_CACHE = lage.RAW / "flst_cache.json"
+# Flurstückspunkte (dl-de/zero-2.0) im Repository, damit die Verortung nicht von der Erreichbarkeit des Dienstes abhängt
+FLST_CACHE = config.GEO / "dl-de-zero" / "flurstuecke.json"
+_DIENST_AUS = False
 AUSSCHLUSS = set(config.STADT.get("verortung", {}).get("ausschluss_namen", []))
 
 
@@ -74,18 +76,22 @@ def _ortsteil(name=None, gk=None):
 
 
 def flurstueck(gk, flur, zaehler, nenner):
-    """Punkt eines Flurstücks (lon, lat) über den Suchdienst; Ergebnisse zwischengespeichert."""
+    """Punkt eines Flurstücks (lon, lat) über den Suchdienst; Ergebnisse zwischengespeichert. Ist der Dienst nicht
+    erreichbar, bleibt das Flurstück für diesen Lauf ohne Punkt (kein Eintrag im Zwischenspeicher)."""
+    global _DIENST_AUS
     key = f"{gk}-{flur}-{zaehler}-{nenner or ''}"
     cache = json.loads(FLST_CACHE.read_text(encoding="utf-8")) if FLST_CACHE.exists() else {}
     if key in cache:
         return cache[key]
+    if _DIENST_AUS:
+        return None
     teile = [("FS_GKNR", gk), ("FS_FLNR", f"{int(flur):03d}"), ("FS_FSZ", f"{int(zaehler):05d}")]
     if nenner:
         teile.append(("FS_FSN", f"{int(nenner):03d}"))
     flt = "<Filter><And>" + "".join(f"<PropertyIsEqualTo><PropertyName>{k}</PropertyName><Literal>{v}</Literal></PropertyIsEqualTo>" for k, v in teile) + "</And></Filter>"
     url = f"{lage.URL}?" + urllib.parse.urlencode({"SERVICE": "WFS", "VERSION": "1.1.0", "REQUEST": "GetFeature", "TYPENAME": "flst", "FILTER": flt})
     try:
-        body, _ = net.get(url)
+        body, _ = net.get(url, tries=2)
         pos = re.search(rb"<gml:pos>([\d.]+) ([\d.]+)</gml:pos>", body)  # EPSG:31467, Hochwert zuerst
         res = None
         if pos:
@@ -93,10 +99,11 @@ def flurstueck(gk, flur, zaehler, nenner):
             res = {"lon": round(lon, 6), "lat": round(lat, 6)}
         time.sleep(0.3)
     except Exception:
+        _DIENST_AUS = True
         return None
     cache[key] = res
     FLST_CACHE.parent.mkdir(parents=True, exist_ok=True)
-    FLST_CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
+    FLST_CACHE.write_text(json.dumps(dict(sorted(cache.items())), ensure_ascii=False, indent=0), encoding="utf-8")
     return res
 
 

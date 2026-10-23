@@ -7,6 +7,9 @@ Name → Gemarkungen (Ortsbezirke) mit einem Bezugspunkt je Gemarkung.
 
 Die Gemarkung jedes Punkts wird per Punkt-in-Fläche gegen die Gemarkungen (pipeline/gemarkungen.py) bestimmt und
 mit der Angabe des Dienstes abgeglichen; Abweichungen stehen im Audit. Hausnummern werden nicht übernommen.
+
+Das Verzeichnis liegt im Repository (dl-de/zero-2.0). Scheitert ein Abruf (etwa weil der Dienst Anfragen aus dem
+Rechenzentrum des Workflows ablehnt), steht das im Abrufprotokoll und das Verzeichnis bleibt auf dem letzten Stand.
 """
 import hashlib
 import json
@@ -40,28 +43,36 @@ def _bbox_utm():
     return int(min(xs)) // KACHEL * KACHEL, int(min(ys)) // KACHEL * KACHEL, int(max(xs)) + 1, int(max(ys)) + 1
 
 
-def fetch():
-    """Kacheln der Ebene `lage` laden (Zwischenspeicher 30 Tage)."""
-    RAW.mkdir(parents=True, exist_ok=True)
+def kacheln():
     x0, y0, x1, y1 = _bbox_utm()
-    for x in range(x0, x1, KACHEL):
-        for y in range(y0, y1, KACHEL):
-            p = RAW / f"lage_{x}_{y}.gml"
-            if p.exists() and time.time() - p.stat().st_mtime < 30 * 86400:
-                continue
-            url = (f"{URL}?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&TYPENAME=lage&SRSNAME=EPSG:25832"
-                   f"&BBOX={x},{y},{x + KACHEL},{y + KACHEL},EPSG:25832")
-            try:
-                body, _ = net.get(url)
-            except Exception as e:
-                audit.abruf("hako_lage", url, getattr(e, "code", ""), "", "", "", str(e)[:200])
-                raise
-            n = body.count(b"<ms:lage ")
-            if n >= LIMIT:
-                raise SystemExit(f"Kachel {x},{y}: {n} Objekte, Grenze des Dienstes erreicht – Kachel verkleinern")
-            p.write_bytes(body)
-            audit.abruf("hako_lage", url, 200, len(body), hashlib.sha256(body).hexdigest(), n, "")
-            time.sleep(0.5)
+    return [(x, y) for x in range(x0, x1, KACHEL) for y in range(y0, y1, KACHEL)]
+
+
+def vollstaendig():
+    return (RAW / "hako.gml").exists() and all((RAW / f"lage_{x}_{y}.gml").exists() for x, y in kacheln())
+
+
+def fetch():
+    """Kacheln der Ebene `lage` laden (Zwischenspeicher 30 Tage); beim ersten Fehler abbrechen, ohne die Pipeline anzuhalten."""
+    RAW.mkdir(parents=True, exist_ok=True)
+    for x, y in kacheln():
+        p = RAW / f"lage_{x}_{y}.gml"
+        if p.exists() and time.time() - p.stat().st_mtime < 30 * 86400:
+            continue
+        url = (f"{URL}?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&TYPENAME=lage&SRSNAME=EPSG:25832"
+               f"&BBOX={x},{y},{x + KACHEL},{y + KACHEL},EPSG:25832")
+        try:
+            body, _ = net.get(url, tries=2)
+        except Exception as e:
+            audit.abruf("hako_lage", url, getattr(e, "code", ""), "", "", "", str(e)[:200])
+            print(f"Lagebezeichnungen nicht abrufbar ({e}); Verzeichnis bleibt auf dem letzten Stand")
+            return
+        n = body.count(b"<ms:lage ")
+        if n >= LIMIT:
+            raise SystemExit(f"Kachel {x},{y}: {n} Objekte, Grenze des Dienstes erreicht – Kachel verkleinern")
+        p.write_bytes(body)
+        audit.abruf("hako_lage", url, 200, len(body), hashlib.sha256(body).hexdigest(), n, "")
+        time.sleep(0.5)
 
 
 def fetch_hako():
@@ -74,7 +85,12 @@ def fetch_hako():
     flt = (f"<Filter><And><PropertyIsEqualTo><PropertyName>HA_KREIS</PropertyName><Literal>{kreis}</Literal></PropertyIsEqualTo>"
            f"<PropertyIsEqualTo><PropertyName>HA_GEMEINDE</PropertyName><Literal>{gem}</Literal></PropertyIsEqualTo></And></Filter>")
     url = f"{URL}?" + urllib.parse.urlencode({"SERVICE": "WFS", "VERSION": "1.1.0", "REQUEST": "GetFeature", "TYPENAME": "hako", "FILTER": flt})
-    body, _ = net.get(url)
+    try:
+        body, _ = net.get(url, tries=2)
+    except Exception as e:
+        audit.abruf("hako_lage", url, getattr(e, "code", ""), "", "", "", str(e)[:200])
+        print(f"Hauskoordinaten nicht abrufbar ({e}); Verzeichnis bleibt auf dem letzten Stand")
+        return
     n = body.count(b"<ms:hako ")
     if n >= LIMIT or n == 0:
         audit.abruf("hako_lage", url, 200, len(body), "", n, "Anzahl unplausibel")
@@ -116,6 +132,9 @@ def punkte():
 def build():
     """Verzeichnis {name: {gemarkung_nr: {"n", "lon", "lat", "quelle"}}}; Punkt = Median der Punkte je Gemarkung."""
     from shapely.geometry import Point, shape
+    if not vollstaendig():
+        print(f"Rohdaten unvollständig; {VERZEICHNIS.relative_to(config.ROOT)} bleibt unverändert")
+        return
     to_wgs = Transformer.from_crs("EPSG:25832", "EPSG:4326", always_xy=True).transform
     flaechen = [(f["properties"]["gmk_nr"], shape(f["geometry"])) for f in json.loads(config.ORTSBEZIRKE.read_text(encoding="utf-8"))["features"]]
     je, abweichungen = {}, []
