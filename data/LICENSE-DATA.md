@@ -5,6 +5,7 @@ Die Daten stehen nicht unter der MIT-Lizenz des Codes.
 | Datei | Quelle | Lizenz |
 |---|---|---|
 | `export/vorgaenge.json`, `export/audit/*.tsv`, `export/stadtmonitor-daten.zip` (im Workflow erzeugt) | Einladungen in den amtlichen Bekanntmachungen der Stadt Witzenhausen, https://www.witzenhausen.eu/amtliche-bekanntmachungen/ | vermutlich amtliche Werke nach § 5 Abs. 1 UrhG; Bestätigung durch die Stadt offen |
+| `geo/dl-de-zero/ortsbezirke.geojson`, `export/flaechen.json` | Gemarkungen aus den Digitalen Verwaltungsgrenzen Hessen (HVBG), https://gds-srv.hessen.de/atomfeed/DigVGr-epsg25832-shp.zip; Zuordnung zu Ortsbezirken laut `config/stadt.json` | dl-de/zero-2.0; „Geobasisdaten: © HVBG“ (freiwillig) |
 | Kartenhintergrund (nur angezeigt, nicht gespeichert) | basemap.de Web Raster, BKG | CC BY 4.0; „© basemap.de / BKG \| Datenquellen: © GeoBasis-DE“ |
 | `../phase0/stichprobe_20_einladungen.tsv` | 20 Einladungen (wie oben), Stufen vorläufig abgeleitet | wie oben |
 | `../tests/fixtures/vorgaenge.json`, `../tests/fixtures/einladungen/` | Einladungen (wie oben), nur für Tests | wie oben |
