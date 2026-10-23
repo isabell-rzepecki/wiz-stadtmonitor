@@ -5,6 +5,7 @@
     "titel": "Stadtmonitor Witzenhausen",
     "kurz": "Stadtmonitor",
     "gemeindeschluessel": "06636016",
+    "ars": "066360016016",
     "wikidata": "Q564827",
     "osm_relation": 549412,
     "website": "https://www.witzenhausen.eu/",
@@ -643,5 +644,103 @@
         ]
       }
     ]
+  },
+  "wohnen": {
+    "_hinweis": "Modul Wohnen und Boden. Bestandsmiete, Angebotsmiete und ortsübliche Vergleichsmiete werden nie in einer Zahl oder Skala zusammengeführt. Rechtlicher Kontext ist datierter Text, kein Datensatz.",
+    "boris": {
+      "url": "https://www.gds.hessen.de/wfs2/boris/cgi-bin/brw/2024/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=boris:BR_BodenrichtwertZonal&COUNT=5000",
+      "stichtag": "2024-01-01",
+      "stichtag_hinweis": "Stichtag 01.01.2024. Ein Dienst mit dem Stichtag 01.01.2026 war am 23.10.2026 nicht auffindbar (…/brw/2026/wfs: HTTP 404; der INSPIRE-Download-Feed 732 beruht auf dem Dienst mit Stichtag 01.01.2020).",
+      "attribution": "Bodenrichtwerte: Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH, Stichtag 01.01.2024",
+      "lizenz": "Nutzung ohne Einschränkung oder Bedingung (AccessConstraints des Dienstes); dl-de/zero-2.0",
+      "filter": "baureifes Land (Entwicklungszustand B), Art W… (Wohnbauflächen) oder M… (gemischte Bauflächen)",
+      "klassen": [
+        30,
+        40,
+        60,
+        80
+      ]
+    },
+    "zensus": {
+      "stichtag": "2022-05-15",
+      "attribution": "© Statistische Ämter des Bundes und der Länder, 2024, dl-de/by-2-0",
+      "regionaltabelle": "https://www.destatis.de/static/DE/zensus/gitterdaten/Regionaltabelle_Gebaeude_Wohnungen.xlsx",
+      "gitter": {
+        "miete": {
+          "url": "https://www.destatis.de/static/DE/zensus/gitterdaten/Durchschnittliche_Nettokaltmiete_und_Anzahl_der_Wohnungen.zip",
+          "datei": "Zensus2022_Durchschn_Nettokaltmiete_Anzahl_der_Wohnungen_100m-Gitter.csv",
+          "wert": "durchschnMieteQM",
+          "gewicht": "AnzahlWohnungen"
+        },
+        "eigentuemerquote": {
+          "url": "https://www.destatis.de/static/DE/zensus/gitterdaten/Eigentuemerquote_in_Gitterzellen.zip",
+          "datei": "Zensus2022_Eigentuemerquote_100m-Gitter.csv",
+          "wert": "Eigentuemerquote"
+        }
+      },
+      "vergleich": [
+        "066360016016",
+        "066360001001",
+        "066360002002",
+        "066360004004",
+        "066360009009",
+        "031590013013",
+        "031590017017",
+        "031590034034",
+        "031595401021",
+        "160615008014",
+        "160615008066"
+      ],
+      "naeherung": "Näherung: Gitterzellen (100 m) werden über ihren Mittelpunkt einer Gemarkung zugeordnet. Die Bestandsmiete ist mit der Zahl der vermieteten Wohnungen gewichtet; für die Eigentümerquote steht der Median der Zellwerte, ungewichtet. Zellen mit „–“ (genau null oder durch die Geheimhaltung auf null gesetzt) zählen nicht als null, sondern als „ohne Wert“. Werte aus weniger als 5 Zellen werden nicht ausgewiesen. Die Leerstandsquote wird nur für die Gemeinde angegeben: Im Gitter fasst „–“ echte Nullwerte und geheim gehaltene Werte zusammen, eine Quote je Ortsbezirk wäre deshalb verzerrt.",
+      "mindestzellen": 5
+    },
+    "begriffe": [
+      {
+        "begriff": "Bestandsmiete",
+        "text": "Nettokaltmiete je m² bestehender Mietverhältnisse, erhoben im Zensus 2022 (Stichtag 15.05.2022). Der Stadtmonitor zeigt nur diese Miete."
+      },
+      {
+        "begriff": "Angebotsmiete",
+        "text": "Miete in Inseraten für neu zu vermietende Wohnungen. Sie liegt meist über der Bestandsmiete. Private Portale haben keine offene Lizenz; der Stadtmonitor übernimmt keine Angebotsmieten."
+      },
+      {
+        "begriff": "Ortsübliche Vergleichsmiete",
+        "text": "Rechtsbegriff nach § 558 BGB, in der Regel durch einen Mietspiegel belegt. Für Witzenhausen gibt es keinen Mietspiegel; eine Vergleichsmiete ist nicht verfügbar."
+      }
+    ],
+    "kontext": [
+      {
+        "thema": "Wohngeld-Mietenstufe",
+        "aussage": "Witzenhausen, Stadt: Mietenstufe I (niedrigste von sieben Stufen).",
+        "stand": "Anlage zu § 1 Abs. 3 WoGV, Fassung ab 01.01.2023; geprüft am 23.10.2026 an einer konsolidierten Fassung (buzer.de), da gesetze-im-internet.de nicht erreichbar war.",
+        "link": "https://www.gesetze-im-internet.de/wogv/anlage.html"
+      },
+      {
+        "thema": "Mietpreisbremse und Kappungsgrenze (Mieterschutzverordnung)",
+        "aussage": "Witzenhausen gehört weder zur geltenden Gebietskulisse (Verordnung vom 12.11.2025, GVBl. 2025 Nr. 74) noch zu den 71 Kommunen des Entwurfs vom 24.09.2026. Die geltende Verordnung läuft am 25.11.2026 aus; die Neufassung soll Mitte November 2026 beschlossen werden.",
+        "stand": "geprüft am 23.10.2026; Rechtslage im Fluss",
+        "link": "https://hessen.de/presse/mieterschutz-soll-auf-71-kommunen-wachsen"
+      },
+      {
+        "thema": "Kosten der Unterkunft (KdU)",
+        "aussage": "Angemessenheitsgrenzen legt der Werra-Meißner-Kreis fest. Ein aktueller Stand war nicht öffentlich abrufbar. Amtlich belegt ist eine Handlungsanweisung von 2018; eine Sekundärquelle nennt Werte mit Stand 01.01.2023 (nicht geprüft), eine Fortschreibung ist beauftragt. Der Stadtmonitor nennt deshalb keine Beträge. Auskunft: Jobcenter Werra-Meißner.",
+        "stand": "23.10.2026",
+        "link": "https://jobcenter-werra-meissner.de/geldleistungen/unterkunftskosten/"
+      }
+    ],
+    "berichte": [
+      {
+        "titel": "Immobilienmarktbericht des Gutachterausschusses für die Landkreise Hersfeld-Rotenburg, Schwalm-Eder und Werra-Meißner",
+        "herausgeber": "Gutachterausschuss für Immobilienwerte beim Amt für Bodenmanagement Homberg (Efze)",
+        "link": "https://gds.hessen.de"
+      },
+      {
+        "titel": "Immobilienmarktbericht Hessen",
+        "herausgeber": "Zentrale Geschäftsstelle der Gutachterausschüsse (ZGGH)",
+        "link": "https://gds.hessen.de"
+      }
+    ],
+    "berichte_hinweis": "Nur verlinkt; eine tabellarische Übernahme setzt eine Prüfung der Nutzungsbedingungen voraus.",
+    "bezug_titel": "(Bebauungsplan|Flächennutzungsplan|Bauleitplan|Wohn|Bauplatz|Bauplätze|Baugebiet|Baugrundstück|Grundstück|Bauantrag|Bauvoranfrage|Neubau|Bauvorhaben|Leerstand|Miete|Sanierung|Innenentwicklung|Baulücke)"
   }
 }

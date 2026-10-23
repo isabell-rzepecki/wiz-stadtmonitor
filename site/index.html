@@ -31,6 +31,7 @@
       <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
       <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
       <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H6.5A2.5 2.5 0 0 0 4 5.5v13A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5M10 20v-5.5h4V20"/></symbol>
       <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 17v-5M11 17V6M16 17v-8M21 17v-3"/></symbol>
       <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.6 3.2-6 6.5-6s6 2.4 6.5 6"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.6c1.8.9 3 2.7 3.2 5.4"/></symbol>
       <symbol id="i-data" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.5"/><path d="M4.5 5.5v13c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-13M4.5 12c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5"/></symbol>
@@ -86,6 +87,12 @@
           <span class="card-title">Kennzahlen zum Gebiet</span>
           <span class="card-text">Tagesordnungspunkte nach Gremium, Jahr und Ortsbezug. Ein Klick auf einen Balken filtert die Liste.</span>
           <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-stats"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>Kennzahlen</button></span>
+        </div>
+        <div class="card static">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg></span>
+          <span class="card-title">Wohnen und Boden</span>
+          <span class="card-text">Bodenrichtwerte, Bestandsmiete und Eigentümerquote zum Gebiet, mit Stichtag und Quelle; Vergleich mit Nachbargemeinden.</span>
+          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-wohnen"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Wohnen und Boden</button></span>
         </div>
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg></span>
@@ -188,6 +195,14 @@
         <button type="button" class="icon-btn" data-close="panel-auswertung" aria-label="Kennzahlen schließen"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
       </div>
       <div class="panel-body" id="stats"></div>
+    </section>
+
+    <section id="panel-wohnen" class="glass overlay" aria-labelledby="wohnen-heading" hidden>
+      <div class="panel-head">
+        <h2 id="wohnen-heading" tabindex="-1">Wohnen und Boden</h2>
+        <button type="button" class="icon-btn" data-close="panel-wohnen" aria-label="Wohnen und Boden schließen"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+      </div>
+      <div class="panel-body" id="wohnen"></div>
     </section>
 
     <section id="panel-termine" class="glass overlay" aria-labelledby="termine-heading" hidden>

@@ -329,6 +329,14 @@ body.detail-closed #timeline-wrap { right: 16px; }
 /* Kennzahlen */
 .stat-block { margin: 6px 0 16px; }
 .stat-block h3 { font: 600 14px/1.3 var(--font-body); margin: 0 0 6px; }
+/* Wohnen und Boden */
+.stichtag { display: inline-block; margin: 0 0 6px; padding: 2px 8px; border-radius: 999px; background: var(--accent-tint); color: var(--accent-ink); font-weight: 700; font-size: 14px; }
+.table-wrap { overflow-x: auto; }
+table.compare { border-collapse: collapse; font-size: 14px; width: 100%; }
+table.compare th, table.compare td { padding: 3px 6px; text-align: right; border-bottom: 1px solid var(--border-alt); }
+table.compare th[scope=row], table.compare thead th:first-child { text-align: left; font-weight: 400; }
+table.compare tr.own th, table.compare tr.own td { font-weight: 700; }
+dl.glossar dt { font-weight: 700; margin-top: 6px; } dl.glossar dd { margin: 0; }
 .bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
 .bar { width: 100%; display: grid; grid-template-columns: minmax(120px, 34%) 1fr 48px; align-items: center; gap: 10px; border: 0; background: transparent; padding: 4px 6px; border-radius: 10px; cursor: pointer; text-align: left; font-size: 14px; }
 .bar:hover { background: rgba(244, 114, 107, 0.06); }
