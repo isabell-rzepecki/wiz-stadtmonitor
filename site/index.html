@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Content-Security-Policy: Skripte, Stile und Schrift nur von hier (Leaflet und Schriften lokal in vendor/ und fonts/),
+       keine Inline-Skripte; Kartenkacheln von basemap.de (BKG). Inline-Stile bleiben erlaubt (Leaflet, Balken). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://sgx.geodatenzentrum.de; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <!-- Stadtspezifische Angaben (Name, Adressen, Gremien) setzt app.js aus stadt.json (config/stadt.json) ein -->
+  <title>Stadtmonitor – Sitzungsinformationen auf Karte und Zeitleiste</title>
+  <meta name="description" content="Tagesordnungen der Stadtverordnetenversammlung, der Ausschüsse, Ortsbeiräte und Beiräte auf Karte, Zeitleiste und als Liste – mit Quellenangabe.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#f4726b">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/space-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/lilita-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="stadt.json" as="fetch" crossorigin>
+  <link rel="preload" href="data/export/vorgaenge.json" as="fetch" crossorigin>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==">
+  <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.min.css" integrity="sha512-ENrTWqddXrLJsQS2A86QmvA17PkJ0GVm1bqj5aTgpeMAfDKN2+SIOLpKG8R/6KkimnhTb+VW5qqUHB/r1zaRgg==">
+  <link rel="stylesheet" href="vendor/markercluster/MarkerCluster.Default.min.css" integrity="sha512-fYyZwU1wU0QWB4Yutd/Pvhy5J1oWAwFXun1pt+Bps04WSe4Aq6tyHlT4+MHSJhD8JlLfgLuC4CbCnX5KHSjyCg==">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="list-closed detail-open">
+  <noscript><div class="noscript glass"><p><strong>Stadtmonitor</strong> zeigt die Tagesordnungen der städtischen Gremien auf Karte und Zeitleiste. Für die Karte wird JavaScript benötigt.</p>
+    <p>Die Daten gibt es auch ohne Karte: <a href="data/export/vorgaenge.json">Vorgänge (JSON)</a> · <a href="datenschutz.html">Datenschutz</a></p></div></noscript>
+  <!-- Symbole (eigene Strichzeichnungen, 24er-Raster) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.6-4.6"/></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+      <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H6.5A2.5 2.5 0 0 0 4 5.5v13A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 17v-5M11 17V6M16 17v-8M21 17v-3"/></symbol>
+      <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.6 3.2-6 6.5-6s6 2.4 6.5 6"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.6c1.8.9 3 2.7 3.2 5.4"/></symbol>
+      <symbol id="i-data" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.5"/><path d="M4.5 5.5v13c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-13M4.5 12c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></symbol>
+      <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11.5l-2 4 2 4H5"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+      <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></symbol>
+    </defs>
+  </svg>
+
+  <header>
+    <h1 class="site-title">Stadtmonitor <span data-cfg="stadt.name"></span></h1>
+    <nav class="nav glass" aria-label="Hauptmenü">
+      <div class="brand" aria-hidden="true">Stadtmonitor <span data-cfg="stadt.name"></span></div>
+      <form class="nav-search" id="nav-search" role="search">
+        <label class="visually-hidden" for="q">Tagesordnungspunkte suchen</label>
+        <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+        <input type="search" id="q" placeholder="Tagesordnungspunkte suchen …" autocomplete="off">
+      </form>
+      <label class="visually-hidden" for="f-area">Gebiet</label>
+      <select id="f-area" class="nav-area"></select>
+      <div class="nav-group seg" role="group" aria-label="Flächen ein- und ausblenden">
+        <button type="button" class="toggle" data-panel="panel-list" aria-controls="panel-list" aria-pressed="false" title="Liste der Vorgänge">
+          <svg class="icon" aria-hidden="true"><use href="#i-list"/></svg><span>Liste</span></button>
+        <button type="button" class="toggle" data-panel="timeline-wrap" aria-controls="timeline-wrap" aria-pressed="false" title="Zeitleiste">
+          <svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg><span>Zeitleiste</span></button>
+        <button type="button" class="toggle" data-panel="panel-detail" aria-controls="panel-detail" aria-pressed="true" title="Gewählter Vorgang">
+          <svg class="icon" aria-hidden="true"><use href="#i-doc"/></svg><span>Vorgang</span></button>
+      </div>
+      <div class="nav-group" role="group" aria-label="Menü">
+        <button type="button" class="menu-btn" data-mega="mega-mitmachen" aria-expanded="false" aria-controls="mega-mitmachen">
+          <svg class="icon" aria-hidden="true"><use href="#i-people"/></svg><span>Sitzungen</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        <button type="button" class="menu-btn" data-mega="mega-daten" aria-expanded="false" aria-controls="mega-daten">
+          <svg class="icon" aria-hidden="true"><use href="#i-data"/></svg><span>Daten</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        <button type="button" class="menu-btn" id="about-open" aria-haspopup="dialog">
+          <svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span>Über</span></button>
+      </div>
+    </nav>
+
+    <section class="mega glass" id="mega-mitmachen" aria-label="Sitzungen und Hinweise" hidden>
+      <div class="cards">
+        <div class="card static">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg></span>
+          <span class="card-title">Kommende Sitzungen</span>
+          <span class="card-text">Stadtverordnetenversammlung, Ausschüsse, Ortsbeiräte und Beiräte tagen in der Regel öffentlich.</span>
+          <span class="card-actions"><button type="button" class="btn btn-cta" id="cta-termine"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>Termine anzeigen</button></span>
+        </div>
+        <div class="card static">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></span>
+          <span class="card-title">Kennzahlen zum Gebiet</span>
+          <span class="card-text">Tagesordnungspunkte nach Gremium, Jahr und Ortsbezug. Ein Klick auf einen Balken filtert die Liste.</span>
+          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-stats"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>Kennzahlen</button></span>
+        </div>
+        <div class="card static">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg></span>
+          <span class="card-title">Ratsinformationssystem</span>
+          <span class="card-text">Vorlagen, Niederschriften und Beschlüsse stehen, soweit veröffentlicht, im Bürgerinformationssystem der Stadt.</span>
+          <span class="card-actions"><a class="btn btn-soft" data-cfg-href="stadt.sessionnet" href="#" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg>Bürgerinfo öffnen<span class="visually-hidden"> (neuer Tab)</span></a></span>
+        </div>
+        <div class="card static">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg></span>
+          <span class="card-title">Fehler melden</span>
+          <span class="card-text">Ort falsch zugeordnet oder etwas unklar? Ein Hinweis hilft, die Karte zu verbessern.</span>
+          <span class="card-actions"><a class="btn btn-soft" id="cta-report" href="#" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg>Hinweis geben</a></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="mega glass" id="mega-daten" aria-label="Daten und Quellen" hidden>
+      <div class="cards cards-3">
+        <a class="card" href="data/export/vorgaenge.json" download>
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></span>
+          <span class="card-title">Vorgänge (JSON)</span>
+          <span class="card-text">Sitzungen, Tagesordnungspunkte und Ortsbezüge mit Fundstelle.</span></a>
+        <a class="card" data-cfg-href="stadt.bekanntmachungen" href="#" target="_blank" rel="noopener">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg></span>
+          <span class="card-title">Amtliche Bekanntmachungen</span>
+          <span class="card-text">Die Originale (PDF) auf der Seite der Stadt.</span></a>
+      </div>
+      <details class="acc" id="sources">
+        <summary>Quellen, Lizenzen und Datenstand</summary>
+        <div>
+          <p>Einladungen aus den amtlichen Bekanntmachungen der Stadt (PDF; Tagesordnungen als amtliche Werke, Prüfung offen) · Kartenhintergrund © basemap.de / BKG (CC BY 4.0), Datenquellen © GeoBasis-DE. Abgeleitete Angaben sind gekennzeichnet.</p>
+          <p id="stand"></p>
+          <p><a href="data/LICENSE-DATA.md">Lizenzen der Daten</a> · <a data-cfg-href="projekt.repo" href="#">Quellcode</a> · <a href="datenschutz.html">Datenschutz</a></p>
+        </div>
+      </details>
+    </section>
+  </header>
+
+  <main>
+    <section id="panel-list" class="panel glass" aria-labelledby="list-heading" hidden>
+      <div class="resizer" data-resize="list" role="separator" tabindex="0" aria-orientation="vertical" aria-controls="panel-list" aria-label="Breite der Liste ändern (Pfeiltasten)"></div>
+      <div class="panel-head">
+        <h2 id="list-heading" tabindex="-1">Vorgänge</h2>
+        <button type="button" class="icon-btn" data-close="panel-list" aria-label="Liste einklappen">‹</button>
+      </div>
+      <div class="panel-body">
+        <form class="filters" id="filters" role="search" aria-label="Vorgänge filtern">
+          <label>Stichwort
+            <input type="search" id="f-text" placeholder="z. B. Bebauungsplan, Kita, STV/488/2025" autocomplete="off">
+          </label>
+          <div class="filter-row">
+            <label>Gremium
+              <select id="f-gremium"><option value="">alle</option></select>
+            </label>
+            <label>Art
+              <select id="f-art">
+                <option value="">alle</option>
+                <option value="vorlage">mit Vorlagennummer</option>
+                <option value="top">ohne Vorlagennummer</option>
+              </select>
+            </label>
+          </div>
+          <details class="acc" id="more-filters">
+            <summary>Weitere Filter<span class="active-filters" id="active-filters"></span></summary>
+            <div class="filters">
+              <label class="check"><input type="checkbox" id="f-verfahren"> auch Verfahrenspunkte (Eröffnung, Niederschrift, Verschiedenes …)</label>
+              <fieldset id="f-conf">
+                <legend>Ortsangabe</legend>
+                <label class="check"><input type="checkbox" value="hoch" checked> gesichert <span class="hint">(Gremium oder eindeutiger Plan)</span></label>
+                <label class="check"><input type="checkbox" value="mittel" checked> erschlossen <span class="hint">(Name im Titel)</span></label>
+                <label class="check"><input type="checkbox" value="niedrig" checked> unsicher <span class="hint">(mehrdeutig oder Sprachmodell)</span></label>
+              </fieldset>
+            </div>
+          </details>
+        </form>
+        <p class="count" id="count" aria-live="polite"></p>
+        <ol class="papers" id="papers" tabindex="-1"></ol>
+      </div>
+    </section>
+
+    <section id="timeline-wrap" class="glass" aria-label="Zeitleiste" hidden></section>
+
+    <section id="panel-detail" class="panel glass" aria-labelledby="detail-heading">
+      <div class="resizer" data-resize="detail" role="separator" tabindex="0" aria-orientation="vertical" aria-controls="panel-detail" aria-label="Breite des Vorgangs ändern (Pfeiltasten)"></div>
+      <div class="panel-head">
+        <h2 id="detail-heading" tabindex="-1">Los geht's</h2>
+        <button type="button" class="icon-btn" data-close="panel-detail" aria-label="Detail einklappen">›</button>
+      </div>
+      <div class="panel-body detail" id="detail"></div>
+    </section>
+
+    <section id="panel-auswertung" class="glass overlay" aria-labelledby="auswertung-heading" hidden>
+      <div class="panel-head">
+        <h2 id="auswertung-heading" tabindex="-1">Kennzahlen zum Gebiet</h2>
+        <button type="button" class="icon-btn" data-close="panel-auswertung" aria-label="Kennzahlen schließen"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+      </div>
+      <div class="panel-body" id="stats"></div>
+    </section>
+
+    <section id="panel-termine" class="glass overlay" aria-labelledby="termine-heading" hidden>
+      <div class="panel-head">
+        <h2 id="termine-heading" tabindex="-1">Kommende Sitzungen</h2>
+        <button type="button" class="icon-btn" data-close="panel-termine" aria-label="Termine schließen"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+      </div>
+      <div class="panel-body" id="termine"></div>
+    </section>
+
+    <div id="map" role="region" aria-label="Karte der Tagesordnungspunkte mit Ortsbezug. Alle Vorgänge stehen auch in der Liste; das Gebiet lässt sich oben über die Auswahl „Gebiet“ wählen."></div>
+  </main>
+
+  <dialog id="about" class="glass" aria-labelledby="about-heading">
+    <div class="panel-head">
+      <h2 id="about-heading">Über den Stadtmonitor</h2>
+      <button type="button" class="icon-btn" id="about-close" aria-label="Schließen">×</button>
+    </div>
+    <div class="about-body">
+      <h3>Worum geht es?</h3>
+      <p>Der Stadtmonitor zeigt, womit sich die Stadtverordnetenversammlung, die Ausschüsse, die Ortsbeiräte und die Beiräte der Stadt <span data-cfg="stadt.name"></span> beschäftigen: auf einer Karte, auf einer Zeitleiste und als Liste. <span data-cfg="texte.datenluecke"></span></p>
+
+      <h3>Was ist ein Vorgang?</h3>
+      <p>Ein Tagesordnungspunkt mit Vorlagennummer (zum Beispiel <code>STV/488/2025</code>) kann in mehreren Sitzungen beraten werden. Diese Beratungen fasst der Stadtmonitor zu einem Vorgang zusammen. Tagesordnungspunkte ohne Vorlagennummer bleiben einzelne Vorgänge; sie werden nicht über ähnliche Titel verknüpft.</p>
+
+      <h3>Wie sicher sind die Angaben?</h3>
+      <p>Gremium, Datum, Ort der Sitzung und Tagesordnung stammen aus den Einladungen. Der Ortsbezug ist abgeleitet und gekennzeichnet: <strong>gesichert</strong> (Ortsbeirat des Ortsteils oder eindeutig erkannter Plan), <strong>erschlossen</strong> (Orts- oder Straßenname im Titel) und <strong>unsicher</strong> (mehrdeutig oder mit einem Sprachmodell erkannt). Zu jedem Ortsbezug stehen Methode, Fundstelle und das Original-PDF. Wohnadressen von Privatpersonen werden nicht verortet.</p>
+
+      <h3>Was der Stadtmonitor nicht kann</h3>
+      <p>Er ersetzt nicht das Original: Maßgeblich ist die Bekanntmachung der Stadt, zu der jeder Vorgang verlinkt. Beschlussergebnisse sind nicht veröffentlicht; die Prozesslinie kennzeichnet sie als Lücke und leitet nichts ab. Nichtöffentliche Beratungen und Sitzungen vor Juli 2024 fehlen.</p>
+
+      <h3>Wer steckt dahinter?</h3>
+      <p>Der Stadtmonitor ist ein offenes Projekt; der Code steht unter MIT-Lizenz. Er beruht auf der <a href="https://github.com/daimpad/allris-test" target="_blank" rel="noopener">RIS-Karte Bonn<span class="visually-hidden"> (GitHub, neuer Tab)</span></a> von Damian Paderta (MIT-Lizenz). Fehler können Sie im <a data-cfg-href="projekt.repo" href="#">Projekt auf GitHub</a> melden.</p>
+
+      <h3 id="about-impressum" tabindex="-1">Datenschutz</h3>
+      <p>Schriften und Programmbibliotheken kommen vom Server dieser Seite. Nur die Kartenkacheln lädt Ihr Browser von basemap.de (sgx.geodatenzentrum.de, Bundesamt für Kartographie und Geodäsie). <a href="datenschutz.html">Datenschutz</a></p>
+    </div>
+  </dialog>
+
+  <p class="visually-hidden" id="announce" aria-live="polite"></p>
+
+  <script src="vendor/leaflet/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g=="></script>
+  <script src="vendor/markercluster/leaflet.markercluster.min.js" integrity="sha512-TiMWaqipFi2Vqt4ugRzsF8oRoGFlFFuqIi30FFxEPNw58Ov9mOy6LgC05ysfkxwLE0xVeZtmr92wVg9siAFRWA=="></script>
+  <script src="timeline.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
