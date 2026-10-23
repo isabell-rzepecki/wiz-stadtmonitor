@@ -12,3 +12,5 @@ osm	ODbL 1.0	© OpenStreetMap-Mitwirkende, ODbL	https://www.openstreetmap.org/co
 wikidata	CC0	Daten: Wikidata (CC0) (freiwillig)	https://www.wikidata.org	nein
 wahl_btw2025_bwl_wbz,wahl_btw2021_bwl_wbz,wahl_btw2017_bwl_wbz,wahl_ew2024_bwl_wbz,wahl_ew2019_bwl_wbz	mit Quellenangabe	© Die Bundeswahlleiterin (im Auftrag der Herausgebergemeinschaft), Wahlbezirksstatistik	https://www.bundeswahlleiterin.de	ja
 wahl_stvv2026_bm,wahl_ob2026_bm,wahl_kw2021_vm,wahl_kw2016_vm	amtliche Werke	Wahlergebnisse: Stadt Witzenhausen (Bekanntmachungen Nr. 043 und 044/2026; Ergebnispräsentation 2016 und 2021)	https://www.witzenhausen.eu/amtliche-bekanntmachungen/	ja
+rp_nordhessen_wfs	dl-de/by-2.0	Regionalplan Nordhessen: Hessisches Ministerium für Wirtschaft, Energie, Verkehr, Wohnen und ländlichen Raum (HMWVW), dl-de/by-2-0	https://www.govdata.de/dl-de/by-2-0	ja
+denkmal_wfs	dl-de/by-2.0	Kulturdenkmäler: Landesamt für Denkmalpflege Hessen (DenkXweb), dl-de/by-2-0	https://denkxweb.denkmalpflege-hessen.de	ja

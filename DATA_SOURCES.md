@@ -47,7 +47,7 @@ Status laut Register: `verifiziert`, `teilweise`, `zu prüfen`, `zu verifizieren
 
 | Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
 |---|---|---|---|---|---|---|
-| [Kulturdenkmäler Hessen (DenkXweb)](https://geodienste.denkx.de/geoserver/denkx/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities) (`denkmal_wfs`) | Landesamt für Denkmalpflege Hessen | dl-de/by-2.0 | – | verifiziert | geprüft 23.10.2026 (581 Baudenkmäler in BBOX, inkl. Nachbargemeinden) | Denkmäler als Ortsbezug für TOPs; mit Stadtgrenze clippen (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+| [Kulturdenkmäler Hessen (DenkXweb)](https://geodienste.denkx.de/geoserver/denkx/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities) (`denkmal_wfs`) | Landesamt für Denkmalpflege Hessen | dl-de/by-2.0 (laut Ergänzung v0.3; im Capabilities-Dokument nicht genannt) | Kulturdenkmäler: Landesamt für Denkmalpflege Hessen (DenkXweb), dl-de/by-2-0 | verifiziert, eingebunden | GetFeature JSON HTTP 200; im Stadtgebiet 383 Baudenkmäler und 19 Gesamtanlagen; Erfassung laut Dienst nicht flächendeckend | nur Kartenebene (keine Verortung von TOPs); Bodendenkmäler nicht gezeigt |
 
 ## Eigentum
 
@@ -102,7 +102,7 @@ Status laut Register: `verifiziert`, `teilweise`, `zu prüfen`, `zu verifizieren
 
 | Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
 |---|---|---|---|---|---|---|
-| [Regionalplan Nordhessen (WFS)](https://geodatendienste-landesplanung-hessen.de/ows/services/org.3.fd8337b7-de57-4cc3-9393-e7c1d74120a4_wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities) (`rp_nordhessen_wfs`) | HMWVW | dl-de/by-2.0 | – | verifiziert | geprüft 23.10.2026 (GetFeature vorrang_wind: 9 Gebiete in BBOX, 3 im Stadtgebiet) | Windvorranggebiete, Siedlungs-/Vorranggebiete; Material: windvorranggebiete_witzenhausen.geojson (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
+| [Regionalplan Nordhessen (WFS)](https://geodatendienste-landesplanung-hessen.de/ows/services/org.3.fd8337b7-de57-4cc3-9393-e7c1d74120a4_wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities) (`rp_nordhessen_wfs`) | HMWVW | dl-de/by-2.0 | Regionalplan Nordhessen: Hessisches Ministerium für Wirtschaft, Energie, Verkehr, Wohnen und ländlichen Raum (HMWVW), dl-de/by-2-0 | verifiziert, eingebunden | GetFeature JSON HTTP 200 mit BBOX EPSG:4326 (Breite zuerst); 4 Vorranggebiete im Stadtgebiet (ESW 03, 05, 07, 12b), Abstimmungsstand „2. Offenlegung“ | Kartenebene Windvorranggebiete; räumliche Überschneidung mit Flurstücken und Geltungsbereichen; planung/bestand nicht ausgewertet |
 | [Regionalplan Nordhessen (WMS)](https://geodatendienste-landesplanung-hessen.de/ows/services/org.3.fd8337b7-de57-4cc3-9393-e7c1d74120a4_wms?SERVICE=WMS&REQUEST=GetCapabilities) (`rp_nordhessen_wms`) | HMWVW | dl-de/by-2.0 | – | verifiziert | geprüft 23.10.2026 | Darstellung (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
 | [Regionalversammlung Nordhessen – Drucksachen](https://rim.ekom21.de/rp-kassel/) (`rp_kassel_rim`) | RP Kassel (ekom21 RIM) | amtliche Dokumente | – | zu prüfen | nicht geprüft | Neuaufstellung Regionalplan; OParl-Schnittstelle prüfen (aus Ergänzung v0.3, eigene Prüfung bei Nutzung) |
 

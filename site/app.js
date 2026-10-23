@@ -470,7 +470,7 @@
       const vorhanden = new Set(((umweltLayers[g.id] && umweltLayers[g.id].toGeoJSON().features) || []).map((f) => f.properties.ebene));
       const rows = g.ebenen.filter((e) => vorhanden.has(e.id)).map((e) => `<li><span class="swatch swatch-area" aria-hidden="true"
         style="border-color:${g.farbe};border-style:${e.stil.dash ? (e.stil.dash.startsWith("1 ") || e.stil.dash.startsWith("2 ") ? "dotted" : "dashed") : "solid"};background:${e.stil.fill ? `color-mix(in srgb, ${g.farbe} ${Math.round(e.stil.fill * 100)}%, transparent)` : "transparent"}"></span>${esc(e.titel)}</li>`).join("");
-      return `<p class="legend-group">${esc(g.titel)}</p><ul>${rows || "<li>keine Fläche im Stadtgebiet</li>"}</ul><p class="hint">${esc(g.attribution)}.</p>`;
+      return `<p class="legend-group">${esc(g.titel)}</p><ul>${rows || "<li>keine Fläche im Stadtgebiet</li>"}</ul>${g.hinweis ? `<p class="hint">${esc(g.hinweis)}</p>` : ""}<p class="hint">${esc(g.attribution)}.</p>`;
     }).join("") + `<p class="hint">${esc(cfg.umwelt.hinweis)}</p>`;
   }
   // Kartenebene Bauleitplanung: erst beim Einschalten geladen; Hinweis zur Nutzung in Legende und Namensnennung
