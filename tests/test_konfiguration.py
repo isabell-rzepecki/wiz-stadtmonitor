@@ -16,7 +16,7 @@ class Konfiguration(unittest.TestCase):
 
     def test_gremien(self):
         ids = {g["id"] for g in STADT["gremien"]}
-        self.assertTrue(set(STADT["zeitleiste_gremien"]) <= ids)
+        self.assertTrue({i for r in STADT["zeitleiste_gremien"] for i in r["ids"]} <= ids)
         self.assertTrue(all(g["typ"] in STADT["gremientypen"] for g in STADT["gremien"]))
 
     def test_kein_bonn_im_code(self):

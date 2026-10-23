@@ -2,7 +2,7 @@
 
 Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in drei Dimensionen: **räumlich** (Karte und Liste nach Ortsbezirk), **zeitlich** (Sitzungskalender, Zeitleiste, Prozesslinie über die Vorlagennummer) und **nach Gremien**. Jede Angabe ist auf ein Quelldokument rückführbar.
 
-**Stand: Phase 1 (Übernahme und Entkopplung).** Die Seite steht, die Datenpipeline folgt in Phase 2. Ohne Daten zeigt die Seite einen Hinweis.
+**Stand: Phase 2 (Datenpipeline).** Die Pipeline ruft täglich alle Einladungen ab, liest Kopf und Tagesordnung, fasst TOPs über die Vorlagennummer zu Vorgängen zusammen und verortet nach Stufe A (Ortsbeirat → Ortsteil) sowie über Plannummern der Bauleitplanung. Straßen und Flurstücke (Stufe B) folgen mit den Gemarkungsflächen in Phase 3.
 
 ## Quellen und Grenzen
 
@@ -13,16 +13,44 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - **Kartenhintergrund:** basemap.de (BKG, CC BY 4.0).
 - **Lizenzen:** siehe [`data/LICENSE-DATA.md`](data/LICENSE-DATA.md), Recherche in [`docs/Datenquellen_Geodaten_Witzenhausen.md`](docs/Datenquellen_Geodaten_Witzenhausen.md).
 
+## Grenzen der Daten
+
+- **Zeitraum:** Einladungen sind ab Juli 2024 veröffentlicht; ältere Sitzungen fehlen.
+- **Ergebnisse:** Beschlüsse, Niederschriften und Vorlagentexte stehen nicht in den Bekanntmachungen. Die Prozesslinie zeigt je Station „Ergebnis nicht veröffentlicht“.
+- **Nichtöffentliche Sitzungen** erscheinen ohne Tagesordnung.
+- **Verortung:** Stufe A ordnet den Ortsbezug des Gremiums zu, nicht zwingend den des Gegenstands. Plan-Abgleiche, deren Änderung noch nicht im Datensatz der Stadt steht, zeigen auf den Ursprungsplan und sind als „mittel“ gekennzeichnet.
+- **Bauleitplanung (Bebauungspläne, Flächennutzungsplan):**
+  - Die Umringe der Stadt stehen unter der Nutzungsbedingung „Die Nutzung ohne vertragliche Vereinbarung mit der Stadt Witzenhausen ist nur für nicht kommerzielle Zwecke erlaubt.“ Eine gesonderte Freigabe gibt es nicht.
+  - Der Stadtmonitor nutzt sie deshalb nur im Build. Die Rohgeometrien liegen in `data/geo/restricted/`; der Ordner ist von der Versionierung ausgeschlossen.
+  - Ausgeliefert werden sie nur als Kartenebene mit dem Hinweis „Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke“. Es gibt keinen GeoJSON-Export, keinen Download in der Oberfläche und keine Flächen im Datenpaket.
+  - Im Repository und im Datenpaket bleibt nur die Zuordnung Vorgang → Plannummer (`audit/verortung_bauleitplanung.tsv`). Sie enthält keine Geometrie der Stadt.
+- **Quellen:** Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv).
+
+## Aktualisierung
+
+Der Workflow `.github/workflows/pages.yml` läuft täglich um 04:17 UTC und bei jedem Push. Er führt `python -m pipeline all` aus:
+
+1. Abruf der Einladungen und Umringe;
+2. Aufbau der Vorgänge;
+3. Prüfung;
+4. Datenpaket;
+5. Seite.
+
+Danach veröffentlicht er die Seite auf GitHub Pages. Die Rohdaten liegen nur im Zwischenspeicher des Workflows. Voraussetzung: In den Repository-Einstellungen unter „Pages“ ist als Quelle „GitHub Actions“ gewählt.
+
+Pull Requests prüft `.github/workflows/tests.yml` mit Python-Tests, Kontrastprüfung und Browser-Tests mit axe-core.
+
 ## Aufbau
 
 ```
 config/stadt.json   Alle stadtspezifischen Werte (Name, Gremien, Ortsbezirke, Karte, Farben, Texte)
 site/               Seite (Leaflet, Zeitleiste, Liste, Prozesslinie), ohne Build-Schritt
-pipeline/           Python-Pipeline; jetzt: Seite zusammenstellen (python -m pipeline site → _site/)
+pipeline/           Python-Pipeline: fetch, fetch-plaene, build, check, package, site (python -m pipeline all)
 tools/kontrast.py   WCAG-Kontrastprüfung der Farb-Tokens aus config/stadt.json
 tests/              Python-Tests, Browser-Tests (Playwright, axe-core), Testdaten
 phase0/             Bestandsaufnahme: Bericht, Stichprobe (TSV), Explorationsskripte
-docs/               Projektprompt, Recherche zu Datenquellen
+docs/               Projektprompts (v0.1, Übergabe v0.2 mit Material), Recherche zu Datenquellen
+data/quellen_register.tsv   Quellenregister mit Prüfstatus
 mietmonitor/        Früherer Inhalt des Repositorys (Mietdaten-Erfassung), unverändert lauffähig
 ```
 

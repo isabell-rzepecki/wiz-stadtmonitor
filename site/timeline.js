@@ -3,7 +3,7 @@
 //
 // Schnittstelle
 //   const tl = Timeline.create(container, options)
-//     options.rows                 [{ id, label }] Gremien der Sitzungsspur (Sitzungen tragen gremium_id)
+//     options.rows                 [{ id, label, ids? }] Zeilen der Sitzungsspur (Sitzungen tragen gremium_id)
 //     options.limits               Hinweise „Was die Zeitleiste nicht zeigt“
 //     options.unit                 Bezeichnung der gezählten Objekte (z. B. „Vorgänge“)
 //     options.onRange(from, to)    gewählter Zeitraum (ISO-Datum) – entprellt
@@ -51,7 +51,9 @@
 
   function create(root, options) {
     const o = Object.assign({ rows: [], limits: [], unit: "Vorgänge", onRange() {}, onDate() {} }, options);
+    // Zeilen der Sitzungsspur; eine Zeile kann mehrere Gremien zusammenfassen (z. B. Ausschuss vor und nach 2026)
     const ROWS = o.rows.map((r) => r.id), SHORT = Object.fromEntries(o.rows.map((r) => [r.id, r.label]));
+    const ROW_OF = new Map(o.rows.flatMap((r, i) => (r.ids || [r.id]).map((id) => [id, i])));
     let data = null, papers = [], selected = null, preview = false, level = 1;
     let view = [0, 1], range = [0, 1], extent = [0, 1], debounce;
 
@@ -210,7 +212,7 @@
       });
       const today = Date.now();
       for (const m of compact ? [] : data.meetings) {
-        const i = ROWS.indexOf(m.gremium_id);
+        const i = ROW_OF.has(m.gremium_id) ? ROW_OF.get(m.gremium_id) : -1;
         if (i < 0) continue;
         const ms = t(m.date);
         if (ms < view[0] || ms > view[1]) continue;

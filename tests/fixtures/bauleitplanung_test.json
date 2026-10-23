@@ -1,0 +1,3 @@
+{"type":"FeatureCollection","license":"Testdaten","attribution":"Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke","_hinweis":"Erfundene Testfläche für den Browsertest, keine Daten der Stadt.",
+ "features":[{"type":"Feature","properties":{"key":"bplan:2151:99:0","art":"bplan","titel":"Testfläche (keine Daten der Stadt)","nr":"99","gemarkung_nr":"2151","aenderung":0,"gueltig_ab":"2020-01-01"},
+  "geometry":{"type":"Polygon","coordinates":[[[9.80,51.38],[9.81,51.38],[9.81,51.385],[9.80,51.385],[9.80,51.38]]]}}]}

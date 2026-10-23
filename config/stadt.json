@@ -24,12 +24,35 @@
     "liste": "https://www.witzenhausen.eu/wp-json/wp/v2/media?mime_type=application/pdf&per_page=100&page={page}&_fields=id,date,source_url,title",
     "datenbeginn": "2024-07-01",
     "pause_s": 1.0,
-    "ausschliessen": ["jagd", "jagsgenossensch", "neujahrsempfang", "generalversammlung", "jhv-ffw", "stadtspaziergang", "projektwerkstatt", "interessenten", "fahrplan", "einladungsplakat", "ikek-steuerungsguppe", "tourismuswirtschaft", "buergerversammlung"]
+    "ausschliessen": [
+      "jagd",
+      "jagsgenossensch",
+      "neujahrsempfang",
+      "generalversammlung",
+      "jhv-ffw",
+      "stadtspaziergang",
+      "projektwerkstatt",
+      "interessenten",
+      "fahrplan",
+      "einladungsplakat",
+      "ikek-steuerungsguppe",
+      "tourismuswirtschaft",
+      "buergerversammlung"
+    ],
+    "attribution": "Quelle: Amtliche Bekanntmachungen der Stadt Witzenhausen, witzenhausen.eu"
   },
   "karte": {
-    "zentrum": [51.341, 9.857],
+    "zentrum": [
+      51.341,
+      9.857
+    ],
     "zoom": 12,
-    "bbox": [9.72, 51.28, 9.94, 51.41],
+    "bbox": [
+      9.72,
+      51.28,
+      9.94,
+      51.41
+    ],
     "hintergrund": {
       "grau": "https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_grau/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png",
       "farbig": "https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png",
@@ -43,20 +66,90 @@
     "theme_color": "#f4726b",
     "farben": {
       "hell": {
-        "bg": "#fdf6f4", "surface": "#ffffff", "text": "#1a1a1a", "text_muted": "#5c5458",
-        "accent": "#f4726b", "on_accent": "#1a1a1a", "accent_ink": "#b8352e", "accent_fill": "#b8352e", "on_accent_fill": "#ffffff",
-        "hoch": "#1f7a4d", "mittel": "#9a5200", "niedrig": "#4a5a8a"
+        "bg": "#fdf6f4",
+        "surface": "#ffffff",
+        "text": "#1a1a1a",
+        "text_muted": "#5c5458",
+        "accent": "#f4726b",
+        "on_accent": "#1a1a1a",
+        "accent_ink": "#b8352e",
+        "accent_fill": "#b8352e",
+        "on_accent_fill": "#ffffff",
+        "hoch": "#1f7a4d",
+        "mittel": "#9a5200",
+        "niedrig": "#4a5a8a"
       },
       "dunkel": {
-        "bg": "#1c1a1b", "surface": "#242122", "text": "#ece6e7", "text_muted": "#b8adb0",
-        "accent": "#f4726b", "on_accent": "#1a1a1a", "accent_ink": "#f8a29d", "accent_fill": "#f4726b", "on_accent_fill": "#1a1a1a",
-        "hoch": "#7fd1a5", "mittel": "#f0b060", "niedrig": "#a9b8f0"
+        "bg": "#1c1a1b",
+        "surface": "#242122",
+        "text": "#ece6e7",
+        "text_muted": "#b8adb0",
+        "accent": "#f4726b",
+        "on_accent": "#1a1a1a",
+        "accent_ink": "#f8a29d",
+        "accent_fill": "#f4726b",
+        "on_accent_fill": "#1a1a1a",
+        "hoch": "#7fd1a5",
+        "mittel": "#f0b060",
+        "niedrig": "#a9b8f0"
       }
     },
     "kontrast_paare": [
-      ["text", "bg", 4.5], ["text", "surface", 4.5], ["text_muted", "bg", 4.5], ["text_muted", "surface", 4.5],
-      ["accent_ink", "bg", 4.5], ["accent_ink", "surface", 4.5], ["on_accent_fill", "accent_fill", 4.5], ["on_accent", "accent", 4.5],
-      ["hoch", "surface", 4.5], ["mittel", "surface", 4.5], ["niedrig", "surface", 4.5]
+      [
+        "text",
+        "bg",
+        4.5
+      ],
+      [
+        "text",
+        "surface",
+        4.5
+      ],
+      [
+        "text_muted",
+        "bg",
+        4.5
+      ],
+      [
+        "text_muted",
+        "surface",
+        4.5
+      ],
+      [
+        "accent_ink",
+        "bg",
+        4.5
+      ],
+      [
+        "accent_ink",
+        "surface",
+        4.5
+      ],
+      [
+        "on_accent_fill",
+        "accent_fill",
+        4.5
+      ],
+      [
+        "on_accent",
+        "accent",
+        4.5
+      ],
+      [
+        "hoch",
+        "surface",
+        4.5
+      ],
+      [
+        "mittel",
+        "surface",
+        4.5
+      ],
+      [
+        "niedrig",
+        "surface",
+        4.5
+      ]
     ]
   },
   "gremientypen": {
@@ -67,41 +160,310 @@
     "beirat": "Beirat"
   },
   "gremien": [
-    {"id": "STVV", "name": "Stadtverordnetenversammlung", "kurz": "StVV", "typ": "stvv", "muster": ["STVV", "STV"]},
-    {"id": "HFR", "name": "Haupt-, Finanz-, Rechts-, Digitalisierungs- und Wirtschaftsausschuss", "kurz": "HFR", "typ": "ausschuss", "muster": ["HFR", "HFR-Ausschuss"], "frueher": ["Haupt-, Finanz- und Rechtsausschuss"]},
-    {"id": "BV", "name": "Bau-, Verkehrs-, Umwelt- und Energieausschuss", "kurz": "BV", "typ": "ausschuss", "muster": ["BV", "BV-Ausschuss", "BuV", "BuV-Ausschuss", "StUUE-Ausschuss"], "frueher": ["Bau- und Verkehrsausschuss"], "hinweis": "BV steht hier für den Bauausschuss, nicht für eine Bezirksvertretung."},
-    {"id": "SozA", "name": "Sozial-, Familien-, Jugend-, Senioren- und Sportausschuss", "kurz": "Sozialausschuss", "typ": "ausschuss", "muster": ["Soz", "SozA", "Soz-Ausschuss"]},
-    {"id": "STE", "name": "Ausschuss für Stadtentwicklung, Tourismus und Kultur", "kurz": "STE", "typ": "ausschuss", "muster": ["STE", "Stadtentwickl-Ausschuss"]},
-    {"id": "AB", "name": "Ausländerbeirat", "kurz": "Ausländerbeirat", "typ": "beirat", "muster": ["AB", "Auslaenderbeirat"]},
-    {"id": "Jugendrat", "name": "Jugendrat", "kurz": "Jugendrat", "typ": "beirat", "muster": ["Jugendrat"]},
-    {"id": "Seniorenrat", "name": "Seniorenrat", "kurz": "Seniorenrat", "typ": "beirat", "muster": ["Seniorenrat"]}
+    {
+      "id": "STVV",
+      "name": "Stadtverordnetenversammlung",
+      "kurz": "StVV",
+      "typ": "stvv"
+    },
+    {
+      "id": "HFR",
+      "name": "Haupt-, Finanz-, Rechts-, Digitalisierungs- und Wirtschaftsausschuss",
+      "kurz": "HFR",
+      "typ": "ausschuss",
+      "seit": "2026-04-01"
+    },
+    {
+      "id": "BV",
+      "name": "Bau-, Verkehrs-, Umwelt- und Energieausschuss",
+      "kurz": "BV",
+      "typ": "ausschuss",
+      "seit": "2026-04-01",
+      "hinweis": "BV steht hier für den Bauausschuss, nicht für eine Bezirksvertretung."
+    },
+    {
+      "id": "SozA",
+      "name": "Sozial-, Familien-, Jugend-, Senioren- und Sportausschuss",
+      "namen": [
+        "Sozial-, Familien-, Jugend-, Senioren und Sportausschuss"
+      ],
+      "kurz": "Sozialausschuss",
+      "typ": "ausschuss",
+      "seit": "2026-04-01"
+    },
+    {
+      "id": "STE",
+      "name": "Ausschuss für Stadtentwicklung, Tourismus und Kultur",
+      "kurz": "STE",
+      "typ": "ausschuss",
+      "seit": "2026-04-01"
+    },
+    {
+      "id": "HFR-2021",
+      "name": "Haupt-, Finanz- und Rechtsausschuss",
+      "kurz": "HFR (bis 2026)",
+      "typ": "ausschuss",
+      "bis": "2026-03-31"
+    },
+    {
+      "id": "BV-2021",
+      "name": "Bau- und Verkehrsausschuss",
+      "kurz": "BV (bis 2026)",
+      "typ": "ausschuss",
+      "bis": "2026-03-31"
+    },
+    {
+      "id": "StUUE-2021",
+      "name": "Stadtentwicklungs-, Umwelt- und Energieausschuss",
+      "kurz": "StUUE (bis 2026)",
+      "typ": "ausschuss",
+      "bis": "2026-03-31"
+    },
+    {
+      "id": "SozA-2021",
+      "name": "Sozialausschuss (Familie, Jugend und Senioren)",
+      "kurz": "Sozialausschuss (bis 2026)",
+      "typ": "ausschuss",
+      "bis": "2026-03-31"
+    },
+    {
+      "id": "AB",
+      "name": "Ausländerbeirat",
+      "kurz": "Ausländerbeirat",
+      "typ": "beirat"
+    },
+    {
+      "id": "Jugendrat",
+      "name": "Jugendrat",
+      "namen": [
+        "Jugendrat und des Jugendforums"
+      ],
+      "kurz": "Jugendrat",
+      "typ": "beirat"
+    },
+    {
+      "id": "Seniorenrat",
+      "name": "Seniorenrat",
+      "kurz": "Seniorenrat",
+      "typ": "beirat"
+    }
   ],
-  "zeitleiste_gremien": ["STVV", "HFR", "BV", "SozA", "STE"],
+  "zeitleiste_gremien": [
+    {
+      "label": "StVV",
+      "ids": [
+        "STVV"
+      ]
+    },
+    {
+      "label": "HFR",
+      "ids": [
+        "HFR",
+        "HFR-2021"
+      ]
+    },
+    {
+      "label": "Bau",
+      "ids": [
+        "BV",
+        "BV-2021"
+      ]
+    },
+    {
+      "label": "StUUE/STE",
+      "ids": [
+        "StUUE-2021",
+        "STE"
+      ]
+    },
+    {
+      "label": "Soziales",
+      "ids": [
+        "SozA",
+        "SozA-2021"
+      ]
+    }
+  ],
   "wahlperioden": [
-    {"name": "Wahlperiode 2021–2026", "start": "2021-04-01", "end": "2026-03-31"},
-    {"name": "Wahlperiode ab 2026", "start": "2026-04-01", "end": null}
+    {
+      "name": "Wahlperiode 2021–2026",
+      "start": "2021-04-01",
+      "end": "2026-03-31"
+    },
+    {
+      "name": "Wahlperiode ab 2026",
+      "start": "2026-04-01",
+      "end": null
+    }
   ],
   "ortsteile": [
-    {"slug": "kernstadt", "name": "Kernstadt", "ortsbezirk": false, "hinweis": "ohne Ortsbeirat; umfasst nach Wikipedia auch Bischhausen (zu prüfen)", "varianten": ["Witzenhausen (Kernstadt)"]},
-    {"slug": "albshausen", "name": "Albshausen", "ortsbezirk": true, "wikidata": "Q1660176", "stadtteilbeirat": true},
-    {"slug": "berlepsch-ellerode", "name": "Berlepsch-Ellerode", "ortsbezirk": true, "wikidata": "Q15107510", "varianten": ["Berlepsch-Ellerode-Hübenthal", "Berlepsch", "Ellerode", "Hübenthal"]},
-    {"slug": "blickershausen", "name": "Blickershausen", "ortsbezirk": true, "wikidata": "Q884011"},
-    {"slug": "dohrenbach", "name": "Dohrenbach", "ortsbezirk": true, "wikidata": "Q1234893"},
-    {"slug": "ellingerode", "name": "Ellingerode", "ortsbezirk": true, "wikidata": "Q1332184"},
-    {"slug": "ermschwerd", "name": "Ermschwerd", "ortsbezirk": true, "wikidata": "Q1292400"},
-    {"slug": "gertenbach", "name": "Gertenbach", "ortsbezirk": true, "wikidata": "Q1433972"},
-    {"slug": "hubenrode", "name": "Hubenrode", "ortsbezirk": true, "wikidata": "Q1632999", "stadtteilbeirat": true},
-    {"slug": "hundelshausen", "name": "Hundelshausen", "ortsbezirk": true, "wikidata": "Q1637452"},
-    {"slug": "kleinalmerode", "name": "Kleinalmerode", "ortsbezirk": true, "wikidata": "Q1746285"},
-    {"slug": "neuseesen", "name": "Neuseesen", "ortsbezirk": true, "wikidata": "Q1745254"},
-    {"slug": "rossbach", "name": "Roßbach", "ortsbezirk": true, "wikidata": "Q1753104", "varianten": ["Rossbach"]},
-    {"slug": "unterrieden", "name": "Unterrieden", "ortsbezirk": true, "wikidata": "Q2498818"},
-    {"slug": "wendershausen", "name": "Wendershausen", "ortsbezirk": true, "wikidata": "Q2559136"},
-    {"slug": "werleshausen", "name": "Werleshausen", "ortsbezirk": true, "wikidata": "Q2560623"},
-    {"slug": "ziegenhagen", "name": "Ziegenhagen", "ortsbezirk": true, "wikidata": "Q198786"}
+    {
+      "slug": "kernstadt",
+      "name": "Kernstadt",
+      "ortsbezirk": false,
+      "hinweis": "ohne Ortsbeirat; umfasst nach Wikipedia auch Bischhausen (zu prüfen)",
+      "varianten": [
+        "Witzenhausen (Kernstadt)"
+      ],
+      "gemarkung": "Witzenhausen",
+      "gemarkung_nr": "2246"
+    },
+    {
+      "slug": "albshausen",
+      "name": "Albshausen",
+      "ortsbezirk": true,
+      "wikidata": "Q1660176",
+      "stadtteilbeirat": true,
+      "gemarkung": "Albshausen",
+      "gemarkung_nr": "2113"
+    },
+    {
+      "slug": "berlepsch-ellerode",
+      "name": "Berlepsch-Ellerode",
+      "ortsbezirk": true,
+      "wikidata": "Q15107510",
+      "varianten": [
+        "Berlepsch-Ellerode-Hübenthal",
+        "Berlepsch",
+        "Ellerode",
+        "Hübenthal"
+      ],
+      "gemarkung": "Berlepsch-Ellerode",
+      "gemarkung_nr": "2121"
+    },
+    {
+      "slug": "blickershausen",
+      "name": "Blickershausen",
+      "ortsbezirk": true,
+      "wikidata": "Q884011",
+      "gemarkung": "Blickershausen",
+      "gemarkung_nr": "2125"
+    },
+    {
+      "slug": "dohrenbach",
+      "name": "Dohrenbach",
+      "ortsbezirk": true,
+      "wikidata": "Q1234893",
+      "gemarkung": "Dohrenbach",
+      "gemarkung_nr": "2132"
+    },
+    {
+      "slug": "ellingerode",
+      "name": "Ellingerode",
+      "ortsbezirk": true,
+      "wikidata": "Q1332184",
+      "gemarkung": "Ellingerode",
+      "gemarkung_nr": "2136"
+    },
+    {
+      "slug": "ermschwerd",
+      "name": "Ermschwerd",
+      "ortsbezirk": true,
+      "wikidata": "Q1292400",
+      "gemarkung": "Ermschwerd",
+      "gemarkung_nr": "2140"
+    },
+    {
+      "slug": "gertenbach",
+      "name": "Gertenbach",
+      "ortsbezirk": true,
+      "wikidata": "Q1433972",
+      "gemarkung": "Gertenbach",
+      "gemarkung_nr": "2151"
+    },
+    {
+      "slug": "hubenrode",
+      "name": "Hubenrode",
+      "ortsbezirk": true,
+      "wikidata": "Q1632999",
+      "stadtteilbeirat": true,
+      "gemarkung": "Hubenrode",
+      "gemarkung_nr": "2172"
+    },
+    {
+      "slug": "hundelshausen",
+      "name": "Hundelshausen",
+      "ortsbezirk": true,
+      "wikidata": "Q1637452",
+      "gemarkung": "Hundelshausen",
+      "gemarkung_nr": "2173"
+    },
+    {
+      "slug": "kleinalmerode",
+      "name": "Kleinalmerode",
+      "ortsbezirk": true,
+      "wikidata": "Q1746285",
+      "gemarkung": "Kleinalmerode",
+      "gemarkung_nr": "2177"
+    },
+    {
+      "slug": "neuseesen",
+      "name": "Neuseesen",
+      "ortsbezirk": true,
+      "wikidata": "Q1745254",
+      "gemarkung": "Neuseesen",
+      "gemarkung_nr": "2194"
+    },
+    {
+      "slug": "rossbach",
+      "name": "Roßbach",
+      "ortsbezirk": true,
+      "wikidata": "Q1753104",
+      "varianten": [
+        "Rossbach"
+      ],
+      "gemarkung": "Roßbach",
+      "gemarkung_nr": "2214"
+    },
+    {
+      "slug": "unterrieden",
+      "name": "Unterrieden",
+      "ortsbezirk": true,
+      "wikidata": "Q2498818",
+      "gemarkung": "Unterrieden",
+      "gemarkung_nr": "2227"
+    },
+    {
+      "slug": "wendershausen",
+      "name": "Wendershausen",
+      "ortsbezirk": true,
+      "wikidata": "Q2559136",
+      "gemarkung": "Wendershausen",
+      "gemarkung_nr": "2241"
+    },
+    {
+      "slug": "werleshausen",
+      "name": "Werleshausen",
+      "ortsbezirk": true,
+      "wikidata": "Q2560623",
+      "gemarkung": "Werleshausen",
+      "gemarkung_nr": "2242"
+    },
+    {
+      "slug": "ziegenhagen",
+      "name": "Ziegenhagen",
+      "ortsbezirk": true,
+      "wikidata": "Q198786",
+      "gemarkung": "Ziegenhagen",
+      "gemarkung_nr": "2251"
+    }
   ],
   "texte": {
     "lead": "Womit befassen sich Stadtverordnetenversammlung, Ausschüsse, Ortsbeiräte und Beiräte der Stadt Witzenhausen – wo, wann und wer ist beteiligt?",
     "datenluecke": "Grundlage sind die Einladungen in den amtlichen Bekanntmachungen ab Juli 2024. Beschlussergebnisse und Niederschriften sind dort nicht veröffentlicht."
+  },
+  "bauleitplanung": {
+    "attribution": "Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke",
+    "nutzung": "Die Nutzung ohne vertragliche Vereinbarung mit der Stadt Witzenhausen ist nur für nicht kommerzielle Zwecke erlaubt.",
+    "quellen": {
+      "bplan": {
+        "url": "https://www.gdi-nordosthessen.de/ws/wfs/ds_plu_bplan_whs/ows.wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=lyr:witzenhausen_bplaene_umringe_feature&SRSNAME=EPSG:4326",
+        "element": "witzenhausen_bplaene_umringe_feature"
+      },
+      "fplan": {
+        "url": "https://www.gdi-nordosthessen.de/ws/wfs/2f2bfc47-027f-051b/ds_lu_fplan_whs/ows.wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=lyr:witzenhausen_fplaene_umringe_feature&SRSNAME=EPSG:4326",
+        "element": "witzenhausen_fplaene_umringe_feature"
+      }
+    }
   }
 }
