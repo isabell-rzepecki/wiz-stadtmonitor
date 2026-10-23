@@ -19,7 +19,7 @@
   const METHOD = {
     gremium_ortsbeirat: "Ortsbeirat des Ortsteils (Ortsbezug des Gremiums, nicht zwingend des Gegenstands)",
     gremium_stadtteilbeirat: "Stadtteilbeirat des Ortsteils (Ortsbezug des Gremiums, nicht zwingend des Gegenstands)",
-    ortsteil_name: "Ortsteilname im Titel", strasse: "Straßenname im Titel", "strasse+ortsteil": "Straßen- und Ortsteilname im Titel",
+    ortsteil_name: "Ortsteilname im Titel", strasse: "Straßen- oder Lagename im Titel, Lage laut Hauskoordinaten und Lagebezeichnungen (HVBG)", "strasse+ortsteil": "Straßenname im Titel, in mehreren Ortsteilen vorhanden; eingegrenzt über Gremium, Ortsteil, Gemarkung oder eine weitere Straße im Titel",
     strasse_mehrdeutig: "Straßenname im Titel, mehrere Lagen", gemarkung: "Gemarkung im Titel",
     flurstueck: "Flurstücksangabe im Titel, Lage laut Liegenschaftskataster", bebauungsplan: "Bebauungsplan im Titel, Geltungsbereich der Stadt",
     objekt_name: "Name eines Gebäudes oder einer Anlage im Titel",

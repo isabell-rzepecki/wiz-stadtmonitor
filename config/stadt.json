@@ -488,5 +488,12 @@
     "Wortlaut § 6 Hauptsatzung (Ortsbezirke = Gemarkungen?) – Issue #3",
     "Bischhausen: Kernstadt? – Issue #3",
     "Hübenthal: Berlepsch-Ellerode? – Issue #3"
-  ]
+  ],
+  "verortung": {
+    "ausschluss_namen": [
+      "In der Stadt",
+      "Radweg"
+    ],
+    "_hinweis": "Lagebezeichnungen, die als allgemeine Wendung in Titeln vorkommen und deshalb nicht als Ort gelten (aus der Prüfung des Audits verortung_stufe_b.tsv)"
+  }
 }

@@ -14,7 +14,7 @@ import json
 import re
 from datetime import datetime, timezone
 
-from . import audit, bauleitplanung, config, fetch, geo, parse
+from . import audit, bauleitplanung, config, fetch, geo, parse, verortung
 
 VERFAHREN = re.compile(
     r"^(Eröffnung|Begrüßung|Feststellung (der|des)|Genehmigung (der|des) (Tagesordnung|Niederschrift|Protokoll)|"
@@ -31,6 +31,9 @@ GLIEDERUNG = re.compile(r"^(Anträge|Anfragen|Grundstücksangelegenheiten|Über-
                         r"Darlehensangelegenheiten|Personalangelegenheiten|Mitteilungen|Berichte)$", re.I)
 BPLAN = re.compile(r"(?:(\d+)\.\s*Änderung\s+(?:und\s+Erweiterung\s+)?des\s+)?Bebauungsplan(?:es|s)?\s+Nr\.\s*(\d+)"
                    r"(?:\s*,?\s*Gemarkung\s+([A-ZÄÖÜ][\wäöüß-]+))?")
+DETAIL = {"gremium_ortsbeirat": "A-gremium", "gremium_stadtteilbeirat": "A-gremium", "strasse": "B-strasse",
+          "strasse+ortsteil": "B-strasse", "gemarkung": "B-gemarkung", "flurstueck": "B-flurstueck", "ortsteil_name": "B-ortsteil",
+          "bebauungsplan": "B-bplan", "flaechennutzungsplan": "B-fplan"}
 FPLAN = re.compile(r"(\d+)\.\s*Änderung\s+des\s+Flächennutzungsplan(?:es|s)?")
 
 
@@ -88,6 +91,7 @@ def build():
     medien = json.loads(fetch.MEDIEN.read_text(encoding="utf-8"))
     plaene = bauleitplanung.plaene()
     flaechen = geo.Ortsteile() if config.ORTSBEZIRKE.exists() else None
+    verz = verortung.Verzeichnis()
     sitzungen, tops, fehler = {}, [], []
     for m in medien["medien"]:
         name = fetch.dateiname(m["source_url"])
@@ -118,7 +122,7 @@ def build():
     for t in tops:
         key = t["vorlage"] or f"{t['sitzung']}-TOP{t['top']}"
         gruppen.setdefault(key, []).append(t)
-    vorgaenge, plan_audit = [], []
+    vorgaenge, plan_audit, b_audit = [], [], []
     for key, ts in gruppen.items():
         ts.sort(key=lambda t: (sitzungen[t["sitzung"]]["date"], [int(x) for x in t["top"].split(".")]))
         process = []
@@ -150,6 +154,16 @@ def build():
                                       "confidence": "hoch" if treffer == "eindeutig" else "mittel",
                                       "evidence": v["evidence"], "plan": p["key"], "lon": round(pt.x, 6), "lat": round(pt.y, 6),
                                       "source_pdf": sitzungen[t["sitzung"]]["pdf"]})
+        # Stufe B aus den Titeln (nicht für Verfahrenspunkte)
+        for t in ts:
+            if t["verfahrenspunkt"]:
+                continue
+            s = sitzungen[t["sitzung"]]
+            locs_b, aud = verortung.stufe_b(t["titel"], s, verz, s["pdf"])
+            for l in locs_b:
+                if not any(x["level"] == l["level"] and x["name"] == l["name"] for x in locations):
+                    locations.append(l)
+            b_audit += [{"vorgang": key, "sitzung": t["sitzung"], "top": t["top"], "titel": t["titel"], **a} for a in aud]
         first = ts[0]
         vorgaenge.append({"reference": key, "vorlage": first["vorlage"], "name": first["titel"], "date": process[0]["date"],
                           "verfahrenspunkt": all(t["verfahrenspunkt"] for t in ts),
@@ -171,8 +185,11 @@ def build():
     n_karte = bauleitplanung.karte(plaene)
 
     audit.tabelle("parserfehler.tsv", ["datei", "fehler", "url"], fehler)
+    audit.tabelle("verortung_stufe_b.tsv", ["vorgang", "sitzung", "top", "titel", "methode_detail", "mehrdeutig", "treffer",
+                                            "ortsteil", "konfidenz", "fundstelle"], b_audit)
     audit.tabelle("verortung_bauleitplanung.tsv", ["vorgang", "sitzung", "top", "art", "nr", "aenderung", "gemarkung_nr",
                                                    "treffer", "plan_key", "plan_titel", "fundstelle"], plan_audit)
+    mehrdeutig = {(a["vorgang"], a["sitzung"], a["top"]) for a in b_audit if a["mehrdeutig"] == "ja"}
     zeilen = []
     for v in vorgaenge:
         for s in v["process"]:
@@ -183,9 +200,12 @@ def build():
                            "stufe": "/".join(sorted({l["stage"] for l in ls})) or "-",
                            "treffer": "; ".join(l["name"] for l in ls), "konfidenz": "; ".join(l["confidence"] for l in ls),
                            "methode": "; ".join(l["method"] for l in ls), "fundstelle": "; ".join(l["evidence"] for l in ls),
+                           "methode_detail": "; ".join(DETAIL.get(l["method"], l["method"]) for l in ls),
+                           "mehrdeutig": "ja" if (v["reference"], s["sitzung"], s["top"]) in mehrdeutig else "nein",
                            "quelle_pdf": s["pdf"], "pruefstatus": "ungeprüft"})
     audit.tabelle("tops.tsv", ["bekanntmachung", "gremium", "datum", "top", "titel", "vorlage", "vorgang", "verfahrenspunkt",
-                               "stufe", "treffer", "konfidenz", "methode", "fundstelle", "quelle_pdf", "pruefstatus"], zeilen)
+                               "stufe", "treffer", "konfidenz", "methode", "methode_detail", "mehrdeutig", "fundstelle",
+                               "quelle_pdf", "pruefstatus"], zeilen)
     print(f"{len(sitzungen)} Sitzungen, {len(tops)} TOPs, {len(vorgaenge)} Vorgänge, {len(fehler)} Parserfehler, "
           f"{len(plan_audit)} Planverweise, {n_karte} Flächen der Bauleitplanung")
     return daten

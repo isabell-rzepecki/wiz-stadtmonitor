@@ -2,7 +2,7 @@
 
 Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in drei Dimensionen: **räumlich** (Karte und Liste nach Ortsbezirk), **zeitlich** (Sitzungskalender, Zeitleiste, Prozesslinie über die Vorlagennummer) und **nach Gremien**. Jede Angabe ist auf ein Quelldokument rückführbar.
 
-**Stand: Phase 2 (Datenpipeline).** Die Pipeline ruft täglich alle Einladungen ab, liest Kopf und Tagesordnung, fasst TOPs über die Vorlagennummer zu Vorgängen zusammen und verortet nach Stufe A (Ortsbeirat → Ortsteil) sowie über Plannummern der Bauleitplanung. Straßen und Flurstücke (Stufe B) folgen mit den Gemarkungsflächen in Phase 3.
+**Stand: Phase 2 (Datenpipeline).** Die Pipeline ruft täglich alle Einladungen ab, liest Kopf und Tagesordnung, fasst TOPs über die Vorlagennummer zu Vorgängen zusammen und verortet nach Stufe A (Ortsbeirat → Ortsteil) sowie über Plannummern der Bauleitplanung. Stufe B gleicht die Titel mit Straßen- und Lagenamen (Hauskoordinaten und Lagebezeichnungen der HVBG), Gemarkungen, Ortsteilnamen und Flurstücksangaben ab.
 
 ## Quellen und Grenzen
 
@@ -19,6 +19,7 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - **Ergebnisse:** Beschlüsse, Niederschriften und Vorlagentexte stehen nicht in den Bekanntmachungen. Die Prozesslinie zeigt je Station „Ergebnis nicht veröffentlicht“.
 - **Nichtöffentliche Sitzungen** erscheinen ohne Tagesordnung.
 - **Ortsbezirke:** Die Flächen sind aus den 17 Gemarkungen abgeleitet (HVBG, dl-de/zero-2.0, `data/geo/dl-de-zero/ortsbezirke.geojson`). Die Gleichsetzung Gemarkung = Ortsbezirk ist plausibel, aber noch nicht mit § 6 der Hauptsatzung abgeglichen; Bischhausen und Hübenthal sind offen (Issue #3).
+- **Stufe B:** Straßennamen, die in mehreren Ortsteilen vorkommen, werden nur über das beratende Gremium, einen genannten Ortsteil, eine Gemarkung oder eine weitere eindeutige Straße im Titel eingegrenzt; sonst bleiben sie ohne Ort und stehen im Audit `verortung_stufe_b.tsv` als „mehrdeutig“. Hausnummern werden nicht ausgewertet.
 - **Verortung:** Stufe A ordnet den Ortsbezug des Gremiums zu, nicht zwingend den des Gegenstands. Plan-Abgleiche, deren Änderung noch nicht im Datensatz der Stadt steht, zeigen auf den Ursprungsplan und sind als „mittel“ gekennzeichnet.
 - **Bauleitplanung (Bebauungspläne, Flächennutzungsplan):**
   - Die Umringe der Stadt stehen unter der Nutzungsbedingung „Die Nutzung ohne vertragliche Vereinbarung mit der Stadt Witzenhausen ist nur für nicht kommerzielle Zwecke erlaubt.“ Eine gesonderte Freigabe gibt es nicht.
