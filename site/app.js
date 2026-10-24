@@ -116,6 +116,7 @@
     const n = all.length;
     return `<div class="intro">
       <p class="intro-lead">${esc(cfg.texte.lead)}</p>
+      <button type="button" class="btn btn-cta tour-cta" data-tour><span class="tour-cta-dot" aria-hidden="true"></span>Tour durch alle Funktionen</button>
       <p><strong>So geht's:</strong> Oben ein Gebiet wählen, dann auf der Karte oder in der Liste einen Vorgang anklicken. Hier erscheint die Prozesslinie: in welchen Sitzungen er auf der Tagesordnung stand, mit Fundstelle.</p>
       <p class="intro-actions">
         <button type="button" class="btn btn-soft" data-show="panel-list"><svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>Liste öffnen</button>
@@ -1369,6 +1370,32 @@
     if (initial) select(initial); else if (params.get("plan")) await showPlan(params.get("plan")); else showIntro();
     syncUrl();
   }
+
+  // für die Tour (site/tour.js): Flächen und Menüs öffnen, ein Beispiel zeigen, Lage des Gebiets auf der Karte
+  window.stadtmonitor = {
+    get stadt() { return cfg && cfg.stadt.name; },
+    ui: {
+      panel(id, open) { if (!toggleFor(id) || !toggleFor(id).hidden) setPanel(id, open); },
+      mapMenu(open) { const b = document.querySelector(".map-menu"); if (b && (b.getAttribute("aria-expanded") === "true") !== open) b.click(); },
+      layers(open) { const d = document.querySelector(".map-layers"); if (d) d.open = open; },
+      menu(id) { if (id) openMega(id); else closeMega(); },
+      async example() {
+        if (selected) return true;
+        // jüngster Vorgang mit Punkt auf der Karte und mehreren Stationen, sonst der erste der Liste
+        const list = filtered();
+        const p = list.filter((x) => x.process.length > 1 && (markers.get(x.reference) || []).length)
+          .sort((a, b) => String(b.date).localeCompare(String(a.date)))[0] || list[0];
+        if (p) select(p);
+        return Boolean(p);
+      },
+      areaRect() {
+        if (!outline) return null;
+        const b = outline.getBounds(), r = map.getContainer().getBoundingClientRect();
+        const nw = map.latLngToContainerPoint(b.getNorthWest()), se = map.latLngToContainerPoint(b.getSouthEast());
+        return { left: r.left + nw.x, top: r.top + nw.y, right: r.left + se.x, bottom: r.top + se.y };
+      },
+    },
+  };
 
   start().catch((err) => { $("#detail").innerHTML = `<p>Die Seite konnte nicht geladen werden (${esc(err.message)}).</p>`; });
 })();

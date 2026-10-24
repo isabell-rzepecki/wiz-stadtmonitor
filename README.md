@@ -70,7 +70,7 @@ Pull Requests prüft `.github/workflows/tests.yml` mit Python-Tests, Kontrastpr�
 
 ```
 config/stadt.json   Alle stadtspezifischen Werte (Name, Gremien, Ortsbezirke, Karte, Farben, Texte)
-site/               Seite (Leaflet, Zeitleiste, Liste, Prozesslinie; 3D-Ansicht mit MapLibre GL), ohne Build-Schritt
+site/               Seite (Leaflet, Zeitleiste, Liste, Prozesslinie; Tour in tour.js; 3D-Ansicht mit MapLibre GL), ohne Build-Schritt
 pipeline/           Python-Pipeline: fetch, fetch-plaene, build, check, package, site (python -m pipeline all)
 tools/kontrast.py   WCAG-Kontrastprüfung der Farb-Tokens aus config/stadt.json
 tests/              Python-Tests, Browser-Tests (Playwright, axe-core), Testdaten

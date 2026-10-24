@@ -329,3 +329,27 @@ test("3D-Ansicht: Ortsteil aus dem Link, Höhenangaben, Hinweis und Namensnennun
   assert.deepEqual(errors, []);
   await page.close();
 });
+
+test("Tour: Start aus dem Startfenster, alle Schritte mit Pfeiltaste, Beispielvorgang, Esc beendet, ohne Verstöße", async () => {
+  const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
+  await page.locator("#detail [data-tour]").click();
+  const card = page.locator(".tour-card");
+  await card.waitFor();
+  assert.match(await page.locator("#tour-title").textContent(), /Willkommen/);
+  assert.deepEqual(await axe(page), []);
+  const titel = [];
+  for (let k = 0; k < 20; k++) {
+    const [ist, von] = (await page.locator("#tour-count").textContent()).match(/(\d+) von (\d+)/).slice(1);
+    if (ist === von) break;
+    await page.keyboard.press("ArrowRight");
+    await page.waitForFunction((ist) => !document.querySelector("#tour-count")?.textContent.startsWith(`Schritt ${ist} `), ist);
+    titel.push(await page.locator("#tour-title").textContent());
+  }
+  for (const t of ["Suche", "Gebiet wählen", "Die Karte", "Kartenoptionen und Ebenen", "Die Liste", "Der Vorgang", "Die Prozesslinie", "Sitzungen und Themen", "Über den Stadtmonitor"])
+    assert.ok(titel.includes(t), `Schritt „${t}“ fehlt: ${titel.join(", ")}`);
+  assert.equal(await page.locator("#detail-heading").textContent(), "Vorgang", "Beispielvorgang geöffnet");
+  await page.keyboard.press("Escape");
+  assert.equal(await page.locator(".tour").count(), 0);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
