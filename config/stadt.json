@@ -643,7 +643,7 @@
         "titel": "Windvorranggebiete (Regionalplan)",
         "quelle": "rp_nordhessen_wfs",
         "farbe": "#5a3e8c",
-        "attribution": "Regionalplan Nordhessen: Hessisches Ministerium für Wirtschaft, Energie, Verkehr, Wohnen und ländlichen Raum (HMWVW), dl-de/by-2-0",
+        "attribution": "Regionalplan Nordhessen: Hessisches Ministerium für Wirtschaft, Energie, Verkehr, Wohnen und ländlichen Raum (HMWVW), dl-de/by-2-0; auf das Stadtgebiet zugeschnitten und vereinfacht",
         "attribution_kurz": "Regionalplan Nordhessen: HMWVW, dl-de/by-2-0",
         "hinweis": "Vorranggebiete zur Nutzung der Windenergie laut Regionalplan; die Attribute „planung“ und „bestand“ des Dienstes sind nicht dokumentiert und werden nicht ausgewertet.",
         "ebenen": [
@@ -666,7 +666,7 @@
         "titel": "Kulturdenkmäler",
         "quelle": "denkmal_wfs",
         "farbe": "#7a4a12",
-        "attribution": "Kulturdenkmäler: Landesamt für Denkmalpflege Hessen (DenkXweb), dl-de/by-2-0",
+        "attribution": "Kulturdenkmäler: Landesamt für Denkmalpflege Hessen (LfDH, DenkXweb), dl-de/by-2-0; auf das Stadtgebiet zugeschnitten und vereinfacht",
         "attribution_kurz": "Denkmäler: LfDH (DenkXweb), dl-de/by-2-0",
         "hinweis": "Erfassung der Baudenkmäler nicht flächendeckend (Bearbeitungsstand in DenkXweb). Maßgeblich ist das Denkmalverzeichnis. Bodendenkmäler werden nicht gezeigt.",
         "ebenen": [
@@ -730,15 +730,15 @@
       "beschriftung": "hboris_label",
       "stichtag": "2026-01-01",
       "min_zoom": 13,
-      "attribution": "Bodenrichtwerte 2026: Gutachterausschüsse für Immobilienwerte des Landes Hessen / HVBG, Kartendienst (WMS)",
+      "attribution": "Bodenrichtwerte 2026: Gutachterausschüsse für Immobilienwerte des Landes Hessen / HVBG, Kartendienst (WMS); Beschriftung farblich angepasst",
       "hinweis": "Darstellung des Kartendienstes der HVBG (Farben je Nutzungsart, Werte als Beschriftung; Beschriftung für bessere Lesbarkeit hell auf dunkel umgefärbt). Sichtbar erst bei näherer Ansicht, Beschriftungen ab etwa Maßstab 1:15 000. Beim Einschalten lädt Ihr Browser die Bilder von gds-srv.hessen.de."
     },
     "boris": {
       "url": "https://www.gds.hessen.de/wfs2/boris/cgi-bin/brw/2024/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=boris:BR_BodenrichtwertZonal&COUNT=5000",
       "stichtag": "2024-01-01",
       "stichtag_hinweis": "Stichtag 01.01.2024 (Zonen und Spannen). Einen Datendienst (WFS) mit dem Stichtag 01.01.2026 gibt es nicht (…/brw/2026/wfs: HTTP 404, geprüft am 24.10.2026); den Stichtag 2026 zeigt die eigene Ebene „Bodenrichtwerte 2026 (Karte der HVBG)“.",
-      "attribution": "Bodenrichtwerte: Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH, Stichtag 01.01.2024",
-      "lizenz": "Nutzung ohne Einschränkung oder Bedingung (AccessConstraints des Dienstes); dl-de/zero-2.0",
+      "attribution": "Bodenrichtwerte: Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH, Stichtag 01.01.2024; Zonen vereinfacht, Spannen eigene Berechnung",
+      "lizenz": "Nutzung ohne Einschränkung oder Bedingung (AccessConstraints des Dienstes, § 17 Abs. 4 BauGB-AV)",
       "filter": "baureifes Land (Entwicklungszustand B), Art W… (Wohnbauflächen) oder M… (gemischte Bauflächen)",
       "klassen": [
         30,

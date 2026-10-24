@@ -24,8 +24,8 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - **Bauleitplanung (Bebauungspläne, Flächennutzungsplan):**
   - Die Umringe der Stadt stehen unter der Nutzungsbedingung „Die Nutzung ohne vertragliche Vereinbarung mit der Stadt Witzenhausen ist nur für nicht kommerzielle Zwecke erlaubt.“ Eine gesonderte Freigabe gibt es nicht.
   - Der Stadtmonitor nutzt sie deshalb nur im Build. Die Rohgeometrien liegen in `data/geo/restricted/`; der Ordner ist von der Versionierung ausgeschlossen.
-  - Ausgeliefert werden sie nur als Kartenebene mit dem Hinweis „Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke“. Es gibt keinen GeoJSON-Export, keinen Download in der Oberfläche und keine Flächen im Datenpaket.
-  - Im Repository und im Datenpaket bleibt nur die Zuordnung Vorgang → Plannummer (`audit/verortung_bauleitplanung.tsv`). Sie enthält keine Geometrie der Stadt.
+  - Ausgeliefert werden sie nur als Kartenebene mit dem Hinweis „Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke“; die Datei der Ebene trägt denselben Hinweis. Es gibt keinen Download in der Oberfläche und keine Flächen im Datenpaket.
+  - Punkte im Geltungsbereich, Plantitel und Überschneidungen von Planflächen mit Umweltebenen nutzt nur die Seite. Im Repository und im Datenpaket bleibt nur die Zuordnung Vorgang → Plannummer (`audit/verortung_bauleitplanung.tsv`, ohne Plantitel).
 - **Umweltebenen (Hochwasser, Wasserschutz, Schutzgebiete):**
   - Zuschaltbare Kartenebenen aus den INSPIRE-Diensten des Landes (HLNUG, CC BY 4.0; HMLU, frei nutzbar ohne Weiterveräußerung), zugeschnitten auf das Stadtgebiet. Sie sind nicht rechtsverbindlich.
   - Eine „räumliche Überschneidung“ wird nur für Flurstückspunkte und Geltungsbereiche von Plänen (mindestens 1 % der Fläche) angegeben, nicht für Straßen oder Ortsteile. Sie sagt nichts über den Inhalt eines Vorgangs aus (`audit/ueberschneidung_umwelt.tsv`).
