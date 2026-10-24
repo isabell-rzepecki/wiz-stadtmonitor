@@ -1,0 +1,26 @@
+{
+ "attribution": "3D-Gebäudemodelle LoD2: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG); Darstellung vereinfacht",
+ "hinweis": "Vereinfachte Darstellung: Grundriss mit gemessener Gebäudehöhe; Dachformen und Geländehöhe werden nicht dargestellt.",
+ "dateien": [
+  "BW_Witzenhausen.gml"
+ ],
+ "ortsteile": {
+  "albshausen": 5,
+  "berlepsch-ellerode": 6,
+  "blickershausen": 9,
+  "dohrenbach": 20,
+  "ellingerode": 13,
+  "ermschwerd": 20,
+  "gertenbach": 30,
+  "hubenrode": 17,
+  "hundelshausen": 45,
+  "kernstadt": 175,
+  "kleinalmerode": 21,
+  "neuseesen": 8,
+  "rossbach": 12,
+  "unterrieden": 74,
+  "wendershausen": 14,
+  "werleshausen": 14,
+  "ziegenhagen": 12
+ }
+}

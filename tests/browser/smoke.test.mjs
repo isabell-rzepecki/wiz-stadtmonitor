@@ -1,5 +1,5 @@
 // Browser-Prüfung der zusammengestellten Seite (Playwright, Chromium; aufgebaut wie in der RIS-Karte Bonn):
-// Start ohne Daten, Gebiet mit Vorgang und Prozesslinie, Termine, Zeitleiste, mobil, Dunkelmodus.
+// Start ohne Daten, 3D-Ansicht, Gebiet mit Vorgang und Prozesslinie, Termine, Zeitleiste, mobil, Dunkelmodus.
 // Barrierefreiheit mit axe-core (WCAG 2.1 A und AA). Aufruf über tests/browser/run.sh.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
@@ -15,7 +15,9 @@ let browser;
 // Kartenkacheln werden im Test nicht geladen (kein Netz nötig); ein leeres Bild genügt
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
 
-before(async () => { browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}); });
+// WebGL für die 3D-Ansicht (MapLibre) über die Software-Darstellung
+const ARGS = ["--use-gl=swiftshader", "--enable-unsafe-swiftshader"];
+before(async () => { browser = await chromium.launch({ args: ARGS, ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}) }); });
 after(async () => { await browser?.close(); });
 
 async function open(base, path = "", { width = 1440, height = 900, dark = false } = {}) {
@@ -219,5 +221,30 @@ test("Mobil: Kartenoptionen in einem Menü, ohne Verstöße", async () => {
   assert.ok(kasten.y >= titel.y + titel.height, `Kasten ${kasten.y} unter Titel ${titel.y + titel.height}`);
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+test("3D-Ansicht: Ortsteil aus dem Link, Höhenangaben, Hinweis und Namensnennung, Weg zurück, ohne Verstöße", async () => {
+  const karte = await open(SITE, "?gebiet=ortsteil:kernstadt");
+  const link = karte.locator(".map-3d");
+  await link.click();
+  await karte.waitForURL(/3d\.html\?gebiet=ortsteil(:|%3A)kernstadt/);
+  await karte.close();
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, bypassCSP: true });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  await page.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
+  await page.goto(SITE + "3d.html?gebiet=ortsteil:kernstadt", { waitUntil: "networkidle" });
+  await page.waitForFunction(() => /Objekte/.test(document.querySelector("#stand3d").textContent));
+  assert.match(await page.locator("#stand3d").textContent(), /^Kernstadt: \d+ Objekte, Höhe Median [\d,]+ m/);
+  assert.equal(await page.locator("#ortsteil3d").inputValue(), "kernstadt");
+  assert.match(await page.locator("#hinweis3d").textContent(), /Dachformen und Geländehöhe werden nicht dargestellt/);
+  assert.match(await page.locator(".maplibregl-ctrl-attrib").textContent(), /HVBG.*vereinfacht/);
+  await page.locator("#ortsteil3d").selectOption("ermschwerd");
+  await page.waitForFunction(() => /^Ermschwerd/.test(document.querySelector("#stand3d").textContent));
+  assert.match(page.url(), /gebiet=ortsteil%3Aermschwerd/);
+  assert.equal(await page.locator("#zurueck").getAttribute("href"), "./?gebiet=ortsteil:ermschwerd");
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(errors, []);
   await page.close();
 });
