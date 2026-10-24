@@ -26,6 +26,9 @@
   const MOBILE = matchMedia("(max-width: 900px)");
   const NARROW = matchMedia("(max-width: 1279px)");
   const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // JSON abrufen, null bei Fehler; vergessen() leert dann den Zwischenspeicher, damit das nächste Einschalten neu versucht
+  const holen = (url, vergessen) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    .then((d) => { if (!d) vergessen(); return d; });
   const CONF = { hoch: "Ort gesichert", mittel: "Ort erschlossen", niedrig: "Ort unsicher" };
   // Methoden der Verortung (Stufe A: Gremium, B: Regeln, C: Sprachmodell); Schlüssel wie pipeline/verortung.py
   const METHOD = {
@@ -77,7 +80,7 @@
 
   let wohnen = null, brwData = null, brwLayer = null, brw26Layer = null, wanderungData = null, wanderungLayer = {}, wanderungJahr = null, wahlen = null, beteiligung = null, eigentum = null;
   let cfg = null, data = null, flaechen = null, zeit = null, all = [], papers = [], area = null, selected = null, dataStand = null;
-  let planData = null, planLayer = null, planOn = false, planShown = null;
+  let planData = null, planLayer = null, planOn = false, planShown = null, planFolge = 0, planListe = [];
   const umweltOn = new Set(), umweltData = {}, umweltLayers = {};
   let map, cluster, outline, navLayer = null, markers = new Map(), tl = null, range = null, shown = LIST_STEP, legendEl = null;
 
@@ -95,12 +98,18 @@
   const SHEETS = ["panel-list", "panel-detail", "panel-auswertung", "panel-termine", "panel-wohnen", "panel-wahlen", "panel-wanderung", "timeline-wrap"];
   const OVERLAYS = ["panel-auswertung", "panel-termine", "panel-wohnen", "panel-wahlen", "panel-wanderung"];
   const toggleFor = (id) => document.querySelector(`.toggle[data-panel="${id}"]`);
+  const opener = {};  // Element, das eine Fläche geöffnet hat (für den Fokus beim Schließen)
   function setPanel(id, open) {
     const el = document.getElementById(id);
+    if (open && el.hidden && document.activeElement && !el.contains(document.activeElement)) opener[id] = document.activeElement;
     el.hidden = !open;
     document.querySelectorAll(`.toggle[data-panel="${id}"]`).forEach((b) => b.setAttribute("aria-pressed", String(open)));
     if (id === "panel-list") { document.body.classList.toggle("list-open", open); document.body.classList.toggle("list-closed", !open); }
     if (id === "panel-detail") { document.body.classList.toggle("detail-open", open); document.body.classList.toggle("detail-closed", !open); }
+    if (id === "timeline-wrap") {  // mobil: Kartenknöpfe über die offene Zeitleiste heben (style.css)
+      document.body.classList.toggle("timeline-open", open);
+      if (open) requestAnimationFrame(() => document.documentElement.style.setProperty("--tl-h", `${el.offsetHeight}px`));
+    }
     if (!open) return;
     el.classList.remove("full");
     const sz = el.querySelector(".sheet-size");
@@ -136,8 +145,10 @@
   }
   function closePanel(id) {
     setPanel(id, false);
-    const t = toggleFor(id);
-    if (t && t.offsetParent) t.focus();
+    // Fokus zurück: Schalter der Fläche, sonst das öffnende Element, sonst der Knopf seines (nun geschlossenen) Menüs
+    const t = toggleFor(id), o = opener[id], mega = o && o.closest && o.closest(".mega");
+    const ziel = [t, o, mega && document.querySelector(`[data-mega="${mega.id}"]`)].find((x) => x && x.isConnected && x.offsetParent);
+    if (ziel) ziel.focus();
   }
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-panel]");
@@ -209,6 +220,9 @@
     if (save) { try { localStorage.setItem("sm-breite-" + k, String(v)); } catch (e) { /* ohne Speicher */ } }
   }
   function clampWidths() { for (const k of Object.keys(WIDTH)) setWidth(k, widthOf(k)); }
+  // Fenstergröße geändert: Breiten auf die neuen Grenzen ziehen (verzögert, nicht bei jedem Zwischenschritt)
+  let breiteZeit = 0;
+  addEventListener("resize", () => { clearTimeout(breiteZeit); breiteZeit = setTimeout(clampWidths, 150); });
   for (const k of Object.keys(WIDTH)) {
     try { const v = Number(localStorage.getItem("sm-breite-" + k)); if (v) document.documentElement.style.setProperty(WIDTH[k].v, v + "px"); } catch (e) { /* ohne Speicher */ }
   }
@@ -220,10 +234,13 @@
       const x0 = e.clientX, w0 = widthOf(k);
       r.classList.add("active"); document.body.classList.add("resizing");
       const move = (ev) => setWidth(k, w0 + sign * (ev.clientX - x0));
-      const up = () => { r.removeEventListener("pointermove", move); r.classList.remove("active"); document.body.classList.remove("resizing"); setWidth(k, widthOf(k), true); };
+      const up = () => {  // beide Endereignisse abmelden, sonst sammeln sich Zuhörer über viele Ziehvorgänge
+        r.removeEventListener("pointermove", move); r.removeEventListener("pointerup", up); r.removeEventListener("pointercancel", up);
+        r.classList.remove("active"); document.body.classList.remove("resizing"); setWidth(k, widthOf(k), true);
+      };
       r.addEventListener("pointermove", move);
-      r.addEventListener("pointerup", up, { once: true });
-      r.addEventListener("pointercancel", up, { once: true });
+      r.addEventListener("pointerup", up);
+      r.addEventListener("pointercancel", up);
     });
     r.addEventListener("keydown", (e) => {
       const step = e.shiftKey ? 64 : 16;
@@ -292,16 +309,21 @@
   }
   const bestConfidence = (p) => areaLocs(p).reduce((b, l) => (RANK[l.confidence] > RANK[b] ? l.confidence : b), "niedrig");
 
+  // 3D-Ansicht mit dem gewählten Ortsteil (auch für „Link kopieren“ und neuen Tab, daher im Attribut)
+  const link3d = () => `3d.html${area && area.kind === "ortsteil" ? `?gebiet=ortsteil:${encodeURIComponent(area.key)}` : ""}`;
   function loadArea(value, keepState) {
     area = parseArea(value);
     $("#f-area").value = `${area.kind}:${area.key}`;
+    const a3 = document.querySelector(".map-3d");
+    if (a3) a3.href = link3d();
     papers = all.filter(inArea);
     document.title = area.kind === "stadt" ? `${cfg.stadt.titel} – Sitzungsinformationen auf Karte und Zeitleiste`
       : `${cfg.stadt.titel} – Vorgänge ${area.kind === "ohne" ? "ohne Ortsbezug" : "in " + area.name}`;
-    $("#f-conf").hidden = area.kind === "ohne";
+    $("#f-conf").hidden = area.kind !== "ortsteil";  // wirkt nur innerhalb eines Ortsteils (siehe filtered)
     fillFilters();
     drawOutline();
     selected = null;
+    planShown = null;
     shown = LIST_STEP;
     if (!keepState) showIntro();
     if (tl && zeit) { tl.setData(zeit); tl.select(null); }
@@ -315,12 +337,17 @@
 
   // --- Karte -----------------------------------------------------------------------------------------
   const MARKER = { radius: 8, weight: 2, color: "#fff", fillOpacity: 0.95 };
-  const color = (c) => getComputedStyle(document.documentElement).getPropertyValue("--" + c).trim();
+  // Farben aus den CSS-Variablen; gemerkt (sonst je Marker eine Stilberechnung), neu gelesen beim Wechsel hell/dunkel
+  const farben = new Map();
+  const color = (c) => { if (!farben.has(c)) farben.set(c, getComputedStyle(document.documentElement).getPropertyValue("--" + c).trim()); return farben.get(c); };
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => farben.clear());
   let baseLayer = null, colored = false;
   function setBase() {
-    const h = cfg.karte.hintergrund;
-    if (baseLayer) baseLayer.remove();
-    baseLayer = L.tileLayer(colored ? h.farbig : h.grau, { maxZoom: h.max_zoom, attribution: h.attribution }).addTo(map);
+    // neuer Hintergrund zuerst, dann der alte weg: sonst bestimmt kurz eine Ebene mit Mindestzoom (BORIS 2026) die Zoomstufe;
+    // zIndex 0 hält den Hintergrund unter den Bildebenen
+    const h = cfg.karte.hintergrund, alt = baseLayer;
+    baseLayer = L.tileLayer(colored ? h.farbig : h.grau, { maxZoom: h.max_zoom, attribution: h.attribution, zIndex: 0 }).addTo(map);
+    if (alt) alt.remove();
   }
   function initMap() {
     map = L.map("map", { zoomControl: false, scrollWheelZoom: true, zoomAnimation: !REDUCED, fadeAnimation: !REDUCED, markerZoomAnimation: !REDUCED });
@@ -350,7 +377,9 @@
     if (cfg.umwelt) {
       const wanted = (new URLSearchParams(location.search).get("ebenen") || "").split(",");
       for (const g of cfg.umwelt.gruppen) if (wanted.includes(g.id)) umweltOn.add(g.id);
-      for (const id of ["bodenrichtwerte", "bodenrichtwerte2026", ...WANDERUNG_EBENEN.map((e) => e.id)]) if (wanted.includes(id)) umweltOn.add(id);
+      // Bodenrichtwerte 2026 (Kartendienst der HVBG) nicht aus dem Link: Bilder eines fremden Servers erst nach Einschalten
+      // (Datenschutzhinweis); alle anderen Ebenen liegen auf dem Server der Seite
+      for (const id of ["bodenrichtwerte", ...WANDERUNG_EBENEN.map((e) => e.id)]) if (wanted.includes(id)) umweltOn.add(id);
       const Layers = L.Control.extend({
         options: { position: "bottomright" },
         onAdd() {
@@ -362,7 +391,8 @@
             `<label><input type="checkbox" value="${esc(g.id)}"${(g.id === "bauleitplanung" ? planOn : umweltOn.has(g.id)) ? " checked" : ""}> ${esc(g.titel)}</label>`).join("")}</fieldset>`;
           d.addEventListener("change", (e) => {
             const id = e.target.value;
-            if (id === "bauleitplanung") { planOn = e.target.checked; drawPlans(); syncUrl(); return; }
+            // Nutzungshinweis (nur nicht kommerziell) sichtbar machen: Legende beim Einschalten aufklappen
+            if (id === "bauleitplanung") { planOn = e.target.checked; if (planOn && legendEl) legendEl.open = true; drawPlans(); syncUrl(); return; }
             if (e.target.checked) umweltOn.add(id); else umweltOn.delete(id);
             drawEbene(id);
             syncUrl();
@@ -381,9 +411,8 @@
         options: { position: "bottomright" },
         onAdd() {
           const a = L.DomUtil.create("a", "map-style map-3d");
-          a.href = "3d.html";
+          a.href = link3d();
           a.textContent = "3D-Ansicht";
-          a.addEventListener("click", () => { a.href = `3d.html${area && area.kind === "ortsteil" ? `?gebiet=ortsteil:${encodeURIComponent(area.key)}` : ""}`; });
           L.DomEvent.disableClickPropagation(a);
           return a;
         },
@@ -435,6 +464,8 @@
       },
     });
     legendEl = new Legend().addTo(map).getContainer();
+    // Pläne auch ohne Maus erreichbar: Auswahl in der Legende
+    legendEl.addEventListener("change", (e) => { if (e.target.matches("[data-plan-wahl]") && e.target.value) showPlan(e.target.value); });
     cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 40, animate: !REDUCED }).addTo(map);
     map.fitBounds(cityBounds());
   }
@@ -485,6 +516,8 @@
       .map(([c, t]) => `<li><span class="swatch" style="background:${c}" aria-hidden="true"></span>${esc(t)}</li>`).join("")}</ul>
       ${planOn ? `<p class="legend-group">Bauleitplanung</p><ul><li><span class="swatch swatch-plan" aria-hidden="true"></span>Geltungsbereich eines Bebauungsplans</li>
         <li><span class="swatch swatch-fplan" aria-hidden="true"></span>Änderung des Flächennutzungsplans</li></ul>
+        ${planListe.length ? `<label class="legend-plan">Plan anzeigen <select data-plan-wahl><option value="">auswählen …</option>${planListe
+          .map((p) => `<option value="${esc(p.key)}"${p.key === planShown ? " selected" : ""}>${esc(planName(p))}</option>`).join("")}</select></label>` : ""}
         <p class="hint">${esc(cfg.bauleitplanung.attribution)}.</p>` : ""}
       ${umweltLegend()}${brwLegend()}${brw26Legend()}${wanderungLegend()}
       ${ebenen ? '<p class="hint">Kartenebenen sind nicht rechtsverbindlich; maßgeblich sind die Quellen.</p>' : ""}
@@ -500,7 +533,7 @@
   }
   async function drawBrw() {
     if (!umweltOn.has("bodenrichtwerte")) { if (brwLayer) { brwLayer.remove(); brwLayer = null; } if (legendEl) drawLegend(); return; }
-    brwData ||= fetch(BRW_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    brwData ||= holen(BRW_URL, () => { brwData = null; });
     const d = await brwData;
     if (!umweltOn.has("bodenrichtwerte") || brwLayer || !d) { if (legendEl) drawLegend(); return; }
     brwLayer = L.geoJSON(d, {
@@ -575,7 +608,7 @@
   const umweltEbene = (g, id) => g.ebenen.find((e) => e.id === id) || { stil: {} };
   const umweltStyle = (g, e) => ({ color: g.farbe, weight: e.stil.weight || 1.5, opacity: 0.9, dashArray: e.stil.dash || null,
     fill: Boolean(e.stil.fill), fillColor: g.farbe, fillOpacity: e.stil.fill || 0 });
-  const loadUmwelt = (id) => (umweltData[id] ||= fetch(UMWELT_URL(id)).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  const loadUmwelt = (id) => (umweltData[id] ||= holen(UMWELT_URL(id), () => { delete umweltData[id]; }));
   async function drawUmwelt(id) {
     const g = umweltGruppe(id);
     if (!g) return;
@@ -605,7 +638,7 @@
     }).join("");
   }
   // Kartenebene Bauleitplanung: erst beim Einschalten geladen; Hinweis zur Nutzung in Legende und Namensnennung
-  const loadPlans = () => (planData ||= fetch(PLAENE_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  const loadPlans = () => (planData ||= holen(PLAENE_URL, () => { planData = null; }));
   const planStyle = (f) => ({ color: f.properties.art === "fplan" ? color("niedrig") : color("accent-ink"), weight: 1.5,
     dashArray: f.properties.art === "fplan" ? "5 4" : null, fillColor: f.properties.art === "fplan" ? color("niedrig") : color("accent"), fillOpacity: 0.1 });
   async function drawPlans() {
@@ -613,6 +646,7 @@
     if (!planOn) { if (planLayer) { planLayer.remove(); planLayer = null; } return; }
     const d = await loadPlans();
     if (!planOn || planLayer || !d) return;
+    planListe = d.features.map((f) => f.properties).sort((a, b) => planName(a).localeCompare(planName(b), "de", { numeric: true }));
     planLayer = L.geoJSON(d, {
       style: planStyle, attribution: esc(d.attribution),
       onEachFeature: (f, layer) => layer.bindTooltip(`${esc(planName(f.properties))}${f.properties.gueltig_ab ? `<br>rechtskräftig seit ${fmtDate(f.properties.gueltig_ab)}` : ""}`, { sticky: true })
@@ -623,11 +657,14 @@
   }
   const planName = (p) => `${p.art === "fplan" ? "" : "Bebauungsplan "}${p.titel}`;
   async function showPlan(key) {
+    const nr = ++planFolge;  // eine spätere Auswahl (Vorgang oder anderer Plan) hat Vorrang
     const d = await loadPlans();
     const f = d && d.features.find((x) => x.properties.key === key);
-    if (!f) return;
+    if (!f || nr !== planFolge) return;
     selected = null;
     planShown = key;
+    document.querySelectorAll(".papers button[data-ref]").forEach((b) => b.setAttribute("aria-current", "false"));
+    if (tl) tl.select(null);
     highlight();
     const list = all.filter((v) => (v.plans || []).some((p) => p.key === key));
     const docs = (f.properties.dokumente || []).map((u) => link(u, esc(decodeURIComponent(u.split("/").pop())))).filter(Boolean);
@@ -637,7 +674,7 @@
         ${f.properties.nr ? `<dt>Plannummer</dt><dd>${esc(f.properties.nr)}${f.properties.aenderung ? `, ${f.properties.aenderung}. Änderung` : ""}</dd>` : ""}</dl>
       ${docs.length ? `<h4>Plandokumente der Stadt</h4><ul class="related">${docs.map((x) => `<li>${x}</li>`).join("")}</ul>` : ""}
       ${(() => { const bs = ((beteiligung && beteiligung.verfahren) || []).filter((b) => b.plan.key === key);
-        return bs.length ? `<h4>Beteiligung und Verfahrensschritte</h4>${beteiligungHtml(bs.map((b) => ({ ...b })))}` : ""; })()}
+        return bs.length ? `<h4>Beteiligung und Verfahrensschritte</h4>${beteiligungHtml(bs)}` : ""; })()}
       <h4>Vorgänge mit dieser Plannummer (${list.length})</h4>
       ${list.length ? `<ul class="related">${list.map((v) => `<li><button type="button" class="link-btn" data-open-ref="${esc(v.reference)}">${esc(v.name)}</button> · ${fmtDate(v.date)}</li>`).join("")}</ul>`
         : "<p>Kein Tagesordnungspunkt seit Juli 2024 nennt diesen Plan.</p>"}
@@ -654,7 +691,7 @@
     for (const p of list) {
       const ms = areaLocs(p).filter((l) => l.level !== "ortsteil" && l.lon != null).map((l) => {
         const m = L.circleMarker([l.lat, l.lon], { ...MARKER, fillColor: color(l.confidence) })
-          .bindTooltip(`${esc(p.reference)} · ${esc(l.name)}`).on("click", () => select(p, true));
+          .bindTooltip(`${esc(p.reference)} · ${esc(l.name)}<br>${CONF[l.confidence] || esc(l.confidence)}`).on("click", () => select(p, true));
         return m;
       });
       ms.forEach((m) => cluster.addLayer(m));
@@ -774,8 +811,10 @@
     return `${esc(m)}${l.stage === "C" ? ' <span class="derived">Sprachmodell</span>' : ""}${l.evidence ? ` · Fundstelle: „${esc(l.evidence)}“` : ""}`;
   }
   function select(p, fromMap) {
+    const ausListe = $("#panel-list").contains(document.activeElement);
     selected = p;
     planShown = null;
+    planFolge++;  // noch ladende Plananzeige verwerfen
     document.querySelectorAll(".papers button[data-ref]").forEach((b) => b.setAttribute("aria-current", String(b.dataset.ref === p.reference)));
     syncUrl();
     if (tl) tl.select(p);
@@ -829,7 +868,8 @@
       if (b) b.scrollIntoView({ block: "nearest" });
     } else {
       if (ms.length) cluster.zoomToShowLayer(ms[0], () => { highlight(); map.panTo(ms[0].getLatLng(), { animate: !REDUCED }); });
-      if (MOBILE.matches) $("#detail h3").focus();
+      // schmal oder mittlere Breite: die Liste schließt sich, der Fokus folgt in den Vorgang
+      if (MOBILE.matches || (ausListe && $("#panel-list").hidden)) $("#detail h3").focus();
     }
   }
   $("#detail").addEventListener("click", (e) => {
@@ -869,7 +909,7 @@
   function showTermine() {
     const box = $("#termine");
     const scope = box.querySelector("#termine-scope") ? box.querySelector("#termine-scope").value : "gebiet";
-    const today = new Date().toISOString().slice(0, 10);
+    const today = heute();  // Datum in Berlin, nicht in UTC (sonst fehlt kurz nach Mitternacht die Sitzung des Tages)
     // im Gebiet: stadtweite Gremien und Beiräte des gewählten Ortsteils
     const relevant = (m) => scope === "alle" || area.kind !== "ortsteil" || !m.ortsteil || m.ortsteil === area.name;
     const list = (data.sitzungen || []).filter((m) => m.date >= today && relevant(m)).sort((a, b) => a.date.localeCompare(b.date));
@@ -892,7 +932,7 @@
         <option value="alle"${scope === "alle" ? " selected" : ""}>alle Gremien</option></select></label></div>
       <p class="count">${list.length} kommende Sitzungen</p>
       ${items || "<p>Keine kommenden Sitzungen im Datenbestand.</p>"}`;
-    box.querySelector("#termine-scope").addEventListener("change", showTermine);
+    box.querySelector("#termine-scope").addEventListener("change", () => { showTermine(); $("#termine-scope").focus(); });
   }
   $("#termine").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-ref]");
@@ -912,8 +952,8 @@
     const rows = [...r.vorschlaege].sort((a, b) => b.stimmen - a.stimmen);
     return `<div class="table-wrap"><table class="compare"><caption class="visually-hidden">${esc(caption)}</caption>
       <thead><tr><th scope="col">Wahlvorschlag</th><th scope="col">Stimmen&shy;anteil</th><th scope="col">Sitze</th></tr></thead>
-      <tbody>${rows.map((v) => `<tr><th scope="row">${esc(v.name)}</th><td>${pct(v.anteil)}</td><td>${v.sitze}</td></tr>`).join("")}
-      <tr class="own"><th scope="row">zusammen</th><td></td><td>${r.sitze}</td></tr></tbody></table></div>`;
+      <tbody>${rows.map((v) => `<tr><th scope="row">${esc(v.name)}</th><td>${pct(v.anteil)}</td><td>${esc(v.sitze)}</td></tr>`).join("")}
+      <tr class="own"><th scope="row">zusammen</th><td></td><td>${esc(r.sitze)}</td></tr></tbody></table></div>`;
   }
   function wahlKopf(e) {
     const s = e.stufe === "endgültig" ? "" : ` <span class="derived">${esc(STUFE[e.stufe] || e.stufe)}</span>`;
@@ -1034,7 +1074,7 @@
   // Je Gemeinde nur Zu- und Fortzüge über die Gemeindegrenze; Herkunft und Ziel nur je Kreis. Keine Schätzung je Ortsteil.
   const WANDERUNG_EBENEN = [{ id: "wanderung_gemeinden", titel: "Wanderungssaldo der Gemeinden im Kreis" },
     { id: "wanderung_kreise", titel: "Wanderung über die Kreisgrenze" }];
-  const loadWanderung = () => (wanderungData ||= fetch(WANDERUNG_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  const loadWanderung = () => (wanderungData ||= holen(WANDERUNG_URL, () => { wanderungData = null; }));
   const mittel = (j) => (j.bev_anfang + j.bev_ende) / 2;
   const saldo = (j) => j.zuzuege - j.fortzuege;
   const rate = (j) => (saldo(j) / mittel(j)) * 1000;
@@ -1056,7 +1096,7 @@
       ${ticks.map((v) => `<line x1="${l}" x2="${W - r}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${l - 6}" y="${y(v) + 4}" text-anchor="end">${de(v)}</text>`).join("")}
       ${reihe.map(([jahr, j], i) => `<rect x="${x(i) - bw}" y="${y(j.zuzuege)}" width="${bw}" height="${y(0) - y(j.zuzuege)}" fill="${color("accent-ink")}"/>
         <rect x="${x(i)}" y="${y(j.fortzuege)}" width="${bw}" height="${y(0) - y(j.fortzuege)}" fill="${color("abzug")}"/>
-        <text x="${x(i)}" y="${H - 8}" text-anchor="middle">${jahr}</text>`).join("")}</svg>`;
+        <text x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(jahr)}</text>`).join("")}</svg>`;
   }
   async function showWanderung() {
     const box = $("#wanderung");
@@ -1084,9 +1124,9 @@
         <details class="acc"><summary>Tabelle ${jahre[0]} bis ${jahre[jahre.length - 1]}</summary><div class="table-wrap"><table class="compare">
           <caption class="visually-hidden">Zu- und Fortzüge, Saldo und natürliche Bilanz je Jahr</caption>
           <thead><tr><th scope="col">Jahr</th><th scope="col">Zuzüge</th><th scope="col">Fortzüge</th><th scope="col">Saldo</th><th scope="col">je 1 000</th><th scope="col">Geburten − Sterbefälle</th></tr></thead>
-          <tbody>${reihe.map(([y, j]) => `<tr><th scope="row">${y}</th><td>${de(j.zuzuege)}</td><td>${de(j.fortzuege)}</td><td>${vz(saldo(j))}</td><td>${vz(rate(j), 1)}</td><td>${vz(j.geborene - j.gestorbene)}</td></tr>`).join("")}</tbody></table></div></details></section>
+          <tbody>${reihe.map(([y, j]) => `<tr><th scope="row">${esc(y)}</th><td>${de(j.zuzuege)}</td><td>${de(j.fortzuege)}</td><td>${vz(saldo(j))}</td><td>${vz(rate(j), 1)}</td><td>${vz(j.geborene - j.gestorbene)}</td></tr>`).join("")}</tbody></table></div></details></section>
       <section class="stat-block"><h3>Gemeinden im ${esc(W.kreis_name)}</h3>
-        <label class="inline">Jahr <select id="wanderung-jahr">${jahre.map((y) => `<option${y === wanderungJahr ? " selected" : ""}>${y}</option>`).join("")}</select></label>
+        <label class="inline">Jahr <select id="wanderung-jahr">${jahre.map((y) => `<option${y === wanderungJahr ? " selected" : ""}>${esc(y)}</option>`).join("")}</select></label>
         <p><button type="button" class="btn btn-soft" data-wanderung-on="wanderung_gemeinden">Saldo auf der Karte zeigen</button></p>
         <div class="table-wrap"><table class="compare"><caption class="visually-hidden">Wanderungssaldo je 1 000 Einwohner der Gemeinden im Kreis, ${esc(wanderungJahr)}</caption>
           <thead><tr><th scope="col">Gemeinde</th><th scope="col">Zuzüge</th><th scope="col">Fortzüge</th><th scope="col">Saldo je 1 000</th></tr></thead>
@@ -1107,7 +1147,7 @@
       ${methode([`<ul>${W.hinweise.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`,
         `${esc(W.attribution)}. ${esc(W.lizenz)}. Berichte: ${jahre.map((y) => link(d.quellen[y], y)).join(", ")}${k ? `; Kreismatrix ${link(k.quelle, String(k.jahr))}` : ""}.`],
         "Wie die Zahlen zu lesen sind")}`;
-    $("#wanderung-jahr").addEventListener("change", (e) => { wanderungJahr = e.target.value; showWanderung(); if (wanderungLayer.wanderung_gemeinden) { wanderungLayer.wanderung_gemeinden.remove(); delete wanderungLayer.wanderung_gemeinden; drawWanderung("wanderung_gemeinden"); } });
+    $("#wanderung-jahr").addEventListener("change", (e) => { wanderungJahr = e.target.value; showWanderung(); $("#wanderung-jahr").focus(); if (wanderungLayer.wanderung_gemeinden) { wanderungLayer.wanderung_gemeinden.remove(); delete wanderungLayer.wanderung_gemeinden; drawWanderung("wanderung_gemeinden"); } });
   }
   const wName = (d, ags, fallback) => (d.geo?.gemeinden.features.find((f) => f.properties.ags === ags)?.properties.name) || fallback;
   function kuerzen(a, b, km) {
@@ -1138,7 +1178,7 @@
             fillColor: i == null ? "transparent" : SALDO_FARBE(i), fillOpacity: i == null ? 0 : SALDO_DECK[i] }; },
         attribution: esc(`${W.attribution}; ${d.geo.attribution}`),
         onEachFeature: (f, layer) => { const j = d.gemeinden[f.properties.ags]?.jahre[jahr];
-          layer.bindTooltip(j ? `<strong>${esc(f.properties.name)} ${jahr}</strong><br>Zuzüge ${de(j.zuzuege)}, Fortzüge ${de(j.fortzuege)}<br>Saldo ${vz(saldo(j))} (${vz(rate(j), 1)} je 1 000 Einwohner)`
+          layer.bindTooltip(j ? `<strong>${esc(f.properties.name)} ${esc(jahr)}</strong><br>Zuzüge ${de(j.zuzuege)}, Fortzüge ${de(j.fortzuege)}<br>Saldo ${vz(saldo(j))} (${vz(rate(j), 1)} je 1 000 Einwohner)`
             : `<strong>${esc(f.properties.name)}</strong><br>gemeindefreies Gebiet, keine Angabe`, { sticky: true }); },
       }).addTo(map);
     } else {
@@ -1156,10 +1196,8 @@
         L.polyline([[von[1], von[0]], [nach[1], nach[0]]], { color: farbe, weight, opacity: 0.75 }).bindTooltip(tip, { sticky: true }).addTo(g);
         L.polygon(pfeil(von, nach, 3 + weight * 0.6), { color: farbe, weight: 1, fillColor: farbe, fillOpacity: 0.9 }).bindTooltip(tip, { sticky: true }).addTo(g);
       }
-      g.getAttribution = () => esc(`${W.attribution}; ${d.geo.attribution}`);
+      g.getAttribution = () => esc(`${W.attribution}; ${d.geo.attribution}`);  // Leaflet nimmt sie beim Hinzufügen auf
       wanderungLayer[id] = g.addTo(map);
-      map.attributionControl.addAttribution(g.getAttribution());
-      g.on("remove", () => map.attributionControl.removeAttribution(g.getAttribution()));
     }
     if (legendEl) drawLegend();
   }
@@ -1244,6 +1282,7 @@
     const b = e.target.closest(".bar");
     if (!b || b.dataset.statNone !== undefined) return;
     $("#filters").reset();
+    $("#q").value = "";  // Suchfeld der Leiste gehört zum Filter (wie in resetFilters)
     range = null;
     if (tl) tl.reset();
     if (b.dataset.statGremium) $("#f-gremium").value = b.dataset.statGremium;
@@ -1291,7 +1330,8 @@
     const ei = $("#f-einreicher").value;
     if (ei) url.searchParams.set("einreicher", ei); else url.searchParams.delete("einreicher");
     if (planOn) url.searchParams.set("plaene", "1"); else url.searchParams.delete("plaene");
-    if (umweltOn.size) url.searchParams.set("ebenen", [...umweltOn].join(",")); else url.searchParams.delete("ebenen");
+    const imLink = [...umweltOn].filter((id) => id !== "bodenrichtwerte2026");
+    if (imLink.length) url.searchParams.set("ebenen", imLink.join(",")); else url.searchParams.delete("ebenen");
     if (!selected && planShown) url.searchParams.set("plan", planShown); else url.searchParams.delete("plan");
     url.hash = selected ? encodeURIComponent(selected.reference) : "";
     history.replaceState(null, "", url);
@@ -1345,7 +1385,14 @@
     $("#nav-search").addEventListener("submit", (e) => { e.preventDefault(); setPanel("panel-list", true); $("#papers").focus(); });
     $("#f-area").addEventListener("change", (e) => chooseArea(e.target.value));
     $("#papers").addEventListener("click", (e) => {
-      if (e.target.closest("#more")) { shown += LIST_STEP; render(); return; }
+      if (e.target.closest("#more")) {  // weitere Einträge; Fokus auf den ersten neuen, statt ihn mit dem Knopf zu verlieren
+        const bisher = shown;
+        shown += LIST_STEP;
+        render();
+        const b = document.querySelectorAll("#papers button[data-ref]")[bisher];
+        if (b) b.focus();
+        return;
+      }
       if (e.target.closest("#reset-filters")) { resetFilters(); return; }
       const b = e.target.closest("button[data-ref]");
       if (b) select(papers.find((p) => p.reference === b.dataset.ref));

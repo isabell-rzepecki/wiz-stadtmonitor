@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Browser-Prüfung: Seite zweimal zusammenstellen (ohne Daten und mit den Testdaten aus tests/fixtures),
 # je einen lokalen Server starten und die Tests ausführen. Aufruf aus dem Wurzelverzeichnis:
-#   bash tests/browser/run.sh      (einmalig vorher: npm install --prefix tests/browser)
+#   bash tests/browser/run.sh      (einmalig vorher: npm install --prefix tests/browser und
+#                                   cd tests/browser && npx playwright install chromium, oder CHROMIUM=<Pfad> setzen)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 TMP="$(mktemp -d)"
@@ -28,7 +29,14 @@ cp tests/fixtures/eigentum.json "$TMP/test/data/export/eigentum.json"
 cp -r data/geo/hvgg/gebaeude3d "$TMP/test/data/export/gebaeude3d"
 # Zuzug und Wegzug: amtliche Zahlen (HSL) und Gemeindegrenzen (HVBG) aus dem Repository, wie im Export zusammengeführt
 python3 -c "import json; d=json.load(open('data/wanderung/wanderung.json')); d['geo']=json.load(open('data/geo/dl-de-zero/wanderung_geo.json')); json.dump(d, open('$TMP/test/data/export/wanderung.json','w'), ensure_ascii=False)"
-python3 -m http.server 8765 --bind 127.0.0.1 --directory "$TMP/leer" >/dev/null 2>&1 &
-python3 -m http.server 8766 --bind 127.0.0.1 --directory "$TMP/test" >/dev/null 2>&1 &
-sleep 1
-SITE_LEER=http://127.0.0.1:8765/ SITE=http://127.0.0.1:8766/ node --test tests/browser/smoke.test.mjs
+# freie Ports (ein belegter Port hätte sonst einen fremden Server getestet), dann warten, bis beide Server antworten
+frei() { python3 -c "import socket; s=socket.socket(); s.bind(('127.0.0.1', 0)); print(s.getsockname()[1])"; }
+P_LEER="$(frei)"; P_TEST="$(frei)"
+while [ "$P_TEST" = "$P_LEER" ]; do P_TEST="$(frei)"; done
+python3 -m http.server "$P_LEER" --bind 127.0.0.1 --directory "$TMP/leer" >"$TMP/server_leer.log" 2>&1 &
+python3 -m http.server "$P_TEST" --bind 127.0.0.1 --directory "$TMP/test" >"$TMP/server_test.log" 2>&1 &
+for p in "$P_LEER" "$P_TEST"; do
+  for _ in $(seq 50); do curl -sf -o /dev/null "http://127.0.0.1:$p/stadt.json" && break; sleep 0.1; done
+  curl -sf -o /dev/null "http://127.0.0.1:$p/stadt.json" || { echo "Testserver auf Port $p antwortet nicht"; cat "$TMP"/server_*.log; exit 1; }
+done
+SITE_LEER="http://127.0.0.1:$P_LEER/" SITE="http://127.0.0.1:$P_TEST/" node --test tests/browser/smoke.test.mjs

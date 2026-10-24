@@ -107,7 +107,6 @@
     document.body.classList.add("touring");
     addEventListener("keydown", onKey, true);
     addEventListener("resize", layout);
-    if (ui.prefetch) ui.prefetch();
     go(0, 1);
   }
 
@@ -121,7 +120,8 @@
     ui.menu(null);
     root.remove();
     root = null;
-    const back = prevFocus && prevFocus.isConnected && shown(prevFocus) ? prevFocus : $("#detail-heading");
+    // Fokus zurück: zuletzt fokussiertes Element, sonst Überschrift des Vorgangs, sonst die Gebietsauswahl
+    const back = [prevFocus, $("#detail-heading"), $("#f-area")].find((el) => el && el.isConnected && shown(el));
     if (back) back.focus();
   }
 

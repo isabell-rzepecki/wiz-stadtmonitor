@@ -2,14 +2,14 @@
 
 Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in drei Dimensionen: **räumlich** (Karte und Liste nach Ortsbezirk), **zeitlich** (Sitzungskalender, Zeitleiste, Prozesslinie über die Vorlagennummer) und **nach Gremien**. Jede Angabe ist auf ein Quelldokument rückführbar.
 
-**Stand: Phase 2 (Datenpipeline).** Die Pipeline ruft täglich alle Einladungen ab, liest Kopf und Tagesordnung, fasst TOPs über die Vorlagennummer zu Vorgängen zusammen und verortet nach Stufe A (Ortsbeirat → Ortsteil) sowie über Plannummern der Bauleitplanung. Stufe B gleicht die Titel mit Straßen- und Lagenamen (Hauskoordinaten und Lagebezeichnungen der HVBG), Gemarkungen, Ortsteilnamen und Flurstücksangaben ab.
+**Stand:** Die Pipeline ruft täglich alle Einladungen ab, liest Kopf und Tagesordnung, fasst TOPs über die Vorlagennummer zu Vorgängen zusammen und verortet nach Stufe A (Ortsbeirat → Ortsteil) sowie über Plannummern der Bauleitplanung. Stufe B gleicht die Titel mit Straßen- und Lagenamen (Hauskoordinaten und Lagebezeichnungen der HVBG), Gemarkungen, Ortsteilnamen und Flurstücksangaben ab.
 
 ## Quellen und Grenzen
 
 - **Grundlage** sind die Einladungen (PDF) in den [amtlichen Bekanntmachungen](https://www.witzenhausen.eu/amtliche-bekanntmachungen/), veröffentlicht ab Juli 2024.
 - **Was fehlt:** Beschlussergebnisse, Niederschriften und Vorlagentexte sind dort nicht veröffentlicht. Die Prozesslinie kennzeichnet sie als Lücke und leitet nichts ab.
 - **SessionNet** wird nicht automatisiert abgerufen, nur verlinkt.
-- **Ortsbezüge** sind abgeleitet. Jeder trägt Stufe (A Gremium, B Regel, C Sprachmodell), Methode, Konfidenz und Fundstelle.
+- **Ortsbezüge** sind abgeleitet. Jeder trägt Stufe (A Gremium, B Regel), Methode, Konfidenz und Fundstelle. Stufe C (Sprachmodell, `pipeline/sprachmodell.py`) ist vorbereitet, aber nicht im Ablauf.
 - **Kartenhintergrund:** basemap.de (BKG, CC BY 4.0).
 - **Lizenzen:** siehe [`data/LICENSE-DATA.md`](data/LICENSE-DATA.md), Recherche in [`docs/Datenquellen_Geodaten_Witzenhausen.md`](docs/Datenquellen_Geodaten_Witzenhausen.md).
 
@@ -54,24 +54,24 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 
 ## Aktualisierung
 
-Der Workflow `.github/workflows/pages.yml` läuft täglich um 04:17 UTC und bei jedem Push. Er führt `python -m pipeline all` aus:
+Der Workflow `.github/workflows/pages.yml` läuft täglich um 04:17 UTC und bei jedem Push. Er führt `python -m pipeline all` aus (Schritte: `python -m pipeline` ohne Angabe):
 
-1. Abruf der Einladungen und Umringe;
+1. Abruf und Ableitung je Quelle: Einladungen, Bauleitplanung, Gemarkungen, Lagebezeichnungen, Gebäude und Gesellschaften, Umwelt, Wohnen, Wahlen, Beteiligung, Wanderung, 3D-Gebäude. Scheitert ein Abruf oder liefert er einen Fehlerbericht, bleibt der letzte Stand;
 2. Aufbau der Vorgänge;
-3. Prüfung;
+3. Prüfung (Rückführbarkeit, Datenschutz, Lizenzgrenzen);
 4. Datenpaket;
 5. Seite.
 
-Danach veröffentlicht er die Seite auf GitHub Pages. Die Rohdaten liegen nur im Zwischenspeicher des Workflows. Voraussetzung: In den Repository-Einstellungen unter „Pages“ ist als Quelle „GitHub Actions“ gewählt.
+Nur vom Hauptzweig veröffentlicht er die Seite auf GitHub Pages; auf anderen Zweigen ist der Lauf eine Probe. Die Rohdaten liegen nur im Zwischenspeicher des Workflows. Voraussetzung: In den Repository-Einstellungen unter „Pages“ ist als Quelle „GitHub Actions“ gewählt.
 
-Pull Requests prüft `.github/workflows/tests.yml` mit Python-Tests, Kontrastprüfung und Browser-Tests mit axe-core.
+Pull Requests und den Hauptzweig prüft `.github/workflows/tests.yml` mit Python-Tests, Kontrastprüfung und Browser-Tests mit axe-core.
 
 ## Aufbau
 
 ```
 config/stadt.json   Alle stadtspezifischen Werte (Name, Gremien, Ortsbezirke, Karte, Farben, Texte)
 site/               Seite (Leaflet, Zeitleiste, Liste, Prozesslinie; Tour in tour.js; 3D-Ansicht mit MapLibre GL), ohne Build-Schritt
-pipeline/           Python-Pipeline: fetch, fetch-plaene, build, check, package, site (python -m pipeline all)
+pipeline/           Python-Pipeline, je Quelle Abruf und Ableitung, dann build, check, package, site (python -m pipeline all)
 tools/kontrast.py   WCAG-Kontrastprüfung der Farb-Tokens aus config/stadt.json
 tests/              Python-Tests, Browser-Tests (Playwright, axe-core), Testdaten
 phase0/             Bestandsaufnahme: Bericht, Stichprobe (TSV), Explorationsskripte
@@ -86,7 +86,8 @@ mietmonitor/        Früherer Inhalt des Repositorys (Mietdaten-Erfassung), unve
 python3 -m unittest discover -s tests -t .     # Konfiguration, Kontrast, Zusammenstellen
 python3 tools/kontrast.py                       # Kontraste der Farbwerte (nur heller Modus)
 python3 tools/kontrast_karte.py                 # Nicht-Text-Kontrast der Kartengrafik (Pillow nötig)
-npm install --prefix tests/browser && bash tests/browser/run.sh   # Browser und Barrierefreiheit
+npm install --prefix tests/browser && (cd tests/browser && npx playwright install chromium)
+bash tests/browser/run.sh                       # Browser und Barrierefreiheit (oder CHROMIUM=<Pfad> für ein vorhandenes Chromium)
 ```
 
 ## Gestaltung

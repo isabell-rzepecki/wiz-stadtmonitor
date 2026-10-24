@@ -1,14 +1,18 @@
-# Bei Pull Requests: Python-Tests (Parser, Konfiguration, Kontrast) und Browser-Prüfung mit axe-core (WCAG 2.1 AA)
+# Bei Pull Requests und auf dem Hauptzweig: Python-Tests (Parser, Konfiguration, Kontrast) und Browser-Prüfung mit
+# axe-core (WCAG 2.1 AA)
 name: Tests
 
 on:
   pull_request:
+  push:
 
 permissions:
   contents: read
 
 jobs:
   tests:
+    # Push nur auf dem Hauptzweig (andere Zweige prüft der Pull Request)
+    if: github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

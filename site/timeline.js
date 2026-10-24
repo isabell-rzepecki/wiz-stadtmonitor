@@ -47,7 +47,6 @@
     if (parent) parent.appendChild(e);
     return e;
   };
-  const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function create(root, options) {
     const o = Object.assign({ rows: [], limits: [], unit: "Vorgänge", onRange() {}, onDate() {} }, options);
@@ -194,7 +193,9 @@
         let y = LAYOUT.density[1];
         const bw = Math.max(1, x(b.end) - x(b.start) - 1);
         const g = el("g", {}, svg);
-        el("title", {}, g).textContent = `${b.label}: ${b.total} ${dimSel.value === "vorlage" ? o.unit : "Beratungen"}`;
+        // Titel mit Aufteilung, damit die Farben nicht die einzige Information tragen
+        const teile = b.parts.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(", ");
+        el("title", {}, g).textContent = `${b.label}: ${b.total} ${dimSel.value === "vorlage" ? o.unit : "Beratungen"}${teile ? ` (${teile})` : ""}`;
         for (const [k, v] of b.parts) {
           if (!v) continue;
           const bh = (v / max) * h;
@@ -217,8 +218,8 @@
         const ms = t(m.date);
         if (ms < view[0] || ms > view[1]) continue;
         const y = LAYOUT.meet[0] + i * rh + rh / 2;
-        const c = el("circle", { cx: x(ms), cy: y, r: 2.6, class: `tl-meet${ms > today ? " future" : ""}${m.cancelled ? " cancelled" : ""}` }, svg);
-        el("title", {}, c).textContent = `${de(ms)} · ${m.gremium}${m.cancelled ? " · abgesagt" : ms > today ? " · geplant" : ""}`;
+        const c = el("circle", { cx: x(ms), cy: y, r: 2.6, class: `tl-meet${ms > today ? " future" : ""}` }, svg);
+        el("title", {}, c).textContent = `${de(ms)} · ${m.gremium}${ms > today ? " · geplant" : ""}`;
       }
 
       // Kontext: Wahlperioden (aus der Konfiguration)
@@ -275,7 +276,8 @@
         hd.setAttribute("aria-valuetext", de(ms));
         hd.classList.toggle("tl-off", ms < view[0] || ms > view[1]);
       });
-      root.querySelector(".tl-level").textContent = LEVELS[level].name;
+      const lvEl = root.querySelector(".tl-level");  // Live-Bereich nur bei Wechsel der Stufe ändern, nicht bei jedem Zeichnen
+      if (lvEl.textContent !== LEVELS[level].name) lvEl.textContent = LEVELS[level].name;
     }
 
     // --- Zeitraum ---------------------------------------------------------------------------------
@@ -312,7 +314,7 @@
     }
 
     function table() {
-      const dim = dimSel.value, d = data.density;
+      const d = data.density;
       const rowsHtml = data.months.map((m, i) => {
         const v = Object.values(d.vorlage).reduce((s, arr) => s + arr[i], 0);
         const meet = data.meetings.filter((x) => x.date.startsWith(m)).length;
@@ -321,7 +323,6 @@
       root.querySelector(".tl-table-body").innerHTML = `<table><thead><tr><th scope="col">Monat</th>
         <th scope="col">${o.unit} (erste Beratung)</th><th scope="col">Beratungen</th>
         <th scope="col">Sitzungen (alle Gremien)</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
-      void dim;
     }
 
     // --- Interaktion --------------------------------------------------------------------------------
@@ -342,6 +343,8 @@
 
     let drag = null;
     stage.addEventListener("pointerdown", (e) => {
+      // Stationen des Vorgangs sind anklickbar: kein Ziehen und keine Zeigerbindung (sie lenkte den Klick auf die Fläche um)
+      if (e.target.classList.contains("tl-step")) return;
       if (e.target.classList.contains("tl-handle")) {
         drag = { kind: "handle", i: +e.target.dataset.h };
       } else {
@@ -441,7 +444,6 @@
         }
       },
       dimension() { return dimSel.value; },
-      reduceMotion,
     };
   }
 
