@@ -1131,7 +1131,11 @@
         "muster": "genehmigt|wird\\s+.{0,120}?wirksam"
       }
     ],
-    "verfahren_muster": "§\\s*13a\\s*BauGB|beschleunigten\\s+Verfahren|vereinfachten\\s+Verfahren|§\\s*13b"
+    "verfahren": [
+      {"titel": "Außenbereich (§ 13b BauGB)", "muster": "§\\s*13b"},
+      {"titel": "beschleunigt (§ 13a BauGB)", "muster": "§\\s*13a\\s*BauGB|beschleunigten\\s+Verfahren"},
+      {"titel": "vereinfacht (§ 13 BauGB)", "muster": "§\\s*13\\s+BauGB|vereinfachten\\s+Verfahren"}
+    ]
   },
   "eigentum": {
     "_hinweis": "Was zum Eigentum öffentlich darstellbar ist: Gebäudefunktion (ALKIS), städtische Gesellschaften und Eigenbetriebe (Beteiligungsbericht). Keine Privateigentümer (§ 12 GBO, DSGVO); keine Personen aus dem Bericht.",

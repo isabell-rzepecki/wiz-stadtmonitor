@@ -13,6 +13,8 @@ const AXE = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.mi
 let browser;
 
 // Kartenkacheln werden im Test nicht geladen (kein Netz nötig); ein leeres Bild genügt
+// Feste Startzeit (die Uhr läuft weiter): Die Testdaten enthalten Sitzungen im November 2026
+const JETZT = new Date("2026-10-24T10:00:00Z");
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
 
 // WebGL für die 3D-Ansicht (MapLibre) über die Software-Darstellung
@@ -22,6 +24,7 @@ after(async () => { await browser?.close(); });
 
 async function open(base, path = "", { width = 1440, height = 900, dark = false } = {}) {
   const page = await browser.newPage({ viewport: { width, height }, colorScheme: dark ? "dark" : "light", bypassCSP: true });
+  await page.clock.setSystemTime(JETZT);
   page.errors = [];
   page.on("pageerror", (e) => page.errors.push(String(e)));
   page.on("console", (m) => { if (m.type() === "error" && !/404|Failed to load resource/.test(m.text())) page.errors.push(m.text()); });
@@ -120,9 +123,8 @@ test("Termine: kommende Sitzungen mit Tagesordnung", async () => {
   await page.locator('[data-mega="mega-mitmachen"]').click();
   await page.locator("#cta-termine").click();
   await page.waitForFunction(() => document.querySelectorAll("#termine .meeting").length > 0);
-  // Sitzungen ab heute; die Testdaten enthalten zwei im November 2026
-  const n = await page.locator("#termine .meeting").count();
-  assert.ok(n <= 2);
+  // Sitzungen ab heute (24.10.2026); die Testdaten enthalten zwei im November 2026
+  assert.equal(await page.locator("#termine .meeting").count(), 2);
   assert.match(await page.locator("#termine").textContent(), /Laufende Beteiligung der Öffentlichkeit.*Testplan/s);
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);

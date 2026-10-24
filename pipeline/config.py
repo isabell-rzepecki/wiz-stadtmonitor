@@ -9,7 +9,6 @@ STADT = json.loads(STADT_JSON.read_text(encoding="utf-8"))
 
 RAW = ROOT / "data" / "raw"
 GEO = ROOT / "data" / "geo"
-BUILD = ROOT / "data" / "build"
 EXPORT = ROOT / "data" / "export"
 SITE_SRC = ROOT / "site"
 SITE_OUT = ROOT / "_site"

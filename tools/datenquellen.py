@@ -1,10 +1,9 @@
-"""DATA_SOURCES.md und die Namensnennungen der Seite aus data/quellen_register.tsv und data/attribution.tsv erzeugen.
+"""DATA_SOURCES.md aus data/quellen_register.tsv und data/attribution.tsv erzeugen (Namensnennungen der Seite: pipeline/site.py).
 
 Aufruf: python tools/datenquellen.py         – schreibt DATA_SOURCES.md
         python tools/datenquellen.py --pruefen – Rückgabewert 1, wenn DATA_SOURCES.md nicht dem Register entspricht
 """
 import csv
-import json
 import sys
 from pathlib import Path
 
@@ -16,12 +15,6 @@ ZIEL = ROOT / "DATA_SOURCES.md"
 
 def lesen(p):
     return list(csv.DictReader(p.open(encoding="utf-8"), delimiter="\t"))
-
-
-def namensnennungen(nur_seite=True):
-    """[{quellen, lizenz, text, link}] – für die Seite nur die Quellen, die sie tatsächlich nutzt."""
-    return [{"quellen": a["quellen"].split(","), "lizenz": a["lizenz"], "text": a["text"], "link": a["link"]}
-            for a in lesen(ATTRIBUTION) if not nur_seite or a["auf_seite"] == "ja"]
 
 
 def _zelle(t):

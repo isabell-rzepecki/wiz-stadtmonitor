@@ -32,8 +32,8 @@ VERFAHREN = re.compile(
 # als Platzhalter ohne Unterpunkt stehen („Darlehensangelegenheiten“)
 GLIEDERUNG = re.compile(r"^(Anträge|Anfragen|Grundstücksangelegenheiten|Über- und außerplanmäßige Ausgaben|"
                         r"Darlehensangelegenheiten|Personalangelegenheiten|Mitteilungen|Berichte)$", re.I)
-BPLAN = re.compile(r"(?:(\d+)\.\s*Änderung\s+(?:und\s+Erweiterung\s+)?des\s+)?Bebauungsplan(?:es|s)?\s+Nr\.\s*(\d+)"
-                   r"(?:\s*,?\s*Gemarkung\s+([A-ZÄÖÜ][\wäöüß-]+))?")
+BPLAN = re.compile(r"(?:(\d+)\.\s*Änderung\s+(?:und\s+Erweiterung\s+)?des\s+)?Bebauungsplan(?:es|s)?\s+"
+                   + bauleitplanung.PLAN_NR + r"(?:\s*,?\s*Gemarkung\s+([A-ZÄÖÜ][\wäöüß-]+))?")
 DETAIL = {"gremium_ortsbeirat": "A-gremium", "gremium_stadtteilbeirat": "A-gremium", "strasse": "B-strasse",
           "strasse+ortsteil": "B-strasse", "gemarkung": "B-gemarkung", "flurstueck": "B-flurstueck", "ortsteil_name": "B-ortsteil",
           "bebauungsplan": "B-bplan", "flaechennutzungsplan": "B-fplan"}
@@ -66,7 +66,7 @@ def plan_verweise(titel, sitzung):
         # ohne Gemarkung: nur eindeutig, wenn ein Ortsbeirat berät (Plannummern zählen je Gemarkung)
         if not o and sitzung["gremium_typ"] in ("ortsbeirat", "stadtteilbeirat"):
             o = ortsteil_zu(name=sitzung["ortsteil"])
-        out.append({"art": "bplan", "nr": m.group(2), "aenderung": int(m.group(1) or 0),
+        out.append({"art": "bplan", "nr": bauleitplanung.plan_nr(m.group(2)), "aenderung": int(m.group(1) or 0),
                     "gemarkung_nr": o["gemarkung_nr"] if o else None, "evidence": m.group(0)})
     for m in FPLAN.finditer(titel):
         out.append({"art": "fplan", "aenderung": int(m.group(1)), "evidence": m.group(0)})
@@ -80,7 +80,8 @@ def plan_treffer(v, plaene):
         return (p, "eindeutig") if p else (None, "nicht im Datensatz (im Verfahren)")
     if not v["gemarkung_nr"]:
         return None, "mehrdeutig (ohne Gemarkung)"
-    cand = [p for p in plaene if p["art"] == "bplan" and p["gemarkung_nr"] == v["gemarkung_nr"] and p["nr"] == v["nr"]]
+    cand = [p for p in plaene if p["art"] == "bplan" and p["gemarkung_nr"] == v["gemarkung_nr"]
+            and bauleitplanung.plan_nr(p["nr"]) == v["nr"]]
     exact = next((p for p in cand if p["aenderung"] == v["aenderung"]), None)
     if exact:
         return exact, "eindeutig"
@@ -104,7 +105,8 @@ def build():
         name = fetch.dateiname(m["source_url"])
         txt = fetch.TXT / (name.rsplit(".", 1)[0] + ".txt")
         try:
-            e = parse.einladung(txt.read_text(encoding="utf-8"))
+            # Nummern ohne Jahr zählen im Jahr der Veröffentlichung (Einladung im Dezember für eine Sitzung im Januar)
+            e = parse.einladung(txt.read_text(encoding="utf-8"), m["date"][:4])
         except (parse.ParseFehler, FileNotFoundError, ValueError) as ex:
             fehler.append({"datei": name, "fehler": str(ex), "url": m["source_url"]})
             continue
@@ -147,7 +149,7 @@ def build():
         verweise, verfahren_ids = [], set()
         for t in ts:
             for v in plan_verweise(t["titel"], sitzungen[t["sitzung"]]):
-                verfahren_ids.add(f"fplan:{v['aenderung']}" if v["art"] == "fplan" else f"bplan:{v['gemarkung_nr'] or '?'}:{v['nr']}:{v['aenderung']}")
+                verfahren_ids.add(bauleitplanung.verfahren_id(v["art"], v["aenderung"], v.get("nr"), v.get("gemarkung_nr")))
                 p, treffer = plan_treffer(v, plaene)
                 plan_audit.append({"vorgang": key, "sitzung": t["sitzung"], "top": t["top"], "art": v["art"], "nr": v.get("nr", ""),
                                    "aenderung": v["aenderung"], "gemarkung_nr": v.get("gemarkung_nr", ""), "treffer": treffer,
@@ -190,10 +192,11 @@ def build():
         initiative = None
         for t in ts:
             r = einreicher.erkennen(t["titel"])
-            if r:
+            if r:  # Anträge ohne erkannte Fraktion (etwa eines Ortsbeirats) nur im Audit
                 e_audit.append({"vorgang": key, "sitzung": t["sitzung"], "top": t["top"], "typ": r["typ"], "einreicher": ",".join(r["einreicher"]) or "nicht zugeordnet",
                                 "datum": r["datum"], "gemeinsam": "ja" if r["gemeinsam"] else "nein", "fundstelle": r["fundstelle"]})
-                initiative = initiative or r
+                if r["einreicher"]:
+                    initiative = initiative or r
         schritte = [{"nr": b["nr"], "veroeffentlicht": b["veroeffentlicht"], "pdf": b["pdf"], "stufen": b["stufen"]}
                     for b in beteiligung if b["plan"]["verfahren"] in verfahren_ids]
         vorgaenge.append({"reference": key, "vorlage": first["vorlage"], "name": first["titel"], "date": process[0]["date"],

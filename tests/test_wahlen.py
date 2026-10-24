@@ -42,11 +42,14 @@ class Wahlen(unittest.TestCase):
         d = json.loads(wahlen.OUT_REPO.read_text(encoding="utf-8"))
         for e in d["kommunal"]:
             for r in e.get("ergebnisse", []):
-                self.assertEqual(r["pruefung"], "ok", (e["id"], r.get("gebiet")))
+                erwartet = wahlen.NUR_SITZE if e["id"] in ("stvv2016", "stvv2021") else "ok"  # votemanager
+                self.assertEqual(r["pruefung"], erwartet, (e["id"], r.get("gebiet")))
         for b in d["bund"]:
             self.assertEqual(b["ergebnis"]["pruefung"], "ok", b["id"])
-        luecke = [e for e in d["kommunal"] if e["stufe"] == "luecke"]
-        self.assertTrue(all("ergebnisse" not in e for e in luecke))
+        # ohne amtliches Ergebnis nur als markierte Lücke
+        for e in d["kommunal"]:
+            if "ergebnisse" not in e:
+                self.assertEqual(e["stufe"], "luecke", e["id"])
 
     def test_jede_wahl_mit_stufe(self):
         for w in config.STADT["wahlen"]["kommunal"]:

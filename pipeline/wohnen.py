@@ -18,7 +18,6 @@ import io
 import json
 import re
 import statistics
-import time
 import zipfile
 from datetime import date
 
@@ -46,7 +45,7 @@ def _gemarkungen():
 
 
 def _laden(ziel, url, quelle):
-    if ziel.exists() and time.time() - ziel.stat().st_mtime < ALTER:
+    if net.gueltig(ziel, ALTER):
         return True
     try:
         body, _ = net.get(url, tries=2)
@@ -54,7 +53,12 @@ def _laden(ziel, url, quelle):
         audit.abruf(quelle, url, getattr(e, "code", ""), "", "", "", str(e)[:200])
         print(f"{quelle}: Abruf gescheitert ({e}); Ergebnisse bleiben auf dem letzten Stand")
         return False
-    ziel.write_bytes(body)
+    grund = net.pruefen(ziel, body)
+    if grund:
+        audit.abruf(quelle, url, 200, len(body), hashlib.sha256(body).hexdigest(), "", grund)
+        print(f"{quelle}: {grund}; Ergebnisse bleiben auf dem letzten Stand")
+        return False
+    net.speichern(ziel, body)
     audit.abruf(quelle, url, 200, len(body), hashlib.sha256(body).hexdigest(), "", "")
     return True
 
@@ -130,7 +134,7 @@ def spannen(liste):
 
 def _boris(gem):
     liste = zonen()
-    if liste is None:
+    if not liste:  # keine Rohdaten oder keine Zonen gelesen: Stand im Repository
         if not BRW_GEO.exists():
             return None
         d = json.loads(BRW_GEO.read_text(encoding="utf-8"))
@@ -140,7 +144,7 @@ def _boris(gem):
                   "geometry": json.loads(json.dumps(mapping(z["geometry"].simplify(0.00001, preserve_topology=True))),
                                          parse_float=lambda x: round(float(x), 6))} for z in liste]
         BRW_GEO.write_text(json.dumps({"type": "FeatureCollection", "license": W["boris"]["lizenz"], "attribution": W["boris"]["attribution"],
-                                       "source": W["boris"]["url"], "stichtag": W["boris"]["stichtag"], "retrieved": date.today().isoformat(),
+                                       "source": W["boris"]["url"], "stichtag": W["boris"]["stichtag"], "retrieved": net.abrufdatum(RAW / f"boris_{W['boris']['stichtag'][:4]}.gml"),
                                        "features": feats}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     sp = spannen(liste)
     # Abgleich mit der Referenztabelle der Übergabe (abgeleitet, ungeprüft)
@@ -261,7 +265,7 @@ def build():
     gd, ob = gemeinden(), ortsbezirke(gem)
     if gd is not None or ob is not None:
         neu = {"license": "dl-de/by-2.0", "attribution": W["zensus"]["attribution"], "stichtag": W["zensus"]["stichtag"],
-               "retrieved": date.today().isoformat(), "naeherung": W["zensus"]["naeherung"],
+               "retrieved": net.abrufdatum(RAW / "regionaltabelle.xlsx", *RAW.glob("*.zip")), "naeherung": W["zensus"]["naeherung"],
                "gemeinden": gd if gd is not None else alt.get("gemeinden", []),
                "ortsbezirke": ob if ob is not None else alt.get("ortsbezirke", {})}
         ZENSUS.parent.mkdir(parents=True, exist_ok=True)

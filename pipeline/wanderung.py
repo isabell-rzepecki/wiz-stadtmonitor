@@ -17,7 +17,7 @@ import zipfile
 from datetime import date
 
 from pyproj import Transformer
-from shapely.geometry import mapping, shape
+from shapely.geometry import shape
 from shapely.ops import transform, unary_union
 
 from . import audit, config, gemarkungen, net
@@ -180,9 +180,12 @@ def build():
     mp = RAW / f"matrix_{W['matrix']['jahr']}.pdf"
     if mp.exists():
         zu, fort = matrix(text(mp), W["kreis_name"], W["kreise"])
-        daten["kreis"] = {"jahr": W["matrix"]["jahr"], "quelle": W["matrix"]["url"], "zuzuege": zu, "fortzuege": fort}
+        if zu and fort:  # sonst (etwa geändertes Layout) bleibt der Stand im Repository
+            daten["kreis"] = {"jahr": W["matrix"]["jahr"], "quelle": W["matrix"]["url"], "zuzuege": zu, "fortzuege": fort}
+        else:
+            zeilen.append({"jahr": f"Matrix {W['matrix']['jahr']}", "ergebnis": "nicht gelesen, Stand im Repository"})
         andere = [k for k in W["kreise"] if k != W["kreis_name"]]
-        for art, d in (("Zuzüge", zu), ("Fortzüge", fort)):  # Summe der Kreise gegen „Land Hessen“ (geheime Werte fehlen)
+        for art, d in (("Zuzüge", zu), ("Fortzüge", fort)) if zu and fort else ():  # Summe der Kreise gegen „Land Hessen“ (geheime Werte fehlen)
             summe, geheim = sum(d.get(k) or 0 for k in andere), [k for k in andere if d.get(k) is None]
             zeilen.append({"jahr": f"Matrix {W['matrix']['jahr']}", "ergebnis": f"{art}: Kreise {summe}, Land Hessen {d.get('Land Hessen')}, "
                            f"ohne Wert (geheim): {', '.join(geheim) or 'keine'}"})

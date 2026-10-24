@@ -13,7 +13,6 @@ import html
 import json
 import re
 import subprocess
-import time
 import zipfile
 from datetime import date
 
@@ -25,10 +24,12 @@ OUT_REPO = config.ROOT / "data" / "wahlen" / "wahlen.json"
 OUT = config.EXPORT / "wahlen.json"
 GMDE = config.STADT["stadt"]["gemeindeschluessel"]  # 06636016: Land 06, RB 6, Kreis 36, Gemeinde 016
 ALTER = 30 * 86400
+# votemanager nennt die gültigen Stimmen nur als Summe der Listen; prüfbar ist dort nur die Sitzzahl
+NUR_SITZE = "Sitze ok; Stimmen nur als Summe der Listen (nicht getrennt prüfbar)"
 
 
 def _laden(ziel, url, quelle):
-    if ziel.exists() and time.time() - ziel.stat().st_mtime < ALTER:
+    if net.gueltig(ziel, ALTER):
         return
     try:
         body, _ = net.get(url, tries=2)
@@ -36,7 +37,12 @@ def _laden(ziel, url, quelle):
         audit.abruf(quelle, url, getattr(e, "code", ""), "", "", "", str(e)[:200])
         print(f"{quelle}: Abruf gescheitert ({e}); Stand im Repository bleibt")
         return
-    ziel.write_bytes(body)
+    grund = net.pruefen(ziel, body)
+    if grund:
+        audit.abruf(quelle, url, 200, len(body), hashlib.sha256(body).hexdigest(), "", grund)
+        print(f"{quelle}: {grund}; Stand im Repository bleibt")
+        return
+    net.speichern(ziel, body)
     audit.abruf(quelle, url, 200, len(body), hashlib.sha256(body).hexdigest(), "", "")
 
 
@@ -117,7 +123,7 @@ def votemanager(seite):
         return None
     gueltig = sum(_int(n) for _, n, _ in summen)
     return [{"gebiet": None, "wahlberechtigte": _int(kopf.group(1)), "waehlende": _int(kopf.group(2)), "beteiligung": _pct(kopf.group(3)),
-             "stimmen_gueltig": gueltig, "sitze": int(gesamt.group(1)) if gesamt else sum(sitze.values()),
+             "stimmen_gueltig": gueltig, "sitze": int(gesamt.group(1)) if gesamt else None, "_summe_aus_listen": True,
              "vorschlaege": [{"name": p.strip(), "stimmen": _int(n), "anteil": float(a), "sitze": sitze.get(p.strip(), 0)} for p, n, a in summen]}]
 
 
@@ -139,15 +145,21 @@ def kommunal():
             ergebnisse = bekanntmachung(text)
         elif w["quelle"] == "votemanager" and (RAW / f"{w['id']}.html").exists():
             ergebnisse = votemanager((RAW / f"{w['id']}.html").read_text(encoding="utf-8", errors="replace"))
-        if ergebnisse is not None:
+        if ergebnisse:  # nichts gelesen (Scan, geänderter Wortlaut): Stand im Repository bleibt (siehe build)
             for r in ergebnisse:
                 if w["art"] == "ortsbeirat":
                     r["ortsteil"] = _slug(r["gebiet"])
                 else:
                     r["gebiet"] = None
-                # Plausibilität: Summe der Stimmen und Sitze
-                r["pruefung"] = ("ok" if sum(v["stimmen"] for v in r["vorschlaege"]) == r.get("stimmen_gueltig")
-                                 and sum(v["sitze"] for v in r["vorschlaege"]) == r.get("sitze") else "abweichend")
+                # Plausibilität: Summe der Stimmen und Sitze gegen die Angaben der Quelle
+                sitze_ok = sum(v["sitze"] for v in r["vorschlaege"]) == r.get("sitze")
+                if r.pop("_summe_aus_listen", False):
+                    r["pruefung"] = "nicht prüfbar" if r.get("sitze") is None else NUR_SITZE if sitze_ok else "abweichend"
+                else:
+                    r["pruefung"] = ("ok" if sum(v["stimmen"] for v in r["vorschlaege"]) == r.get("stimmen_gueltig") and sitze_ok
+                                     else "abweichend")
+                if r.get("sitze") is None:
+                    r["sitze"] = sum(v["sitze"] for v in r["vorschlaege"])
             e["ergebnisse"] = ergebnisse
         out.append(e)
     return out
@@ -189,7 +201,7 @@ def bund_ergebnis(w):
         f = [x.strip().strip('"') for x in l.split(";")]
         if len(f) < len(parteien) or (f[idx["Land"]], f[idx[rb]], f[idx["Kreis"]], f[idx["Gemeinde"]]) != (GMDE[:2], GMDE[2], GMDE[3:5], GMDE[5:]):
             continue
-        num = lambda i: int(f[i] or 0)
+        num = lambda i, f=f: int(f[i] or 0)  # Zeile f fest gebunden
         summe["wahlbezirke"] += 1
         summe["wahlberechtigte"] += num(idx[a])
         summe["waehlende"] += num(idx[b])
@@ -225,7 +237,7 @@ def build():
               for e in kom for r in e.get("ergebnisse", [])]
     zeilen += [{"wahl": b["id"], "gebiet": "Gemeinde", "pruefung": b["ergebnis"]["pruefung"] if b["ergebnis"] else "fehlt", "sitze": ""} for b in bund]
     audit.tabelle("wahlen_pruefung.tsv", ["wahl", "gebiet", "pruefung", "sitze"], zeilen)
-    abw = [z for z in zeilen if z["pruefung"] != "ok"]
+    abw = [z for z in zeilen if z["pruefung"] not in ("ok", NUR_SITZE)]
     print(f"Wahlen: {sum(len(e.get('ergebnisse', [])) for e in kom)} kommunale Ergebnisse, {sum(1 for b in bund if b['ergebnis'])} Bundes-/Europawahlen; "
           f"{len(abw)} Prüfungen nicht ok")
     return daten

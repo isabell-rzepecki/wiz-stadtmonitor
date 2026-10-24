@@ -430,11 +430,12 @@
       center(d) { setLevel(level, t(d)); },
       getState() { return { von: iso(range[0]), bis: iso(range[1]), zoom: LEVELS[level].name, achse: dimSel.value }; },
       setState(s) {
-        if (s.achse) dimSel.value = s.achse;
+        // Werte aus dem Link: nur bekannte Achsen, nur gültige Daten (sonst bleibt der bisherige Zustand)
+        if ([...dimSel.options].some((x) => x.value === s.achse)) dimSel.value = s.achse;
         const z = LEVELS.findIndex((l) => l.name === s.zoom);
         if (z >= 0) level = z;
-        if (s.von && s.bis) {
-          range = [t(s.von), t(s.bis)];
+        if (s.von && s.bis && Number.isFinite(t(s.von)) && Number.isFinite(t(s.bis))) {
+          range = [t(s.von), t(s.bis)].sort((x, y) => x - y);
           setLevel(level, (range[0] + range[1]) / 2);
           setRange(range[0], range[1], true);
         }

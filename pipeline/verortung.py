@@ -19,7 +19,9 @@ from pyproj import Transformer
 from . import config, lage, net
 
 STRASSENWORT = re.compile(r"(straße|weg|gasse|platz|allee|ring|pfad|steig|stieg|ufer|brücke|tor|markt|hof)$", re.I)
-FLST = re.compile(r"Gem(?:arkung|\.)\s+([A-ZÄÖÜ][\wäöüß-]+(?:-[A-ZÄÖÜ][\wäöüß-]+)?),?\s+Fl(?:ur|\.)\s*(\d+),?\s+Fl(?:urstück|st\.?)\s*(\d+)(?:/(\d+))?")
+# „Gemarkung X, Flur 2, Flurstück 169/3“, auch „Flur. 2“, „Flurstücke 169 und 171“ (erstes), „Flurstück Nr. 169“
+FLST = re.compile(r"Gem(?:arkung|\.)\s+([A-ZÄÖÜ][\wäöüß-]+(?:-[A-ZÄÖÜ][\wäöüß-]+)?),?\s+Fl(?:ur\.?|\.)\s*(\d+),?\s+"
+                  r"Fl(?:urstücke?|st\.?)\s*(?:Nr\.\s*)?(\d+)(?:/(\d+))?")
 GEMARKUNG = re.compile(r"Gem(?:arkung|\.)\s+([A-ZÄÖÜ][\wäöüß]+(?:-[A-ZÄÖÜ][\wäöüß]+)?)")
 # Flurstückspunkte (dl-de/zero-2.0) im Repository, damit die Verortung nicht von der Erreichbarkeit des Dienstes abhängt
 FLST_CACHE = config.GEO / "dl-de-zero" / "flurstuecke.json"
@@ -92,6 +94,9 @@ def flurstueck(gk, flur, zaehler, nenner):
     url = f"{lage.URL}?" + urllib.parse.urlencode({"SERVICE": "WFS", "VERSION": "1.1.0", "REQUEST": "GetFeature", "TYPENAME": "flst", "FILTER": flt})
     try:
         body, _ = net.get(url, tries=2)
+        grund = net.pruefen("flst.gml", body)
+        if grund:  # Fehlerbericht: nicht als „Flurstück nicht gefunden“ merken
+            raise ValueError(grund)
         pos = re.search(rb"<gml:pos>([\d.]+) ([\d.]+)</gml:pos>", body)  # EPSG:31467, Hochwert zuerst
         res = None
         if pos:
