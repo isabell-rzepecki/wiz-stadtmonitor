@@ -370,6 +370,7 @@ ol.beteiligung { margin: 4px 0 10px; padding-left: 18px; } ol.beteiligung ul { m
 .map-legend .swatch { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(26, 26, 26, 0.25); flex: none; }
 .map-legend .hint { margin: 6px 0 0; }
 .map-style.map-menu { display: none; }
+.map-style.map-sources { display: none; }
 .map-style.map-menu[aria-expanded="true"] { background: var(--accent-fill); color: var(--on-accent-fill); border-color: transparent; }
 .map-style[aria-pressed="true"] { background: var(--accent-fill); color: var(--on-accent-fill); border-color: transparent; }
 /* Umweltebenen: aufklappbare Auswahl unter den Kartenschaltflächen */
@@ -463,6 +464,24 @@ body.list-open .leaflet-left { left: calc(var(--list-w) + 16px); }
   .map-style { min-height: 44px; }
   .map-style.map-menu { display: block; }
   .leaflet-container:not(.map-menu-open) .leaflet-right .map-style:not(.map-menu) { display: none; }
+  /* Kartenoptionen als ein scrollbarer Kasten über der Leiste, Schaltflächen in voller Breite */
+  .leaflet-container.map-menu-open .leaflet-bottom.leaflet-right {
+    position: fixed; left: 10px; right: 10px; bottom: 200px; z-index: 1001; max-height: calc(100dvh - 280px); overflow-y: auto;
+    display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 18px; pointer-events: auto;
+    background: var(--surface-strong); border: 1px solid var(--border-alt); box-shadow: var(--shadow);
+  }
+  .leaflet-container.map-menu-open .leaflet-bottom.leaflet-right .leaflet-control { float: none; margin: 0; width: 100%; }
+  .leaflet-container.map-menu-open .leaflet-bottom.leaflet-right .map-style { box-shadow: none; text-align: left; }
+  .leaflet-container.map-menu-open .leaflet-bottom.leaflet-right .leaflet-control-attribution,
+  .leaflet-container.map-menu-open .leaflet-bottom.leaflet-right .leaflet-bar { display: none; }
+  /* Namensnennungen: zugeklappt hinter „© Quellen“; aufgeklappt als Kasten */
+  .map-style.map-sources { display: block; min-height: 44px; }
+  .leaflet-container:not(.attr-open) .leaflet-control-attribution { display: none; }
+  .leaflet-container.attr-open .leaflet-control-attribution {
+    position: fixed; left: 10px; right: 10px; bottom: 200px; z-index: 1002; max-height: 40dvh; overflow-y: auto; margin: 0;
+    background: var(--solid) !important; border: 1px solid var(--border-alt);
+    padding: 10px 12px; border-radius: 14px !important; font-size: 14px; line-height: 1.45; box-shadow: var(--shadow);
+  }
   .tl-btn, .tl-chip, .icon-btn, .chip { min-width: 44px; min-height: 44px; }
   .bar { grid-template-columns: 1fr 80px 40px; }
 }
