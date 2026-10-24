@@ -295,7 +295,7 @@
       "gemarkung": "Witzenhausen",
       "gemarkung_nr": "2246",
       "zuordnung_status": "kein Ortsbezirk (§ 6 Hauptsatzung nennt nur die 16 Stadtteile); Gemarkung Witzenhausen",
-      "anmerkung": "Kernstadt ohne Ortsbeirat; Bischhausen wird in § 6 nicht genannt und hat keinen eigenen Ortsbezirk"
+      "anmerkung": "Kernstadt ohne Ortsbeirat. Bischhausen liegt in der Gemarkung Witzenhausen und wurde am 30.09.1928 nach Witzenhausen eingemeindet (LAGIS, Historisches Ortslexikon, ID 5408); es gehört damit zur Kernstadt und ist kein Ortsbezirk nach § 6"
     },
     {
       "slug": "albshausen",
@@ -321,7 +321,7 @@
       "gemarkung": "Berlepsch-Ellerode",
       "gemarkung_nr": "2121",
       "zuordnung_status": "§ 6 Abs. 2 Hauptsatzung: Gebiet der ehemaligen Gemeinde; als Gemarkung abgebildet",
-      "anmerkung": "Hübenthal wird in § 6 nicht eigens genannt; ob es zum Gebiet der ehemaligen Gemeinde Berlepsch-Ellerode gehört, ist nicht geprüft"
+      "anmerkung": "Hübenthal (Gehöftgruppe) liegt in der Gemarkung Berlepsch-Ellerode (LAGIS, Historisches Ortslexikon, ID 6064; Hauskoordinaten der HVBG: 11 Adressen in Gemarkung 2121) und gehört damit zum Ortsbezirk Berlepsch-Ellerode. 1821 wird es als zu Blickershausen gehörig geführt; das betrifft nicht die heutige Abgrenzung"
     },
     {
       "slug": "blickershausen",
@@ -792,7 +792,7 @@
       {
         "thema": "Wohngeld-Mietenstufe",
         "aussage": "Witzenhausen, Stadt: Mietenstufe I (niedrigste von sieben Stufen).",
-        "stand": "Anlage zu § 1 Abs. 3 WoGV, Fassung ab 01.01.2023; geprüft am 23.10.2026 an einer konsolidierten Fassung (buzer.de), da gesetze-im-internet.de nicht erreichbar war.",
+        "stand": "Anlage zu § 1 Abs. 3 WoGV (Mietenstufen ab 01.01.2023, BGBl. I 2022, 2166), geltende Fassung auf gesetze-im-internet.de, geprüft am 24.10.2026.",
         "link": "https://www.gesetze-im-internet.de/wogv/anlage.html"
       },
       {
