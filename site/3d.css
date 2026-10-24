@@ -1,0 +1,29 @@
+/* 3D-Ansicht: Karte vollflächig, Leiste oben, Hinweise unten links */
+html, body.ansicht3d { height: 100%; }
+body.ansicht3d { overflow: hidden; }
+.bar3d { position: fixed; z-index: 10; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  padding: 8px 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.96); box-shadow: 0 8px 32px rgba(26, 26, 26, 0.12); }
+.bar3d .page-brand { margin-right: auto; }
+.wahl3d { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.wahl3d select { font: inherit; font-weight: 400; min-height: 44px; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--text); }
+#karte3d { position: fixed; inset: 0; }
+.info3d { position: fixed; z-index: 10; left: 12px; bottom: 56px; max-width: min(380px, calc(100% - 24px)); padding: 10px 14px; border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96); box-shadow: 0 8px 32px rgba(26, 26, 26, 0.12); font-size: 14px; line-height: 1.45; }
+.info3d summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; font-weight: 700; }
+.maplibregl-ctrl-top-right { top: 84px; }
+.hint3d { margin: 0 0 6px; color: var(--muted); }
+#stand3d { color: var(--text); font-weight: 700; }
+.legende3d { list-style: none; margin: 6px 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 4px 10px; }
+.legende3d li { display: flex; align-items: center; gap: 6px; }
+.legende3d .sw { width: 14px; height: 14px; border-radius: 3px; flex: none; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.maplibregl-ctrl-attrib { font: 12px/1.4 "Space Mono", ui-monospace, monospace; }
+.maplibregl-ctrl-attrib a { color: var(--text); text-decoration: underline; }
+@media (max-width: 700px) {
+  .bar3d { gap: 8px; }
+  .bar3d .page-brand { font-size: 18px; }
+  .wahl3d { order: 3; flex: 1 1 100%; }
+  .wahl3d select { flex: 1; min-width: 0; }
+  .maplibregl-ctrl-top-right { top: 140px; }
+  .info3d { bottom: 12px; right: 56px; max-height: 50dvh; overflow-y: auto; }
+}

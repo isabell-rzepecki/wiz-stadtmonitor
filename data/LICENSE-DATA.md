@@ -16,6 +16,7 @@ Die Daten stehen nicht unter der MIT-Lizenz des Codes.
 | `wahlen/wahlen.json`, `export/wahlen.json` (Bundestags- und Europawahlen) | Wahlbezirksstatistik der Bundeswahlleiterin, summiert für die Gemeinde | „Vervielfältigung und Verbreitung, auch auszugsweise, mit Quellenangabe gestattet“; © Die Bundeswahlleiterin |
 | `export/beteiligung.json` | Amtliche Bekanntmachungen zur Bauleitplanung: Plan, Stufen, Fristen; ohne Ansprechpersonen | wie Einladungen (amtliche Werke) |
 | `export/karte/umwelt_gebaeude.json` | Gebäude für öffentliche Zwecke, ALKIS vereinfacht (HVBG) | Nutzung ohne Einschränkung (§ 18 HVGG); Quellenvermerk mit Hinweis auf Veränderung |
+| `geo/hvgg/gebaeude3d/*.json`, `export/gebaeude3d/*.json` | 3D-Gebäudemodelle LoD2 (HVBG, Download-Center), je Ortsteil auf Grundriss und gemessene Höhe vereinfacht; derzeit nur Bauwerke (BW) | Nutzung ohne Einschränkung (§ 18 HVGG); Quellenvermerk mit Hinweis auf Veränderung |
 | `export/eigentum.json` | Beteiligungsbericht der Stadt (§ 123a HGO): Unternehmen, Rechtsform, Gegenstand, Gesellschafter; ohne Personen | amtliche Veröffentlichung der Stadt; Quelle angeben |
 | Kartenhintergrund (nur angezeigt, nicht gespeichert) | basemap.de Web Raster, BKG | CC BY 4.0; „© basemap.de / BKG \| Datenquellen: © GeoBasis-DE“ |
 | `../phase0/stichprobe_20_einladungen.tsv` | 20 Einladungen (wie oben), Stufen vorläufig abgeleitet | wie oben |

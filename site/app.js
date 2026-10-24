@@ -334,6 +334,21 @@
       new Layers().addTo(map);
     }
     new (button("map-whole", `Ganz ${cfg.stadt.name} ansehen`, () => map.fitBounds(cityBounds(), mapPadding())))().addTo(map);
+    // 3D-Ansicht (eigene Seite, MapLibre) für das gewählte Gebiet
+    if (cfg.gebaeude3d) {
+      const Ansicht3d = L.Control.extend({
+        options: { position: "bottomright" },
+        onAdd() {
+          const a = L.DomUtil.create("a", "map-style map-3d");
+          a.href = "3d.html";
+          a.textContent = "3D-Ansicht";
+          a.addEventListener("click", () => { a.href = `3d.html${area && area.kind === "ortsteil" ? `?gebiet=ortsteil:${encodeURIComponent(area.key)}` : ""}`; });
+          L.DomEvent.disableClickPropagation(a);
+          return a;
+        },
+      });
+      new Ansicht3d().addTo(map);
+    }
     // mobil: die Schaltflächen unten rechts hinter „Kartenoptionen“, damit sie die Karte nicht verdecken
     const MapMenu = L.Control.extend({
       options: { position: "bottomright" },

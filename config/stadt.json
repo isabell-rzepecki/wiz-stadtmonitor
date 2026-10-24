@@ -1017,5 +1017,18 @@
       "Eigentum von Bund, Land und Kirchen ist nur lückenhaft belegt und wird nicht dargestellt.",
       "Privateigentümer werden nicht dargestellt (Grundbuch nur bei berechtigtem Interesse, § 12 GBO)."
     ]
+  },
+  "gebaeude3d": {
+    "_hinweis": "3D-Ansicht: vereinfachte Darstellung aus den 3D-Gebäudemodellen LoD2 (Grundriss mit gemessener Höhe, ohne Dachformen). Dateien aus dem Download-Center der HVBG von Hand nach data/raw/lod2/ legen.",
+    "quelle": "https://gds.hessen.de/INTERSHOP/web/WFS/HLBG-Geodaten-Site/de_DE/-/EUR/ViewDownloadcenter-Start?path=3D-Daten/3D-Geb%C3%A4udemodelle/3D-Geb%C3%A4udemodelle%20LoD2",
+    "lizenz": "Nutzung ohne Einschränkung (§ 18 HVGG); im Download-Center nicht gesondert ausgewiesen",
+    "attribution": "3D-Gebäudemodelle LoD2: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG); Darstellung vereinfacht",
+    "hinweis": "Vereinfachte Darstellung: Grundriss mit gemessener Gebäudehöhe; Dachformen und Geländehöhe werden nicht dargestellt.",
+    "hoehen": [
+      5,
+      10,
+      15,
+      20
+    ]
   }
 }

@@ -510,3 +510,6 @@ html { font-synthesis: none; }
 .map-legend .hint { max-width: 240px; }
 .credits { margin: 0 0 8px; padding-left: 18px; font-size: 14px; }
 .credits li { margin-bottom: 4px; }
+
+/* Verweis auf die 3D-Ansicht (eigene Seite) */
+a.map-style.map-3d { display: inline-block; text-decoration: none; }
