@@ -1,4 +1,4 @@
-"""Aufruf: python -m pipeline {fetch|fetch-plaene|fetch-gemarkungen|gemarkungen|fetch-lage|lage|fetch-eigentum|eigentum|fetch-umwelt|umwelt|fetch-wohnen|wohnen|fetch-wahlen|wahlen|fetch-beteiligung|beteiligung|fetch-wanderung|wanderung|gebaeude3d|build|check|package|site|all}"""
+"""Aufruf: python -m pipeline {fetch|fetch-plaene|fetch-gemarkungen|gemarkungen|fetch-lage|lage|fetch-eigentum|eigentum|fetch-umwelt|umwelt|fetch-wohnen|wohnen|fetch-wahlen|wahlen|fetch-beteiligung|beteiligung|fetch-wanderung|wanderung|fetch-gebaeude3d|gebaeude3d|build|check|package|site|all}"""
 import sys
 
 from . import bauleitplanung, beteiligung, build, check, eigentum, fetch, gebaeude3d, gemarkungen, lage, package, site, umwelt, wahlen, wanderung, wohnen
@@ -17,7 +17,8 @@ STEPS = {
     "fetch-wohnen": wohnen.fetch,  # Bodenrichtwerte (BORIS), Zensus 2022 Regionaltabelle und Gitter, alle 365 Tage neu
     "fetch-wanderung": wanderung.fetch,  # Jahresberichte und Kreismatrix des HSL (einmalig, ändern sich nicht)
     "wanderung": wanderung.build,  # Zu- und Fortzüge je Gemeinde des Kreises, Wanderung über die Kreisgrenze
-    "gebaeude3d": gebaeude3d.build,  # 3D-Gebäude (LoD2, von Hand nach data/raw/lod2/) je Ortsteil für die 3D-Ansicht
+    "fetch-gebaeude3d": gebaeude3d.fetch,  # 3D-Gebäudemodelle LoD2 der Gemeinde (Download-Center der HVBG), alle 180 Tage neu
+    "gebaeude3d": gebaeude3d.build,  # 3D-Gebäude je Ortsteil für die 3D-Ansicht
     "wohnen": wohnen.build,  # Bodenrichtwerte und Zensuswerte je Ortsbezirk und Gemeinde, Kartenebene Bodenrichtwerte
     "fetch-wahlen": wahlen.fetch,  # amtliche Wahlergebnisse (Bekanntmachungen, votemanager, Bundeswahlleiterin), alle 30 Tage neu
     "wahlen": wahlen.build,  # Ergebnisse je Wahl ohne Personennamen, Prüfung der Summen
@@ -28,7 +29,7 @@ STEPS = {
     "package": package.package,  # Datenpaket (Zip) ohne Flächen der Bauleitplanung
     "site": site.build,  # Seite in _site/ zusammenstellen
 }
-ALL = ["fetch", "fetch-plaene", "fetch-gemarkungen", "gemarkungen", "fetch-lage", "lage", "fetch-eigentum", "eigentum", "fetch-umwelt", "umwelt", "fetch-wohnen", "wohnen", "fetch-wahlen", "wahlen", "fetch-beteiligung", "beteiligung", "fetch-wanderung", "wanderung", "gebaeude3d", "build", "check", "package", "site"]
+ALL = ["fetch", "fetch-plaene", "fetch-gemarkungen", "gemarkungen", "fetch-lage", "lage", "fetch-eigentum", "eigentum", "fetch-umwelt", "umwelt", "fetch-wohnen", "wohnen", "fetch-wahlen", "wahlen", "fetch-beteiligung", "beteiligung", "fetch-wanderung", "wanderung", "fetch-gebaeude3d", "gebaeude3d", "build", "check", "package", "site"]
 
 
 def main(argv):

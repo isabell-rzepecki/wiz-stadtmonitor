@@ -1149,8 +1149,13 @@
     ]
   },
   "gebaeude3d": {
-    "_hinweis": "3D-Ansicht: vereinfachte Darstellung aus den 3D-Gebäudemodellen LoD2 (Grundriss mit gemessener Höhe, ohne Dachformen). Dateien aus dem Download-Center der HVBG von Hand nach data/raw/lod2/ legen.",
+    "_hinweis": "3D-Ansicht: vereinfachte Darstellung aus den 3D-Gebäudemodellen LoD2 (Grundriss mit gemessener Höhe, ohne Dachformen). Gebäude (LoD2) und Bauwerke (BW) der Gemeinde kommen über die Schnittstelle des Download-Centers der HVBG (dateien).",
     "quelle": "https://gds.hessen.de/INTERSHOP/web/WFS/HLBG-Geodaten-Site/de_DE/-/EUR/ViewDownloadcenter-Start?path=3D-Daten/3D-Geb%C3%A4udemodelle/3D-Geb%C3%A4udemodelle%20LoD2",
+    "download_basis": "https://gds.hessen.de",
+    "dateien": [
+      {"rest": "https://gds.hessen.de/INTERSHOP/rest/WFS/HLBG-Geodaten-Site/-/downloadcenter?path=3D-Daten/3D-Geb%C3%A4udemodelle/3D-Geb%C3%A4udemodelle%20LoD2/Werra-Meissner-Kreis", "datei": "Witzenhausen-LoD2"},
+      {"rest": "https://gds.hessen.de/INTERSHOP/rest/WFS/HLBG-Geodaten-Site/-/downloadcenter?path=3D-Daten/3D-Geb%C3%A4udemodelle/ALKIS-ATKIS-%C3%BCbergreifender%20Grunddatenbestand/Werra-Meissner-Kreis", "datei": "Witzenhausen - BW"}
+    ],
     "lizenz": "Nutzung ohne Einschränkung (§ 18 HVGG); im Download-Center nicht gesondert ausgewiesen",
     "attribution": "3D-Gebäudemodelle LoD2: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG); Darstellung vereinfacht",
     "hinweis": "Vereinfachte Darstellung: Grundriss mit gemessener Gebäudehöhe; Dachformen und Geländehöhe werden nicht dargestellt.",
