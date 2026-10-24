@@ -195,6 +195,7 @@ button.card:hover, a.card:hover { transform: translateY(-2px); box-shadow: var(-
 body.resizing { cursor: col-resize; user-select: none; }
 body.resizing .panel, body.resizing #timeline-wrap { transition: none; }
 .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 12px 8px 18px; }
+.panel-head > h2 { flex: 1; min-width: 0; }
 .panel-head h2 { font: 400 20px/1.2 var(--font-display); margin: 0; letter-spacing: -0.01em; }
 .icon-btn { border: 1px solid var(--border-alt); background: var(--surface-strong); border-radius: var(--radius-s); width: 36px; height: 36px; cursor: pointer; display: grid; place-items: center; transition: background .2s, transform .15s; }
 .icon-btn:hover { background: var(--solid); transform: translateY(-1px); }
@@ -370,8 +371,19 @@ ol.beteiligung { margin: 4px 0 10px; padding-left: 18px; } ol.beteiligung ul { m
 .map-legend li { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
 .map-legend .swatch { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(26, 26, 26, 0.25); flex: none; }
 .map-legend .hint { margin: 6px 0 0; }
-.map-style.map-menu { display: none; }
-.map-style.map-sources { display: none; }
+/* Kartenoptionen: Schaltflächen unten rechts hinter einem Knopf (Desktop als Kasten an der Karte, mobil über der Leiste) */
+.map-style.map-menu { display: block; }
+.leaflet-container:not(.map-menu-open) .leaflet-right .map-style:not(.map-menu) { display: none; }
+.leaflet-container.map-menu-open .leaflet-bottom.leaflet-right > .leaflet-control:not(.leaflet-bar):not(.leaflet-control-attribution) { margin-bottom: 6px; }
+.leaflet-container.map-menu-open .leaflet-right .map-style:not(.map-menu) { box-shadow: var(--shadow); }
+/* Namensnennungen hinter „© Quellen“; aufgeklappt als Kasten über dem Knopf */
+.map-style.map-sources { display: block; }
+.leaflet-container:not(.attr-open) .leaflet-control-attribution { display: none; }
+.leaflet-container.attr-open .leaflet-control-attribution {
+  position: absolute; left: 10px; bottom: 56px; z-index: 1002; max-width: min(560px, calc(100% - 20px)); max-height: 40vh; overflow-y: auto; margin: 0;
+  background: var(--solid) !important; border: 1px solid var(--border-alt); padding: 10px 12px; border-radius: 14px !important;
+  font-size: 14px; line-height: 1.45; box-shadow: var(--shadow);
+}
 .map-style.map-menu[aria-expanded="true"] { background: var(--accent-fill); color: var(--on-accent-fill); border-color: transparent; }
 .map-style[aria-pressed="true"] { background: var(--accent-fill); color: var(--on-accent-fill); border-color: transparent; }
 /* Umweltebenen: aufklappbare Auswahl unter den Kartenschaltflächen */
@@ -463,8 +475,6 @@ body.list-open .leaflet-left { left: calc(var(--list-w) + 16px); }
   body.list-open .leaflet-left { left: 0; }
   .step .jump { display: none; }
   .map-style { min-height: 44px; }
-  .map-style.map-menu { display: block; }
-  .leaflet-container:not(.map-menu-open) .leaflet-right .map-style:not(.map-menu) { display: none; }
   /* Kartenoptionen als ein scrollbarer Kasten über der Leiste, Schaltflächen in voller Breite */
   .leaflet-container.map-menu-open .leaflet-bottom.leaflet-right {
     position: fixed; left: 10px; right: 10px; bottom: 200px; z-index: 1001; max-height: calc(100dvh - 280px); overflow-y: auto;
@@ -476,13 +486,18 @@ body.list-open .leaflet-left { left: calc(var(--list-w) + 16px); }
   .leaflet-container.map-menu-open .leaflet-bottom.leaflet-right .leaflet-control-attribution,
   .leaflet-container.map-menu-open .leaflet-bottom.leaflet-right .leaflet-bar { display: none; }
   /* Namensnennungen: zugeklappt hinter „© Quellen“; aufgeklappt als Kasten */
-  .map-style.map-sources { display: block; min-height: 44px; }
-  .leaflet-container:not(.attr-open) .leaflet-control-attribution { display: none; }
-  .leaflet-container.attr-open .leaflet-control-attribution {
-    position: fixed; left: 10px; right: 10px; bottom: 200px; z-index: 1002; max-height: 40dvh; overflow-y: auto; margin: 0;
-    background: var(--solid) !important; border: 1px solid var(--border-alt);
-    padding: 10px 12px; border-radius: 14px !important; font-size: 14px; line-height: 1.45; box-shadow: var(--shadow);
-  }
+  .map-style.map-sources { min-height: 44px; }
+  .leaflet-container.attr-open .leaflet-control-attribution { position: fixed; left: 10px; right: 10px; bottom: 200px; max-width: none; max-height: 40dvh; }
+  /* Blätter starten auf halber Höhe, die Karte bleibt sichtbar; „Vergrößern“ zeigt sie ganz */
+  .panel, .overlay { max-height: min(46dvh, calc(100dvh - 258px)); }
+  .panel.full, .overlay.full { max-height: calc(100dvh - 258px); }
+  .panel-head .sheet-size { display: grid; }
+  /* Menü kompakt: nur die Schaltflächen der Karten, ohne Symbol, Titel und Beschreibung */
+  .mega .card.static { padding: 0; border: 0; background: none; box-shadow: none; gap: 0; }
+  .mega .card.static .card-icon, .mega .card.static .card-title, .mega .card.static .card-text { display: none; }
+  .mega .card.static .card-actions { margin: 0; }
+  .mega .cards { gap: 6px; }
+  .mega .card.static .card-actions .btn { width: 100%; justify-content: flex-start; }
   .tl-btn, .tl-chip, .icon-btn, .chip { min-width: 44px; min-height: 44px; }
   .bar { grid-template-columns: 1fr 80px 40px; }
 }
@@ -526,3 +541,11 @@ table.bars .bar { position: absolute; left: 0; top: 4px; bottom: 4px; opacity: 0
 table.bars .bar-zu { background: var(--accent-ink); } table.bars .bar-fort { background: var(--abzug); }
 label.inline { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
 label.inline select { font: inherit; font-weight: 400; min-height: 40px; padding: 4px 8px; border-radius: 10px; border: 1px solid var(--border-alt); background: var(--solid); color: var(--text); }
+
+/* Größe der Blätter (nur mobil sichtbar) */
+.sheet-size { display: none; }
+.sheet-size .icon { transition: transform .2s; }
+.full .sheet-size .icon { transform: rotate(180deg); }
+/* Methode und Quellen: aufklappbar am Ende eines Panels */
+details.methode { margin-top: 12px; }
+details.methode p, details.methode li { font-size: 14px; color: var(--text-muted); line-height: 1.5; }

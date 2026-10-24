@@ -47,6 +47,11 @@
     soll: "nach Regelwerk vorgesehen, nicht belegt",
   };
   const RESULT_GAP = "Ergebnis nicht veröffentlicht. Die Einladungen nennen nur die Tagesordnung; Beschlüsse und Niederschriften stehen, soweit veröffentlicht, im Bürgerinformationssystem der Stadt. Der Stadtmonitor leitet keine Ergebnisse ab.";
+  // Methode, Prüfangaben und Quellen eines Panels: einmal, aufklappbar am Ende; im Lesetext bleiben Wert, Stichtag und Gebiet
+  const methode = (teile, titel = "Methode und Quellen") => {
+    const t = teile.filter(Boolean);
+    return t.length ? `<details class="acc methode"><summary>${titel}</summary>${t.map((x) => (x.startsWith("<") ? x : `<p>${x}</p>`)).join("")}</details>` : "";
+  };
   const LIMITS = `<details class="acc"><summary>Was diese Darstellung nicht zeigen kann</summary><ul>
     <li>Beschlussergebnisse: Sie sind in den Bekanntmachungen nicht veröffentlicht.</li>
     <li>Vorlagentexte und Niederschriften.</li>
@@ -93,6 +98,9 @@
     if (id === "panel-list") { document.body.classList.toggle("list-open", open); document.body.classList.toggle("list-closed", !open); }
     if (id === "panel-detail") { document.body.classList.toggle("detail-open", open); document.body.classList.toggle("detail-closed", !open); }
     if (!open) return;
+    el.classList.remove("full");
+    const sz = el.querySelector(".sheet-size");
+    if (sz) { sz.setAttribute("aria-expanded", "false"); sz.setAttribute("aria-label", "Vergrößern"); }
     closeMega();
     // schmale Bildschirme: nur eine Fläche; mittlere Breiten: Liste oder Vorgang, damit die Zeitleiste Platz hat;
     // Kennzahlen und Termine liegen mittig übereinander, daher immer nur eines davon
@@ -223,7 +231,32 @@
 
   // --- Über ----------------------------------------------------------------------------------------
   $("#about-open").addEventListener("click", () => { closeMega(); $("#about").showModal(); });
+  // mobil: Blätter starten auf halber Höhe; die Schaltfläche im Kopf zeigt sie ganz (auf breiten Bildschirmen ausgeblendet)
+  for (const id of SHEETS.filter((x) => x !== "timeline-wrap")) {
+    const head = document.querySelector(`#${id} .panel-head`), close = head && head.querySelector("[data-close]");
+    if (!close) continue;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "icon-btn sheet-size";
+    b.setAttribute("aria-expanded", "false");
+    b.setAttribute("aria-label", "Vergrößern");
+    b.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg>';
+    b.addEventListener("click", () => {
+      const full = document.getElementById(id).classList.toggle("full");
+      b.setAttribute("aria-expanded", String(full));
+      b.setAttribute("aria-label", full ? "Verkleinern" : "Vergrößern");
+    });
+    head.insertBefore(b, close);
+  }
   $("#about-close").addEventListener("click", () => $("#about").close());
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-about]");
+    if (!b) return;
+    closeMega();
+    $("#about").showModal();
+    const h = document.getElementById(b.dataset.about);
+    if (h) { h.scrollIntoView({ block: "start" }); h.focus(); }
+  });
   $("#about").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 
   // --- Gebiet ----------------------------------------------------------------------------------------
@@ -242,7 +275,7 @@
   function countIn(o) { return all.filter((p) => !p.verfahrenspunkt && p.locations.some((l) => l.ortsteil === o.name)).length; }
   function fillAreaSelect() {
     const sel = $("#f-area");
-    const opt = (o) => `<option value="ortsteil:${esc(o.slug)}">${esc(o.name)}${all.length ? ` (${countIn(o)})` : ""}</option>`;
+    const opt = (o) => `<option value="ortsteil:${esc(o.slug)}">${esc(o.name)}</option>`;  // Zahl der Vorgänge steht in der Liste
     sel.innerHTML = `<option value="stadt:alle">${esc(`Ganz ${cfg.stadt.name}`)}</option>`
       + ortsteile().filter((o) => !o.ortsbezirk).map(opt).join("")
       + `<optgroup label="Ortsbezirke">${ortsteile().filter((o) => o.ortsbezirk).sort((a, b) => a.name.localeCompare(b.name, "de")).map(opt).join("")}</optgroup>`
@@ -309,7 +342,6 @@
       setBase();
     }, () => colored))().addTo(map);
     planOn = new URLSearchParams(location.search).get("plaene") === "1";
-    new (button("map-plans", "Bauleitplanung", () => { planOn = !planOn; drawPlans(); syncUrl(); }, () => planOn))().addTo(map);
     if (cfg.umwelt) {
       const wanted = (new URLSearchParams(location.search).get("ebenen") || "").split(",");
       for (const g of cfg.umwelt.gruppen) if (wanted.includes(g.id)) umweltOn.add(g.id);
@@ -318,13 +350,14 @@
         options: { position: "bottomright" },
         onAdd() {
           const d = L.DomUtil.create("details", "map-style map-layers");
-          const ebenen = [...cfg.umwelt.gruppen, ...(cfg.wohnen ? [{ id: "bodenrichtwerte", titel: `Bodenrichtwerte ${cfg.wohnen.boris.stichtag.slice(0, 4)}` }] : []),
+          const ebenen = [{ id: "bauleitplanung", titel: "Bauleitplanung" }, ...cfg.umwelt.gruppen, ...(cfg.wohnen ? [{ id: "bodenrichtwerte", titel: `Bodenrichtwerte ${cfg.wohnen.boris.stichtag.slice(0, 4)}` }] : []),
             ...(cfg.wohnen?.boris2026 ? [{ id: "bodenrichtwerte2026", titel: "Bodenrichtwerte 2026 (Karte der HVBG)" }] : []),
             ...(cfg.wanderung ? WANDERUNG_EBENEN : [])];
           d.innerHTML = `<summary>Weitere Ebenen</summary><fieldset aria-label="Weitere Kartenebenen einblenden">${ebenen.map((g) =>
-            `<label><input type="checkbox" value="${esc(g.id)}"${umweltOn.has(g.id) ? " checked" : ""}> ${esc(g.titel)}</label>`).join("")}</fieldset>`;
+            `<label><input type="checkbox" value="${esc(g.id)}"${(g.id === "bauleitplanung" ? planOn : umweltOn.has(g.id)) ? " checked" : ""}> ${esc(g.titel)}</label>`).join("")}</fieldset>`;
           d.addEventListener("change", (e) => {
             const id = e.target.value;
+            if (id === "bauleitplanung") { planOn = e.target.checked; drawPlans(); syncUrl(); return; }
             if (e.target.checked) umweltOn.add(id); else umweltOn.delete(id);
             drawEbene(id);
             syncUrl();
@@ -352,7 +385,7 @@
       });
       new Ansicht3d().addTo(map);
     }
-    // mobil: die Schaltflächen unten rechts hinter „Kartenoptionen“, damit sie die Karte nicht verdecken
+    // die Schaltflächen unten rechts hinter „Kartenoptionen“, damit sie die Karte nicht verdecken (mobil als Kasten über der Leiste)
     const MapMenu = L.Control.extend({
       options: { position: "bottomright" },
       onAdd() {
@@ -368,7 +401,7 @@
       },
     });
     new MapMenu().addTo(map);
-    // mobil: Namensnennungen hinter „© Quellen“, als Kasten über der Leiste (auf breiten Bildschirmen immer sichtbar)
+    // Namensnennungen hinter „© Quellen“, aufgeklappt als Kasten
     const Sources = L.Control.extend({
       options: { position: "bottomleft" },
       onAdd() {
@@ -390,7 +423,7 @@
       options: { position: "bottomleft" },
       onAdd() {
         const d = L.DomUtil.create("details", "map-legend");
-        d.open = !MOBILE.matches;
+        d.open = false;
         L.DomEvent.disableClickPropagation(d);
         L.DomEvent.disableScrollPropagation(d);
         return d;
@@ -422,9 +455,7 @@
       onEachFeature(f, layer) {
         const o = ortsteile().find((x) => x.slug === f.properties.slug);
         if (!o) return;
-        const p = f.properties;
-        layer.bindTooltip(() => `<strong>${esc(o.name)}</strong>${o.ortsbezirk ? "" : " (ohne Ortsbeirat)"}<br>${de(countIn(o))} Vorgänge mit Ortsbezug
-          <br><span class="nav-dim">Gemarkung ${esc(p.gemarkung)} · Zuordnung: ${esc(p.zuordnung_status || "–")}</span>`, { sticky: true, className: "nav-tip" });
+        layer.bindTooltip(() => `<strong>${esc(o.name)}</strong><br>${de(countIn(o))} Vorgänge mit Ortsbezug`, { sticky: true, className: "nav-tip" });
         layer.on("click", () => { if (!(area.kind === "ortsteil" && area.key === o.slug)) chooseArea(`ortsteil:${o.slug}`); });
       },
     }).addTo(map);
@@ -444,14 +475,15 @@
   }
   function drawLegend() {
     const rows = [[color("hoch"), "Ort gesichert (Gremium des Ortsteils oder eindeutiger Plan)"], [color("mittel"), "Ort erschlossen (Name im Titel)"], [color("niedrig"), "Ort unsicher (mehrdeutig oder Sprachmodell)"]];
-    legendEl.innerHTML = `<summary>Legende: Sicherheit des Orts</summary><ul>${rows
+    const ebenen = planOn || umweltOn.size;
+    legendEl.innerHTML = `<summary>Legende</summary><p class="legend-group">Ort eines Vorgangs</p><ul>${rows
       .map(([c, t]) => `<li><span class="swatch" style="background:${c}" aria-hidden="true"></span>${esc(t)}</li>`).join("")}</ul>
-      <p class="hint">Vorgänge, die nur einem Ortsteil zugeordnet sind, stehen in der Liste, nicht als Punkt.</p>
-      ${navLayer ? '<p class="hint">Grenzen: Gemarkungen (HVBG). Nach § 6 der Hauptsatzung umfasst jeder Ortsbezirk das Gebiet der ehemaligen Gemeinde; die Gemarkung bildet es ab. Die Kernstadt ist kein Ortsbezirk.</p>' : ""}
-      ${planOn ? `<ul><li><span class="swatch swatch-plan" aria-hidden="true"></span>Geltungsbereich eines Bebauungsplans</li>
+      ${planOn ? `<p class="legend-group">Bauleitplanung</p><ul><li><span class="swatch swatch-plan" aria-hidden="true"></span>Geltungsbereich eines Bebauungsplans</li>
         <li><span class="swatch swatch-fplan" aria-hidden="true"></span>Änderung des Flächennutzungsplans</li></ul>
-        <p class="hint">${esc(cfg.bauleitplanung.attribution)}. Nicht rechtsverbindlich.</p>` : ""}
-      ${umweltLegend()}${brwLegend()}${brw26Legend()}${wanderungLegend()}`;
+        <p class="hint">${esc(cfg.bauleitplanung.attribution)}.</p>` : ""}
+      ${umweltLegend()}${brwLegend()}${brw26Legend()}${wanderungLegend()}
+      ${ebenen ? '<p class="hint">Kartenebenen sind nicht rechtsverbindlich; maßgeblich sind die Quellen.</p>' : ""}
+      <p><button type="button" class="link-btn" data-about="about-verortung">Mehr zur Verortung</button></p>`;
   }
   // Bodenrichtwerte: Zonen für baureifes Land, Klassen laut stadt.json (wohnen.boris.klassen), Stichtag immer sichtbar
   const BRW_FILL = [0.08, 0.18, 0.3, 0.44, 0.6];
@@ -525,13 +557,13 @@
     const B = cfg.wohnen.boris2026;
     const nah = map.getZoom() >= B.min_zoom;
     return `<p class="legend-group">Bodenrichtwerte, Stichtag ${fmtDate(B.stichtag)}</p>
-      ${nah ? "" : '<p class="hint"><strong>Zum Anzeigen näher heranzoomen.</strong></p>'}<p class="hint">${esc(B.hinweis)} ${esc(B.attribution)}.</p>`;
+      ${nah ? "" : '<p class="hint"><strong>Zum Anzeigen näher heranzoomen.</strong></p>'}<p class="hint">${esc(B.hinweis)}</p>`;
   }
   function brwLegend() {
     if (!brwLayer) return "";
     return `<p class="legend-group">Bodenrichtwerte, Stichtag ${brwStichtag()}</p><ul>${brwKlassen().map((t, i) => `<li><span class="swatch swatch-area" aria-hidden="true"
       style="border-color:${color("accent-ink")};background:color-mix(in srgb, ${color("accent-ink")} ${Math.round(BRW_FILL[i] * 100)}%, transparent)"></span>${esc(t)} €/m²</li>`).join("")}</ul>
-      <p class="hint">Baureifes Land. ${esc(cfg.wohnen.boris.attribution)}.</p>`;
+      <p class="hint">Baureifes Land.</p>`;
   }
   // Umweltebenen: erst beim Einschalten geladen; Flächen ohne Klickziel, nur mit Hinweis beim Überfahren
   const umweltGruppe = (id) => cfg.umwelt.gruppen.find((g) => g.id === id);
@@ -560,8 +592,8 @@
       const vorhanden = new Set(((umweltLayers[g.id] && umweltLayers[g.id].toGeoJSON().features) || []).map((f) => f.properties.ebene));
       const rows = g.ebenen.filter((e) => vorhanden.has(e.id)).map((e) => `<li><span class="swatch swatch-area" aria-hidden="true"
         style="border-color:${g.farbe};border-style:${e.stil.dash ? (e.stil.dash.startsWith("1 ") || e.stil.dash.startsWith("2 ") ? "dotted" : "dashed") : "solid"};background:${e.stil.fill ? `color-mix(in srgb, ${g.farbe} ${Math.round(e.stil.fill * 100)}%, transparent)` : "transparent"}"></span>${esc(e.titel)}</li>`).join("");
-      return `<p class="legend-group">${esc(g.titel)}</p><ul>${rows || "<li>keine Fläche im Stadtgebiet</li>"}</ul>${g.hinweis ? `<p class="hint">${esc(g.hinweis)}</p>` : ""}<p class="hint">${esc(g.attribution)}.</p>`;
-    }).join("") + `<p class="hint">${esc(cfg.umwelt.hinweis)}</p>`;
+      return `<p class="legend-group">${esc(g.titel)}</p><ul>${rows || "<li>keine Fläche im Stadtgebiet</li>"}</ul>${g.hinweis ? `<p class="hint">${esc(g.hinweis)}</p>` : ""}`;
+    }).join("");
   }
   // Kartenebene Bauleitplanung: erst beim Einschalten geladen; Hinweis zur Nutzung in Legende und Namensnennung
   const loadPlans = () => (planData ||= fetch(PLAENE_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null));
@@ -719,10 +751,10 @@
       <div class="step-head">Beratung: ${esc(s.gremium)}<span class="step-status">${esc(STATUS[status])}</span></div>
       <div class="step-body">${body.join("<br>")}${result}</div></li>`;
   }
-  function legend() {
-    return `<details class="acc"><summary>Legende Evidenzstatus</summary><div class="legend">${["belegt", "abgeleitet", "nicht_öffentlich", "unklar"]
+  function legendInhalt() {
+    return `<div class="legend">${["belegt", "abgeleitet", "nicht_öffentlich", "unklar"]
       .map((s) => `<span><span class="mark mark-${s}" aria-hidden="true">${s === "unklar" ? "?" : ""}</span><strong>${STATUS[s]}</strong> – ${STATUS_TEXT[s]}</span>`).join("")}
-      <span class="hint">Linie: durchgezogen = belegt, gestrichelt = abgeleitet, gepunktet = nicht öffentlich oder unklar.</span></div></details>`;
+      <span class="hint">Linie: durchgezogen = belegt, gestrichelt = abgeleitet, gepunktet = nicht öffentlich oder unklar.</span></div>`;
   }
   function reportLink(p) {
     const q = new URLSearchParams({ title: `Verortung prüfen: ${p.reference}`, body: `Vorgang: ${p.reference}\nTitel: ${p.name}\nGebiet: ${area.name}\n\nWas ist falsch?\n` });
@@ -759,25 +791,25 @@
       <div class="links">${link(p.process[0] && p.process[0].pdf, "Einladung (PDF)", "btn btn-primary")}
         ${link(cfg.stadt.sessionnet, "Bürgerinformationssystem", "btn btn-secondary")}</div>
       <h4>Prozesslinie</h4>
-      ${p.vorlage ? `<p class="hint">Stationen sind die Sitzungen, in deren Tagesordnung die Vorlage ${esc(p.vorlage)} steht, chronologisch.</p>`
-        : '<p class="hint">Ohne Vorlagennummer: eine einzelne Station. Tagesordnungspunkte werden nicht über ähnliche Titel verknüpft.</p>'}
       <ol class="steps">${p.process.map(stepHtml).join("")}</ol>
-      ${(p.beteiligung || []).length ? `<h4>Beteiligung der Öffentlichkeit (Bauleitplanung)</h4>
-        <p class="hint">Verfahrensschritte laut amtlichen Bekanntmachungen zu diesem Plan; zugeordnet über Plannummer und Gemarkung.</p>${beteiligungHtml(p.beteiligung)}` : ""}
-      ${legend()}
+      ${(p.beteiligung || []).length ? `<h4>Beteiligung der Öffentlichkeit (Bauleitplanung)</h4>${beteiligungHtml(p.beteiligung)}` : ""}
       <h4>Ortsbezug</h4><ul class="locs">${locs}</ul>
       ${(p.plans || []).length ? `<h4>Bauleitplanung</h4><ul class="locs">${p.plans.map((x) => `<li><button type="button" class="link-btn" data-open-plan="${esc(x.key)}">${esc(x.titel)}</button>
-        <br><span class="meta">${esc(x.treffer)} · Fundstelle: „${esc(x.evidence)}“</span></li>`).join("")}</ul>
-        <p class="hint">${esc(cfg.bauleitplanung.attribution)}.</p>` : ""}
+        <br><span class="meta">${esc(x.treffer)} · Fundstelle: „${esc(x.evidence)}“</span></li>`).join("")}</ul>` : ""}
       ${wohnenKasten(p)}
       ${(p.overlaps || []).length && cfg.umwelt ? `<h4>Räumliche Überschneidung</h4><ul class="locs">${p.overlaps.map((u) => `<li>${esc(u.titel)}${u.name ? `: ${esc(u.name)}` : ""}${u.zone ? `, ${esc(u.zone)}` : ""}
         <br><span class="meta">Ort: ${esc(u.ort)}</span></li>`).join("")}</ul>
-        <p class="hint">${esc(cfg.umwelt.ueberschneidung_hinweis)} ${esc(cfg.umwelt.hinweis)}</p>` : ""}
+        <p class="hint">${esc(cfg.umwelt.ueberschneidung_hinweis)}</p>` : ""}
       ${(p.bezuege || []).length ? `<p class="hint">Im Titel genannt: ${p.bezuege.map(esc).join(", ")} <span class="derived">Verweis, nicht verknüpft</span></p>` : ""}
       <p class="links">${link(reportLink(p), "Verortung falsch? Hinweis geben", "btn btn-secondary")}</p>
-      <details class="acc"><summary>Quellen dieses Vorgangs</summary><ul>
-        ${p.process.map((s) => `<li>${link(s.pdf, `Bekanntmachung Nr. ${esc(s.bekanntmachung)}`) || esc(s.bekanntmachung)} · ${esc(s.gremium)}, ${fmtDate(s.date)}, TOP ${esc(s.top)}</li>`).join("")}
-        ${sources}</ul></details>
+      ${methode([p.vorlage ? `Stationen der Prozesslinie sind die Sitzungen, in deren Tagesordnung die Vorlage ${esc(p.vorlage)} steht, chronologisch.`
+          : "Ohne Vorlagennummer: eine einzelne Station. Tagesordnungspunkte werden nicht über ähnliche Titel verknüpft.",
+        legendInhalt(),
+        (p.beteiligung || []).length ? "Beteiligung: Verfahrensschritte laut amtlichen Bekanntmachungen zu diesem Plan; zugeordnet über Plannummer und Gemarkung." : "",
+        (p.plans || []).length ? `${esc(cfg.bauleitplanung.attribution)}.` : "",
+        (p.overlaps || []).length && cfg.umwelt ? esc(cfg.umwelt.hinweis) : "",
+        `<ul>${p.process.map((s) => `<li>${link(s.pdf, `Bekanntmachung Nr. ${esc(s.bekanntmachung)}`) || esc(s.bekanntmachung)} · ${esc(s.gremium)}, ${fmtDate(s.date)}, TOP ${esc(s.top)}</li>`).join("")}
+        ${sources}</ul>`])}
       ${LIMITS}`;
     $("#announce").textContent = `Vorgang ${p.reference} geöffnet: ${p.name}`;
     if (MOBILE.matches || $("#panel-detail").hidden) setPanel("panel-detail", true);
@@ -795,7 +827,7 @@
     const ow = e.target.closest("[data-open-wohnen]");
     if (ow) { setPanel("panel-wohnen", true); showWohnen(ow.dataset.openWohnen); focusPanel("panel-wohnen"); return; }
     const pl = e.target.closest("[data-open-plan]");
-    if (pl) { if (!planOn) { planOn = true; document.querySelector(".map-plans")?.setAttribute("aria-pressed", "true"); drawPlans(); } showPlan(pl.dataset.openPlan); return; }
+    if (pl) { if (!planOn) { planOn = true; const cb = document.querySelector('.map-layers input[value="bauleitplanung"]'); if (cb) cb.checked = true; drawPlans(); } showPlan(pl.dataset.openPlan); return; }
     const r = e.target.closest("[data-open-ref]");
     if (r) { const v = all.find((x) => x.reference === r.dataset.openRef); if (v) { if (!papers.includes(v)) loadArea(DEFAULT_AREA, true); select(v); } return; }
     const b = e.target.closest(".jump");
@@ -902,23 +934,24 @@
     const slug = area.kind === "ortsteil" ? area.key : null;
     const obListe = ob && ob.ergebnisse ? (slug ? ob.ergebnisse.filter((r) => r.ortsteil === slug) : ob.ergebnisse) : [];
     const obName = (r) => (cfg.ortsteile.find((o) => o.slug === r.ortsteil) || { name: r.gebiet }).name;
-    box.innerHTML = `<p class="hint">Nur amtliche Ergebnisse. Namen von Kandidierenden und Gewählten werden nicht übernommen; maßgeblich sind die verlinkten Quellen.</p>
+    box.innerHTML = `<p class="hint">Nur amtliche Ergebnisse, ohne Namen von Personen.</p>
       <section class="stat-block"><h3>Stadtverordnetenversammlung</h3>
         ${stvv.map((e) => `${wahlKopf(e)}
           ${e.ergebnisse ? `${kommunalTabelle(e.ergebnisse[0], `${e.titel} ${fmtDate(e.datum)}: Stimmenanteile und Sitze`)}
-            <p class="hint">Wahlbeteiligung ${num(e.ergebnisse[0].beteiligung, 2)} %. ${esc(e.stufe_text)}. ${link(e.quelle_url, "Quelle")}</p>`
-            : `<p class="blackbox">${esc(e.stufe_text)}.</p>`}`).join("")}
-        <p class="hint">${esc(W.gremien_hinweis)}</p></section>
+            <p class="hint">Wahlbeteiligung ${num(e.ergebnisse[0].beteiligung, 2)} %.</p>`
+            : `<p class="blackbox">${esc(e.stufe_text)}.</p>`}`).join("")}</section>
       ${ob ? `<section class="stat-block"><h3>Ortsbeiräte</h3>${wahlKopf(ob)}
         ${obListe.length ? `<div class="table-wrap"><table class="compare"><caption class="visually-hidden">Ortsbeiratswahlen ${fmtDate(ob.datum)}: Sitze je Wahlvorschlag und Wahlbeteiligung</caption>
           <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Wahlvorschläge (Sitze)</th><th scope="col">Beteiligung</th></tr></thead>
           <tbody>${obListe.map((r) => `<tr><th scope="row">${esc(obName(r))}</th><td class="text">${[...r.vorschlaege].sort((a, b) => b.sitze - a.sitze).map((v) => `${esc(v.name)} (${v.sitze})`).join("; ")}</td><td>${pct(r.beteiligung)}</td></tr>`).join("")}</tbody></table></div>`
           : '<p>Für dieses Gebiet gibt es keinen Ortsbeirat.</p>'}
-        <p class="hint">${esc(ob.stufe_text)}. ${link(ob.quelle_url, "Quelle")}</p></section>` : ""}
+        </section>` : ""}
       <section class="stat-block"><h3>Bundestags- und Europawahlen in ${esc(cfg.stadt.name)}</h3>
-        <p class="hint">Bundestagswahl: Zweitstimmen; Europawahl: Stimmen; Anteile in Prozent der gültigen Stimmen.</p>
-        ${bundTabelle(wahlen.bund)}
-        <p class="hint">${esc(W.bund_hinweis)} ${esc(wahlen.bund_attribution)}.</p></section>`;
+        <p class="hint">Bundestagswahl: Zweitstimmen; Europawahl: Stimmen; in Prozent der gültigen Stimmen.</p>
+        ${bundTabelle(wahlen.bund)}</section>
+      ${methode([`Namen von Kandidierenden und Gewählten werden nicht übernommen; maßgeblich sind die verlinkten Quellen. ${esc(W.gremien_hinweis)}`,
+        `<ul>${[...stvv, ...(ob ? [ob] : [])].map((e) => `<li>${esc(e.titel)} ${fmtDate(e.datum)}: ${esc(e.stufe_text)}${e.quelle_url ? ` · ${link(e.quelle_url, "Quelle")}` : ""}</li>`).join("")}</ul>`,
+        `${esc(W.bund_hinweis)} ${esc(wahlen.bund_attribution)}.`])}`;
   }
 
   // --- Wohnen und Boden: Kennzahlen mit Stichtag und Quelle; Bestands-, Angebots- und Vergleichsmiete getrennt ------
@@ -928,7 +961,7 @@
   function zensusWert(e, d, einheit) {
     if (!e) return "–";
     if (e.wert == null) return `nicht ausgewiesen <span class="meta">(${esc(e.grund || "keine Zelle mit Wert")})</span>`;
-    return `${num(e.wert, d)} ${einheit} <span class="derived">Näherung</span> <span class="meta">(${e.wohnungen != null ? `${de(e.wohnungen)} vermietete Wohnungen, ` : ""}${de(e.zellen)} Zellen; ${de(e.zellen_ohne_wert)} ohne Wert)</span>`;
+    return `${num(e.wert, d)} ${einheit} <span class="derived">Näherung</span>`;
   }
   function showWohnen(slug) {
     const box = $("#wohnen");
@@ -949,16 +982,13 @@
         <p class="stichtag">Stichtag ${brwStichtag()}</p>
         ${sp ? `<dl class="facts"><dt>Spanne</dt><dd>${num(sp.min, 0)} bis ${num(sp.max, 0)} €/m²</dd><dt>Zonen</dt><dd>${de(sp.zonen)} (${esc(sp.arten.join(", "))})</dd></dl>`
           : "<p>Keine Bodenrichtwertzone für baureifes Wohn- oder Mischbauland.</p>"}
-        <p class="hint">Filter: ${esc(W.boris.filter)}. ${esc(W.boris.stichtag_hinweis)}</p>
         <p><button type="button" class="btn btn-soft" data-brw-on>Zonen auf der Karte zeigen</button></p></section>
       <section class="stat-block"><h3>Bestandsmiete und Eigentum (Zensus 2022)</h3>
         <p class="stichtag">Stichtag ${fmtDate(z.stichtag)}</p>
         ${o ? `<dl class="facts"><dt>Bestandsmiete ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.miete, 2, "€/m²")}</dd>
-          <dt>Eigentümerquote ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.eigentuemerquote, 1, "%")}</dd></dl>
-          <p class="hint">${esc(z.naeherung)}</p>` : ""}
+          <dt>Eigentümerquote ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.eigentuemerquote, 1, "%")}</dd></dl>` : ""}
         ${gem ? `<dl class="facts"><dt>Bestandsmiete ${esc(cfg.stadt.name)}</dt><dd>${num(gem.nettokaltmiete_eur_m2, 2)} €/m²</dd>
-          <dt>Leerstandsquote</dt><dd>${num(gem.leerstandsquote_pct, 1)} %</dd><dt>Eigentümerquote</dt><dd>${num(gem.eigentuemerquote_pct, 1)} %</dd></dl>
-          <p class="hint">Gemeindewerte: Regionaltabelle Gebäude und Wohnungen des Zensus 2022.</p>` : ""}
+          <dt>Leerstandsquote</dt><dd>${num(gem.leerstandsquote_pct, 1)} %</dd><dt>Eigentümerquote</dt><dd>${num(gem.eigentuemerquote_pct, 1)} %</dd></dl>` : ""}
         <p class="hint">Angebotsmieten und eine ortsübliche Vergleichsmiete stehen hier nicht: siehe Begriffe.</p></section>
       ${z.gemeinden.length ? `<section class="stat-block"><h3>Vergleich mit Nachbargemeinden (Zensus 2022)</h3>
         <div class="table-wrap"><table class="compare"><caption class="visually-hidden">Bestandsmiete, Leerstands- und Eigentümerquote je Gemeinde, Stichtag 15.05.2022</caption>
@@ -972,7 +1002,9 @@
       <section class="stat-block"><h3>Immobilienmarktberichte</h3><ul class="locs">${W.berichte.map((b) => `<li>${link(b.link, esc(b.titel)) || esc(b.titel)}<br><span class="meta">${esc(b.herausgeber)}</span></li>`).join("")}</ul>
         <p class="hint">${esc(W.berichte_hinweis)}</p></section>
       ${eigentumHtml()}
-      <p class="hint">${esc(W.boris.attribution)}. ${esc(z.attribution)}.</p>`;
+      ${methode([`<strong>Bodenrichtwerte:</strong> ${esc(W.boris.filter)}. ${esc(W.boris.stichtag_hinweis)} ${esc(W.boris.attribution)}.`,
+        `<strong>Zensus:</strong> ${esc(z.naeherung)} Gemeindewerte aus der Regionaltabelle Gebäude und Wohnungen des Zensus 2022. ${esc(z.attribution)}.`,
+        eigentum ? `<p><strong>Gebäude und Eigentum:</strong> ${link(eigentum.bericht.url, `Beteiligungsbericht ${esc(String(eigentum.bericht.jahr))}`)}, ${esc(eigentum.bericht.stand)}. Personen (Geschäftsführung, Aufsichtsrat) werden nicht übernommen.</p><ul>${eigentum.grenzen.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""])}`;
   }
   function eigentumHtml() {
     if (!eigentum) return "";
@@ -987,8 +1019,7 @@
       <p class="hint">Gebäudefunktion laut Liegenschaftskataster; sie beschreibt die Nutzung, nicht das Eigentum.</p>
       ${pf.length ? `<h4>Beteiligungen und Eigenbetriebe der Stadt (Pflichtangaben, § 123a HGO)</h4>${tab(pf, "Beteiligungen und Eigenbetriebe")}` : ""}
       ${fr.length ? `<details class="acc"><summary>Weitere Beteiligungen (freiwillige Angaben, ${fr.length})</summary>${tab(fr, "Weitere Beteiligungen")}</details>` : ""}
-      <p class="hint">${link(eigentum.bericht.url, `Beteiligungsbericht ${esc(String(eigentum.bericht.jahr))}`)}, ${esc(eigentum.bericht.stand)}. Personen (Geschäftsführung, Aufsichtsrat) werden nicht übernommen.</p>
-      <ul class="hint">${eigentum.grenzen.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></section>`;
+      </section>`;
   }
   // --- Zuzug und Wegzug (amtliche Wanderungsstatistik, HSL) --------------------------------------------
   // Je Gemeinde nur Zu- und Fortzüge über die Gemeindegrenze; Herkunft und Ziel nur je Kreis. Keine Schätzung je Ortsteil.
@@ -1034,7 +1065,7 @@
       <td><span class="bar bar-fort" style="width:${(100 * (fort || 0)) / m}%"></span>${fort == null ? "•" : de(fort)}</td><td>${zu == null || fort == null ? "•" : vz(zu - fort)}</td></tr>`; };
     const kreiseTop = k ? Object.keys(W.kreise).filter((n) => n !== W.kreis_name)
       .map((n) => ({ n, zu: k.zuzuege[n], fort: k.fortzuege[n] })).sort((a, b) => ((b.zu || 0) + (b.fort || 0)) - ((a.zu || 0) + (a.fort || 0))) : [];
-    box.innerHTML = `<p class="hint">Amtliche Wanderungsstatistik. Gezählt werden Zu- und Fortzüge über die Gemeindegrenze; Zahlen je Ortsteil sind nicht veröffentlicht.</p>
+    box.innerHTML = `<p class="hint">Zu- und Fortzüge über die Gemeindegrenze (amtliche Statistik); Zahlen je Ortsteil sind nicht veröffentlicht.</p>
       <section class="stat-block"><h3>${esc(cfg.stadt.name)} ${jahre[0]} bis ${jahre[jahre.length - 1]}</h3>
         <dl class="facts"><dt>Zuzüge ${jahre[jahre.length - 1]}</dt><dd>${de(lj.zuzuege)}</dd><dt>Fortzüge</dt><dd>${de(lj.fortzuege)}</dd>
           <dt>Wanderungssaldo</dt><dd>${vz(saldo(lj))}</dd><dt>je 1 000 Einwohner</dt><dd>${vz(rate(lj), 1)}</dd>
@@ -1064,8 +1095,9 @@
           <thead><tr><th scope="col">Kreis</th><th scope="col">Zuzüge aus</th><th scope="col">Fortzüge nach</th><th scope="col">Saldo</th></tr></thead>
           <tbody>${kreiseTop.map((x) => `<tr><th scope="row">${esc(x.n)}</th><td>${x.zu == null ? "•" : de(x.zu)}</td><td>${x.fort == null ? "•" : de(x.fort)}</td><td>${x.zu == null || x.fort == null ? "•" : vz(x.zu - x.fort)}</td></tr>`).join("")}</tbody></table></div>
           <p class="hint">• = geheim gehalten. ${esc(W.kreise_hinweis)}</p></details></section>` : ""}
-      <section class="stat-block"><h3>Wie die Zahlen zu lesen sind</h3><ul class="hint">${W.hinweise.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></section>
-      <p class="hint">${esc(W.attribution)}. ${esc(W.lizenz)}. Quellen: ${jahre.map((y) => link(d.quellen[y], y)).join(", ")}${k ? `; Kreismatrix ${link(k.quelle, String(k.jahr))}` : ""}.</p>`;
+      ${methode([`<ul>${W.hinweise.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`,
+        `${esc(W.attribution)}. ${esc(W.lizenz)}. Berichte: ${jahre.map((y) => link(d.quellen[y], y)).join(", ")}${k ? `; Kreismatrix ${link(k.quelle, String(k.jahr))}` : ""}.`],
+        "Wie die Zahlen zu lesen sind")}`;
     $("#wanderung-jahr").addEventListener("change", (e) => { wanderungJahr = e.target.value; showWanderung(); if (wanderungLayer.wanderung_gemeinden) { wanderungLayer.wanderung_gemeinden.remove(); delete wanderungLayer.wanderung_gemeinden; drawWanderung("wanderung_gemeinden"); } });
   }
   const wName = (d, ags, fallback) => (d.geo?.gemeinden.features.find((f) => f.properties.ags === ags)?.properties.name) || fallback;
@@ -1128,7 +1160,7 @@
     if (wanderungLayer.wanderung_gemeinden) {
       h += `<p class="legend-group">Wanderungssaldo je 1 000 Einwohner, ${esc(wanderungJahr)}</p><ul>${saldoKlassenText().map((t, i) => `<li><span class="swatch swatch-area" aria-hidden="true"
         style="border-color:${color("text-muted")};background:color-mix(in srgb, ${SALDO_FARBE(i)} ${Math.round(SALDO_DECK[i] * 100)}%, transparent)"></span>${esc(t)}</li>`).join("")}</ul>
-        <p class="hint">Gemeinden im ${esc(cfg.wanderung.kreis_name)}; Wanderungen über die Gemeindegrenze. ${esc(cfg.wanderung.attribution)}.</p>`;
+        <p class="hint">Gemeinden im ${esc(cfg.wanderung.kreis_name)}; Wanderungen über die Gemeindegrenze.</p>`;
     }
     if (wanderungLayer.wanderung_kreise) {
       h += `<p class="legend-group">Wanderung über die Kreisgrenze, ${esc(cfg.wanderung.kreis_name)}</p><ul>
