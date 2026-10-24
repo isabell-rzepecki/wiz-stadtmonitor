@@ -132,6 +132,7 @@ def karte(liste):
             props["dokumente"] = p["dokumente"]
         feats.append({"type": "Feature", "properties": props, "geometry": geom})
     data = {"type": "FeatureCollection", "license": BL["nutzung"], "attribution": BL["attribution"],
+            "hinweis": "Nur als Kartenebene des Stadtmonitors bereitgestellt, nicht als Datensatz zur Weitergabe. " + BL["nutzung"],
             "source": {a: q["url"] for a, q in BL["quellen"].items()}, "retrieved": net.abrufdatum(*(RESTRICTED / f"{a}.gml" for a in BL["quellen"])),
             "features": feats}
     KARTE.parent.mkdir(parents=True, exist_ok=True)

@@ -3,7 +3,7 @@ wp_media	amtliche Werke (Bestätigung ausstehend)	Quelle: Amtliche Bekanntmachun
 vg_shp,hako_lage	dl-de/zero-2.0	Geobasisdaten: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG), dl-de/zero-2.0 (freiwillig)	https://www.govdata.de/dl-de/zero-2-0	ja
 basemap	CC BY 4.0	© basemap.de / BKG (Jahr) – Datenquellen: © GeoBasis-DE	https://basemap.de	ja
 bplan,fplan	nur nicht kommerziell	Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke		ja
-boris	Nutzung ohne Einschränkung	Bodenrichtwerte: Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH, Stichtag 01.01.2024		ja
+boris	Nutzung ohne Einschränkung oder Bedingung	Bodenrichtwerte: Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH, Stichtag 01.01.2024; Zonen vereinfacht, Spannen eigene Berechnung		ja
 uesg,tws	CC BY 4.0	Darstellung auf der Grundlage von Daten des Hessischen Landesamtes für Naturschutz, Umwelt und Geologie (HLNUG)	https://creativecommons.org/licenses/by/4.0/deed.de	ja
 schutzgeb	frei nutzbar, keine Weiterveräußerung	Darstellung auf der Grundlage von Daten des Hessischen Ministeriums für Landwirtschaft und Umwelt, Weinbau, Forsten, Jagd und Heimat (HMLU); Naturparke: Landesbetrieb HessenForst		ja
 zensus_gem,zensus_gitter,zensus_miete_gitter,zensus_eigentum_gitter	dl-de/by-2.0	© Statistische Ämter des Bundes und der Länder, 2024, dl-de/by-2-0	https://www.govdata.de/dl-de/by-2-0	ja
@@ -11,11 +11,11 @@ vg250	dl-de/by-2.0	© BKG (Jahr) dl-de/by-2-0	https://www.bkg.bund.de	nein
 osm	ODbL 1.0	© OpenStreetMap-Mitwirkende, ODbL	https://www.openstreetmap.org/copyright	nein
 wikidata	CC0	Daten: Wikidata (CC0) (freiwillig)	https://www.wikidata.org	nein
 wahl_btw2025_bwl_wbz,wahl_btw2021_bwl_wbz,wahl_btw2017_bwl_wbz,wahl_ew2024_bwl_wbz,wahl_ew2019_bwl_wbz	mit Quellenangabe	© Die Bundeswahlleiterin (im Auftrag der Herausgebergemeinschaft), Wahlbezirksstatistik	https://www.bundeswahlleiterin.de	ja
-wahl_stvv2026_bm,wahl_ob2026_bm,wahl_kw2021_vm,wahl_kw2016_vm	amtliche Werke	Wahlergebnisse: Stadt Witzenhausen (Bekanntmachungen Nr. 043 und 044/2026; Ergebnispräsentation 2016 und 2021)	https://www.witzenhausen.eu/amtliche-bekanntmachungen/	ja
-rp_nordhessen_wfs	dl-de/by-2.0	Regionalplan Nordhessen: Hessisches Ministerium für Wirtschaft, Energie, Verkehr, Wohnen und ländlichen Raum (HMWVW), dl-de/by-2-0	https://www.govdata.de/dl-de/by-2-0	ja
-denkmal_wfs	dl-de/by-2.0	Kulturdenkmäler: Landesamt für Denkmalpflege Hessen (DenkXweb), dl-de/by-2-0	https://denkxweb.denkmalpflege-hessen.de	ja
+wahl_stvv2026_bm,wahl_ob2026_bm,wahl_kw2021_vm,wahl_kw2016_vm	amtliche Werke (Bekanntmachungen 2026); 2016 und 2021 ohne Lizenzangabe der Quelle	Wahlergebnisse: Stadt Witzenhausen (Bekanntmachungen Nr. 043 und 044/2026; Ergebnispräsentation 2016 und 2021)	https://www.witzenhausen.eu/amtliche-bekanntmachungen/	ja
+rp_nordhessen_wfs	dl-de/by-2.0	Regionalplan Nordhessen: Hessisches Ministerium für Wirtschaft, Energie, Verkehr, Wohnen und ländlichen Raum (HMWVW), dl-de/by-2-0; auf das Stadtgebiet zugeschnitten und vereinfacht	https://www.govdata.de/dl-de/by-2-0	ja
+denkmal_wfs	dl-de/by-2.0	Kulturdenkmäler: Landesamt für Denkmalpflege Hessen (LfDH, DenkXweb), dl-de/by-2-0; auf das Stadtgebiet zugeschnitten und vereinfacht	https://denkxweb.denkmalpflege-hessen.de	ja
 alkis_gebaeude	Nutzung ohne Einschränkung	Gebäude: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG), ALKIS vereinfacht; Darstellung verändert		ja
 beteiligungsbericht	amtliche Veröffentlichung	Beteiligungsbericht der Stadt Witzenhausen 2024	https://www.witzenhausen.eu/wp-content/uploads/2025/11/Beteiligungsbericht-2024.pdf	ja
 lod2_dlc	Nutzung ohne Einschränkung	3D-Gebäudemodelle LoD2: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG); Darstellung vereinfacht		ja
-boris2026	Nutzung ohne Einschränkung	Bodenrichtwerte 2026: Gutachterausschüsse für Immobilienwerte des Landes Hessen / HVBG, Kartendienst (WMS)	https://boris.hessen.de	ja
+boris2026	Nutzung ohne Einschränkung oder Bedingung	Bodenrichtwerte 2026: Gutachterausschüsse für Immobilienwerte des Landes Hessen / HVBG, Kartendienst (WMS); Beschriftung farblich angepasst	https://boris.hessen.de	ja
 hsl_wanderung,hsl_wanderung_kreise	Quellenangabe	Wanderung: © Hessisches Statistisches Landesamt, Wiesbaden; Raten je 1 000 Einwohner eigene Berechnung	https://statistik.hessen.de	ja
