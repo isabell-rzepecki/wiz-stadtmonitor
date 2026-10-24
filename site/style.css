@@ -512,4 +512,4 @@ html { font-synthesis: none; }
 .credits li { margin-bottom: 4px; }
 
 /* Verweis auf die 3D-Ansicht (eigene Seite) */
-a.map-style.map-3d { display: inline-block; text-decoration: none; }
+a.map-style.map-3d { display: inline-block; text-decoration: none; color: var(--text); }

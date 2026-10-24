@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Content-Security-Policy: Skripte, Stile und Schrift nur von hier (Leaflet und Schriften lokal in vendor/ und fonts/),
        keine Inline-Skripte; Kartenkacheln von basemap.de (BKG). Inline-Stile bleiben erlaubt (Leaflet, Balken). -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://sgx.geodatenzentrum.de; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://sgx.geodatenzentrum.de https://www.gds-srv.hessen.de; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <!-- Stadtspezifische Angaben (Name, Adressen, Gremien) setzt app.js aus stadt.json (config/stadt.json) ein -->
   <title>Stadtmonitor – Sitzungsinformationen auf Karte und Zeitleiste</title>
   <meta name="description" content="Tagesordnungen der Stadtverordnetenversammlung, der Ausschüsse, Ortsbeiräte und Beiräte auf Karte, Zeitleiste und als Liste – mit Quellenangabe.">
@@ -256,7 +256,7 @@
       <p>Der Stadtmonitor ist ein offenes Projekt; der Code steht unter MIT-Lizenz. Er beruht auf der <a href="https://github.com/daimpad/allris-test" target="_blank" rel="noopener">RIS-Karte Bonn<span class="visually-hidden"> (GitHub, neuer Tab)</span></a> von Damian Paderta (MIT-Lizenz). Fehler können Sie im <a data-cfg-href="projekt.repo" href="#">Projekt auf GitHub</a> melden.</p>
 
       <h3 id="about-impressum" tabindex="-1">Datenschutz</h3>
-      <p>Schriften und Programmbibliotheken kommen vom Server dieser Seite. Nur die Kartenkacheln lädt Ihr Browser von basemap.de (sgx.geodatenzentrum.de, Bundesamt für Kartographie und Geodäsie). <a href="datenschutz.html">Datenschutz</a></p>
+      <p>Schriften und Programmbibliotheken kommen vom Server dieser Seite. Nur die Kartenkacheln lädt Ihr Browser von basemap.de (sgx.geodatenzentrum.de, Bundesamt für Kartographie und Geodäsie), die Ebene „Bodenrichtwerte 2026“ nach dem Einschalten von der HVBG (gds-srv.hessen.de). <a href="datenschutz.html">Datenschutz</a></p>
     </div>
   </dialog>
 

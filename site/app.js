@@ -65,7 +65,7 @@
   const de = (n) => Number(n || 0).toLocaleString("de-DE");
   const get = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 
-  let wohnen = null, brwData = null, brwLayer = null, wahlen = null, beteiligung = null, eigentum = null;
+  let wohnen = null, brwData = null, brwLayer = null, brw26Layer = null, wahlen = null, beteiligung = null, eigentum = null;
   let cfg = null, data = null, flaechen = null, zeit = null, all = [], papers = [], area = null, selected = null, dataStand = null;
   let planData = null, planLayer = null, planOn = false, planShown = null;
   const umweltOn = new Set(), umweltData = {}, umweltLayers = {};
@@ -312,18 +312,19 @@
     if (cfg.umwelt) {
       const wanted = (new URLSearchParams(location.search).get("ebenen") || "").split(",");
       for (const g of cfg.umwelt.gruppen) if (wanted.includes(g.id)) umweltOn.add(g.id);
-      if (wanted.includes("bodenrichtwerte")) umweltOn.add("bodenrichtwerte");
+      for (const id of ["bodenrichtwerte", "bodenrichtwerte2026"]) if (wanted.includes(id)) umweltOn.add(id);
       const Layers = L.Control.extend({
         options: { position: "bottomright" },
         onAdd() {
           const d = L.DomUtil.create("details", "map-style map-layers");
-          const ebenen = [...cfg.umwelt.gruppen, ...(cfg.wohnen ? [{ id: "bodenrichtwerte", titel: "Bodenrichtwerte" }] : [])];
+          const ebenen = [...cfg.umwelt.gruppen, ...(cfg.wohnen ? [{ id: "bodenrichtwerte", titel: `Bodenrichtwerte ${cfg.wohnen.boris.stichtag.slice(0, 4)}` }] : []),
+            ...(cfg.wohnen?.boris2026 ? [{ id: "bodenrichtwerte2026", titel: "Bodenrichtwerte 2026 (Karte der HVBG)" }] : [])];
           d.innerHTML = `<summary>Weitere Ebenen</summary><fieldset aria-label="Weitere Kartenebenen einblenden">${ebenen.map((g) =>
             `<label><input type="checkbox" value="${esc(g.id)}"${umweltOn.has(g.id) ? " checked" : ""}> ${esc(g.titel)}</label>`).join("")}</fieldset>`;
           d.addEventListener("change", (e) => {
             const id = e.target.value;
             if (e.target.checked) umweltOn.add(id); else umweltOn.delete(id);
-            if (id === "bodenrichtwerte") drawBrw(); else drawUmwelt(id);
+            drawEbene(id);
             syncUrl();
           });
           L.DomEvent.disableClickPropagation(d);
@@ -448,7 +449,7 @@
       ${planOn ? `<ul><li><span class="swatch swatch-plan" aria-hidden="true"></span>Geltungsbereich eines Bebauungsplans</li>
         <li><span class="swatch swatch-fplan" aria-hidden="true"></span>Änderung des Flächennutzungsplans</li></ul>
         <p class="hint">${esc(cfg.bauleitplanung.attribution)}. Nicht rechtsverbindlich.</p>` : ""}
-      ${umweltLegend()}${brwLegend()}`;
+      ${umweltLegend()}${brwLegend()}${brw26Legend()}`;
   }
   // Bodenrichtwerte: Zonen für baureifes Land, Klassen laut stadt.json (wohnen.boris.klassen), Stichtag immer sichtbar
   const BRW_FILL = [0.08, 0.18, 0.3, 0.44, 0.6];
@@ -471,6 +472,26 @@
     }).addTo(map);
     brwLayer.bringToBack();
     if (legendEl) drawLegend();
+  }
+  // Bodenrichtwerte 2026: nur als Kartenbild der HVBG (kein Datendienst); eigene Ebene, nicht mit 2024 vermischt
+  const drawEbene = (id) => (id === "bodenrichtwerte" ? drawBrw() : id === "bodenrichtwerte2026" ? drawBrw26() : drawUmwelt(id));
+  const brw26Zoom = () => { if (legendEl) drawLegend(); };  // Hinweis „näher heranzoomen“ aktuell halten
+  function drawBrw26() {
+    const B = cfg.wohnen.boris2026;
+    if (!umweltOn.has("bodenrichtwerte2026")) { if (brw26Layer) { brw26Layer.remove(); brw26Layer = null; map.off("zoomend", brw26Zoom); } }
+    else if (!brw26Layer) {
+      brw26Layer = L.tileLayer.wms(B.wms, { layers: B.layers, format: "image/png", transparent: true, version: "1.3.0", minZoom: B.min_zoom,
+        opacity: 0.8, attribution: esc(B.attribution) }).addTo(map);
+      map.on("zoomend", brw26Zoom);
+    }
+    if (legendEl) drawLegend();
+  }
+  function brw26Legend() {
+    if (!brw26Layer) return "";
+    const B = cfg.wohnen.boris2026;
+    const nah = map.getZoom() >= B.min_zoom;
+    return `<p class="legend-group">Bodenrichtwerte, Stichtag ${fmtDate(B.stichtag)}</p>
+      ${nah ? "" : '<p class="hint"><strong>Zum Anzeigen näher heranzoomen.</strong></p>'}<p class="hint">${esc(B.hinweis)} ${esc(B.attribution)}.</p>`;
   }
   function brwLegend() {
     if (!brwLayer) return "";
@@ -1115,7 +1136,7 @@
       render();
     }
     if (planOn) drawPlans();
-    for (const id of umweltOn) if (id === "bodenrichtwerte") drawBrw(); else drawUmwelt(id);
+    for (const id of umweltOn) drawEbene(id);
     const initial = papers.find((p) => p.reference === ref);
     if (initial) select(initial); else if (params.get("plan")) await showPlan(params.get("plan")); else showIntro();
     syncUrl();
