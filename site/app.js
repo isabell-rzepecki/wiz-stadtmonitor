@@ -64,6 +64,10 @@
   // nur http(s)-Adressen aus den Daten werden zu Links
   const safeUrl = (u) => (/^https?:\/\//i.test(String(u || "")) ? esc(u) : null);
   const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+  const isoTag = (v) => {  // gültiges Datum JJJJ-MM-TT (auch 2025-13-01 oder 2025-02-30 ausschließen)
+    const d = ISO_DAY.test(v || "") && new Date(v + "T12:00:00Z");
+    return Boolean(d) && !isNaN(d) && d.toISOString().slice(0, 10) === v;
+  };
   const fmtDate = (iso) => iso ? new Date(iso.length === 10 ? iso + "T12:00:00Z" : iso)
     .toLocaleDateString("de-DE", { timeZone: "Europe/Berlin", day: "2-digit", month: "2-digit", year: "numeric" }) : "";
   const fmtDay = (iso) => new Date(iso + "T12:00:00Z").toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" });
@@ -579,7 +583,11 @@
     const d = await loadUmwelt(id);
     if (!umweltOn.has(id) || umweltLayers[id] || !d) { if (legendEl) drawLegend(); return; }
     umweltLayers[id] = L.geoJSON(d, {
-      style: (f) => umweltStyle(g, umweltEbene(g, f.properties.ebene)), attribution: esc(g.attribution_kurz || d.attribution),
+      // Punkte (etwa Einzeldenkmäler) als kleine Kreise statt der Standardmarke
+      pointToLayer: (f, ll) => L.circleMarker(ll),
+      style: (f) => ({ ...umweltStyle(g, umweltEbene(g, f.properties.ebene)),
+        ...(/Point/.test(f.geometry.type) ? { radius: 4, fill: true, fillOpacity: 0.7 } : {}) }),
+      attribution: esc(g.attribution_kurz || d.attribution),
       onEachFeature: (f, layer) => layer.bindTooltip(umweltText(g, f.properties), { sticky: true }),
     }).addTo(map);
     umweltLayers[id].bringToBack();
@@ -1353,20 +1361,24 @@
     $("#cta-wanderung").addEventListener("click", () => { setPanel("panel-wanderung", true); showWanderung(); focusPanel("panel-wanderung"); });
     $("#cta-wohnen").addEventListener("click", () => { setPanel("panel-wohnen", true); showWohnen(null); focusPanel("panel-wohnen"); });
     const params = new URLSearchParams(location.search);
-    const ref = decodeURIComponent(location.hash.slice(1));
+    let ref = "";
+    try { ref = decodeURIComponent(location.hash.slice(1)); } catch (e) { /* fehlerhafter Anker: ohne Vorgang starten */ }
     loadArea(params.get("gebiet") || DEFAULT_AREA, true);
     if (params.get("gremium")) { $("#f-gremium").value = params.get("gremium"); setPanel("panel-list", true); render(); }
     if (params.get("einreicher")) { $("#f-einreicher").value = params.get("einreicher"); setPanel("panel-list", true); render(); }
     const von = params.get("von"), bis = params.get("bis");
-    if (tl && ISO_DAY.test(von || "") && ISO_DAY.test(bis || "")) {
+    if (tl && isoTag(von) && isoTag(bis)) {
       setPanel("timeline-wrap", true);
       tl.setState({ von, bis, zoom: params.get("zoom"), achse: params.get("achse") });
-      range = [von, bis];
+      const st = tl.getState();  // von der Zeitleiste geordnet und auf den Bestand begrenzt
+      range = [st.von, st.bis];
       render();
     }
     if (planOn) drawPlans();
     for (const id of umweltOn) drawEbene(id);
-    const initial = papers.find((p) => p.reference === ref);
+    // Vorgang aus dem Anker; liegt er nicht im gewählten Gebiet, die ganze Stadt laden
+    const initial = ref && all.find((p) => p.reference === ref);
+    if (initial && !papers.includes(initial)) loadArea(DEFAULT_AREA, true);
     if (initial) select(initial); else if (params.get("plan")) await showPlan(params.get("plan")); else showIntro();
     syncUrl();
   }

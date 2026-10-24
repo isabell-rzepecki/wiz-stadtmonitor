@@ -11,9 +11,7 @@ Ausgabe:
 import hashlib
 import io
 import json
-import time
 import zipfile
-from datetime import date
 
 import shapefile
 from pyproj import Transformer
@@ -33,7 +31,7 @@ GMDE_NR = config.STADT["stadt"]["gemeindeschluessel"][-6:]
 def fetch():
     """Shapefile-Archiv laden (rund 68 MB); aus dem Zwischenspeicher, solange es jünger als 30 Tage ist. Scheitert der
     Abruf, bleiben die Ortsbezirksflächen im Repository auf dem letzten Stand."""
-    if ZIP.exists() and time.time() - ZIP.stat().st_mtime < 30 * 86400:
+    if net.gueltig(ZIP, 30 * 86400):
         return
     ZIP.parent.mkdir(parents=True, exist_ok=True)
     try:
@@ -42,7 +40,12 @@ def fetch():
         audit.abruf("vg_shp", URL, getattr(e, "code", ""), "", "", "", str(e)[:200])
         print(f"Verwaltungsgrenzen nicht abrufbar ({e}); Ortsbezirksflächen bleiben auf dem letzten Stand")
         return
-    ZIP.write_bytes(body)
+    grund = net.pruefen(ZIP, body)
+    if grund:
+        audit.abruf("vg_shp", URL, 200, len(body), "", "", grund)
+        print(f"Verwaltungsgrenzen: {grund}; Ortsbezirksflächen bleiben auf dem letzten Stand")
+        return
+    net.speichern(ZIP, body)
     audit.abruf("vg_shp", URL, 200, len(body), hashlib.sha256(body).hexdigest(), "", "")
 
 
@@ -85,7 +88,7 @@ def features(gem, toleranz=None):
 
 
 def kopf(erzeugt_am):
-    return {"license": LIZENZ, "attribution": NAMENSNENNUNG, "source": URL, "retrieved": date.today().isoformat(),
+    return {"license": LIZENZ, "attribution": NAMENSNENNUNG, "source": URL, "retrieved": net.abrufdatum(ZIP),
             "erzeugt_am_quelle": erzeugt_am}
 
 

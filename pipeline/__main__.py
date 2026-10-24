@@ -1,5 +1,7 @@
 """Aufruf: python -m pipeline {fetch|fetch-plaene|fetch-gemarkungen|gemarkungen|fetch-lage|lage|fetch-eigentum|eigentum|fetch-umwelt|umwelt|fetch-wohnen|wohnen|fetch-wahlen|wahlen|fetch-beteiligung|beteiligung|fetch-wanderung|wanderung|fetch-gebaeude3d|gebaeude3d|build|check|package|site|all}"""
+import os
 import sys
+import traceback
 
 from . import bauleitplanung, beteiligung, build, check, eigentum, fetch, gebaeude3d, gemarkungen, lage, package, site, umwelt, wahlen, wanderung, wohnen
 
@@ -32,12 +34,29 @@ STEPS = {
 ALL = ["fetch", "fetch-plaene", "fetch-gemarkungen", "gemarkungen", "fetch-lage", "lage", "fetch-eigentum", "eigentum", "fetch-umwelt", "umwelt", "fetch-wohnen", "wohnen", "fetch-wahlen", "wahlen", "fetch-beteiligung", "beteiligung", "fetch-wanderung", "wanderung", "fetch-gebaeude3d", "gebaeude3d", "build", "check", "package", "site"]
 
 
+# Ohne diese Schritte keine Seite; alle anderen (Abrufe und abgeleitete Ebenen) scheitern im Gesamtlauf weich:
+# der Fehler steht im Protokoll, ihre Ergebnisse bleiben auf dem letzten Stand
+PFLICHT = {"build", "check", "package", "site"}
+
+
 def main(argv):
     if len(argv) != 1 or argv[0] not in (*STEPS, "all"):
         raise SystemExit(__doc__)
-    for step in ALL if argv[0] == "all" else argv:
+    gesamt, gescheitert = argv[0] == "all", []
+    for step in ALL if gesamt else argv:
         print(f"== {step}", flush=True)
-        STEPS[step]()
+        if not gesamt or step in PFLICHT:
+            STEPS[step]()
+            continue
+        try:
+            STEPS[step]()
+        except (Exception, SystemExit) as e:
+            traceback.print_exc()
+            gescheitert.append(step)
+            if os.environ.get("GITHUB_ACTIONS"):  # als Hinweis in der Übersicht des Laufs
+                print(f"::warning title=Schritt {step} gescheitert::{str(e)[:300]}", flush=True)
+    if gescheitert:
+        print(f"Gescheitert (letzter Stand bleibt): {', '.join(gescheitert)}")
 
 
 main(sys.argv[1:])

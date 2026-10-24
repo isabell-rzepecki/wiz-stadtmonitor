@@ -61,17 +61,23 @@ def fetch():
         body = ANFRAGE.format(gmde=config.STADT["stadt"]["gemeindeschluessel"], funktion=E["alkis_funktion"]).encode("utf-8")
         try:
             gml = net.post(E["alkis_wfs"], body)
-            gj = gebaeude_geojson(gml.decode("utf-8"))
-            GEBAEUDE.write_text(json.dumps(gj, ensure_ascii=False), encoding="utf-8")
+            grund = net.pruefen("antwort.gml", gml)
+            gj = gebaeude_geojson(gml.decode("utf-8")) if not grund else None
+            if not gj or not gj["features"]:  # Fehlerbericht oder leere Antwort: letzter Stand bleibt
+                raise ValueError(grund or "keine Gebäude in der Antwort")
+            net.speichern(GEBAEUDE, json.dumps(gj, ensure_ascii=False).encode("utf-8"))
             audit.abruf("alkis_gebaeude", E["alkis_wfs"] + " (POST)", 200, len(gml), hashlib.sha256(gml).hexdigest(), len(gj["features"]), "")
         except Exception as e:
             audit.abruf("alkis_gebaeude", E["alkis_wfs"] + " (POST)", getattr(e, "code", ""), "", "", "", str(e)[:200])
     RAW.mkdir(parents=True, exist_ok=True)
     ziel = RAW / "beteiligungsbericht.pdf"
-    if not (ziel.exists() and time.time() - ziel.stat().st_mtime < ALTER):
+    if not net.gueltig(ziel, ALTER):
         try:
             body, _ = net.get(E["beteiligungsbericht"]["url"], tries=2)
-            ziel.write_bytes(body)
+            grund = net.pruefen(ziel, body)
+            if grund:
+                raise ValueError(grund)
+            net.speichern(ziel, body)
             audit.abruf("beteiligungsbericht", E["beteiligungsbericht"]["url"], 200, len(body), hashlib.sha256(body).hexdigest(), "", "")
         except Exception as e:
             audit.abruf("beteiligungsbericht", E["beteiligungsbericht"]["url"], getattr(e, "code", ""), "", "", "", str(e)[:200])

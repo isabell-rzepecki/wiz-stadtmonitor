@@ -69,6 +69,13 @@ class StufeB(unittest.TestCase):
         f.assert_called_once_with("2140", "11", "125", None)
         self.assertIn(("flurstueck", "Gemarkung Ermschwerd, Flur 11, Flurstück 125", "Ermschwerd"), locs)
 
+    def test_flurstueck_schreibweisen(self):
+        for titel in ("Verkauf Gemarkung Witzenhausen, Flur. 2, Flurstück 169", "Gemarkung Witzenhausen, Flur 2, Flurstücke 169 und 171",
+                      "Gemarkung Witzenhausen, Flur 2, Flurstück Nr. 169"):
+            with mock.patch.object(verortung, "flurstueck", return_value={"lon": 9.85, "lat": 51.34}) as f:
+                self.b(titel)
+            f.assert_called_once_with("2246", "2", "169", None)
+
 
 if __name__ == "__main__":
     unittest.main()

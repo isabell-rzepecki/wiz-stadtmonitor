@@ -24,7 +24,7 @@ MONATE = {m: i + 1 for i, m in enumerate(["Januar", "Februar", "März", "April",
 DATUM = r"(\d{1,2}\.\s*(?:\d{1,2}\.|[A-ZÄÖÜa-zäöü]+)\s*\d{4})"
 FRIST = re.compile(rf"(?:vom|in der Zeit vom)\s+{DATUM}\s+bis\s+(?:einschließlich\s+|zum\s+)?{DATUM}")
 NR = re.compile(r"Nr\.\s*(\d{1,3})\s*/\s*(\d{4})")
-BPLAN = re.compile(r"(?:(\d+)\.\s*Änderung\s+(?:und\s+Erweiterung\s+)?des\s+)?Bebauungsplan(?:es|s)?\s+Nr\.\s*(\d+)")
+BPLAN = re.compile(r"(?:(\d+)\.\s*Änderung\s+(?:und\s+Erweiterung\s+)?des\s+)?Bebauungsplan(?:es|s)?\s+" + bauleitplanung.PLAN_NR)
 FPLAN = re.compile(r"(\d+)\.\s*Änderung\s+des\s+Flächennutzungsplan(?:es|s)?")
 GEMARKUNG = re.compile(r"Gemarkung\s+([A-ZÄÖÜ][\wäöüß-]+)")
 NAME = re.compile(r"[„\"]([^“\"]{3,80})[“\"]")
@@ -42,15 +42,15 @@ def iso(text):
 
 
 def _seiten(url):
+    """Alle Seiten der Liste oder None, wenn eine Seite fehlt (eine halbe Liste soll den letzten Stand nicht ersetzen)."""
     out, page = [], 1
     while True:
         try:
             body, h = net.get(url.format(page=page), tries=2)
+            out += json.loads(body)
         except Exception as e:
-            if page == 1:
-                audit.abruf("wp_bekanntmachungen", url.format(page=page), getattr(e, "code", ""), "", "", "", str(e)[:200])
-            break
-        out += json.loads(body)
+            audit.abruf("wp_bekanntmachungen", url.format(page=page), getattr(e, "code", ""), "", "", "", str(e)[:200])
+            return None
         if page >= int(h.get("X-WP-TotalPages") or h.get("x-wp-totalpages") or 1):
             break
         page += 1
@@ -58,14 +58,17 @@ def _seiten(url):
 
 
 def kandidaten():
-    """[{pdf, titel, datum}] aus Bekanntmachungen (Titel) und Mediathek (Dateiname)."""
+    """[{pdf, titel, datum}] aus Bekanntmachungen (Titel) und Mediathek (Dateiname); None, wenn eine Liste fehlt."""
     out = {}
-    for b in _seiten(B["bekanntmachungen"]):
+    bekanntmachungen, medien = _seiten(B["bekanntmachungen"]), _seiten(B["medien"])
+    if bekanntmachungen is None or medien is None:
+        return None
+    for b in bekanntmachungen:
         meta = b.get("meta") or {}
         titel = unescape(b["title"]["rendered"])
         if re.search(B["titel_muster"], titel, re.I) and meta.get("dateilink_b"):
             out[meta["dateilink_b"]] = {"pdf": meta["dateilink_b"], "titel": titel, "datum": meta.get("veroeffentlichung") or b["date"][:10]}
-    for m in _seiten(B["medien"]):
+    for m in medien:
         name = m["source_url"].rsplit("/", 1)[-1]
         if re.search(B["datei_muster"], name) and m["source_url"] not in out:
             out[m["source_url"]] = {"pdf": m["source_url"], "titel": None, "datum": m["date"][:10]}
@@ -75,22 +78,26 @@ def kandidaten():
 def fetch():
     RAW.mkdir(parents=True, exist_ok=True)
     liste = kandidaten()
+    if liste is None:
+        print("Bekanntmachungen nicht vollständig abrufbar; Liste der Verfahren bleibt auf dem letzten Stand")
+        return
     for k in liste:
         ziel = RAW / k["pdf"].rsplit("/", 1)[-1]
         if ziel.exists():
             continue
         try:
             body, _ = net.get(k["pdf"], tries=2)
-            ziel.write_bytes(body)
+            grund = net.pruefen(ziel, body)
+            if grund:
+                raise ValueError(grund)
+            net.speichern(ziel, body)
             audit.abruf("wp_bekanntmachungen", k["pdf"], 200, len(body), hashlib.sha256(body).hexdigest(), "", "")
         except Exception as e:
             audit.abruf("wp_bekanntmachungen", k["pdf"], getattr(e, "code", ""), "", "", "", str(e)[:200])
     (RAW / "kandidaten.json").write_text(json.dumps(liste, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
-def verfahren_id(art, aenderung, nr=None, gemarkung_nr=None):
-    """Kennung eines Planverfahrens, unabhängig davon, ob der Umring schon im Datensatz der Stadt steht."""
-    return f"fplan:{aenderung}" if art == "fplan" else f"bplan:{gemarkung_nr or '?'}:{nr}:{aenderung}"
+verfahren_id = bauleitplanung.verfahren_id
 
 
 def lesen(text):
@@ -101,7 +108,7 @@ def lesen(text):
     kopf = flach[:600]
     plan = None
     if m := BPLAN.search(kopf):
-        plan = {"art": "bplan", "nr": m.group(2), "aenderung": int(m.group(1) or 0)}
+        plan = {"art": "bplan", "nr": bauleitplanung.plan_nr(m.group(2)), "aenderung": int(m.group(1) or 0)}
     elif m := FPLAN.search(kopf):
         plan = {"art": "fplan", "aenderung": int(m.group(1))}
     if plan:
@@ -127,7 +134,7 @@ def lesen(text):
     if any(s["stufe"] in ("frueh_oeff", "veroeff") for s in stufen):
         stufen = [s for s in stufen if s["stufe"] not in ("satzung", "genehmigung")]
     return {"nr": f"{int(nr.group(1)):03d}/{nr.group(2)}" if nr else None, "plan": plan,
-            "verfahren": "beschleunigt (§ 13a BauGB)" if re.search(B["verfahren_muster"], kopf) else None, "stufen": stufen}
+            "verfahren": next((v["titel"] for v in B["verfahren"] if re.search(v["muster"], kopf)), None), "stufen": stufen}
 
 
 def build():

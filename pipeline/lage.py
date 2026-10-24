@@ -17,7 +17,6 @@ import re
 import statistics
 import time
 import urllib.parse
-from datetime import date
 
 from pyproj import Transformer
 
@@ -68,9 +67,12 @@ def fetch():
             print(f"Lagebezeichnungen nicht abrufbar ({e}); Verzeichnis bleibt auf dem letzten Stand")
             return
         n = body.count(b"<ms:lage ")
-        if n >= LIMIT:
-            raise SystemExit(f"Kachel {x},{y}: {n} Objekte, Grenze des Dienstes erreicht – Kachel verkleinern")
-        p.write_bytes(body)
+        grund = net.pruefen(p, body) or (f"{n} Objekte, Grenze des Dienstes erreicht – Kachel verkleinern" if n >= LIMIT else None)
+        if grund:  # leere Kacheln sind echt; Fehlerberichte und abgeschnittene Kacheln nicht übernehmen
+            audit.abruf("hako_lage", url, 200, len(body), "", n, grund)
+            print(f"Lagebezeichnungen, Kachel {x},{y}: {grund}; Verzeichnis bleibt auf dem letzten Stand")
+            return
+        net.speichern(p, body)
         audit.abruf("hako_lage", url, 200, len(body), hashlib.sha256(body).hexdigest(), n, "")
         time.sleep(0.5)
 
@@ -94,8 +96,9 @@ def fetch_hako():
     n = body.count(b"<ms:hako ")
     if n >= LIMIT or n == 0:
         audit.abruf("hako_lage", url, 200, len(body), "", n, "Anzahl unplausibel")
-        raise SystemExit(f"Hauskoordinaten: {n} Objekte – Abruf prüfen")
-    p.write_bytes(body)
+        print(f"Hauskoordinaten: {n} Objekte, Abruf prüfen; Verzeichnis bleibt auf dem letzten Stand")
+        return
+    net.speichern(p, body)
     audit.abruf("hako_lage", url, 200, len(body), hashlib.sha256(body).hexdigest(), n, "")
 
 
@@ -154,7 +157,7 @@ def build():
                    for gk, e in sorted(g.items())} for name, g in je.items()}
     out = {"license": "dl-de/zero-2.0",
            "attribution": "Geobasisdaten: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG), dl-de/zero-2.0",
-           "source": URL + " (Ebenen hako und lage)", "retrieved": date.today().isoformat(),
+           "source": URL + " (Ebenen hako und lage)", "retrieved": net.abrufdatum(*RAW.glob("*.gml")),
            "hinweis": "Straßen und Lagebezeichnungen je Gemarkung (Punkt-in-Fläche), Bezugspunkt = Median der Punkte; ohne Hausnummern",
            "namen": dict(sorted(verz.items()))}
     VERZEICHNIS.parent.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-23",
+ "generated_at": "2026-10-24",
  "kommunal": [
   {
    "id": "stvv2026",
@@ -500,7 +500,7 @@
        "sitze": 1
       }
      ],
-     "pruefung": "ok"
+     "pruefung": "Sitze ok; Stimmen nur als Summe der Listen (nicht getrennt prüfbar)"
     }
    ]
   },
@@ -564,7 +564,7 @@
        "sitze": 2
       }
      ],
-     "pruefung": "ok"
+     "pruefung": "Sitze ok; Stimmen nur als Summe der Listen (nicht getrennt prüfbar)"
     }
    ]
   }

@@ -15,7 +15,6 @@ import json
 import re
 import time
 import urllib.parse
-from datetime import date
 
 from shapely.geometry import Point, mapping, shape
 from shapely.ops import unary_union
@@ -84,9 +83,10 @@ def flaechen(stadt=None):
         if not p.exists():
             continue
         for f in json.loads(p.read_text(encoding="utf-8"))["features"]:
-            geom = shape(f["geometry"])
-            geom = (geom if geom.is_valid else geom.buffer(0)).intersection(stadt)
-            if geom.is_empty or geom.area == 0:
+            roh = shape(f["geometry"])
+            geom = (roh if roh.is_valid else roh.buffer(0)).intersection(stadt)
+            # Flächen, die das Stadtgebiet nur am Rand berühren, entfallen; Punkte und Linien (etwa Denkmäler) bleiben
+            if geom.is_empty or (roh.geom_type.endswith("Polygon") and geom.area == 0):
                 continue
             pr = f["properties"]
             link = _wert(pr, e.get("link"))
@@ -113,7 +113,7 @@ def build():
             feats.append({"type": "Feature", "properties": props, "geometry": geom})
         quelle = next(e for e in g["ebenen"])
         data = {"type": "FeatureCollection", "attribution": g["attribution"], "hinweis": g.get("hinweis", U["hinweis"]),
-                "source": quelle["url"].split("?")[0] if quelle.get("url") else g.get("quelle_url") or U["dienst"].format(dienst=quelle["dienst"]), "retrieved": date.today().isoformat(),
+                "source": quelle["url"].split("?")[0] if quelle.get("url") else g.get("quelle_url") or U["dienst"].format(dienst=quelle["dienst"]), "retrieved": net.abrufdatum(*(RAW / f"{e['id']}.geojson" for e in g["ebenen"])),
                 "ebenen": {e["id"]: e["titel"] for e in g["ebenen"]}, "features": feats}
         (KARTE / f"umwelt_{g['id']}.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"Umweltebenen: {len(liste)} Flächen im Stadtgebiet")

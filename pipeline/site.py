@@ -13,6 +13,10 @@ def build(out=config.SITE_OUT, mit_daten=True):
     shutil.copytree(config.SITE_SRC, out)
     shutil.copy2(config.STADT_JSON, out / "stadt.json")
     namensnennungen(out / "namensnennungen.json")
+    # Fehlerseite: GitHub Pages liefert sie für jeden Pfad aus, ein relativer Link führte dort ins Leere
+    p404 = out / "404.html"
+    if p404.exists() and config.SITE_URL:
+        p404.write_text(p404.read_text(encoding="utf-8").replace('href="./"', f'href="{config.SITE_URL}"'), encoding="utf-8")
     data = out / "data"
     (data / "export").mkdir(parents=True)
     if mit_daten and config.EXPORT.exists():

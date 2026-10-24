@@ -10,7 +10,6 @@ Vereinbarung mit der Stadt nur für nicht kommerzielle Zwecke. Deshalb:
 import hashlib
 import json
 import re
-from datetime import date
 from html import unescape
 
 from shapely.geometry import Polygon, MultiPolygon, mapping
@@ -20,6 +19,18 @@ from . import audit, config, net
 RESTRICTED = config.GEO / "restricted"
 KARTE = config.EXPORT / "karte" / "bauleitplanung.json"
 BL = config.STADT["bauleitplanung"]
+# Plannummer in Titeln und Bekanntmachungen: „Nr. 18“, „Nr. 7A“, „Nr. 4-1“, „Nr. 13-1a“, „Nr. 1.1“ (wie in den Kennungen)
+PLAN_NR = r"Nr\.\s*(\d+(?:[A-Za-z](?![A-Za-zäöüß]))?(?:[-.]\d+[a-z]?(?![A-Za-zäöüß]))?)"
+
+
+def plan_nr(text):
+    """Plannummer ohne führende Nullen („08“ → „8“), Vergleich ohne Groß- und Kleinschreibung."""
+    return re.sub(r"^0+(?=\d)", "", text).lower()
+
+
+def verfahren_id(art, aenderung, nr=None, gemarkung_nr=None):
+    """Kennung eines Planverfahrens, unabhängig davon, ob der Umring schon im Datensatz der Stadt steht."""
+    return f"fplan:{aenderung}" if art == "fplan" else f"bplan:{gemarkung_nr or '?'}:{nr}:{aenderung}"
 
 
 def _feld(f, k):
@@ -86,7 +97,12 @@ def fetch():
         try:
             body, _ = net.get(q["url"])
             n = body.count(f"<lyr:{q['element']}".encode())
-            (RESTRICTED / f"{art}.gml").write_bytes(body)
+            grund = net.pruefen(f"{art}.gml", body) or ("keine Pläne in der Antwort" if n == 0 else None)
+            if grund:  # Fehlerbericht mit Status 200: den einzigen Stand nicht überschreiben
+                audit.abruf(art, q["url"], 200, len(body), hashlib.sha256(body).hexdigest(), n, grund)
+                print(f"Bauleitplanung ({art}): {grund}; letzter Stand bleibt")
+                continue
+            net.speichern(RESTRICTED / f"{art}.gml", body)
             audit.abruf(art, q["url"], 200, len(body), hashlib.sha256(body).hexdigest(), n, "")
         except Exception as e:  # Abruf scheitert: letzter Stand bleibt, Fehler steht im Protokoll
             audit.abruf(art, q["url"], getattr(e, "code", ""), "", "", "", str(e)[:200])
@@ -116,7 +132,7 @@ def karte(liste):
             props["dokumente"] = p["dokumente"]
         feats.append({"type": "Feature", "properties": props, "geometry": geom})
     data = {"type": "FeatureCollection", "license": BL["nutzung"], "attribution": BL["attribution"],
-            "source": {a: q["url"] for a, q in BL["quellen"].items()}, "retrieved": date.today().isoformat(),
+            "source": {a: q["url"] for a, q in BL["quellen"].items()}, "retrieved": net.abrufdatum(*(RESTRICTED / f"{a}.gml" for a in BL["quellen"])),
             "features": feats}
     KARTE.parent.mkdir(parents=True, exist_ok=True)
     KARTE.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

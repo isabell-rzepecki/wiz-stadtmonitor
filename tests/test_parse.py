@@ -1,3 +1,4 @@
+import json
 import unittest
 from pathlib import Path
 
@@ -38,6 +39,35 @@ class Kopf(unittest.TestCase):
         e = lies("160-2024-Stadtteilbeirat-Albshausen-21-11-2024.txt")
         self.assertEqual((e["gremium_id"], e["gremium_typ"], e["ortsteil"]), ("STB-albshausen", "stadtteilbeirat", "Albshausen"))
         self.assertTrue(e["ort"].startswith("Privatanschrift"))
+        roh = json.dumps(e, ensure_ascii=False)
+        self.assertNotIn("Beispiel", roh)
+        self.assertNotIn("Musterweg", roh)
+
+    def test_privatanschrift_auch_ohne_bei_am_ende(self):
+        for zeile in ("um 19:00 Uhr, im Hause der Familie Muster, Musterweg 4", "um 19:00 Uhr in der Wohnung von Herrn Muster"):
+            k = parse.kopf(f"Amtliche Bekanntmachung Nr. 1/2025 Einladung zur Sitzung des Ortsbeirates Gertenbach am 01.02.2025 {zeile}")
+            self.assertTrue(k["ort"].startswith("Privatanschrift"), k["ort"])
+
+    def test_namen_in_titeln_entfernt(self):
+        f = parse.ohne_namen
+        self.assertEqual(f("Frau Muster (Tourist-Info) stellt sich vor"), "Frau [Name entfernt] (Tourist-Info) stellt sich vor")
+        self.assertEqual(f("Ortstermin mit Herrn Max Muster am 02.07.2026"), "Ortstermin mit Herrn [Name entfernt] am 02.07.2026")
+        self.assertEqual(f("Antrag der Stadtverordneten Erika Muster vom 13.04.2025 zu X"),
+                         "Antrag der Stadtverordneten [Name entfernt] vom 13.04.2025 zu X")
+        self.assertEqual(f("Erinnerungen an Ortsvorsteherin Erika Muster"), "Erinnerungen an Ortsvorsteherin [Name entfernt]")
+        self.assertEqual(f("Beschilderung L 3302 (eingeladen: M. Muster)"), "Beschilderung L 3302 (eingeladen: [Name entfernt])")
+        self.assertEqual(f("Vortrag (Referent Dr. Max Muster, Stiftung)"), "Vortrag (Referent [Name entfernt], Stiftung)")
+        self.assertEqual(f("Jugendraum (Erika Muster/Max Beispiel)"), "Jugendraum ([Name entfernt])")
+        # Funktionen, Gliederungspunkte und Orte bleiben
+        for t in ("Bericht des Herrn Bürgermeister", "Frau [Name entfernt] (Polizei Witzenhausen) stellt sich vor", "Wanderweg Frau Holle", "Frau-Holle-Pfad", "Bericht des Bürgermeisters",
+                  "Antrag der Stadtverordnetenfraktion SPD vom 01.02.2025", "Bürgerinnen und Bürger haben das Wort"):
+            self.assertEqual(f(t), t)
+
+    def test_antrag_einzelner_stadtverordneter_ohne_namen(self):
+        e = lies("074-2025-Einladung-BuV-Ausschuss-13-05-2025.txt")
+        roh = json.dumps(e, ensure_ascii=False)
+        self.assertNotIn("Muster", roh)
+        self.assertIn("Stadtverordneten [Name entfernt] vom 13.04.2025", roh)
 
     def test_vorlage_ohne_doppelpunkt_und_konstituierung(self):
         e = lies("051-2026-Einladung-STVV-Konstituierung-21-04-2026.txt")

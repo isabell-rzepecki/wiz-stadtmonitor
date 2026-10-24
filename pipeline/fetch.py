@@ -54,26 +54,52 @@ def liste():
 
 
 def text(pdf, txt):
-    subprocess.run(["pdftotext", "-layout", "-enc", "UTF-8", str(pdf), str(txt)], check=True, timeout=120)
+    """Text einer Einladung; False, wenn pdftotext scheitert (die Einladung zählt dann als Parserfehler)."""
+    r = subprocess.run(["pdftotext", "-layout", "-enc", "UTF-8", str(pdf), str(txt)], timeout=120, capture_output=True)
+    return r.returncode == 0
 
 
 def fetch():
+    """Liste und neue PDF laden. Scheitert die Liste oder ist sie leer, bleibt medien.json auf dem letzten Stand;
+    scheitert eine einzelne Datei, fehlt nur sie (sie wird beim nächsten Lauf erneut versucht)."""
     PDF.mkdir(parents=True, exist_ok=True)
     TXT.mkdir(parents=True, exist_ok=True)
-    medien = [m for m in liste() if ist_einladung(m["source_url"])]
-    neu = 0
+    try:
+        alle = liste()
+    except Exception as e:
+        print(f"Liste der Bekanntmachungen nicht abrufbar ({e}); medien.json bleibt auf dem letzten Stand")
+        return
+    medien = [m for m in alle if ist_einladung(m["source_url"])]
+    if not medien:
+        audit.abruf("wp_media", config.STADT["quelle"]["liste"], 200, "", "", 0, "keine Einladungen in der Liste")
+        print("Keine Einladungen in der Liste; medien.json bleibt auf dem letzten Stand")
+        return
+    neu, fehlt = 0, []
     for m in medien:
         name = dateiname(m["source_url"])
         pdf = PDF / name
+        if pdf.exists() and net.pruefen(pdf, net.kopf(pdf)):
+            pdf.unlink()  # kein PDF im Zwischenspeicher (etwa eine Fehlerseite): neu laden
         if not pdf.exists():
-            body, _ = net.get(m["source_url"])
-            pdf.write_bytes(body)
+            try:
+                body, _ = net.get(m["source_url"])
+                grund = net.pruefen(pdf, body)
+                if grund:
+                    raise ValueError(grund)
+            except Exception as e:
+                audit.abruf("wp_media_pdf", m["source_url"], getattr(e, "code", ""), "", "", "", str(e)[:200])
+                fehlt.append(m)
+                continue
+            net.speichern(pdf, body)
             audit.abruf("wp_media_pdf", m["source_url"], 200, len(body), hashlib.sha256(body).hexdigest(), "", "")
             neu += 1
             time.sleep(config.STADT["quelle"]["pause_s"])
         txt = TXT / (pdf.stem + ".txt")
-        if not txt.exists():
-            text(pdf, txt)
+        if not txt.exists() and not text(pdf, txt):
+            txt.unlink(missing_ok=True)  # keine halbe Textdatei; nächster Lauf versucht es erneut
+    if fehlt:
+        print(f"{len(fehlt)} Einladungen nicht abrufbar (siehe Abrufprotokoll); sie fehlen bis zum nächsten Lauf")
+        medien = [m for m in medien if m not in fehlt]
     stand = {"abruf": datetime.now(timezone.utc).isoformat(timespec="seconds"), "anzahl": len(medien), "medien": medien}
     MEDIEN.write_text(json.dumps(stand, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"{len(medien)} Einladungen, davon {neu} neu geladen")

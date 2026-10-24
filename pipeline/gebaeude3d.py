@@ -14,7 +14,6 @@ import re
 import time
 import urllib.parse
 import zipfile
-from datetime import date
 
 from pyproj import Transformer
 from shapely.geometry import Point, Polygon, shape
@@ -133,6 +132,10 @@ def build():
             art = "BW" if name.rsplit("/", 1)[-1].startswith("BW_") else "GB"  # Bauwerk oder Gebäude
             je.setdefault(slug, []).append({"type": "Feature", "properties": {"h": g["hoehe"], "f": g["funktion"], "q": art},
                                             "geometry": {"type": "MultiPolygon", "coordinates": [[p] for p in polys]}})
+    if not je:  # nichts gelesen (z. B. geänderte Schreibweise in einer neuen Ausgabe): Stand im Repository bleibt
+        print("3D-Gebäude: keine Gebäude gelesen; Stand im Repository bleibt")
+        _export()
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     for alt in OUT.glob("*.json"):
         alt.unlink()
@@ -140,7 +143,7 @@ def build():
         if slug == "ausserhalb":
             continue
         (OUT / f"{slug}.json").write_text(json.dumps({"type": "FeatureCollection", "license": G["lizenz"], "attribution": G["attribution"],
-                                                      "stand": date.today().isoformat(), "features": feats},
+                                                      "stand": net.abrufdatum(*RAW.glob("*.zip")), "features": feats},
                                                      ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     index = {"attribution": G["attribution"], "hinweis": G["hinweis"], "dateien": sorted({n.rsplit("/", 1)[-1] for n, _ in liste}),
              "ortsteile": {s: len(f) for s, f in sorted(je.items()) if s != "ausserhalb"}}
