@@ -478,13 +478,44 @@
   // Bodenrichtwerte 2026: nur als Kartenbild der HVBG (kein Datendienst); eigene Ebene, nicht mit 2024 vermischt
   const drawEbene = (id) => (id === "bodenrichtwerte" ? drawBrw() : id === "bodenrichtwerte2026" ? drawBrw26()
     : id.startsWith("wanderung_") ? drawWanderung(id) : drawUmwelt(id));
+  // Beschriftung des Kartendienstes (grauer Kasten, schwarze Schrift, Schatten) im Browser umfärben:
+  // Kasten in Textfarbe, Schrift weiß, Schatten entfernt. Der Dienst erlaubt den Abruf von anderen Seiten (CORS).
+  const WmsBeschriftung = L.TileLayer.WMS.extend({
+    createTile(coords, done) {
+      const c = document.createElement("canvas"), s = this.getTileSize();
+      c.width = s.x; c.height = s.y;
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const g = c.getContext("2d");
+        g.drawImage(img, 0, 0);
+        try {
+          const d = g.getImageData(0, 0, s.x, s.y), p = d.data;
+          for (let i = 0; i < p.length; i += 4) {
+            if (!p[i + 3]) continue;
+            const l = p[i];  // Graustufen: 150 Kasten, 50 Schatten, 0 bis 150 Schrift mit Kantenglättung
+            if (l === 50 && p[i + 1] === 50) { p[i + 3] = 0; continue; }
+            const t = Math.max(0, Math.min(1, 1 - l / 150));
+            p[i] = p[i + 1] = p[i + 2] = Math.round(26 + (255 - 26) * t);
+            p[i + 3] = Math.max(p[i + 3], 235);
+          }
+          g.putImageData(d, 0, 0);
+        } catch (e) { /* ohne CORS bleibt die Darstellung des Dienstes */ }
+        done(null, c);
+      };
+      img.onerror = (e) => done(e, c);
+      img.src = this.getTileUrl(coords);
+      return c;
+    },
+  });
   const brw26Zoom = () => { if (legendEl) drawLegend(); };  // Hinweis „näher heranzoomen“ aktuell halten
   function drawBrw26() {
     const B = cfg.wohnen.boris2026;
     if (!umweltOn.has("bodenrichtwerte2026")) { if (brw26Layer) { brw26Layer.remove(); brw26Layer = null; map.off("zoomend", brw26Zoom); } }
     else if (!brw26Layer) {
-      brw26Layer = L.tileLayer.wms(B.wms, { layers: B.layers, format: "image/png", transparent: true, version: "1.3.0", minZoom: B.min_zoom,
-        opacity: 0.8, attribution: esc(B.attribution) }).addTo(map);
+      const wms = { format: "image/png", transparent: true, version: "1.3.0", minZoom: B.min_zoom };
+      brw26Layer = L.layerGroup([L.tileLayer.wms(B.wms, { ...wms, layers: B.layers, opacity: 0.8, attribution: esc(B.attribution) }),
+        new WmsBeschriftung(B.wms, { ...wms, layers: B.beschriftung })]).addTo(map);
       map.on("zoomend", brw26Zoom);
     }
     if (legendEl) drawLegend();

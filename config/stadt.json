@@ -730,11 +730,12 @@
     "boris2026": {
       "_hinweis": "Bodenrichtwerte mit Stichtag 01.01.2026 nur als Kartendienst (WMS) der HVBG: Bild der Zonen und Werte, keine Geometrien und keine Spannen. Eigene Ebene, nicht mit dem Stichtag 2024 vermischt (Entscheidung 24.10.2026, Issue #4).",
       "wms": "https://www.gds-srv.hessen.de/cgi-bin/lika-services/ogc-free-maps.ows",
-      "layers": "hboris_zonen_t,hboris_label",
+      "layers": "hboris_zonen_t",
+      "beschriftung": "hboris_label",
       "stichtag": "2026-01-01",
       "min_zoom": 13,
       "attribution": "Bodenrichtwerte 2026: Gutachterausschüsse für Immobilienwerte des Landes Hessen / HVBG, Kartendienst (WMS)",
-      "hinweis": "Darstellung des Kartendienstes der HVBG (Farben je Nutzungsart, Werte als Beschriftung). Sichtbar erst bei näherer Ansicht, Beschriftungen ab etwa Maßstab 1:15 000. Beim Einschalten lädt Ihr Browser die Bilder von gds-srv.hessen.de."
+      "hinweis": "Darstellung des Kartendienstes der HVBG (Farben je Nutzungsart, Werte als Beschriftung; Beschriftung für bessere Lesbarkeit hell auf dunkel umgefärbt). Sichtbar erst bei näherer Ansicht, Beschriftungen ab etwa Maßstab 1:15 000. Beim Einschalten lädt Ihr Browser die Bilder von gds-srv.hessen.de."
     },
     "boris": {
       "url": "https://www.gds.hessen.de/wfs2/boris/cgi-bin/brw/2024/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=boris:BR_BodenrichtwertZonal&COUNT=5000",
