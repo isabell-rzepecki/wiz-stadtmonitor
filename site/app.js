@@ -12,6 +12,7 @@
   const UMWELT_URL = (id) => `data/export/karte/umwelt_${id}.json`;
   // Wohnen und Boden: Kennzahlen (Bodenrichtwerte, Zensus 2022) und Zonen der Bodenrichtwerte als Kartenebene
   const WOHNEN_URL = "data/export/wohnen.json";
+  const WANDERUNG_URL = "data/export/wanderung.json";
   // Wahlen: nur amtliche Ergebnisse, ohne Personennamen (stadt.json, wahlen._hinweis)
   const WAHLEN_URL = "data/export/wahlen.json";
   // Beteiligungsverfahren der Bauleitplanung (Stufen und Fristen aus den Bekanntmachungen)
@@ -65,7 +66,7 @@
   const de = (n) => Number(n || 0).toLocaleString("de-DE");
   const get = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 
-  let wohnen = null, brwData = null, brwLayer = null, brw26Layer = null, wahlen = null, beteiligung = null, eigentum = null;
+  let wohnen = null, brwData = null, brwLayer = null, brw26Layer = null, wanderungData = null, wanderungLayer = {}, wanderungJahr = null, wahlen = null, beteiligung = null, eigentum = null;
   let cfg = null, data = null, flaechen = null, zeit = null, all = [], papers = [], area = null, selected = null, dataStand = null;
   let planData = null, planLayer = null, planOn = false, planShown = null;
   const umweltOn = new Set(), umweltData = {}, umweltLayers = {};
@@ -82,8 +83,8 @@
   const gremiumShort = (name) => (cfg.gremien.find((g) => g.name === name) || {}).kurz || name;
 
   // --- Flächen ein- und ausklappen ---------------------------------------------------------------
-  const SHEETS = ["panel-list", "panel-detail", "panel-auswertung", "panel-termine", "panel-wohnen", "panel-wahlen", "timeline-wrap"];
-  const OVERLAYS = ["panel-auswertung", "panel-termine", "panel-wohnen", "panel-wahlen"];
+  const SHEETS = ["panel-list", "panel-detail", "panel-auswertung", "panel-termine", "panel-wohnen", "panel-wahlen", "panel-wanderung", "timeline-wrap"];
+  const OVERLAYS = ["panel-auswertung", "panel-termine", "panel-wohnen", "panel-wahlen", "panel-wanderung"];
   const toggleFor = (id) => document.querySelector(`.toggle[data-panel="${id}"]`);
   function setPanel(id, open) {
     const el = document.getElementById(id);
@@ -312,13 +313,14 @@
     if (cfg.umwelt) {
       const wanted = (new URLSearchParams(location.search).get("ebenen") || "").split(",");
       for (const g of cfg.umwelt.gruppen) if (wanted.includes(g.id)) umweltOn.add(g.id);
-      for (const id of ["bodenrichtwerte", "bodenrichtwerte2026"]) if (wanted.includes(id)) umweltOn.add(id);
+      for (const id of ["bodenrichtwerte", "bodenrichtwerte2026", ...WANDERUNG_EBENEN.map((e) => e.id)]) if (wanted.includes(id)) umweltOn.add(id);
       const Layers = L.Control.extend({
         options: { position: "bottomright" },
         onAdd() {
           const d = L.DomUtil.create("details", "map-style map-layers");
           const ebenen = [...cfg.umwelt.gruppen, ...(cfg.wohnen ? [{ id: "bodenrichtwerte", titel: `Bodenrichtwerte ${cfg.wohnen.boris.stichtag.slice(0, 4)}` }] : []),
-            ...(cfg.wohnen?.boris2026 ? [{ id: "bodenrichtwerte2026", titel: "Bodenrichtwerte 2026 (Karte der HVBG)" }] : [])];
+            ...(cfg.wohnen?.boris2026 ? [{ id: "bodenrichtwerte2026", titel: "Bodenrichtwerte 2026 (Karte der HVBG)" }] : []),
+            ...(cfg.wanderung ? WANDERUNG_EBENEN : [])];
           d.innerHTML = `<summary>Weitere Ebenen</summary><fieldset aria-label="Weitere Kartenebenen einblenden">${ebenen.map((g) =>
             `<label><input type="checkbox" value="${esc(g.id)}"${umweltOn.has(g.id) ? " checked" : ""}> ${esc(g.titel)}</label>`).join("")}</fieldset>`;
           d.addEventListener("change", (e) => {
@@ -449,7 +451,7 @@
       ${planOn ? `<ul><li><span class="swatch swatch-plan" aria-hidden="true"></span>Geltungsbereich eines Bebauungsplans</li>
         <li><span class="swatch swatch-fplan" aria-hidden="true"></span>Änderung des Flächennutzungsplans</li></ul>
         <p class="hint">${esc(cfg.bauleitplanung.attribution)}. Nicht rechtsverbindlich.</p>` : ""}
-      ${umweltLegend()}${brwLegend()}${brw26Legend()}`;
+      ${umweltLegend()}${brwLegend()}${brw26Legend()}${wanderungLegend()}`;
   }
   // Bodenrichtwerte: Zonen für baureifes Land, Klassen laut stadt.json (wohnen.boris.klassen), Stichtag immer sichtbar
   const BRW_FILL = [0.08, 0.18, 0.3, 0.44, 0.6];
@@ -474,7 +476,8 @@
     if (legendEl) drawLegend();
   }
   // Bodenrichtwerte 2026: nur als Kartenbild der HVBG (kein Datendienst); eigene Ebene, nicht mit 2024 vermischt
-  const drawEbene = (id) => (id === "bodenrichtwerte" ? drawBrw() : id === "bodenrichtwerte2026" ? drawBrw26() : drawUmwelt(id));
+  const drawEbene = (id) => (id === "bodenrichtwerte" ? drawBrw() : id === "bodenrichtwerte2026" ? drawBrw26()
+    : id.startsWith("wanderung_") ? drawWanderung(id) : drawUmwelt(id));
   const brw26Zoom = () => { if (legendEl) drawLegend(); };  // Hinweis „näher heranzoomen“ aktuell halten
   function drawBrw26() {
     const B = cfg.wohnen.boris2026;
@@ -956,6 +959,167 @@
       <p class="hint">${link(eigentum.bericht.url, `Beteiligungsbericht ${esc(String(eigentum.bericht.jahr))}`)}, ${esc(eigentum.bericht.stand)}. Personen (Geschäftsführung, Aufsichtsrat) werden nicht übernommen.</p>
       <ul class="hint">${eigentum.grenzen.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></section>`;
   }
+  // --- Zuzug und Wegzug (amtliche Wanderungsstatistik, HSL) --------------------------------------------
+  // Je Gemeinde nur Zu- und Fortzüge über die Gemeindegrenze; Herkunft und Ziel nur je Kreis. Keine Schätzung je Ortsteil.
+  const WANDERUNG_EBENEN = [{ id: "wanderung_gemeinden", titel: "Wanderungssaldo der Gemeinden im Kreis" },
+    { id: "wanderung_kreise", titel: "Wanderung über die Kreisgrenze" }];
+  const loadWanderung = () => (wanderungData ||= fetch(WANDERUNG_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  const mittel = (j) => (j.bev_anfang + j.bev_ende) / 2;
+  const saldo = (j) => j.zuzuege - j.fortzuege;
+  const rate = (j) => (saldo(j) / mittel(j)) * 1000;
+  const vz = (v, d = 0) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${num(Math.abs(v), d)}`;
+  const wJahre = (d) => Object.keys(d.gemeinden[cfg.stadt.gemeindeschluessel]?.jahre || {}).sort();
+  function saldoKlasse(r) { const k = cfg.wanderung.klassen; let i = 0; while (i < k.length && r >= k[i]) i++; return i; }
+  const SALDO_FARBE = (i) => (i < 3 ? color("abzug") : color("accent-ink"));
+  const SALDO_DECK = [0.6, 0.38, 0.16, 0.16, 0.38, 0.6];
+  function saldoKlassenText() {
+    const k = cfg.wanderung.klassen, f = (v) => vz(v);
+    return [`unter ${f(k[0])}`, ...k.slice(1).map((v, i) => `${f(k[i])} bis unter ${f(v)}`), `${f(k[k.length - 1])} und mehr`];
+  }
+  function zeitreiheSvg(reihe) {
+    const W = 560, H = 190, l = 44, r = 8, t = 10, b = 26, max = Math.max(...reihe.flatMap(([, j]) => [j.zuzuege, j.fortzuege])) * 1.08;
+    const x = (i) => l + ((W - l - r) / reihe.length) * (i + 0.5), bw = ((W - l - r) / reihe.length) * 0.36;
+    const y = (v) => t + (H - t - b) * (1 - v / max);
+    const ticks = [0, 250, 500, 750, 1000, 1250].filter((v) => v <= max);
+    return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="wz-titel"><title id="wz-titel">Zu- und Fortzüge ${esc(cfg.stadt.name)} ${reihe[0][0]} bis ${reihe[reihe.length - 1][0]}; Werte in der Tabelle darunter</title>
+      ${ticks.map((v) => `<line x1="${l}" x2="${W - r}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${l - 6}" y="${y(v) + 4}" text-anchor="end">${de(v)}</text>`).join("")}
+      ${reihe.map(([jahr, j], i) => `<rect x="${x(i) - bw}" y="${y(j.zuzuege)}" width="${bw}" height="${y(0) - y(j.zuzuege)}" fill="${color("accent-ink")}"/>
+        <rect x="${x(i)}" y="${y(j.fortzuege)}" width="${bw}" height="${y(0) - y(j.fortzuege)}" fill="${color("abzug")}"/>
+        <text x="${x(i)}" y="${H - 8}" text-anchor="middle">${jahr}</text>`).join("")}</svg>`;
+  }
+  async function showWanderung() {
+    const box = $("#wanderung");
+    const d = cfg.wanderung && await loadWanderung();
+    if (!d) { box.innerHTML = '<p class="hint">Noch keine Daten zu Zuzug und Wegzug.</p>'; return; }
+    const W = cfg.wanderung, jahre = wJahre(d), g = d.gemeinden[cfg.stadt.gemeindeschluessel];
+    wanderungJahr ||= jahre[jahre.length - 1];
+    const reihe = jahre.map((y) => [y, g.jahre[y]]);
+    const lj = g.jahre[jahre[jahre.length - 1]];
+    const gem = Object.entries(d.gemeinden).map(([ags, x]) => ({ ags, name: wName(d, ags, x.name), j: x.jahre[wanderungJahr] })).filter((x) => x.j)
+      .sort((a, b) => rate(b.j) - rate(a.j));
+    const k = d.kreis;
+    const balken = (t, zu, fort) => { const m = Math.max(zu || 0, fort || 0, 1); return `<tr><th scope="row">${esc(t)}</th>
+      <td><span class="bar bar-zu" style="width:${(100 * (zu || 0)) / m}%"></span>${zu == null ? "•" : de(zu)}</td>
+      <td><span class="bar bar-fort" style="width:${(100 * (fort || 0)) / m}%"></span>${fort == null ? "•" : de(fort)}</td><td>${zu == null || fort == null ? "•" : vz(zu - fort)}</td></tr>`; };
+    const kreiseTop = k ? Object.keys(W.kreise).filter((n) => n !== W.kreis_name)
+      .map((n) => ({ n, zu: k.zuzuege[n], fort: k.fortzuege[n] })).sort((a, b) => ((b.zu || 0) + (b.fort || 0)) - ((a.zu || 0) + (a.fort || 0))) : [];
+    box.innerHTML = `<p class="hint">Amtliche Wanderungsstatistik. Gezählt werden Zu- und Fortzüge über die Gemeindegrenze; Zahlen je Ortsteil sind nicht veröffentlicht.</p>
+      <section class="stat-block"><h3>${esc(cfg.stadt.name)} ${jahre[0]} bis ${jahre[jahre.length - 1]}</h3>
+        <dl class="facts"><dt>Zuzüge ${jahre[jahre.length - 1]}</dt><dd>${de(lj.zuzuege)}</dd><dt>Fortzüge</dt><dd>${de(lj.fortzuege)}</dd>
+          <dt>Wanderungssaldo</dt><dd>${vz(saldo(lj))}</dd><dt>je 1 000 Einwohner</dt><dd>${vz(rate(lj), 1)}</dd>
+          <dt>Geburten minus Sterbefälle</dt><dd>${vz(lj.geborene - lj.gestorbene)}</dd></dl>
+        ${zeitreiheSvg(reihe)}
+        <p class="chart-key"><span class="swatch" style="background:${color("accent-ink")}" aria-hidden="true"></span>Zuzüge <span class="swatch" style="background:${color("abzug")}" aria-hidden="true"></span>Fortzüge</p>
+        <details class="acc"><summary>Tabelle ${jahre[0]} bis ${jahre[jahre.length - 1]}</summary><div class="table-wrap"><table class="compare">
+          <caption class="visually-hidden">Zu- und Fortzüge, Saldo und natürliche Bilanz je Jahr</caption>
+          <thead><tr><th scope="col">Jahr</th><th scope="col">Zuzüge</th><th scope="col">Fortzüge</th><th scope="col">Saldo</th><th scope="col">je 1 000</th><th scope="col">Geburten − Sterbefälle</th></tr></thead>
+          <tbody>${reihe.map(([y, j]) => `<tr><th scope="row">${y}</th><td>${de(j.zuzuege)}</td><td>${de(j.fortzuege)}</td><td>${vz(saldo(j))}</td><td>${vz(rate(j), 1)}</td><td>${vz(j.geborene - j.gestorbene)}</td></tr>`).join("")}</tbody></table></div></details></section>
+      <section class="stat-block"><h3>Gemeinden im ${esc(W.kreis_name)}</h3>
+        <label class="inline">Jahr <select id="wanderung-jahr">${jahre.map((y) => `<option${y === wanderungJahr ? " selected" : ""}>${y}</option>`).join("")}</select></label>
+        <p><button type="button" class="btn btn-soft" data-wanderung-on="wanderung_gemeinden">Saldo auf der Karte zeigen</button></p>
+        <div class="table-wrap"><table class="compare"><caption class="visually-hidden">Wanderungssaldo je 1 000 Einwohner der Gemeinden im Kreis, ${esc(wanderungJahr)}</caption>
+          <thead><tr><th scope="col">Gemeinde</th><th scope="col">Zuzüge</th><th scope="col">Fortzüge</th><th scope="col">Saldo je 1 000</th></tr></thead>
+          <tbody>${gem.map((x) => `<tr${x.ags === cfg.stadt.gemeindeschluessel ? ' class="own"' : ""}><th scope="row">${esc(x.name)}</th><td>${de(x.j.zuzuege)}</td><td>${de(x.j.fortzuege)}</td><td>${vz(rate(x.j), 1)}</td></tr>`).join("")}</tbody></table></div>
+        <p class="hint">In kleinen Gemeinden schwankt der Saldo von Jahr zu Jahr stark.</p></section>
+      ${k ? `<section class="stat-block"><h3>Über die Kreisgrenze (${esc(W.kreis_name)}, ${k.jahr})</h3>
+        <p class="hint">Diese Zahlen gelten für den ganzen Kreis, nicht für ${esc(cfg.stadt.name)} allein.</p>
+        <div class="table-wrap"><table class="compare bars"><caption class="visually-hidden">Zu- und Fortzüge des Kreises nach Herkunfts- und Zielgebiet</caption>
+          <thead><tr><th scope="col">Gebiet</th><th scope="col">Zuzüge aus</th><th scope="col">Fortzüge nach</th><th scope="col">Saldo</th></tr></thead>
+          <tbody>${balken("übriges Hessen", k.zuzuege["Land Hessen"], k.fortzuege["Land Hessen"])}${balken("andere Bundesländer", k.zuzuege["Andere Bundesländer"], k.fortzuege["Andere Bundesländer"])}
+            ${balken("Ausland", k.zuzuege.Ausland, k.fortzuege.Ausland)}</tbody></table></div>
+        <p><button type="button" class="btn btn-soft" data-wanderung-on="wanderung_kreise">Hessische Kreise auf der Karte zeigen</button></p>
+        <details class="acc"><summary>Hessische Kreise (${kreiseTop.length})</summary><div class="table-wrap"><table class="compare">
+          <caption class="visually-hidden">Zu- und Fortzüge des Kreises je hessischem Kreis</caption>
+          <thead><tr><th scope="col">Kreis</th><th scope="col">Zuzüge aus</th><th scope="col">Fortzüge nach</th><th scope="col">Saldo</th></tr></thead>
+          <tbody>${kreiseTop.map((x) => `<tr><th scope="row">${esc(x.n)}</th><td>${x.zu == null ? "•" : de(x.zu)}</td><td>${x.fort == null ? "•" : de(x.fort)}</td><td>${x.zu == null || x.fort == null ? "•" : vz(x.zu - x.fort)}</td></tr>`).join("")}</tbody></table></div>
+          <p class="hint">• = geheim gehalten. ${esc(W.kreise_hinweis)}</p></details></section>` : ""}
+      <section class="stat-block"><h3>Wie die Zahlen zu lesen sind</h3><ul class="hint">${W.hinweise.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></section>
+      <p class="hint">${esc(W.attribution)}. ${esc(W.lizenz)}. Quellen: ${jahre.map((y) => link(d.quellen[y], y)).join(", ")}${k ? `; Kreismatrix ${link(k.quelle, String(k.jahr))}` : ""}.</p>`;
+    $("#wanderung-jahr").addEventListener("change", (e) => { wanderungJahr = e.target.value; showWanderung(); if (wanderungLayer.wanderung_gemeinden) { wanderungLayer.wanderung_gemeinden.remove(); delete wanderungLayer.wanderung_gemeinden; drawWanderung("wanderung_gemeinden"); } });
+  }
+  const wName = (d, ags, fallback) => (d.geo?.gemeinden.features.find((f) => f.properties.ags === ags)?.properties.name) || fallback;
+  function kuerzen(a, b, km) {
+    // beide Enden um km zurücknehmen, damit sich die Pfeilspitzen am Kreismittelpunkt nicht stapeln
+    const c = Math.cos((a[1] * Math.PI) / 180), dx = (b[0] - a[0]) * c * 111, dy = (b[1] - a[1]) * 111, len = Math.hypot(dx, dy);
+    if (len <= 3 * km) return [a, b];
+    const f = km / len;
+    return [[a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f], [b[0] - (b[0] - a[0]) * f, b[1] - (b[1] - a[1]) * f]];
+  }
+  function pfeil(von, nach, km) {
+    // Pfeilspitze am Ziel, in Kilometern bemessen (lokal eben genähert)
+    const [x1, y1] = von, [x2, y2] = nach, c = Math.cos((y2 * Math.PI) / 180);
+    const dx = (x2 - x1) * c, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, s = km / 111;
+    const bx = x2 - (ux * s * 1.0) / c, by = y2 - uy * s * 1.0;
+    return [[y2, x2], [by + ux * s * 0.5, bx - (uy * s * 0.5) / c], [by - ux * s * 0.5, bx + (uy * s * 0.5) / c]];
+  }
+  async function drawWanderung(id) {
+    const an = umweltOn.has(id);
+    if (!an) { if (wanderungLayer[id]) { wanderungLayer[id].remove(); delete wanderungLayer[id]; } if (legendEl) drawLegend(); return; }
+    const d = await loadWanderung();
+    if (!d || !d.geo || wanderungLayer[id] || !umweltOn.has(id)) { if (legendEl) drawLegend(); return; }
+    const W = cfg.wanderung;
+    if (id === "wanderung_gemeinden") {
+      const jahr = wanderungJahr ||= wJahre(d).slice(-1)[0];
+      wanderungLayer[id] = L.geoJSON(d.geo.gemeinden, {
+        style: (f) => { const j = d.gemeinden[f.properties.ags]?.jahre[jahr]; const i = j ? saldoKlasse(rate(j)) : null;
+          return { color: color("text-muted"), weight: f.properties.ags === cfg.stadt.gemeindeschluessel ? 2.5 : 1, opacity: 0.9,
+            fillColor: i == null ? "transparent" : SALDO_FARBE(i), fillOpacity: i == null ? 0 : SALDO_DECK[i] }; },
+        attribution: esc(`${W.attribution}; ${d.geo.attribution}`),
+        onEachFeature: (f, layer) => { const j = d.gemeinden[f.properties.ags]?.jahre[jahr];
+          layer.bindTooltip(j ? `<strong>${esc(f.properties.name)} ${jahr}</strong><br>Zuzüge ${de(j.zuzuege)}, Fortzüge ${de(j.fortzuege)}<br>Saldo ${vz(saldo(j))} (${vz(rate(j), 1)} je 1 000 Einwohner)`
+            : `<strong>${esc(f.properties.name)}</strong><br>gemeindefreies Gebiet, keine Angabe`, { sticky: true }); },
+      }).addTo(map);
+    } else {
+      const k = d.kreis, ziel = d.geo.kreise[W.kreis_name];
+      const liste = Object.keys(W.kreise).filter((n) => n !== W.kreis_name && d.geo.kreise[n])
+        .map((n) => ({ n, zu: k.zuzuege[n], fort: k.fortzuege[n] })).filter((x) => (x.zu || 0) + (x.fort || 0) >= W.karte_mindestens);
+      const max = Math.max(...liste.map((x) => (x.zu || 0) + (x.fort || 0)));
+      const g = L.layerGroup();
+      L.geoJSON(d.geo.kreis_umriss, { style: { color: color("accent-ink"), weight: 2, fill: false }, interactive: false }).addTo(g);
+      for (const x of liste) {
+        const s = (x.zu || 0) - (x.fort || 0);
+        const [von, nach] = kuerzen(s >= 0 ? d.geo.kreise[x.n] : ziel, s >= 0 ? ziel : d.geo.kreise[x.n], 7);
+        const farbe = s >= 0 ? color("accent-ink") : color("abzug"), weight = 1.5 + (9 * ((x.zu || 0) + (x.fort || 0))) / max;
+        const tip = `<strong>${esc(x.n)} ↔ ${esc(W.kreis_name)}, ${k.jahr}</strong><br>Zuzüge in den Kreis ${x.zu == null ? "geheim" : de(x.zu)}, Fortzüge ${x.fort == null ? "geheim" : de(x.fort)}<br>Saldo ${x.zu == null || x.fort == null ? "nicht berechenbar" : vz(s)}`;
+        L.polyline([[von[1], von[0]], [nach[1], nach[0]]], { color: farbe, weight, opacity: 0.75 }).bindTooltip(tip, { sticky: true }).addTo(g);
+        L.polygon(pfeil(von, nach, 3 + weight * 0.6), { color: farbe, weight: 1, fillColor: farbe, fillOpacity: 0.9 }).bindTooltip(tip, { sticky: true }).addTo(g);
+      }
+      g.getAttribution = () => esc(`${W.attribution}; ${d.geo.attribution}`);
+      wanderungLayer[id] = g.addTo(map);
+      map.attributionControl.addAttribution(g.getAttribution());
+      g.on("remove", () => map.attributionControl.removeAttribution(g.getAttribution()));
+    }
+    if (legendEl) drawLegend();
+  }
+  function wanderungLegend() {
+    if (!cfg.wanderung) return "";
+    let h = "";
+    if (wanderungLayer.wanderung_gemeinden) {
+      h += `<p class="legend-group">Wanderungssaldo je 1 000 Einwohner, ${esc(wanderungJahr)}</p><ul>${saldoKlassenText().map((t, i) => `<li><span class="swatch swatch-area" aria-hidden="true"
+        style="border-color:${color("text-muted")};background:color-mix(in srgb, ${SALDO_FARBE(i)} ${Math.round(SALDO_DECK[i] * 100)}%, transparent)"></span>${esc(t)}</li>`).join("")}</ul>
+        <p class="hint">Gemeinden im ${esc(cfg.wanderung.kreis_name)}; Wanderungen über die Gemeindegrenze. ${esc(cfg.wanderung.attribution)}.</p>`;
+    }
+    if (wanderungLayer.wanderung_kreise) {
+      h += `<p class="legend-group">Wanderung über die Kreisgrenze, ${esc(cfg.wanderung.kreis_name)}</p><ul>
+        <li><span class="swatch" style="background:${color("accent-ink")}" aria-hidden="true"></span>mehr Zuzüge aus dem Kreis als Fortzüge dorthin</li>
+        <li><span class="swatch" style="background:${color("abzug")}" aria-hidden="true"></span>mehr Fortzüge in den Kreis als Zuzüge von dort</li></ul>
+        <p class="hint">Linienstärke: Zu- und Fortzüge zusammen; gezeigt sind hessische Kreise mit mindestens ${de(cfg.wanderung.karte_mindestens)} Zu- und Fortzügen, alle Kreise stehen in der Tabelle. Nur der Kreis insgesamt, nicht ${esc(cfg.stadt.name)} allein; andere Bundesländer und Ausland im Panel.</p>`;
+    }
+    return h;
+  }
+
+  $("#wanderung").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-wanderung-on]");
+    if (!b) return;
+    const id = b.dataset.wanderungOn;
+    umweltOn.add(id);
+    const box = document.querySelector(`.map-layers input[value="${CSS.escape(id)}"]`);
+    if (box) box.checked = true;
+    await drawWanderung(id);
+    if (wanderungLayer[id]) map.fitBounds(id === "wanderung_kreise" ? L.latLngBounds(Object.values((await loadWanderung()).geo.kreise).map(([x, y]) => [y, x])) : wanderungLayer[id].getBounds(), mapPadding());
+    syncUrl();
+    closePanel("panel-wanderung");
+  });
   $("#wohnen").addEventListener("click", (e) => {
     const eb = e.target.closest("[data-ebene-on]");
     if (eb) {
@@ -1122,6 +1286,7 @@
     $("#cta-termine").addEventListener("click", () => { setPanel("panel-termine", true); showTermine(); focusPanel("panel-termine"); });
     $("#cta-stats").addEventListener("click", () => { setPanel("panel-auswertung", true); showStats(); focusPanel("panel-auswertung"); });
     $("#cta-wahlen").addEventListener("click", () => { setPanel("panel-wahlen", true); showWahlen(); focusPanel("panel-wahlen"); });
+    $("#cta-wanderung").addEventListener("click", () => { setPanel("panel-wanderung", true); showWanderung(); focusPanel("panel-wanderung"); });
     $("#cta-wohnen").addEventListener("click", () => { setPanel("panel-wohnen", true); showWohnen(null); focusPanel("panel-wohnen"); });
     const params = new URLSearchParams(location.search);
     const ref = decodeURIComponent(location.hash.slice(1));

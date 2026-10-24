@@ -43,6 +43,10 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - **Gebäude und Eigentum:** Gezeigt werden nur die Gebäudefunktion „öffentliche Zwecke“ (ALKIS, Nutzung statt Eigentum) und die Unternehmen des Beteiligungsberichts. Kommunale Liegenschaften sind nicht online veröffentlicht; Privateigentum wird nicht dargestellt.
 - **Weitere Kartenebenen:** Windvorranggebiete (Regionalplan Nordhessen) und Kulturdenkmäler (DenkXweb, nicht flächendeckend erfasst) nur als Kartenebene; Bodendenkmäler nicht.
 - **3D-Ansicht** (`3d.html`): Grundriss mit gemessener Höhe aus den 3D-Gebäudemodellen LoD2 der HVBG, ohne Dachformen und Geländehöhe. Das Download-Center ist nur interaktiv nutzbar; die CityGML-Dateien werden von Hand nach `data/raw/lod2/` gelegt und mit `python -m pipeline gebaeude3d` nach `data/geo/hvgg/gebaeude3d/` übernommen. Derzeit liegen nur die Bauwerke (BW, Stand 2021) vor, die Gebäude (GB) fehlen.
+- **Zuzug und Wegzug:**
+  - Amtliche Zahlen des Hessischen Statistischen Landesamts: je Gemeinde nur Zu- und Fortzüge über die Gemeindegrenze (2015–2024); Herkunft und Ziel nur für den Werra-Meißner-Kreis insgesamt und nur über die Kreisgrenze (2024).
+  - Zahlen je Ortsteil und Ströme zwischen einzelnen Gemeinden sind nicht veröffentlicht und werden nicht geschätzt. Umzüge innerhalb der Stadt fehlen.
+  - Witzenhausen ist Hochschulstandort; Zu- und Fortzüge von Studierenden erhöhen beide Ströme. Raten je 1 000 Einwohner beziehen sich auf den Mittelwert aus Jahresanfang und -ende; bis 2023 Bevölkerung auf Basis Zensus 2011, ab 2024 Zensus 2022.
 - **Einreicher:** Antrag oder Anfrage einer Fraktion wird aus dem TOP-Titel erkannt und als Angabe und Filter gezeigt, ohne Zählung je Fraktion. Eine fehlende Nennung im Titel sagt nichts über die Aktivität einer Fraktion.
 - **Quellen:**
   - Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv), lesbar in [`DATA_SOURCES.md`](DATA_SOURCES.md), erzeugt mit `python tools/datenquellen.py`.

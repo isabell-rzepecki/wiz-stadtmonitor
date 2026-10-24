@@ -26,6 +26,8 @@ cp tests/fixtures/beteiligung_test.json "$TMP/test/data/export/beteiligung.json"
 cp tests/fixtures/eigentum.json "$TMP/test/data/export/eigentum.json"
 # 3D-Ansicht: abgeleitete Grundrisse mit Höhe (HVBG, Geobasisdaten; im Repository)
 cp -r data/geo/hvgg/gebaeude3d "$TMP/test/data/export/gebaeude3d"
+# Zuzug und Wegzug: amtliche Zahlen (HSL) und Gemeindegrenzen (HVBG) aus dem Repository, wie im Export zusammengeführt
+python3 -c "import json; d=json.load(open('data/wanderung/wanderung.json')); d['geo']=json.load(open('data/geo/dl-de-zero/wanderung_geo.json')); json.dump(d, open('$TMP/test/data/export/wanderung.json','w'), ensure_ascii=False)"
 python3 -m http.server 8765 --bind 127.0.0.1 --directory "$TMP/leer" >/dev/null 2>&1 &
 python3 -m http.server 8766 --bind 127.0.0.1 --directory "$TMP/test" >/dev/null 2>&1 &
 sleep 1
