@@ -32,6 +32,16 @@ async function open(base, path = "", { width = 1440, height = 900, dark = false 
   return page;
 }
 
+// Kartenoptionen (unten rechts) aufklappen, falls noch zu
+async function kartenoptionen(page) {
+  if ((await page.locator(".map-menu").getAttribute("aria-expanded")) !== "true") await page.locator(".map-menu").click();
+}
+async function weitereEbenen(page) {
+  await kartenoptionen(page);
+  const d = page.locator(".map-layers");
+  if (!(await d.evaluate((e) => e.open))) await d.locator("summary").click();
+}
+
 async function axe(page) {
   if (!(await page.evaluate(() => "axe" in window))) await page.addScriptTag({ content: AXE });
   return page.evaluate(async () => (await window.axe.run(document, { runOnly: ["wcag2a", "wcag2aa"] }))
@@ -82,7 +92,12 @@ test("Karte: Ortsbezirk anklicken lädt das Gebiet, Hinweis zur Zuordnung", asyn
   await page.mouse.click(pts[Math.floor(pts.length / 2)].x, pts[Math.floor(pts.length / 2)].y);
   await page.waitForFunction(() => document.querySelector("#f-area").value.startsWith("ortsteil:"));
   assert.match(page.url(), /gebiet=ortsteil/);
-  assert.match(await page.locator(".map-legend").textContent(), /Hauptsatzung/);
+  assert.equal(await page.locator(".map-legend").evaluate((e) => e.open), false, "Legende startet eingeklappt");
+  await page.locator(".map-legend summary").click();
+  await page.locator('.map-legend [data-about="about-verortung"]').click();
+  assert.ok(await page.locator("#about").evaluate((e) => e.open));
+  assert.match(await page.locator("#about").textContent(), /§ 6 der Hauptsatzung/);
+  await page.locator("#about-close").click();
   assert.match(await page.locator(".leaflet-control-attribution").textContent(), /HVBG/);
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
@@ -140,7 +155,8 @@ test("Systemeinstellung dunkel: Seite bleibt hell, Vorgang ohne Verstöße", asy
 
 test("Kartenebene Bauleitplanung: Nutzungshinweis in Legende und Namensnennung, ohne Verstöße", async () => {
   const page = await open(SITE);
-  await page.locator(".map-plans").click();
+  await weitereEbenen(page);
+  await page.getByLabel("Bauleitplanung").check();
   await page.waitForFunction(() => document.querySelectorAll(".leaflet-overlay-pane path").length > 0);
   assert.match(await page.locator(".map-legend").textContent(), /nur für nicht kommerzielle Zwecke/);
   assert.match(await page.locator(".leaflet-control-attribution").textContent(), /Magistrat der Stadt Witzenhausen/);
@@ -150,15 +166,14 @@ test("Kartenebene Bauleitplanung: Nutzungshinweis in Legende und Namensnennung, 
   await page.close();
 });
 
-test("Umweltebenen: zuschaltbar, Legende mit Hinweis und Quelle, Zustand im Link, ohne Verstöße", async () => {
+test("Umweltebenen: zuschaltbar, Legende mit Hinweis, Quelle unter © Quellen, Zustand im Link, ohne Verstöße", async () => {
   const page = await open(SITE);
-  await page.locator(".map-layers summary").click();  // „Weitere Ebenen“
+  await weitereEbenen(page);
   await page.getByLabel("Schutzgebiete Natur").check();
   await page.waitForFunction(() => document.querySelectorAll(".leaflet-overlay-pane path").length >= 2);
   const legende = await page.locator(".map-legend").textContent();
   assert.match(legende, /Naturschutzgebiet/);
-  assert.match(legende, /Nicht rechtsverbindlich/);
-  assert.match(legende, /HMLU/);
+  assert.match(legende, /nicht rechtsverbindlich/i);
   assert.match(await page.locator(".leaflet-control-attribution").textContent(), /Schutzgebiete: HMLU/);
   assert.match(page.url(), /ebenen=natur/);
   assert.deepEqual(await axe(page), []);
@@ -192,7 +207,7 @@ test("Bodenrichtwerte 2026: eigene Bildebene mit Stichtag, Hinweis zum Heranzoom
   const page = await open(SITE);
   let wms = 0;
   page.on("request", (r) => { if (r.url().startsWith("https://www.gds-srv.hessen.de/")) wms++; });
-  await page.locator(".map-layers summary").click();
+  await weitereEbenen(page);
   await page.getByLabel("Bodenrichtwerte 2026 (Karte der HVBG)").check();
   const legende = page.locator(".map-legend");
   await page.waitForFunction(() => /01\.01\.2026/.test(document.querySelector(".map-legend")?.textContent || ""));
@@ -228,7 +243,7 @@ test("Zuzug und Wegzug: Zeitreihe mit Tabelle, Gemeinden im Kreis, Kreisebene ge
   await page.waitForFunction(() => /Wanderungssaldo je 1 000 Einwohner, 2015/.test(document.querySelector(".map-legend")?.textContent || ""));
   assert.match(page.url(), /ebenen=wanderung_gemeinden/);
   assert.match(await page.locator(".leaflet-control-attribution").textContent(), /Hessisches Statistisches Landesamt/);
-  await page.locator(".map-layers summary").click();
+  await weitereEbenen(page);
   await page.getByLabel("Wanderung über die Kreisgrenze").check();
   await page.waitForFunction(() => /mindestens 30 Zu- und Fortzügen/.test(document.querySelector(".map-legend")?.textContent || ""));
   assert.ok(await page.locator(".leaflet-overlay-pane path").count() > 20);
@@ -248,6 +263,21 @@ test("Wahlen und Gremien: amtliche Ergebnisse, Lücke 2016, Ortsbeirat des Gebie
   assert.match(text, /Gertenbach/);
   assert.equal(await page.locator("#wahlen h3:has-text('Ortsbeiräte') ~ .table-wrap tbody tr").count(), 1);
   assert.ok(await page.locator("#wahlen table").count() >= 4);
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+test("Desktop: Kartenoptionen und Quellen eingeklappt, Bauleitplanung unter den Ebenen", async () => {
+  const page = await open(SITE);
+  assert.equal(await page.locator(".map-whole").isVisible(), false);
+  assert.equal(await page.locator(".leaflet-control-attribution").isVisible(), false);
+  await page.locator(".map-sources").click();
+  assert.ok(await page.locator(".leaflet-control-attribution").isVisible());
+  await page.locator(".map-sources").click();
+  await weitereEbenen(page);
+  assert.ok(await page.locator(".map-whole").isVisible());
+  assert.ok(await page.getByLabel("Bauleitplanung").isVisible());
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.close();
@@ -276,6 +306,7 @@ test("Mobil: Kartenoptionen in einem Menü, ohne Verstöße", async () => {
 
 test("3D-Ansicht: Ortsteil aus dem Link, Höhenangaben, Hinweis und Namensnennung, Weg zurück, ohne Verstöße", async () => {
   const karte = await open(SITE, "?gebiet=ortsteil:kernstadt");
+  await kartenoptionen(karte);
   const link = karte.locator(".map-3d");
   await link.click();
   await karte.waitForURL(/3d\.html\?gebiet=ortsteil(:|%3A)kernstadt/);
