@@ -832,6 +832,126 @@
     "berichte_hinweis": "Nur verlinkt; eine tabellarische Übernahme setzt eine Prüfung der Nutzungsbedingungen voraus.",
     "bezug_titel": "(Bebauungsplan|Flächennutzungsplan|Bauleitplan|Wohn|Bauplatz|Bauplätze|Baugebiet|Baugrundstück|Grundstück|Bauantrag|Bauvoranfrage|Neubau|Bauvorhaben|Leerstand|Miete|Sanierung|Innenentwicklung|Baulücke)"
   },
+  "wanderung": {
+    "_hinweis": "Zuzug und Wegzug: amtliche Wanderungsstatistik des Hessischen Statistischen Landesamts (HSL). Je Gemeinde nur Zu- und Fortzüge über die Gemeindegrenze (Jahresberichte, Tabelle Bevölkerungsvorgänge nach Gemeinden); Herkunft und Ziel nur je Kreis (Wanderung über die Kreisgrenze). Zahlen je Ortsteil und Ströme zwischen einzelnen Gemeinden sind nicht veröffentlicht.",
+    "kreis": "636",
+    "kreis_name": "Werra-Meißner-Kreis",
+    "berichte": {
+      "2015": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00005958/AI2_AII_AIII_AV_15_2hj_a.pdf",
+      "2016": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00007604/AI2_AII_AIII_AV-16_2hj_2kA_a.pdf",
+      "2017": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00007938/AI2_AII_AIII_AV_17_2hj_a.pdf",
+      "2018": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00008723/AI2_AII_AIII_AV_18-2hj_a.pdf",
+      "2019": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00009485/AI2_AII_AIII_AV_19-2hj_a.pdf",
+      "2020": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00010435/AI2_AII_AIII_AV_20-2hj_a.pdf",
+      "2021": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00011030/AI2_AII_AIII_AV_21-2hj_a.pdf",
+      "2022": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00012084/AI2_AII_AIII_AV_22-2hj_a.pdf",
+      "2023": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00013463/AI2_AII_AIII_AV_23-2hj_a.pdf",
+      "2024": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00014800/AI2_AII_AIII_AV_24-2hj_a.pdf"
+    },
+    "matrix": {
+      "jahr": 2024,
+      "url": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00014832/AIII1_j2024_Wanderung_Tabelle1.pdf"
+    },
+    "kreise": {
+      "Darmstadt, Wissenschaftsstadt": [
+        "411"
+      ],
+      "Frankfurt am Main, Stadt": [
+        "412"
+      ],
+      "Offenbach am Main, Stadt": [
+        "413"
+      ],
+      "Wiesbaden, Landeshauptstadt": [
+        "414"
+      ],
+      "Landkreis Bergstraße": [
+        "431"
+      ],
+      "Landkreis Darmstadt-Dieburg": [
+        "432"
+      ],
+      "Landkreis Groß-Gerau": [
+        "433"
+      ],
+      "Hochtaunuskreis": [
+        "434"
+      ],
+      "Main-Kinzig-Kreis": [
+        "435",
+        "415"
+      ],
+      "Main-Taunus-Kreis": [
+        "436"
+      ],
+      "Odenwaldkreis": [
+        "437"
+      ],
+      "Landkreis Offenbach": [
+        "438"
+      ],
+      "Rheingau-Taunus-Kreis": [
+        "439"
+      ],
+      "Wetteraukreis": [
+        "440"
+      ],
+      "Landkreis Gießen": [
+        "531"
+      ],
+      "Lahn-Dill-Kreis": [
+        "532"
+      ],
+      "Landkreis Limburg-Weilburg": [
+        "533"
+      ],
+      "Landkreis Marburg-Biedenkopf": [
+        "534"
+      ],
+      "Vogelsbergkreis": [
+        "535"
+      ],
+      "Kassel, documenta-Stadt": [
+        "611"
+      ],
+      "Landkreis Fulda": [
+        "631"
+      ],
+      "Landkreis Hersfeld-Rotenburg": [
+        "632"
+      ],
+      "Landkreis Kassel": [
+        "633"
+      ],
+      "Schwalm-Eder-Kreis": [
+        "634"
+      ],
+      "Landkreis Waldeck-Frankenberg": [
+        "635"
+      ],
+      "Werra-Meißner-Kreis": [
+        "636"
+      ]
+    },
+    "karte_mindestens": 30,
+    "kreise_hinweis": "Hanau ist seit 2026 kreisfrei; in den Zahlen bis 2024 gehört es zum Main-Kinzig-Kreis und ist dort eingerechnet.",
+    "klassen": [
+      -10,
+      -5,
+      0,
+      5,
+      10
+    ],
+    "lizenz": "Vervielfältigung und Verbreitung, auch auszugsweise, mit Quellenangabe gestattet",
+    "attribution": "Wanderung: © Hessisches Statistisches Landesamt, Wiesbaden; Raten je 1 000 Einwohner eigene Berechnung",
+    "seite": "https://statistik.hessen.de/zahlen-fakten/bevoelkerung",
+    "hinweise": [
+      "Gezählt werden An- und Abmeldungen über die Gemeindegrenze. Umzüge innerhalb der Stadt sind nicht enthalten.",
+      "Witzenhausen ist Hochschulstandort (Universität Kassel, Fachbereich Ökologische Agrarwissenschaften). Zu- und Fortzüge von Studierenden erhöhen beide Ströme; der Saldo ist deshalb aussagekräftiger als die einzelnen Zahlen.",
+      "Raten je 1 000 Einwohner beziehen sich auf den Mittelwert aus Jahresanfang und Jahresende. Bis Ende 2023 beruht der Bevölkerungsstand auf dem Zensus 2011, ab 2024 auf dem Zensus 2022; über diesen Bruch sind die Raten nur eingeschränkt vergleichbar.",
+      "Herkunft und Ziel gibt es nur für den Kreis insgesamt und nur über die Kreisgrenze. Wanderungen zwischen Gemeinden desselben Kreises fehlen dort; für Witzenhausen allein sind Herkunft und Ziel nicht veröffentlicht."
+    ]
+  },
   "einreicher": {
     "_hinweis": "Einreicher von Anträgen und Anfragen aus den TOP-Titeln. Nur Fraktionen bzw. Wählergruppen; Einzelpersonen ohne Namen. Auf der Seite als Angabe und Filter, ohne Zählung je Fraktion (eine fehlende Nennung im Titel sagt nichts über Aktivität).",
     "muster_typ": "(Änderungsantrag|Ergänzungsantrag|Dringlichkeitsantrag|Prüfauftrag|Resolutionsantrag|Resolution|Antrag|Anfrage)",

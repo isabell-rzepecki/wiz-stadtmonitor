@@ -209,6 +209,34 @@ test("Bodenrichtwerte 2026: eigene Bildebene mit Stichtag, Hinweis zum Heranzoom
   await page.close();
 });
 
+test("Zuzug und Wegzug: Zeitreihe mit Tabelle, Gemeinden im Kreis, Kreisebene gekennzeichnet, Kartenebenen, ohne Verstöße", async () => {
+  const page = await open(SITE);
+  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator("#cta-wanderung").click();
+  await page.waitForSelector("#wanderung svg.chart");
+  const text = await page.locator("#wanderung").textContent();
+  assert.match(text, /2015 bis 2024/);
+  assert.match(text, /Zuzüge 2024\s*950/);
+  assert.match(text, /Zahlen je Ortsteil sind nicht veröffentlicht/);
+  assert.match(text, /gelten für den ganzen Kreis, nicht für Witzenhausen allein/);
+  assert.match(text, /Hochschulstandort/);
+  assert.equal(await page.locator("#wanderung table.compare tbody tr.own").count(), 1, "Witzenhausen in der Gemeindetabelle hervorgehoben");
+  assert.deepEqual(await axe(page), []);
+  await page.locator("#wanderung-jahr").selectOption("2015");
+  await page.waitForFunction(() => /im Kreis, 2015/.test(document.querySelector("#wanderung caption")?.textContent + document.querySelectorAll("#wanderung caption")[1]?.textContent));
+  await page.locator('[data-wanderung-on="wanderung_gemeinden"]').click();
+  await page.waitForFunction(() => /Wanderungssaldo je 1 000 Einwohner, 2015/.test(document.querySelector(".map-legend")?.textContent || ""));
+  assert.match(page.url(), /ebenen=wanderung_gemeinden/);
+  assert.match(await page.locator(".leaflet-control-attribution").textContent(), /Hessisches Statistisches Landesamt/);
+  await page.locator(".map-layers summary").click();
+  await page.getByLabel("Wanderung über die Kreisgrenze").check();
+  await page.waitForFunction(() => /mindestens 30 Zu- und Fortzügen/.test(document.querySelector(".map-legend")?.textContent || ""));
+  assert.ok(await page.locator(".leaflet-overlay-pane path").count() > 20);
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 test("Wahlen und Gremien: amtliche Ergebnisse, Lücke 2016, Ortsbeirat des Gebiets, ohne Verstöße", async () => {
   const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
   await page.locator('[data-mega="mega-mitmachen"]').click();

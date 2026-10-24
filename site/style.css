@@ -38,6 +38,7 @@
   --hoch: #1f7a4d;
   --mittel: #9a5200;
   --niedrig: #4a5a8a;
+  --abzug: #2f5d8a;  /* Fortzüge, negativer Wanderungssaldo (7,0:1 auf Weiß) */
   --shadow: 0 8px 32px rgba(26, 26, 26, 0.08);
   --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.6);
   --blur: blur(20px) saturate(160%);
@@ -513,3 +514,15 @@ html { font-synthesis: none; }
 
 /* Verweis auf die 3D-Ansicht (eigene Seite) */
 a.map-style.map-3d { display: inline-block; text-decoration: none; color: var(--text); }
+
+/* Zuzug und Wegzug: Säulendiagramm, Balken in Tabellen */
+svg.chart { width: 100%; height: auto; display: block; margin: 6px 0 2px; font: 11px var(--font-body); fill: var(--text-muted); }
+svg.chart .grid { stroke: var(--border-alt); stroke-width: 1; }
+.chart-key { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; font-size: 14px; margin: 0 0 8px; }
+.chart-key .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-left: 6px; }
+table.compare.bars { width: 100%; }
+table.bars td { position: relative; min-width: 96px; }
+table.bars .bar { position: absolute; left: 0; top: 4px; bottom: 4px; opacity: 0.22; border-radius: 3px; }
+table.bars .bar-zu { background: var(--accent-ink); } table.bars .bar-fort { background: var(--abzug); }
+label.inline { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+label.inline select { font: inherit; font-weight: 400; min-height: 40px; padding: 4px 8px; border-radius: 10px; border: 1px solid var(--border-alt); background: var(--solid); color: var(--text); }

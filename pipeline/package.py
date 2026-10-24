@@ -16,6 +16,8 @@ def package():
             z.write(config.EXPORT / "beteiligung.json", "beteiligung.json")
         if (config.EXPORT / "wahlen.json").exists():  # Wahlergebnisse ohne Personennamen
             z.write(config.EXPORT / "wahlen.json", "wahlen.json")
+        if (config.ROOT / "data" / "wanderung" / "wanderung.json").exists():  # Zu- und Fortzüge (HSL), ohne Geometrie
+            z.write(config.ROOT / "data" / "wanderung" / "wanderung.json", "wanderung.json")
         if (config.EXPORT / "wohnen.json").exists():  # Bodenrichtwert-Spannen und Zensuswerte (ohne Geometrie)
             z.write(config.EXPORT / "wohnen.json", "wohnen.json")
         for p in sorted((config.EXPORT / "audit").glob("*.tsv")):

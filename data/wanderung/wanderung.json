@@ -1,0 +1,1605 @@
+{
+ "attribution": "Wanderung: © Hessisches Statistisches Landesamt, Wiesbaden; Raten je 1 000 Einwohner eigene Berechnung",
+ "gemeinden": {
+  "06636001": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 8350,
+     "bev_ende": 8463,
+     "fortzuege": 451,
+     "geborene": 51,
+     "gestorbene": 149,
+     "veraenderung": 113,
+     "zuzuege": 662
+    },
+    "2016": {
+     "bev_anfang": 8463,
+     "bev_ende": 8476,
+     "fortzuege": 488,
+     "geborene": 57,
+     "gestorbene": 167,
+     "veraenderung": 13,
+     "zuzuege": 613
+    },
+    "2017": {
+     "bev_anfang": 8476,
+     "bev_ende": 8594,
+     "fortzuege": 471,
+     "geborene": 63,
+     "gestorbene": 141,
+     "veraenderung": 118,
+     "zuzuege": 668
+    },
+    "2018": {
+     "bev_anfang": 8594,
+     "bev_ende": 8675,
+     "fortzuege": 595,
+     "geborene": 52,
+     "gestorbene": 173,
+     "veraenderung": 81,
+     "zuzuege": 801
+    },
+    "2019": {
+     "bev_anfang": 8675,
+     "bev_ende": 8631,
+     "fortzuege": 714,
+     "geborene": 52,
+     "gestorbene": 154,
+     "veraenderung": -44,
+     "zuzuege": 777
+    },
+    "2020": {
+     "bev_anfang": 8631,
+     "bev_ende": 8460,
+     "fortzuege": 657,
+     "geborene": 54,
+     "gestorbene": 191,
+     "veraenderung": -171,
+     "zuzuege": 623
+    },
+    "2021": {
+     "bev_anfang": 8460,
+     "bev_ende": 8478,
+     "fortzuege": 558,
+     "geborene": 55,
+     "gestorbene": 144,
+     "veraenderung": 18,
+     "zuzuege": 674
+    },
+    "2022": {
+     "bev_anfang": 8478,
+     "bev_ende": 8394,
+     "fortzuege": 611,
+     "geborene": 54,
+     "gestorbene": 190,
+     "veraenderung": -84,
+     "zuzuege": 669
+    },
+    "2023": {
+     "bev_anfang": 8394,
+     "bev_ende": 8370,
+     "fortzuege": 591,
+     "geborene": 47,
+     "gestorbene": 192,
+     "veraenderung": -24,
+     "zuzuege": 720
+    },
+    "2024": {
+     "bev_anfang": 8030,
+     "bev_ende": 8141,
+     "fortzuege": 511,
+     "geborene": 51,
+     "gestorbene": 124,
+     "veraenderung": 111,
+     "zuzuege": 681
+    }
+   },
+   "name": "Bad Sooden-Allendorf, Stadt"
+  },
+  "06636002": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 1584,
+     "bev_ende": 1560,
+     "fortzuege": 69,
+     "geborene": 9,
+     "gestorbene": 19,
+     "veraenderung": -24,
+     "zuzuege": 55
+    },
+    "2016": {
+     "bev_anfang": 1560,
+     "bev_ende": 1519,
+     "fortzuege": 66,
+     "geborene": 6,
+     "gestorbene": 32,
+     "veraenderung": -41,
+     "zuzuege": 50
+    },
+    "2017": {
+     "bev_anfang": 1519,
+     "bev_ende": 1503,
+     "fortzuege": 55,
+     "geborene": 6,
+     "gestorbene": 37,
+     "veraenderung": -16,
+     "zuzuege": 70
+    },
+    "2018": {
+     "bev_anfang": 1503,
+     "bev_ende": 1470,
+     "fortzuege": 88,
+     "geborene": 5,
+     "gestorbene": 29,
+     "veraenderung": 33,
+     "zuzuege": 78
+    },
+    "2019": {
+     "bev_anfang": 1470,
+     "bev_ende": 1463,
+     "fortzuege": 73,
+     "geborene": 10,
+     "gestorbene": 22,
+     "veraenderung": -7,
+     "zuzuege": 78
+    },
+    "2020": {
+     "bev_anfang": 1463,
+     "bev_ende": 1442,
+     "fortzuege": 65,
+     "geborene": 11,
+     "gestorbene": 37,
+     "veraenderung": -21,
+     "zuzuege": 70
+    },
+    "2021": {
+     "bev_anfang": 1442,
+     "bev_ende": 1472,
+     "fortzuege": 35,
+     "geborene": 16,
+     "gestorbene": 22,
+     "veraenderung": 30,
+     "zuzuege": 72
+    },
+    "2022": {
+     "bev_anfang": 1472,
+     "bev_ende": 1508,
+     "fortzuege": 85,
+     "geborene": 9,
+     "gestorbene": 26,
+     "veraenderung": 36,
+     "zuzuege": 139
+    },
+    "2023": {
+     "bev_anfang": 1508,
+     "bev_ende": 1482,
+     "fortzuege": 71,
+     "geborene": 15,
+     "gestorbene": 35,
+     "veraenderung": -26,
+     "zuzuege": 65
+    },
+    "2024": {
+     "bev_anfang": 1472,
+     "bev_ende": 1474,
+     "fortzuege": 79,
+     "geborene": 12,
+     "gestorbene": 22,
+     "veraenderung": 2,
+     "zuzuege": 91
+    }
+   },
+   "name": "Berkatal"
+  },
+  "06636003": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 19466,
+     "bev_ende": 19542,
+     "fortzuege": 1106,
+     "geborene": 153,
+     "gestorbene": 362,
+     "veraenderung": 76,
+     "zuzuege": 1389
+    },
+    "2016": {
+     "bev_anfang": 19542,
+     "bev_ende": 19716,
+     "fortzuege": 1603,
+     "geborene": 139,
+     "gestorbene": 315,
+     "veraenderung": 174,
+     "zuzuege": 1957
+    },
+    "2017": {
+     "bev_anfang": 19716,
+     "bev_ende": 19647,
+     "fortzuege": 1174,
+     "geborene": 146,
+     "gestorbene": 316,
+     "veraenderung": -69,
+     "zuzuege": 1273
+    },
+    "2018": {
+     "bev_anfang": 19647,
+     "bev_ende": 19606,
+     "fortzuege": 1146,
+     "geborene": 176,
+     "gestorbene": 325,
+     "veraenderung": 41,
+     "zuzuege": 1251
+    },
+    "2019": {
+     "bev_anfang": 19606,
+     "bev_ende": 19412,
+     "fortzuege": 1219,
+     "geborene": 152,
+     "gestorbene": 345,
+     "veraenderung": -194,
+     "zuzuege": 1212
+    },
+    "2020": {
+     "bev_anfang": 19412,
+     "bev_ende": 19365,
+     "fortzuege": 1080,
+     "geborene": 146,
+     "gestorbene": 305,
+     "veraenderung": -47,
+     "zuzuege": 1194
+    },
+    "2021": {
+     "bev_anfang": 19365,
+     "bev_ende": 19278,
+     "fortzuege": 1002,
+     "geborene": 157,
+     "gestorbene": 366,
+     "veraenderung": -87,
+     "zuzuege": 1139
+    },
+    "2022": {
+     "bev_anfang": 19278,
+     "bev_ende": 19472,
+     "fortzuege": 1076,
+     "geborene": 146,
+     "gestorbene": 399,
+     "veraenderung": 194,
+     "zuzuege": 1515
+    },
+    "2023": {
+     "bev_anfang": 19472,
+     "bev_ende": 19435,
+     "fortzuege": 1094,
+     "geborene": 144,
+     "gestorbene": 361,
+     "veraenderung": -37,
+     "zuzuege": 1265
+    },
+    "2024": {
+     "bev_anfang": 18851,
+     "bev_ende": 18743,
+     "fortzuege": 1137,
+     "geborene": 126,
+     "gestorbene": 358,
+     "veraenderung": -108,
+     "zuzuege": 1263
+    }
+   },
+   "name": "Eschwege, Kreisstadt"
+  },
+  "06636004": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 6536,
+     "bev_ende": 6469,
+     "fortzuege": 309,
+     "geborene": 45,
+     "gestorbene": 101,
+     "veraenderung": -67,
+     "zuzuege": 298
+    },
+    "2016": {
+     "bev_anfang": 6469,
+     "bev_ende": 6445,
+     "fortzuege": 346,
+     "geborene": 41,
+     "gestorbene": 102,
+     "veraenderung": -24,
+     "zuzuege": 388
+    },
+    "2017": {
+     "bev_anfang": 6445,
+     "bev_ende": 6389,
+     "fortzuege": 345,
+     "geborene": 38,
+     "gestorbene": 95,
+     "veraenderung": -56,
+     "zuzuege": 345
+    },
+    "2018": {
+     "bev_anfang": 6389,
+     "bev_ende": 6402,
+     "fortzuege": 345,
+     "geborene": 56,
+     "gestorbene": 77,
+     "veraenderung": 13,
+     "zuzuege": 378
+    },
+    "2019": {
+     "bev_anfang": 6402,
+     "bev_ende": 6408,
+     "fortzuege": 302,
+     "geborene": 46,
+     "gestorbene": 84,
+     "veraenderung": 6,
+     "zuzuege": 351
+    },
+    "2020": {
+     "bev_anfang": 6408,
+     "bev_ende": 6323,
+     "fortzuege": 293,
+     "geborene": 33,
+     "gestorbene": 92,
+     "veraenderung": -85,
+     "zuzuege": 269
+    },
+    "2021": {
+     "bev_anfang": 6323,
+     "bev_ende": 6289,
+     "fortzuege": 329,
+     "geborene": 49,
+     "gestorbene": 113,
+     "veraenderung": -34,
+     "zuzuege": 362
+    },
+    "2022": {
+     "bev_anfang": 6289,
+     "bev_ende": 6255,
+     "fortzuege": 318,
+     "geborene": 46,
+     "gestorbene": 106,
+     "veraenderung": -34,
+     "zuzuege": 343
+    },
+    "2023": {
+     "bev_anfang": 6255,
+     "bev_ende": 6226,
+     "fortzuege": 305,
+     "geborene": 48,
+     "gestorbene": 100,
+     "veraenderung": -29,
+     "zuzuege": 328
+    },
+    "2024": {
+     "bev_anfang": 6119,
+     "bev_ende": 6090,
+     "fortzuege": 278,
+     "geborene": 45,
+     "gestorbene": 104,
+     "veraenderung": -29,
+     "zuzuege": 305
+    }
+   },
+   "name": "Großalmerode, Stadt"
+  },
+  "06636005": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 2821,
+     "bev_ende": 2816,
+     "fortzuege": 194,
+     "geborene": 15,
+     "gestorbene": 63,
+     "veraenderung": -5,
+     "zuzuege": 237
+    },
+    "2016": {
+     "bev_anfang": 2816,
+     "bev_ende": 2795,
+     "fortzuege": 206,
+     "geborene": 17,
+     "gestorbene": 64,
+     "veraenderung": -21,
+     "zuzuege": 231
+    },
+    "2017": {
+     "bev_anfang": 2795,
+     "bev_ende": 2787,
+     "fortzuege": 192,
+     "geborene": 22,
+     "gestorbene": 72,
+     "veraenderung": -8,
+     "zuzuege": 234
+    },
+    "2018": {
+     "bev_anfang": 2787,
+     "bev_ende": 2806,
+     "fortzuege": 166,
+     "geborene": 17,
+     "gestorbene": 84,
+     "veraenderung": 19,
+     "zuzuege": 253
+    },
+    "2019": {
+     "bev_anfang": 2806,
+     "bev_ende": 2790,
+     "fortzuege": 152,
+     "geborene": 17,
+     "gestorbene": 68,
+     "veraenderung": -16,
+     "zuzuege": 186
+    },
+    "2020": {
+     "bev_anfang": 2790,
+     "bev_ende": 2766,
+     "fortzuege": 137,
+     "geborene": 13,
+     "gestorbene": 81,
+     "veraenderung": -24,
+     "zuzuege": 184
+    },
+    "2021": {
+     "bev_anfang": 2766,
+     "bev_ende": 2741,
+     "fortzuege": 161,
+     "geborene": 27,
+     "gestorbene": 67,
+     "veraenderung": -25,
+     "zuzuege": 182
+    },
+    "2022": {
+     "bev_anfang": 2741,
+     "bev_ende": 2820,
+     "fortzuege": 130,
+     "geborene": 20,
+     "gestorbene": 73,
+     "veraenderung": 79,
+     "zuzuege": 262
+    },
+    "2023": {
+     "bev_anfang": 2820,
+     "bev_ende": 2756,
+     "fortzuege": 188,
+     "geborene": 17,
+     "gestorbene": 69,
+     "veraenderung": -64,
+     "zuzuege": 176
+    },
+    "2024": {
+     "bev_anfang": 2672,
+     "bev_ende": 2620,
+     "fortzuege": 158,
+     "geborene": 17,
+     "gestorbene": 86,
+     "veraenderung": -52,
+     "zuzuege": 178
+    }
+   },
+   "name": "Herleshausen"
+  },
+  "06636006": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 11984,
+     "bev_ende": 12100,
+     "fortzuege": 732,
+     "geborene": 71,
+     "gestorbene": 148,
+     "veraenderung": 116,
+     "zuzuege": 921
+    },
+    "2016": {
+     "bev_anfang": 12100,
+     "bev_ende": 12120,
+     "fortzuege": 1298,
+     "geborene": 87,
+     "gestorbene": 172,
+     "veraenderung": 20,
+     "zuzuege": 1408
+    },
+    "2017": {
+     "bev_anfang": 12120,
+     "bev_ende": 12284,
+     "fortzuege": 656,
+     "geborene": 107,
+     "gestorbene": 134,
+     "veraenderung": 164,
+     "zuzuege": 849
+    },
+    "2018": {
+     "bev_anfang": 12284,
+     "bev_ende": 12359,
+     "fortzuege": 703,
+     "geborene": 108,
+     "gestorbene": 150,
+     "veraenderung": 75,
+     "zuzuege": 820
+    },
+    "2019": {
+     "bev_anfang": 12359,
+     "bev_ende": 12431,
+     "fortzuege": 678,
+     "geborene": 118,
+     "gestorbene": 159,
+     "veraenderung": 72,
+     "zuzuege": 793
+    },
+    "2020": {
+     "bev_anfang": 12431,
+     "bev_ende": 12443,
+     "fortzuege": 662,
+     "geborene": 89,
+     "gestorbene": 173,
+     "veraenderung": 12,
+     "zuzuege": 755
+    },
+    "2021": {
+     "bev_anfang": 12443,
+     "bev_ende": 12360,
+     "fortzuege": 735,
+     "geborene": 96,
+     "gestorbene": 207,
+     "veraenderung": -83,
+     "zuzuege": 768
+    },
+    "2022": {
+     "bev_anfang": 12360,
+     "bev_ende": 12598,
+     "fortzuege": 622,
+     "geborene": 107,
+     "gestorbene": 153,
+     "veraenderung": 238,
+     "zuzuege": 902
+    },
+    "2023": {
+     "bev_anfang": 12598,
+     "bev_ende": 12798,
+     "fortzuege": 633,
+     "geborene": 103,
+     "gestorbene": 186,
+     "veraenderung": 200,
+     "zuzuege": 909
+    },
+    "2024": {
+     "bev_anfang": 12388,
+     "bev_ende": 12337,
+     "fortzuege": 731,
+     "geborene": 99,
+     "gestorbene": 162,
+     "veraenderung": -51,
+     "zuzuege": 738
+    }
+   },
+   "name": "Hessisch Lichtenau, Stadt"
+  },
+  "06636007": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 4711,
+     "bev_ende": 4716,
+     "fortzuege": 253,
+     "geborene": 28,
+     "gestorbene": 50,
+     "veraenderung": 5,
+     "zuzuege": 280
+    },
+    "2016": {
+     "bev_anfang": 4716,
+     "bev_ende": 4670,
+     "fortzuege": 311,
+     "geborene": 38,
+     "gestorbene": 54,
+     "veraenderung": -46,
+     "zuzuege": 284
+    },
+    "2017": {
+     "bev_anfang": 4670,
+     "bev_ende": 4616,
+     "fortzuege": 259,
+     "geborene": 23,
+     "gestorbene": 66,
+     "veraenderung": -54,
+     "zuzuege": 248
+    },
+    "2018": {
+     "bev_anfang": 4616,
+     "bev_ende": 4574,
+     "fortzuege": 294,
+     "geborene": 32,
+     "gestorbene": 49,
+     "veraenderung": 42,
+     "zuzuege": 273
+    },
+    "2019": {
+     "bev_anfang": 4574,
+     "bev_ende": 4568,
+     "fortzuege": 254,
+     "geborene": 29,
+     "gestorbene": 51,
+     "veraenderung": -6,
+     "zuzuege": 270
+    },
+    "2020": {
+     "bev_anfang": 4568,
+     "bev_ende": 4555,
+     "fortzuege": 234,
+     "geborene": 24,
+     "gestorbene": 64,
+     "veraenderung": -13,
+     "zuzuege": 261
+    },
+    "2021": {
+     "bev_anfang": 4555,
+     "bev_ende": 4548,
+     "fortzuege": 220,
+     "geborene": 34,
+     "gestorbene": 61,
+     "veraenderung": -7,
+     "zuzuege": 241
+    },
+    "2022": {
+     "bev_anfang": 4548,
+     "bev_ende": 4560,
+     "fortzuege": 281,
+     "geborene": 31,
+     "gestorbene": 56,
+     "veraenderung": 12,
+     "zuzuege": 317
+    },
+    "2023": {
+     "bev_anfang": 4560,
+     "bev_ende": 4529,
+     "fortzuege": 221,
+     "geborene": 22,
+     "gestorbene": 64,
+     "veraenderung": -31,
+     "zuzuege": 231
+    },
+    "2024": {
+     "bev_anfang": 4306,
+     "bev_ende": 4267,
+     "fortzuege": 244,
+     "geborene": 37,
+     "gestorbene": 50,
+     "veraenderung": -39,
+     "zuzuege": 217
+    }
+   },
+   "name": "Meinhard"
+  },
+  "06636008": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 3082,
+     "bev_ende": 3055,
+     "fortzuege": 165,
+     "geborene": 13,
+     "gestorbene": 30,
+     "veraenderung": -27,
+     "zuzuege": 155
+    },
+    "2016": {
+     "bev_anfang": 3055,
+     "bev_ende": 3049,
+     "fortzuege": 236,
+     "geborene": 22,
+     "gestorbene": 37,
+     "veraenderung": -6,
+     "zuzuege": 249
+    },
+    "2017": {
+     "bev_anfang": 3049,
+     "bev_ende": 3005,
+     "fortzuege": 226,
+     "geborene": 14,
+     "gestorbene": 28,
+     "veraenderung": -44,
+     "zuzuege": 197
+    },
+    "2018": {
+     "bev_anfang": 3005,
+     "bev_ende": 2998,
+     "fortzuege": 203,
+     "geborene": 13,
+     "gestorbene": 32,
+     "veraenderung": 7,
+     "zuzuege": 216
+    },
+    "2019": {
+     "bev_anfang": 2998,
+     "bev_ende": 2943,
+     "fortzuege": 199,
+     "geborene": 23,
+     "gestorbene": 58,
+     "veraenderung": -55,
+     "zuzuege": 179
+    },
+    "2020": {
+     "bev_anfang": 2943,
+     "bev_ende": 2913,
+     "fortzuege": 190,
+     "geborene": 23,
+     "gestorbene": 51,
+     "veraenderung": -30,
+     "zuzuege": 188
+    },
+    "2021": {
+     "bev_anfang": 2913,
+     "bev_ende": 2938,
+     "fortzuege": 161,
+     "geborene": 20,
+     "gestorbene": 30,
+     "veraenderung": 25,
+     "zuzuege": 198
+    },
+    "2022": {
+     "bev_anfang": 2938,
+     "bev_ende": 2950,
+     "fortzuege": 167,
+     "geborene": 25,
+     "gestorbene": 56,
+     "veraenderung": 12,
+     "zuzuege": 212
+    },
+    "2023": {
+     "bev_anfang": 2950,
+     "bev_ende": 2916,
+     "fortzuege": 190,
+     "geborene": 20,
+     "gestorbene": 53,
+     "veraenderung": -34,
+     "zuzuege": 192
+    },
+    "2024": {
+     "bev_anfang": 2931,
+     "bev_ende": 2915,
+     "fortzuege": 175,
+     "geborene": 21,
+     "gestorbene": 35,
+     "veraenderung": -16,
+     "zuzuege": 172
+    }
+   },
+   "name": "Meißner"
+  },
+  "06636009": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 1853,
+     "bev_ende": 1848,
+     "fortzuege": 121,
+     "geborene": 24,
+     "gestorbene": 33,
+     "veraenderung": -5,
+     "zuzuege": 125
+    },
+    "2016": {
+     "bev_anfang": 1848,
+     "bev_ende": 1839,
+     "fortzuege": 124,
+     "geborene": 18,
+     "gestorbene": 23,
+     "veraenderung": -9,
+     "zuzuege": 121
+    },
+    "2017": {
+     "bev_anfang": 1839,
+     "bev_ende": 1827,
+     "fortzuege": 102,
+     "geborene": 9,
+     "gestorbene": 34,
+     "veraenderung": -12,
+     "zuzuege": 114
+    },
+    "2018": {
+     "bev_anfang": 1827,
+     "bev_ende": 1826,
+     "fortzuege": 108,
+     "geborene": 17,
+     "gestorbene": 33,
+     "veraenderung": 1,
+     "zuzuege": 123
+    },
+    "2019": {
+     "bev_anfang": 1826,
+     "bev_ende": 1818,
+     "fortzuege": 135,
+     "geborene": 17,
+     "gestorbene": 27,
+     "veraenderung": -8,
+     "zuzuege": 137
+    },
+    "2020": {
+     "bev_anfang": 1818,
+     "bev_ende": 1832,
+     "fortzuege": 95,
+     "geborene": 16,
+     "gestorbene": 35,
+     "veraenderung": 14,
+     "zuzuege": 129
+    },
+    "2021": {
+     "bev_anfang": 1832,
+     "bev_ende": 1811,
+     "fortzuege": 107,
+     "geborene": 9,
+     "gestorbene": 33,
+     "veraenderung": -21,
+     "zuzuege": 109
+    },
+    "2022": {
+     "bev_anfang": 1811,
+     "bev_ende": 1808,
+     "fortzuege": 106,
+     "geborene": 13,
+     "gestorbene": 35,
+     "veraenderung": -3,
+     "zuzuege": 126
+    },
+    "2023": {
+     "bev_anfang": 1808,
+     "bev_ende": 1802,
+     "fortzuege": 102,
+     "geborene": 13,
+     "gestorbene": 15,
+     "veraenderung": -6,
+     "zuzuege": 97
+    },
+    "2024": {
+     "bev_anfang": 1729,
+     "bev_ende": 1732,
+     "fortzuege": 84,
+     "geborene": 8,
+     "gestorbene": 29,
+     "veraenderung": 3,
+     "zuzuege": 107
+    }
+   },
+   "name": "Neu-Eichenberg"
+  },
+  "06636010": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 2925,
+     "bev_ende": 2974,
+     "fortzuege": 146,
+     "geborene": 13,
+     "gestorbene": 30,
+     "veraenderung": 49,
+     "zuzuege": 213
+    },
+    "2016": {
+     "bev_anfang": 2974,
+     "bev_ende": 2979,
+     "fortzuege": 160,
+     "geborene": 24,
+     "gestorbene": 27,
+     "veraenderung": 5,
+     "zuzuege": 167
+    },
+    "2017": {
+     "bev_anfang": 2979,
+     "bev_ende": 2924,
+     "fortzuege": 170,
+     "geborene": 33,
+     "gestorbene": 32,
+     "veraenderung": -55,
+     "zuzuege": 115
+    },
+    "2018": {
+     "bev_anfang": 2924,
+     "bev_ende": 2884,
+     "fortzuege": 130,
+     "geborene": 19,
+     "gestorbene": 41,
+     "veraenderung": 40,
+     "zuzuege": 111
+    },
+    "2019": {
+     "bev_anfang": 2884,
+     "bev_ende": 2871,
+     "fortzuege": 127,
+     "geborene": 29,
+     "gestorbene": 39,
+     "veraenderung": -13,
+     "zuzuege": 124
+    },
+    "2020": {
+     "bev_anfang": 2871,
+     "bev_ende": 2884,
+     "fortzuege": 83,
+     "geborene": 23,
+     "gestorbene": 37,
+     "veraenderung": 13,
+     "zuzuege": 110
+    },
+    "2021": {
+     "bev_anfang": 2884,
+     "bev_ende": 2875,
+     "fortzuege": 119,
+     "geborene": 28,
+     "gestorbene": 36,
+     "veraenderung": -9,
+     "zuzuege": 120
+    },
+    "2022": {
+     "bev_anfang": 2875,
+     "bev_ende": 2868,
+     "fortzuege": 111,
+     "geborene": 23,
+     "gestorbene": 38,
+     "veraenderung": -7,
+     "zuzuege": 123
+    },
+    "2023": {
+     "bev_anfang": 2868,
+     "bev_ende": 2842,
+     "fortzuege": 100,
+     "geborene": 21,
+     "gestorbene": 40,
+     "veraenderung": -26,
+     "zuzuege": 93
+    },
+    "2024": {
+     "bev_anfang": 2849,
+     "bev_ende": 2830,
+     "fortzuege": 124,
+     "geborene": 21,
+     "gestorbene": 39,
+     "veraenderung": -19,
+     "zuzuege": 122
+    }
+   },
+   "name": "Ringgau"
+  },
+  "06636011": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 7513,
+     "bev_ende": 7629,
+     "fortzuege": 329,
+     "geborene": 54,
+     "gestorbene": 113,
+     "veraenderung": 116,
+     "zuzuege": 503
+    },
+    "2016": {
+     "bev_anfang": 7629,
+     "bev_ende": 7671,
+     "fortzuege": 631,
+     "geborene": 47,
+     "gestorbene": 92,
+     "veraenderung": 42,
+     "zuzuege": 719
+    },
+    "2017": {
+     "bev_anfang": 7671,
+     "bev_ende": 7856,
+     "fortzuege": 403,
+     "geborene": 61,
+     "gestorbene": 108,
+     "veraenderung": 185,
+     "zuzuege": 635
+    },
+    "2018": {
+     "bev_anfang": 7856,
+     "bev_ende": 7839,
+     "fortzuege": 588,
+     "geborene": 78,
+     "gestorbene": 120,
+     "veraenderung": 17,
+     "zuzuege": 614
+    },
+    "2019": {
+     "bev_anfang": 7839,
+     "bev_ende": 7826,
+     "fortzuege": 542,
+     "geborene": 66,
+     "gestorbene": 110,
+     "veraenderung": -13,
+     "zuzuege": 576
+    },
+    "2020": {
+     "bev_anfang": 7826,
+     "bev_ende": 7693,
+     "fortzuege": 600,
+     "geborene": 54,
+     "gestorbene": 129,
+     "veraenderung": -133,
+     "zuzuege": 547
+    },
+    "2021": {
+     "bev_anfang": 7693,
+     "bev_ende": 7642,
+     "fortzuege": 478,
+     "geborene": 68,
+     "gestorbene": 152,
+     "veraenderung": -51,
+     "zuzuege": 507
+    },
+    "2022": {
+     "bev_anfang": 7642,
+     "bev_ende": 7561,
+     "fortzuege": 528,
+     "geborene": 59,
+     "gestorbene": 148,
+     "veraenderung": -81,
+     "zuzuege": 541
+    },
+    "2023": {
+     "bev_anfang": 7561,
+     "bev_ende": 7653,
+     "fortzuege": 403,
+     "geborene": 62,
+     "gestorbene": 144,
+     "veraenderung": 92,
+     "zuzuege": 582
+    },
+    "2024": {
+     "bev_anfang": 7472,
+     "bev_ende": 7466,
+     "fortzuege": 355,
+     "geborene": 51,
+     "gestorbene": 130,
+     "veraenderung": -6,
+     "zuzuege": 431
+    }
+   },
+   "name": "Sontra, Stadt"
+  },
+  "06636012": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 4433,
+     "bev_ende": 4411,
+     "fortzuege": 212,
+     "geborene": 26,
+     "gestorbene": 63,
+     "veraenderung": -22,
+     "zuzuege": 228
+    },
+    "2016": {
+     "bev_anfang": 4411,
+     "bev_ende": 4359,
+     "fortzuege": 258,
+     "geborene": 29,
+     "gestorbene": 51,
+     "veraenderung": -52,
+     "zuzuege": 228
+    },
+    "2017": {
+     "bev_anfang": 4359,
+     "bev_ende": 4309,
+     "fortzuege": 250,
+     "geborene": 32,
+     "gestorbene": 73,
+     "veraenderung": -50,
+     "zuzuege": 241
+    },
+    "2018": {
+     "bev_anfang": 4309,
+     "bev_ende": 4249,
+     "fortzuege": 223,
+     "geborene": 28,
+     "gestorbene": 62,
+     "veraenderung": 60,
+     "zuzuege": 210
+    },
+    "2019": {
+     "bev_anfang": 4249,
+     "bev_ende": 4234,
+     "fortzuege": 224,
+     "geborene": 24,
+     "gestorbene": 54,
+     "veraenderung": -15,
+     "zuzuege": 238
+    },
+    "2020": {
+     "bev_anfang": 4234,
+     "bev_ende": 4228,
+     "fortzuege": 185,
+     "geborene": 31,
+     "gestorbene": 72,
+     "veraenderung": -6,
+     "zuzuege": 220
+    },
+    "2021": {
+     "bev_anfang": 4228,
+     "bev_ende": 4239,
+     "fortzuege": 157,
+     "geborene": 26,
+     "gestorbene": 80,
+     "veraenderung": 11,
+     "zuzuege": 228
+    },
+    "2022": {
+     "bev_anfang": 4239,
+     "bev_ende": 4231,
+     "fortzuege": 232,
+     "geborene": 29,
+     "gestorbene": 66,
+     "veraenderung": -8,
+     "zuzuege": 256
+    },
+    "2023": {
+     "bev_anfang": 4231,
+     "bev_ende": 4200,
+     "fortzuege": 189,
+     "geborene": 25,
+     "gestorbene": 71,
+     "veraenderung": -31,
+     "zuzuege": 206
+    },
+    "2024": {
+     "bev_anfang": 4100,
+     "bev_ende": 4052,
+     "fortzuege": 219,
+     "geborene": 30,
+     "gestorbene": 63,
+     "veraenderung": -48,
+     "zuzuege": 204
+    }
+   },
+   "name": "Waldkappel, Stadt"
+  },
+  "06636013": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 4151,
+     "bev_ende": 4131,
+     "fortzuege": 210,
+     "geborene": 30,
+     "gestorbene": 67,
+     "veraenderung": -20,
+     "zuzuege": 227
+    },
+    "2016": {
+     "bev_anfang": 4131,
+     "bev_ende": 4151,
+     "fortzuege": 200,
+     "geborene": 25,
+     "gestorbene": 69,
+     "veraenderung": 20,
+     "zuzuege": 265
+    },
+    "2017": {
+     "bev_anfang": 4151,
+     "bev_ende": 4175,
+     "fortzuege": 202,
+     "geborene": 32,
+     "gestorbene": 62,
+     "veraenderung": 24,
+     "zuzuege": 255
+    },
+    "2018": {
+     "bev_anfang": 4175,
+     "bev_ende": 4179,
+     "fortzuege": 212,
+     "geborene": 27,
+     "gestorbene": 76,
+     "veraenderung": 4,
+     "zuzuege": 268
+    },
+    "2019": {
+     "bev_anfang": 4179,
+     "bev_ende": 4174,
+     "fortzuege": 223,
+     "geborene": 35,
+     "gestorbene": 70,
+     "veraenderung": -5,
+     "zuzuege": 252
+    },
+    "2020": {
+     "bev_anfang": 4174,
+     "bev_ende": 4190,
+     "fortzuege": 202,
+     "geborene": 29,
+     "gestorbene": 65,
+     "veraenderung": 16,
+     "zuzuege": 256
+    },
+    "2021": {
+     "bev_anfang": 4190,
+     "bev_ende": 4161,
+     "fortzuege": 190,
+     "geborene": 29,
+     "gestorbene": 72,
+     "veraenderung": -29,
+     "zuzuege": 203
+    },
+    "2022": {
+     "bev_anfang": 4161,
+     "bev_ende": 4227,
+     "fortzuege": 168,
+     "geborene": 34,
+     "gestorbene": 59,
+     "veraenderung": 66,
+     "zuzuege": 260
+    },
+    "2023": {
+     "bev_anfang": 4227,
+     "bev_ende": 4212,
+     "fortzuege": 180,
+     "geborene": 24,
+     "gestorbene": 70,
+     "veraenderung": -15,
+     "zuzuege": 210
+    },
+    "2024": {
+     "bev_anfang": 4042,
+     "bev_ende": 4050,
+     "fortzuege": 176,
+     "geborene": 42,
+     "gestorbene": 59,
+     "veraenderung": 8,
+     "zuzuege": 200
+    }
+   },
+   "name": "Wanfried, Stadt"
+  },
+  "06636014": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 5024,
+     "bev_ende": 5015,
+     "fortzuege": 233,
+     "geborene": 28,
+     "gestorbene": 60,
+     "veraenderung": -9,
+     "zuzuege": 256
+    },
+    "2016": {
+     "bev_anfang": 5015,
+     "bev_ende": 5040,
+     "fortzuege": 231,
+     "geborene": 54,
+     "gestorbene": 74,
+     "veraenderung": 25,
+     "zuzuege": 280
+    },
+    "2017": {
+     "bev_anfang": 5040,
+     "bev_ende": 5004,
+     "fortzuege": 224,
+     "geborene": 30,
+     "gestorbene": 69,
+     "veraenderung": -36,
+     "zuzuege": 227
+    },
+    "2018": {
+     "bev_anfang": 5004,
+     "bev_ende": 5002,
+     "fortzuege": 277,
+     "geborene": 49,
+     "gestorbene": 65,
+     "veraenderung": 2,
+     "zuzuege": 288
+    },
+    "2019": {
+     "bev_anfang": 5002,
+     "bev_ende": 4960,
+     "fortzuege": 244,
+     "geborene": 31,
+     "gestorbene": 53,
+     "veraenderung": -42,
+     "zuzuege": 225
+    },
+    "2020": {
+     "bev_anfang": 4960,
+     "bev_ende": 4963,
+     "fortzuege": 223,
+     "geborene": 39,
+     "gestorbene": 66,
+     "veraenderung": 3,
+     "zuzuege": 255
+    },
+    "2021": {
+     "bev_anfang": 4963,
+     "bev_ende": 4981,
+     "fortzuege": 211,
+     "geborene": 40,
+     "gestorbene": 66,
+     "veraenderung": 18,
+     "zuzuege": 256
+    },
+    "2022": {
+     "bev_anfang": 4981,
+     "bev_ende": 4999,
+     "fortzuege": 261,
+     "geborene": 41,
+     "gestorbene": 72,
+     "veraenderung": 18,
+     "zuzuege": 310
+    },
+    "2023": {
+     "bev_anfang": 4999,
+     "bev_ende": 4944,
+     "fortzuege": 228,
+     "geborene": 43,
+     "gestorbene": 74,
+     "veraenderung": -55,
+     "zuzuege": 202
+    },
+    "2024": {
+     "bev_anfang": 4917,
+     "bev_ende": 4883,
+     "fortzuege": 246,
+     "geborene": 35,
+     "gestorbene": 57,
+     "veraenderung": -34,
+     "zuzuege": 234
+    }
+   },
+   "name": "Wehretal"
+  },
+  "06636015": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 1072,
+     "bev_ende": 1037,
+     "fortzuege": 80,
+     "geborene": 3,
+     "gestorbene": 18,
+     "veraenderung": -35,
+     "zuzuege": 59
+    },
+    "2016": {
+     "bev_anfang": 1037,
+     "bev_ende": 1044,
+     "fortzuege": 70,
+     "geborene": 5,
+     "gestorbene": 18,
+     "veraenderung": 7,
+     "zuzuege": 90
+    },
+    "2017": {
+     "bev_anfang": 1044,
+     "bev_ende": 1018,
+     "fortzuege": 84,
+     "geborene": 7,
+     "gestorbene": 16,
+     "veraenderung": -26,
+     "zuzuege": 68
+    },
+    "2018": {
+     "bev_anfang": 1018,
+     "bev_ende": 981,
+     "fortzuege": 79,
+     "geborene": 3,
+     "gestorbene": 18,
+     "veraenderung": 37,
+     "zuzuege": 58
+    },
+    "2019": {
+     "bev_anfang": 981,
+     "bev_ende": 974,
+     "fortzuege": 55,
+     "geborene": 7,
+     "gestorbene": 8,
+     "veraenderung": -7,
+     "zuzuege": 48
+    },
+    "2020": {
+     "bev_anfang": 974,
+     "bev_ende": 986,
+     "fortzuege": 50,
+     "geborene": 4,
+     "gestorbene": 12,
+     "veraenderung": 12,
+     "zuzuege": 71
+    },
+    "2021": {
+     "bev_anfang": 986,
+     "bev_ende": 958,
+     "fortzuege": 56,
+     "geborene": 6,
+     "gestorbene": 19,
+     "veraenderung": -28,
+     "zuzuege": 41
+    },
+    "2022": {
+     "bev_anfang": 958,
+     "bev_ende": 952,
+     "fortzuege": 42,
+     "geborene": 5,
+     "gestorbene": 19,
+     "veraenderung": -6,
+     "zuzuege": 50
+    },
+    "2023": {
+     "bev_anfang": 952,
+     "bev_ende": 953,
+     "fortzuege": 44,
+     "geborene": 2,
+     "gestorbene": 11,
+     "veraenderung": 1,
+     "zuzuege": 53
+    },
+    "2024": {
+     "bev_anfang": 958,
+     "bev_ende": 963,
+     "fortzuege": 41,
+     "geborene": 6,
+     "gestorbene": 23,
+     "veraenderung": 5,
+     "zuzuege": 63
+    }
+   },
+   "name": "Weißenborn"
+  },
+  "06636016": {
+   "jahre": {
+    "2015": {
+     "bev_anfang": 14701,
+     "bev_ende": 14949,
+     "fortzuege": 898,
+     "geborene": 122,
+     "gestorbene": 195,
+     "veraenderung": 248,
+     "zuzuege": 1214
+    },
+    "2016": {
+     "bev_anfang": 14949,
+     "bev_ende": 15092,
+     "fortzuege": 1060,
+     "geborene": 144,
+     "gestorbene": 192,
+     "veraenderung": 143,
+     "zuzuege": 1264
+    },
+    "2017": {
+     "bev_anfang": 15092,
+     "bev_ende": 15163,
+     "fortzuege": 994,
+     "geborene": 155,
+     "gestorbene": 192,
+     "veraenderung": 71,
+     "zuzuege": 1103
+    },
+    "2018": {
+     "bev_anfang": 15163,
+     "bev_ende": 15167,
+     "fortzuege": 992,
+     "geborene": 157,
+     "gestorbene": 202,
+     "veraenderung": 4,
+     "zuzuege": 1045
+    },
+    "2019": {
+     "bev_anfang": 15167,
+     "bev_ende": 15126,
+     "fortzuege": 1087,
+     "geborene": 144,
+     "gestorbene": 199,
+     "veraenderung": -41,
+     "zuzuege": 1112
+    },
+    "2020": {
+     "bev_anfang": 15126,
+     "bev_ende": 15003,
+     "fortzuege": 989,
+     "geborene": 141,
+     "gestorbene": 224,
+     "veraenderung": -123,
+     "zuzuege": 957
+    },
+    "2021": {
+     "bev_anfang": 15003,
+     "bev_ende": 14943,
+     "fortzuege": 969,
+     "geborene": 143,
+     "gestorbene": 236,
+     "veraenderung": -60,
+     "zuzuege": 1012
+    },
+    "2022": {
+     "bev_anfang": 14943,
+     "bev_ende": 15005,
+     "fortzuege": 1018,
+     "geborene": 125,
+     "gestorbene": 248,
+     "veraenderung": 62,
+     "zuzuege": 1208
+    },
+    "2023": {
+     "bev_anfang": 15005,
+     "bev_ende": 15097,
+     "fortzuege": 949,
+     "geborene": 118,
+     "gestorbene": 209,
+     "veraenderung": 92,
+     "zuzuege": 1131
+    },
+    "2024": {
+     "bev_anfang": 15219,
+     "bev_ende": 15132,
+     "fortzuege": 917,
+     "geborene": 93,
+     "gestorbene": 209,
+     "veraenderung": -87,
+     "zuzuege": 950
+    }
+   },
+   "name": "Witzenhausen, Stadt"
+  }
+ },
+ "generated_at": "2026-10-24",
+ "kreis": {
+  "fortzuege": {
+   "Andere Bundesländer": 1619,
+   "Ausland": 988,
+   "Darmstadt, Wissenschaftsstadt": 4,
+   "Frankfurt am Main, Stadt": 32,
+   "Hochtaunuskreis": 7,
+   "Kassel, documenta-Stadt": 277,
+   "Lahn-Dill-Kreis": 11,
+   "Land Hessen": 1045,
+   "Landkreis Bergstraße": 9,
+   "Landkreis Darmstadt-Dieburg": 7,
+   "Landkreis Fulda": 29,
+   "Landkreis Gießen": 35,
+   "Landkreis Groß-Gerau": 6,
+   "Landkreis Hersfeld-Rotenburg": 154,
+   "Landkreis Kassel": 208,
+   "Landkreis Limburg-Weilburg": 0,
+   "Landkreis Marburg-Biedenkopf": 38,
+   "Landkreis Offenbach": 9,
+   "Landkreis Waldeck-Frankenberg": 42,
+   "Main-Kinzig-Kreis": 18,
+   "Main-Taunus-Kreis": 4,
+   "Odenwaldkreis": null,
+   "Offenbach am Main, Stadt": null,
+   "Rheingau-Taunus-Kreis": 8,
+   "Schwalm-Eder-Kreis": 112,
+   "Vogelsbergkreis": 4,
+   "Wetteraukreis": 15,
+   "Wiesbaden, Landeshauptstadt": 14,
+   "insgesamt": 3652
+  },
+  "jahr": 2024,
+  "quelle": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00014832/AIII1_j2024_Wanderung_Tabelle1.pdf",
+  "zuzuege": {
+   "Andere Bundesländer": 1581,
+   "Ausland": 1170,
+   "Darmstadt, Wissenschaftsstadt": 25,
+   "Frankfurt am Main, Stadt": 28,
+   "Hochtaunuskreis": 5,
+   "Kassel, documenta-Stadt": 250,
+   "Lahn-Dill-Kreis": 4,
+   "Land Hessen": 1382,
+   "Landkreis Bergstraße": 6,
+   "Landkreis Darmstadt-Dieburg": 6,
+   "Landkreis Fulda": 21,
+   "Landkreis Gießen": 90,
+   "Landkreis Groß-Gerau": 6,
+   "Landkreis Hersfeld-Rotenburg": 194,
+   "Landkreis Kassel": 344,
+   "Landkreis Limburg-Weilburg": 3,
+   "Landkreis Marburg-Biedenkopf": 83,
+   "Landkreis Offenbach": 12,
+   "Landkreis Waldeck-Frankenberg": 68,
+   "Main-Kinzig-Kreis": 17,
+   "Main-Taunus-Kreis": 6,
+   "Odenwaldkreis": 3,
+   "Offenbach am Main, Stadt": 6,
+   "Rheingau-Taunus-Kreis": 12,
+   "Schwalm-Eder-Kreis": 121,
+   "Vogelsbergkreis": 6,
+   "Wetteraukreis": 61,
+   "Wiesbaden, Landeshauptstadt": 5,
+   "insgesamt": 4133
+  }
+ },
+ "lizenz": "Vervielfältigung und Verbreitung, auch auszugsweise, mit Quellenangabe gestattet",
+ "quellen": {
+  "2015": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00005958/AI2_AII_AIII_AV_15_2hj_a.pdf",
+  "2016": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00007604/AI2_AII_AIII_AV-16_2hj_2kA_a.pdf",
+  "2017": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00007938/AI2_AII_AIII_AV_17_2hj_a.pdf",
+  "2018": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00008723/AI2_AII_AIII_AV_18-2hj_a.pdf",
+  "2019": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00009485/AI2_AII_AIII_AV_19-2hj_a.pdf",
+  "2020": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00010435/AI2_AII_AIII_AV_20-2hj_a.pdf",
+  "2021": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00011030/AI2_AII_AIII_AV_21-2hj_a.pdf",
+  "2022": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00012084/AI2_AII_AIII_AV_22-2hj_a.pdf",
+  "2023": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00013463/AI2_AII_AIII_AV_23-2hj_a.pdf",
+  "2024": "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/HEHeft_derivate_00014800/AI2_AII_AIII_AV_24-2hj_a.pdf"
+ }
+}
