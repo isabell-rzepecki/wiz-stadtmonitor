@@ -26,6 +26,7 @@ async function open(base, path = "", { width = 1440, height = 900, dark = false 
   page.on("pageerror", (e) => page.errors.push(String(e)));
   page.on("console", (m) => { if (m.type() === "error" && !/404|Failed to load resource/.test(m.text())) page.errors.push(m.text()); });
   await page.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
+  await page.route("https://www.gds-srv.hessen.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
   await page.goto(base + path, { waitUntil: "networkidle" });
   await page.waitForFunction(() => document.querySelector("#f-area")?.value);
   return page;
@@ -183,6 +184,27 @@ test("Wohnen und Boden: Stichtage, getrennte Mietbegriffe, Vergleich, Ortsbezirk
   assert.deepEqual(await axe(page), []);
   await page.locator("[data-brw-on]").click();
   assert.match(page.url(), /ebenen=bodenrichtwerte/);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+test("Bodenrichtwerte 2026: eigene Bildebene mit Stichtag, Hinweis zum Heranzoomen, Zustand im Link, ohne Verstöße", async () => {
+  const page = await open(SITE);
+  let wms = 0;
+  page.on("request", (r) => { if (r.url().startsWith("https://www.gds-srv.hessen.de/")) wms++; });
+  await page.locator(".map-layers summary").click();
+  await page.getByLabel("Bodenrichtwerte 2026 (Karte der HVBG)").check();
+  const legende = page.locator(".map-legend");
+  await page.waitForFunction(() => /01\.01\.2026/.test(document.querySelector(".map-legend")?.textContent || ""));
+  assert.match(await legende.textContent(), /näher heranzoomen/);
+  assert.match(await legende.textContent(), /gds-srv\.hessen\.de/);
+  assert.match(page.url(), /ebenen=bodenrichtwerte2026/);
+  assert.equal(wms, 0, "unterhalb der Mindestzoomstufe keine Abrufe");
+  for (let i = 0; i < 3; i++) { await page.locator(".leaflet-control-zoom-in").click(); await page.waitForTimeout(300); }
+  await page.waitForFunction(() => !/näher heranzoomen/.test(document.querySelector(".map-legend")?.textContent || ""));
+  assert.ok(wms > 0, "ab der Mindestzoomstufe Kartenbilder der HVBG");
+  assert.match(await page.locator(".leaflet-control-attribution").textContent(), /Bodenrichtwerte 2026/);
+  assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.close();
 });

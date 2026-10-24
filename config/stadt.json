@@ -727,10 +727,19 @@
   },
   "wohnen": {
     "_hinweis": "Modul Wohnen und Boden. Bestandsmiete, Angebotsmiete und ortsübliche Vergleichsmiete werden nie in einer Zahl oder Skala zusammengeführt. Rechtlicher Kontext ist datierter Text, kein Datensatz.",
+    "boris2026": {
+      "_hinweis": "Bodenrichtwerte mit Stichtag 01.01.2026 nur als Kartendienst (WMS) der HVBG: Bild der Zonen und Werte, keine Geometrien und keine Spannen. Eigene Ebene, nicht mit dem Stichtag 2024 vermischt (Entscheidung 24.10.2026, Issue #4).",
+      "wms": "https://www.gds-srv.hessen.de/cgi-bin/lika-services/ogc-free-maps.ows",
+      "layers": "hboris_zonen_t,hboris_label",
+      "stichtag": "2026-01-01",
+      "min_zoom": 13,
+      "attribution": "Bodenrichtwerte 2026: Gutachterausschüsse für Immobilienwerte des Landes Hessen / HVBG, Kartendienst (WMS)",
+      "hinweis": "Darstellung des Kartendienstes der HVBG (Farben je Nutzungsart, Werte als Beschriftung). Sichtbar erst bei näherer Ansicht, Beschriftungen ab etwa Maßstab 1:15 000. Beim Einschalten lädt Ihr Browser die Bilder von gds-srv.hessen.de."
+    },
     "boris": {
       "url": "https://www.gds.hessen.de/wfs2/boris/cgi-bin/brw/2024/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=boris:BR_BodenrichtwertZonal&COUNT=5000",
       "stichtag": "2024-01-01",
-      "stichtag_hinweis": "Stichtag 01.01.2024. Ein Dienst mit dem Stichtag 01.01.2026 war am 23.10.2026 nicht auffindbar (…/brw/2026/wfs: HTTP 404; der INSPIRE-Download-Feed 732 beruht auf dem Dienst mit Stichtag 01.01.2020).",
+      "stichtag_hinweis": "Stichtag 01.01.2024 (Zonen und Spannen). Einen Datendienst (WFS) mit dem Stichtag 01.01.2026 gibt es nicht (…/brw/2026/wfs: HTTP 404, geprüft am 24.10.2026); den Stichtag 2026 zeigt die eigene Ebene „Bodenrichtwerte 2026 (Karte der HVBG)“.",
       "attribution": "Bodenrichtwerte: Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH, Stichtag 01.01.2024",
       "lizenz": "Nutzung ohne Einschränkung oder Bedingung (AccessConstraints des Dienstes); dl-de/zero-2.0",
       "filter": "baureifes Land (Entwicklungszustand B), Art W… (Wohnbauflächen) oder M… (gemischte Bauflächen)",
