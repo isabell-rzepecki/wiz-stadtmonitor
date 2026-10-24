@@ -15,7 +15,7 @@
     const vorhanden = index ? index.ortsteile : {};
     const liste = cfg.ortsteile.filter((o) => vorhanden[o.slug]);
     const sel = $("#ortsteil3d");
-    sel.innerHTML = liste.map((o) => `<option value="${esc(o.slug)}">${esc(o.name)} (${vorhanden[o.slug]})</option>`).join("");
+    sel.innerHTML = liste.map((o) => `<option value="${esc(o.slug)}">${esc(o.name)}</option>`).join("");
     sel.value = liste.some((o) => o.slug === gebiet) ? gebiet : (liste.find((o) => o.slug === "kernstadt") || liste[0] || {}).slug || "";
     $("#hinweis3d").textContent = `${G.hinweis} ${index && index.dateien.every((d) => /^BW_/i.test(d)) ? "Derzeit sind nur Bauwerke (Datei „BW“) eingelesen; die Gebäude (Datei „GB“) fehlen noch." : ""}`;
     const k = G.hoehen;
@@ -53,8 +53,11 @@
       const hs = d.features.map((x) => x.properties.h).sort((a, b) => a - b);
       const name = (cfg.ortsteile.find((o) => o.slug === slug) || {}).name || slug;
       $("#stand3d").textContent = `${name}: ${hs.length.toLocaleString("de-DE")} Objekte, Höhe Median ${hs[Math.floor(hs.length / 2)].toLocaleString("de-DE")} m, höchstes ${hs[hs.length - 1].toLocaleString("de-DE")} m`;
-      const b = new maplibregl.LngLatBounds();
-      for (const x of d.features) for (const p of x.geometry.coordinates) for (const r of p) for (const c of r) b.extend(c);
+      // auf den bebauten Kern ausrichten: 5- bis 95-Prozent-Bereich der Gebäudelagen, einzelne entfernte Objekte zählen nicht
+      const pts = d.features.map((x) => x.geometry.coordinates[0][0][0]);
+      const q = (arr, p) => arr[Math.min(arr.length - 1, Math.floor(p * arr.length))];
+      const xs = pts.map((c) => c[0]).sort((a, b) => a - b), ys = pts.map((c) => c[1]).sort((a, b) => a - b);
+      const b = new maplibregl.LngLatBounds([q(xs, 0.05), q(ys, 0.05)], [q(xs, 0.95), q(ys, 0.95)]);
       map.fitBounds(b, { padding: schmal ? { top: 140, bottom: 120, left: 20, right: 20 } : { top: 90, bottom: 60, left: 420, right: 60 }, pitch: 55, bearing: -20, maxZoom: 17, duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 800 });
       $("#zurueck").href = `./?gebiet=ortsteil:${encodeURIComponent(slug)}`;
       const url = new URL(location.href); url.searchParams.set("gebiet", `ortsteil:${slug}`); history.replaceState(null, "", url);

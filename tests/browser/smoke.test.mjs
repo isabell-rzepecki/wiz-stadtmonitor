@@ -317,7 +317,7 @@ test("3D-Ansicht: Ortsteil aus dem Link, Höhenangaben, Hinweis und Namensnennun
   await page.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
   await page.goto(SITE + "3d.html?gebiet=ortsteil:kernstadt", { waitUntil: "networkidle" });
   await page.waitForFunction(() => /Objekte/.test(document.querySelector("#stand3d").textContent));
-  assert.match(await page.locator("#stand3d").textContent(), /^Kernstadt: \d+ Objekte, Höhe Median [\d,]+ m/);
+  assert.match(await page.locator("#stand3d").textContent(), /^Kernstadt: [\d.]+ Objekte, Höhe Median [\d,]+ m/);
   assert.equal(await page.locator("#ortsteil3d").inputValue(), "kernstadt");
   assert.match(await page.locator("#hinweis3d").textContent(), /Dachformen und Geländehöhe werden nicht dargestellt/);
   assert.match(await page.locator(".maplibregl-ctrl-attrib").textContent(), /HVBG.*vereinfacht/);

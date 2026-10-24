@@ -1,7 +1,8 @@
 """3D-Gebäude aus den 3D-Gebäudemodellen LoD2 der HVBG (CityGML) für die 3D-Ansicht.
 
-Das Download-Center der HVBG ist nur interaktiv nutzbar; die CityGML-Dateien je Gemeinde („GB“ Gebäude, „BW“
-Bauwerke) werden deshalb von Hand nach data/raw/lod2/ gelegt (auch als ZIP). Je Gebäude bzw. Gebäudeteil werden
+Gebäude („LoD2“) und Bauwerke („BW“) der Gemeinde lädt fetch() über die Schnittstelle des Download-Centers der HVBG;
+die Adresse einer Datei trägt ein Tagesdatum und wird deshalb jedes Mal erfragt. Gelesen werden alle CityGML-Dateien in
+data/raw/lod2/ (auch in ZIP-Archiven). Je Gebäude bzw. Gebäudeteil werden
 Grundriss (GroundSurface, sonst der tiefste Ring des Körpers) und gemessene Höhe übernommen; Dachformen nicht.
 Ausgabe je Ortsteil (Lage des Grundrissmittelpunkts in der Gemarkung) nach data/geo/hvgg/gebaeude3d/ (Geobasisdaten,
 § 18 HVGG: Nutzung ohne Einschränkung, Quellenvermerk), damit
@@ -10,18 +11,48 @@ die Seite auch ohne Rohdaten im Workflow gebaut werden kann.
 import io
 import json
 import re
+import time
+import urllib.parse
 import zipfile
 from datetime import date
 
 from pyproj import Transformer
 from shapely.geometry import Point, Polygon, shape
 
-from . import config
+from . import audit, config, net
 
 G = config.STADT["gebaeude3d"]
 RAW = config.RAW / "lod2"
 OUT = config.GEO / "hvgg" / "gebaeude3d"
 EXPORT = config.EXPORT / "gebaeude3d"
+
+
+def fetch():
+    """Gebäude und Bauwerke der Gemeinde laden; aus dem Zwischenspeicher, solange sie jünger als 180 Tage sind."""
+    RAW.mkdir(parents=True, exist_ok=True)
+    for d in G["dateien"]:
+        ziel = RAW / f"{d['datei']}.zip"
+        if ziel.exists() and time.time() - ziel.stat().st_mtime < 180 * 86400:
+            continue
+        try:
+            liste, _ = net.get(d["rest"], tries=2)
+            eintrag = next(x for x in json.loads(liste)["searchresult"]["downloads"] if x["name"] == d["datei"])
+            url = G["download_basis"] + urllib.parse.quote(eintrag["downloadLink"]["uri"])
+            body, _ = net.get(url, tries=2)
+            if not body.startswith(b"PK"):
+                raise ValueError("keine ZIP-Datei")
+            ziel.write_bytes(body)
+            audit.abruf("lod2_dlc", url, 200, len(body), "", "", f"Stand {eintrag.get('creationDate', '')}")
+        except Exception as e:  # Stand im Repository bleibt
+            audit.abruf("lod2_dlc", d["rest"], getattr(e, "code", ""), "", "", "", str(e)[:200])
+            print(f"3D-Gebäude: {d['datei']} nicht abrufbar ({e}); Stand im Repository bleibt")
+
+
+def aktuell():
+    """True, wenn die abgeleiteten Dateien jünger sind als alle Rohdateien (dann entfällt das Einlesen von rund 400 MB)."""
+    index = OUT / "index.json"
+    roh = [p for p in RAW.glob("**/*") if p.suffix.lower() in (".gml", ".zip")]
+    return index.exists() and roh and all(p.stat().st_mtime < index.stat().st_mtime for p in roh)
 
 
 def dateien():
@@ -74,6 +105,15 @@ def gebaeude(text):
 
 
 def build():
+    fehlend = [d["datei"] for d in G["dateien"] if not (RAW / f"{d['datei']}.zip").exists()]
+    if fehlend:  # unvollständig (Abruf gescheitert): nicht mit einem Teil der Daten überschreiben
+        print(f"3D-Gebäude: {', '.join(fehlend)} fehlt; Stand im Repository bleibt")
+        _export()
+        return
+    if aktuell():
+        print("3D-Gebäude: Rohdaten unverändert, Stand im Repository bleibt")
+        _export()
+        return
     liste = dateien()
     if not liste:
         print("3D-Gebäude: keine CityGML-Dateien in data/raw/lod2/; Stand im Repository bleibt")
@@ -85,12 +125,13 @@ def build():
     je = {}
     for name, text in liste:
         for g in gebaeude(text):
-            polys = [[[round(c, 6) for c in to_wgs(x, y)] for x, y in r] for r in g["grundriss"] if len(r) >= 4]
+            polys = [[[round(c, 5) for c in to_wgs(x, y)] for x, y in r] for r in g["grundriss"] if len(r) >= 4]  # etwa 1 m
             if not polys:
                 continue
             mitte = Polygon(polys[0]).representative_point()
             slug = next((s for s, f in flaechen if f.contains(Point(mitte.x, mitte.y))), None) or "ausserhalb"
-            je.setdefault(slug, []).append({"type": "Feature", "properties": {"h": g["hoehe"], "f": g["funktion"], "q": name.rsplit("/", 1)[-1]},
+            art = "BW" if name.rsplit("/", 1)[-1].startswith("BW_") else "GB"  # Bauwerk oder Gebäude
+            je.setdefault(slug, []).append({"type": "Feature", "properties": {"h": g["hoehe"], "f": g["funktion"], "q": art},
                                             "geometry": {"type": "MultiPolygon", "coordinates": [[p] for p in polys]}})
     OUT.mkdir(parents=True, exist_ok=True)
     for alt in OUT.glob("*.json"):
