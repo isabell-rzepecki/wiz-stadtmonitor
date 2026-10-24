@@ -25,7 +25,7 @@
     if (!liste.length) { $("#stand3d").textContent = "Noch keine 3D-Daten."; return; }
 
     maplibregl.setWorkerUrl("vendor/maplibre/maplibre-gl-csp-worker.js");
-    const tiles = cfg.karte.hintergrund.grau.replace("{z}/{y}/{x}", "{z}/{y}/{x}");
+    const tiles = cfg.karte.hintergrund.grau;
     const map = new maplibregl.Map({
       container: "karte3d", center: [cfg.karte.zentrum[1], cfg.karte.zentrum[0]], zoom: 15, pitch: 55, bearing: -20, maxPitch: 70,
       style: { version: 8, sources: { basis: { type: "raster", tiles: [tiles], tileSize: 256, maxzoom: cfg.karte.hintergrund.max_zoom,
@@ -43,10 +43,14 @@
         "fill-extrusion-color": ["step", ["get", "h"], FARBEN[0], k[0], FARBEN[1], k[1], FARBEN[2], k[2], FARBEN[3], k[3], FARBEN[4]],
         "fill-extrusion-height": ["get", "h"], "fill-extrusion-base": 0, "fill-extrusion-opacity": 0.9 } });
       laden(sel.value);
+      sel.addEventListener("change", () => laden(sel.value));  // erst nach dem Laden der Karte (Quellen vorhanden)
     });
+    let folge = 0;  // nur die zuletzt gewählte Antwort zeigen, auch wenn eine frühere später eintrifft
     async function laden(slug) {
+      const nr = ++folge;
       const d = await json(`data/export/gebaeude3d/${encodeURIComponent(slug)}.json`);
-      if (!d) { $("#stand3d").textContent = "Daten für diesen Ortsteil fehlen."; return; }
+      if (nr !== folge) return;
+      if (!d || !d.features.length) { $("#stand3d").textContent = "Daten für diesen Ortsteil fehlen."; return; }
       map.getSource("gebaeude").setData(d);
       const f = flaechen && flaechen.features.find((x) => x.properties.slug === slug);
       map.getSource("grenze").setData(f ? { type: "FeatureCollection", features: [f] } : { type: "FeatureCollection", features: [] });
@@ -62,7 +66,6 @@
       $("#zurueck").href = `./?gebiet=ortsteil:${encodeURIComponent(slug)}`;
       const url = new URL(location.href); url.searchParams.set("gebiet", `ortsteil:${slug}`); history.replaceState(null, "", url);
     }
-    sel.addEventListener("change", () => laden(sel.value));
   }
   start().catch((e) => { $("#stand3d").textContent = `Die 3D-Ansicht konnte nicht geladen werden (${e.message}).`; });
 })();

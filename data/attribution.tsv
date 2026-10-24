@@ -6,7 +6,7 @@ bplan,fplan	nur nicht kommerziell	Geltungsbereiche Bauleitplanung: Magistrat der
 boris	Nutzung ohne Einschränkung	Bodenrichtwerte: Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH, Stichtag 01.01.2024		ja
 uesg,tws	CC BY 4.0	Darstellung auf der Grundlage von Daten des Hessischen Landesamtes für Naturschutz, Umwelt und Geologie (HLNUG)	https://creativecommons.org/licenses/by/4.0/deed.de	ja
 schutzgeb	frei nutzbar, keine Weiterveräußerung	Darstellung auf der Grundlage von Daten des Hessischen Ministeriums für Landwirtschaft und Umwelt, Weinbau, Forsten, Jagd und Heimat (HMLU); Naturparke: Landesbetrieb HessenForst		ja
-zensus_gem,zensus_gitter,zensus_miete_gitter,zensus_eigentum_gitter,zensus_leerstand_gitter	dl-de/by-2.0	© Statistische Ämter des Bundes und der Länder, 2024, dl-de/by-2-0	https://www.govdata.de/dl-de/by-2-0	ja
+zensus_gem,zensus_gitter,zensus_miete_gitter,zensus_eigentum_gitter	dl-de/by-2.0	© Statistische Ämter des Bundes und der Länder, 2024, dl-de/by-2-0	https://www.govdata.de/dl-de/by-2-0	ja
 vg250	dl-de/by-2.0	© BKG (Jahr) dl-de/by-2-0	https://www.bkg.bund.de	nein
 osm	ODbL 1.0	© OpenStreetMap-Mitwirkende, ODbL	https://www.openstreetmap.org/copyright	nein
 wikidata	CC0	Daten: Wikidata (CC0) (freiwillig)	https://www.wikidata.org	nein
@@ -16,6 +16,6 @@ rp_nordhessen_wfs	dl-de/by-2.0	Regionalplan Nordhessen: Hessisches Ministerium f
 denkmal_wfs	dl-de/by-2.0	Kulturdenkmäler: Landesamt für Denkmalpflege Hessen (DenkXweb), dl-de/by-2-0	https://denkxweb.denkmalpflege-hessen.de	ja
 alkis_gebaeude	Nutzung ohne Einschränkung	Gebäude: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG), ALKIS vereinfacht; Darstellung verändert		ja
 beteiligungsbericht	amtliche Veröffentlichung	Beteiligungsbericht der Stadt Witzenhausen 2024	https://www.witzenhausen.eu/wp-content/uploads/2025/11/Beteiligungsbericht-2024.pdf	ja
-lod2_dlc	Nutzung ohne Einschränkung	3D-Gebäudemodelle LoD2: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG); Darstellung vereinfacht		nein
-boris2026	Nutzung ohne Einschränkung	Bodenrichtwerte 2026: Gutachterausschüsse für Immobilienwerte des Landes Hessen / HVBG, Kartendienst (WMS)	https://boris.hessen.de	nein
+lod2_dlc	Nutzung ohne Einschränkung	3D-Gebäudemodelle LoD2: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG); Darstellung vereinfacht		ja
+boris2026	Nutzung ohne Einschränkung	Bodenrichtwerte 2026: Gutachterausschüsse für Immobilienwerte des Landes Hessen / HVBG, Kartendienst (WMS)	https://boris.hessen.de	ja
 hsl_wanderung,hsl_wanderung_kreise	Quellenangabe	Wanderung: © Hessisches Statistisches Landesamt, Wiesbaden; Raten je 1 000 Einwohner eigene Berechnung	https://statistik.hessen.de	ja

@@ -30,7 +30,7 @@ class Datenquellen(unittest.TestCase):
         self.assertIn("nicht kommerzielle", texte)
         self.assertIn("basemap.de", texte)
         self.assertNotIn("(Jahr)", texte)
-        self.assertNotIn("Zensus", texte, "nur genutzte Quellen")
+        self.assertNotIn("OpenStreetMap", texte, "nur genutzte Quellen (osm: auf_seite = nein)")
 
 
 if __name__ == "__main__":

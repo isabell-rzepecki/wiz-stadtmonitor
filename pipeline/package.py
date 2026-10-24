@@ -1,5 +1,6 @@
-"""Datenpaket (Zip): Vorgänge, Audit-Protokolle, Quellenregister und Lizenzen. Ohne Flächen der Bauleitplanung
-(Nutzung nur nicht kommerziell, nicht weitergeben); die Zuordnung Vorgang → Plannummer ist enthalten."""
+"""Datenpaket (Zip): Vorgänge, Gesellschaften, Beteiligung, Wahlen, Wanderung, Wohnen, Audit-Protokolle,
+Quellenregister und Lizenzen (je Datei in LICENSE-DATA.md). Ohne Flächen der Bauleitplanung (Nutzung nur nicht
+kommerziell, nicht weitergeben); die Zuordnung Vorgang → Plannummer ist enthalten."""
 import zipfile
 
 from . import config

@@ -1,8 +1,8 @@
 """Ortsbezirke aus den Gemarkungen (Digitale Verwaltungsgrenzen Hessen, HVBG, dl-de/zero-2.0).
 
 Quelle `vg_shp` im Quellenregister: Shapefile in EPSG:25832, Filter auf die Gemeinde (GMDE_NR). Die Zuordnung
-Gemarkung → Ortsbezirk steht in config/stadt.json (ortsteile[].gemarkung_nr, zuordnung_status); offene Punkte
-(§ 6 Hauptsatzung, Bischhausen, Hübenthal) bleiben dort sichtbar markiert und werden hier nicht aufgelöst.
+Gemarkung → Ortsbezirk steht in config/stadt.json (ortsteile[].gemarkung_nr, zuordnung_status, anmerkung); dass
+Gemarkungsgrenzen den Grenzen der ehemaligen Gemeinden (§ 6 Hauptsatzung) entsprechen, ist dort als Annahme markiert.
 
 Ausgabe:
 - data/geo/dl-de-zero/ortsbezirke.geojson: volle Auflösung (6 Nachkommastellen), im Repository;

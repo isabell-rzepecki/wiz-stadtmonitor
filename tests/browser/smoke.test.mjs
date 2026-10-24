@@ -26,8 +26,12 @@ async function open(base, path = "", { width = 1440, height = 900, dark = false 
   const page = await browser.newPage({ viewport: { width, height }, colorScheme: dark ? "dark" : "light", bypassCSP: true });
   await page.clock.setSystemTime(JETZT);
   page.errors = [];
+  page.requests = [];  // alle Abrufe ab dem Laden (etwa fremde Kartendienste)
+  page.on("request", (r) => page.requests.push(r.url()));
   page.on("pageerror", (e) => page.errors.push(String(e)));
-  page.on("console", (m) => { if (m.type() === "error" && !/404|Failed to load resource/.test(m.text())) page.errors.push(m.text()); });
+  // fehlende Dateien sind nur in der Seite ohne Daten erwartet; mit Testdaten zählt jede fehlende Datei als Fehler
+  const fehlendErlaubt = base === SITE_LEER;
+  page.on("console", (m) => { if (m.type() === "error" && !(fehlendErlaubt && /404|Failed to load resource/.test(m.text()))) page.errors.push(m.text()); });
   await page.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
   await page.route("https://www.gds-srv.hessen.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
   await page.goto(base + path, { waitUntil: "networkidle" });
@@ -160,9 +164,15 @@ test("Kartenebene Bauleitplanung: Nutzungshinweis in Legende und Namensnennung, 
   await weitereEbenen(page);
   await page.getByLabel("Bauleitplanung").check();
   await page.waitForFunction(() => document.querySelectorAll(".leaflet-overlay-pane path").length > 0);
-  assert.match(await page.locator(".map-legend").textContent(), /nur für nicht kommerzielle Zwecke/);
+  // der Nutzungshinweis ist sichtbar (Legende klappt beim Einschalten auf), nicht nur im Quelltext
+  assert.ok(await page.locator(".map-legend .hint", { hasText: "nur für nicht kommerzielle Zwecke" }).isVisible());
   assert.match(await page.locator(".leaflet-control-attribution").textContent(), /Magistrat der Stadt Witzenhausen/);
   assert.match(page.url(), /plaene=1/);
+  // Pläne auch per Tastatur: Auswahl in der Legende öffnet den Plan
+  const wahl = page.locator(".map-legend select[data-plan-wahl]");
+  await wahl.selectOption({ index: 1 });
+  await page.waitForFunction(() => /plan$/.test(document.querySelector("#detail-heading")?.textContent || ""));
+  assert.match(page.url(), /plan=/);
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.close();
@@ -205,7 +215,7 @@ test("Wohnen und Boden: Stichtage, getrennte Mietbegriffe, Vergleich, Ortsbezirk
   await page.close();
 });
 
-test("Bodenrichtwerte 2026: eigene Bildebene mit Stichtag, Hinweis zum Heranzoomen, Zustand im Link, ohne Verstöße", async () => {
+test("Bodenrichtwerte 2026: eigene Bildebene mit Stichtag, Hinweis zum Heranzoomen, nicht aus dem Link, ohne Verstöße", async () => {
   const page = await open(SITE);
   let wms = 0;
   page.on("request", (r) => { if (r.url().startsWith("https://www.gds-srv.hessen.de/")) wms++; });
@@ -215,7 +225,7 @@ test("Bodenrichtwerte 2026: eigene Bildebene mit Stichtag, Hinweis zum Heranzoom
   await page.waitForFunction(() => /01\.01\.2026/.test(document.querySelector(".map-legend")?.textContent || ""));
   assert.match(await legende.textContent(), /näher heranzoomen/);
   assert.match(await legende.textContent(), /gds-srv\.hessen\.de/);
-  assert.match(page.url(), /ebenen=bodenrichtwerte2026/);
+  assert.doesNotMatch(page.url(), /bodenrichtwerte2026/, "fremder Kartendienst nur nach Einschalten, nicht über einen Link");
   assert.equal(wms, 0, "unterhalb der Mindestzoomstufe keine Abrufe");
   for (let i = 0; i < 3; i++) { await page.locator(".leaflet-control-zoom-in").click(); await page.waitForTimeout(300); }
   await page.waitForFunction(() => !/näher heranzoomen/.test(document.querySelector(".map-legend")?.textContent || ""));
@@ -224,6 +234,12 @@ test("Bodenrichtwerte 2026: eigene Bildebene mit Stichtag, Hinweis zum Heranzoom
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.close();
+  // ein Link mit der Ebene schaltet sie nicht ein (Datenschutzhinweis: Übertragung nur nach Einschalten)
+  const verlinkt = await open(SITE, "?ebenen=bodenrichtwerte2026&zoom=16");
+  await weitereEbenen(verlinkt);
+  assert.equal(await verlinkt.getByLabel("Bodenrichtwerte 2026 (Karte der HVBG)").isChecked(), false);
+  assert.deepEqual(verlinkt.requests.filter((u) => u.startsWith("https://www.gds-srv.hessen.de/")), []);
+  await verlinkt.close();
 });
 
 test("Zuzug und Wegzug: Zeitreihe mit Tabelle, Gemeinden im Kreis, Kreisebene gekennzeichnet, Kartenebenen, ohne Verstöße", async () => {
@@ -254,7 +270,7 @@ test("Zuzug und Wegzug: Zeitreihe mit Tabelle, Gemeinden im Kreis, Kreisebene ge
   await page.close();
 });
 
-test("Wahlen und Gremien: amtliche Ergebnisse, Lücke 2016, Ortsbeirat des Gebiets, ohne Verstöße", async () => {
+test("Wahlen und Gremien: amtliche Ergebnisse mit Stufe (Schnellmeldung), 2016, Ortsbeirat des Gebiets, ohne Verstöße", async () => {
   const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
   await page.locator('[data-mega="mega-mitmachen"]').click();
   await page.locator("#cta-wahlen").click();

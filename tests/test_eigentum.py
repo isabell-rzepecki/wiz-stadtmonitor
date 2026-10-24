@@ -34,7 +34,7 @@ class Eigentum(unittest.TestCase):
         e = g[0]
         self.assertEqual((e["name"], e["gesellschafter"], e["pflicht"]), ("Muster Bäder GmbH (MB)", "Stadt Musterstadt ( 100 % )", True))
         self.assertEqual(e["gegenstand"], "Gegenstand des Unternehmens ist der Betrieb von öffentlichen Bädern.")
-        self.assertNotIn("Muster,", str(g))
+        self.assertNotIn("Erika", str(g))  # Aufsichtsratsvorsitz (Person) nicht übernommen
         self.assertNotIn("Erika", str(g))
         self.assertNotIn("Beispiel", str(g))
 

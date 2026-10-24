@@ -1,5 +1,6 @@
-# Täglich: Einladungen und Umringe der Bauleitplanung abrufen, Vorgänge erzeugen, prüfen und auf GitHub Pages
-# veröffentlichen. Rohdaten (PDF, Text, Umringe) liegen nur im Zwischenspeicher des Workflows, nicht im Repository.
+# Täglich: alle Quellen abrufen (python -m pipeline all), Vorgänge und Ebenen erzeugen, prüfen und auf GitHub Pages
+# veröffentlichen. Rohdaten (PDF, Text, Umringe, Geodaten) liegen nur im Zwischenspeicher des Workflows, nicht im
+# Repository. Auf anderen Zweigen läuft derselbe Aufbau als Probe, ohne Veröffentlichung und ohne neuen Zwischenspeicher.
 name: Daten und Seite
 
 on:
@@ -9,9 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: read  # Schreibrechte für Pages nur im Job deploy
 
 concurrency:
   group: pages-${{ github.ref }}
@@ -31,8 +30,9 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
           pip install -r requirements.txt
-      # Zwischenspeicher der Rohdaten: neue Einladungen werden nachgeladen, vorhandene nicht erneut abgerufen
-      - uses: actions/cache@v4
+      # Zwischenspeicher der Rohdaten: neue Einladungen werden nachgeladen, vorhandene nicht erneut abgerufen.
+      # Gespeichert wird nur auf dem Hauptzweig (andere Zweige lesen ihn), damit Probeläufe ihn nicht verdrängen.
+      - uses: actions/cache/restore@v4
         with:
           path: |
             data/raw
@@ -43,6 +43,14 @@ jobs:
         run: python -m unittest discover -s tests -t .
       - name: Pipeline (Abruf, Aufbau, Prüfung, Datenpaket, Seite)
         run: python -m pipeline all
+      # auch nach einem Fehler in der Prüfung: die geladenen Rohdaten sind vollständig geschrieben und bleiben nutzbar
+      - uses: actions/cache/save@v4
+        if: ${{ !cancelled() && github.ref_name == github.event.repository.default_branch }}
+        with:
+          path: |
+            data/raw
+            data/geo/restricted
+          key: rohdaten-${{ github.run_id }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
@@ -51,6 +59,10 @@ jobs:
     needs: build
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

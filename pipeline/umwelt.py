@@ -54,7 +54,7 @@ def fetch():
     w, s, o, n = stadtgebiet().bounds
     bbox = (w - 0.005, s - 0.005, o + 0.005, n + 0.005)
     for g, e in ebenen():
-        if e.get("abruf"):  # eigener Abruf in einem anderen Modul (z. B. gebaeude.py)
+        if e.get("abruf"):  # eigener Abruf in einem anderen Modul (z. B. eigentum.py)
             continue
         ziel = RAW / f"{e['id']}.geojson"
         if ziel.exists() and time.time() - ziel.stat().st_mtime < 7 * 86400:

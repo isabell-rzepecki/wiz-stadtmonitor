@@ -50,10 +50,10 @@
     ],
     "zoom": 12,
     "bbox": [
-      9.72,
-      51.28,
-      9.94,
-      51.41
+      9.7,
+      51.26,
+      9.95,
+      51.415
     ],
     "hintergrund": {
       "grau": "https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_grau/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png",
@@ -472,10 +472,6 @@
       }
     }
   },
-  "offene_punkte_raum": [
-    "Gemarkungsgrenzen und Grenzen der ehemaligen Gemeinden: Abweichungen nicht geprüft – Issue #3",
-    "Hübenthal: Teil der ehemaligen Gemeinde Berlepsch-Ellerode? – Issue #3"
-  ],
   "verortung": {
     "ausschluss_namen": [
       "In der Stadt",
@@ -945,7 +941,6 @@
     ],
     "lizenz": "Vervielfältigung und Verbreitung, auch auszugsweise, mit Quellenangabe gestattet",
     "attribution": "Wanderung: © Hessisches Statistisches Landesamt, Wiesbaden; Raten je 1 000 Einwohner eigene Berechnung",
-    "seite": "https://statistik.hessen.de/zahlen-fakten/bevoelkerung",
     "hinweise": [
       "Gezählt werden An- und Abmeldungen über die Gemeindegrenze. Umzüge innerhalb der Stadt sind nicht enthalten.",
       "Witzenhausen ist Hochschulstandort (Universität Kassel, Fachbereich Ökologische Agrarwissenschaften). Zu- und Fortzüge von Studierenden erhöhen beide Ströme; der Saldo ist deshalb aussagekräftiger als die einzelnen Zahlen.",
