@@ -35,7 +35,8 @@ def check():
         probleme.append("vorgaenge.json enthält Geometrien")
     # Kartenebenen ohne Objekte: Hinweis im Protokoll (die Seite zeigt dann eine Lücke)
     for p in sorted((config.EXPORT / "karte").glob("*.json")):
-        if not json.loads(p.read_text(encoding="utf-8")).get("features"):
+        ebene = json.loads(p.read_text(encoding="utf-8"))
+        if ebene.get("type") == "FeatureCollection" and not ebene.get("features"):
             print(f"Hinweis: Kartenebene {p.name} ohne Objekte")
     je = collections.Counter(s["gremium"] for s in d["sitzungen"])
     print(f"{len(d['sitzungen'])} Sitzungen, {len(d['vorgaenge'])} Vorgänge, Parserfehler {quote:.1%}")

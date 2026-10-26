@@ -42,7 +42,7 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - **Beteiligung der Öffentlichkeit:** Stufen und Fristen der Bauleitplanung stammen aus den amtlichen Bekanntmachungen (ab 2024 als PDF, ab 10/2025 als eigener Inhaltstyp). Verknüpft wird über Plannummer, Änderung und Gemarkung; Ansprechpersonen und E-Mail-Adressen werden nicht übernommen.
 - **Gebäude und Eigentum:** Gezeigt werden nur die Gebäudefunktion „öffentliche Zwecke“ (ALKIS, Nutzung statt Eigentum) und die Unternehmen des Beteiligungsberichts. Kommunale Liegenschaften sind nicht online veröffentlicht; Privateigentum wird nicht dargestellt.
 - **Weitere Kartenebenen:** Windvorranggebiete (Regionalplan Nordhessen) und Kulturdenkmäler (DenkXweb, nicht flächendeckend erfasst) nur als Kartenebene; Bodendenkmäler nicht.
-- **3D-Ansicht** (`3d.html`): Grundriss mit gemessener Höhe aus den 3D-Gebäudemodellen LoD2 der HVBG (21 380 Gebäude, Stand 06/2026) und den Bauwerken (Stand 2021), ohne Dachformen und Geländehöhe. Beide Dateien lädt `python -m pipeline fetch-gebaeude3d` über die Schnittstelle des Download-Centers; `gebaeude3d` schreibt je Ortsteil nach `data/geo/hvgg/gebaeude3d/`.
+- **Gebäude 2D/3D** (`wohnen.html`, Seite „Wohnen und Eigentum“): alle 21 924 Gebäude der Stadt als Grundriss aus ALKIS vereinfacht, mit gemessener Höhe aus den 3D-Gebäudemodellen LoD2 und den Bauwerken der HVBG, ohne Dachformen und Geländehöhe. Schlüssel ist die ALKIS-OID; LoD2 trägt dieselbe Kennung ohne den Zusatz „BL“. Ohne passendes Modell gilt eine Standardhöhe von 4 m, schraffiert als „Höhe geschätzt“; die Zuordnung steht im Audit `lod2_alkis_zuordnung.tsv`. Ausgeliefert als Vektorkacheln in einer Datei (`gebaeude.pmtiles`), die der Browser über HTTP-Range-Abfragen lädt. `3d.html` leitet dorthin weiter.
 - **Zuzug und Wegzug:**
   - Amtliche Zahlen des Hessischen Statistischen Landesamts: je Gemeinde nur Zu- und Fortzüge über die Gemeindegrenze (2015–2024); Herkunft und Ziel nur für den Werra-Meißner-Kreis insgesamt und nur über die Kreisgrenze (2024).
   - Zahlen je Ortsteil und Ströme zwischen einzelnen Gemeinden sind nicht veröffentlicht und werden nicht geschätzt. Umzüge innerhalb der Stadt fehlen.
@@ -70,7 +70,7 @@ Pull Requests und den Hauptzweig prüft `.github/workflows/tests.yml` mit Python
 
 ```
 config/stadt.json   Alle stadtspezifischen Werte (Name, Gremien, Ortsbezirke, Karte, Farben, Texte)
-site/               Seite (Leaflet, Zeitleiste, Liste, Prozesslinie; Tour in tour.js; 3D-Ansicht mit MapLibre GL), ohne Build-Schritt
+site/               Seite (Leaflet, Zeitleiste, Liste, Prozesslinie; Tour in tour.js; Wohnen und Eigentum mit MapLibre GL und PMTiles), ohne Build-Schritt
 pipeline/           Python-Pipeline, je Quelle Abruf und Ableitung, dann build, check, package, site (python -m pipeline all)
 tools/kontrast.py   WCAG-Kontrastprüfung der Farb-Tokens aus config/stadt.json
 tests/              Python-Tests, Browser-Tests (Playwright, axe-core), Testdaten

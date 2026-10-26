@@ -310,7 +310,7 @@
   const bestConfidence = (p) => areaLocs(p).reduce((b, l) => (RANK[l.confidence] > RANK[b] ? l.confidence : b), "niedrig");
 
   // 3D-Ansicht mit dem gewählten Ortsteil (auch für „Link kopieren“ und neuen Tab, daher im Attribut)
-  const link3d = () => `3d.html${area && area.kind === "ortsteil" ? `?gebiet=ortsteil:${encodeURIComponent(area.key)}` : ""}`;
+  const link3d = () => `wohnen.html?ansicht=3d${area && area.kind === "ortsteil" ? `&gebiet=ortsteil:${encodeURIComponent(area.key)}` : ""}`;
   function loadArea(value, keepState) {
     area = parseArea(value);
     $("#f-area").value = `${area.kind}:${area.key}`;
@@ -405,14 +405,14 @@
       new Layers().addTo(map);
     }
     new (button("map-whole", `Ganz ${cfg.stadt.name} ansehen`, () => map.fitBounds(cityBounds(), mapPadding())))().addTo(map);
-    // 3D-Ansicht (eigene Seite, MapLibre) für das gewählte Gebiet
-    if (cfg.gebaeude3d) {
+    // Gebäude in 2D und 3D (Seite „Wohnen und Eigentum“, MapLibre) für das gewählte Gebiet
+    if (cfg.gebaeude) {
       const Ansicht3d = L.Control.extend({
         options: { position: "bottomright" },
         onAdd() {
           const a = L.DomUtil.create("a", "map-style map-3d");
           a.href = link3d();
-          a.textContent = "3D-Ansicht";
+          a.textContent = "Gebäude 2D/3D";
           L.DomEvent.disableClickPropagation(a);
           return a;
         },

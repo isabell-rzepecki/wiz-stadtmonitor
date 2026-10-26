@@ -25,16 +25,16 @@ cp tests/fixtures/wahlen.json "$TMP/test/data/export/wahlen.json"
 cp tests/fixtures/beteiligung_test.json "$TMP/test/data/export/beteiligung.json"
 # Eigentum: Unternehmen aus dem Beteiligungsbericht (ohne Personen)
 cp tests/fixtures/eigentum.json "$TMP/test/data/export/eigentum.json"
-# 3D-Ansicht: abgeleitete Grundrisse mit Höhe (HVBG, Geobasisdaten; im Repository)
-cp -r data/geo/hvgg/gebaeude3d "$TMP/test/data/export/gebaeude3d"
+# Gebäude 2D/3D: Kacheln eines Ortsteils aus dem Stand im Repository (ALKIS und LoD2, HVBG, Geobasisdaten)
+python3 -c "from pathlib import Path; from pipeline import gebaeude; gebaeude.export(Path('$TMP/test/data/export/karte/gebaeude.pmtiles'), nur='gertenbach')" >/dev/null
 # Zuzug und Wegzug: amtliche Zahlen (HSL) und Gemeindegrenzen (HVBG) aus dem Repository, wie im Export zusammengeführt
 python3 -c "import json; d=json.load(open('data/wanderung/wanderung.json')); d['geo']=json.load(open('data/geo/dl-de-zero/wanderung_geo.json')); json.dump(d, open('$TMP/test/data/export/wanderung.json','w'), ensure_ascii=False)"
 # freie Ports (ein belegter Port hätte sonst einen fremden Server getestet), dann warten, bis beide Server antworten
 frei() { python3 -c "import socket; s=socket.socket(); s.bind(('127.0.0.1', 0)); print(s.getsockname()[1])"; }
 P_LEER="$(frei)"; P_TEST="$(frei)"
 while [ "$P_TEST" = "$P_LEER" ]; do P_TEST="$(frei)"; done
-python3 -m http.server "$P_LEER" --bind 127.0.0.1 --directory "$TMP/leer" >"$TMP/server_leer.log" 2>&1 &
-python3 -m http.server "$P_TEST" --bind 127.0.0.1 --directory "$TMP/test" >"$TMP/server_test.log" 2>&1 &
+python3 tests/browser/server.py "$P_LEER" "$TMP/leer" >"$TMP/server_leer.log" 2>&1 &
+python3 tests/browser/server.py "$P_TEST" "$TMP/test" >"$TMP/server_test.log" 2>&1 &
 for p in "$P_LEER" "$P_TEST"; do
   for _ in $(seq 50); do curl -sf -o /dev/null "http://127.0.0.1:$p/stadt.json" && break; sleep 0.1; done
   curl -sf -o /dev/null "http://127.0.0.1:$p/stadt.json" || { echo "Testserver auf Port $p antwortet nicht"; cat "$TMP"/server_*.log; exit 1; }
