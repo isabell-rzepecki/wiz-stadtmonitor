@@ -87,8 +87,8 @@
     // Datenschutzhinweis
     const D = F.datenschutz;
     $("#datenschutz-inhalt").innerHTML = `<p class="meta">${esc(D.status)}</p><ul>${D.punkte.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
-      <dl class="fakten"><dt>Verantwortlich</dt><dd>${esc(D.verantwortlich || "noch nicht benannt")}</dd>
-      <dt>Widerspruch und Löschung</dt><dd>${esc(D.kontakt_widerspruch || "noch nicht benannt")}</dd></dl>`;
+      <dl class="fakten"><dt>Verantwortlich</dt><dd>${esc(D.verantwortlich || "noch nicht benannt").replace(/\n/g, "<br>")}</dd>
+      <dt>Widerspruch und Löschung</dt><dd>${esc(D.kontakt_widerspruch || "noch nicht benannt").replace(/\n/g, "<br>")}</dd></dl>`;
     const dlg = $("#datenschutz");
     $("#knopf-datenschutz").addEventListener("click", () => dlg.showModal());
     dlg.querySelector("button").addEventListener("click", (e) => { e.preventDefault(); dlg.close(); });
@@ -185,14 +185,17 @@
         map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: SCHMAL.matches ? { top: 150, bottom: 260, left: 20, right: 20 } : { top: 90, bottom: 40, left: 40, right: 460 },
           duration: 0, maxZoom: 17 });
       }
-      const ohneSchluessel = () => (probe ? `<p class="hinweis-kasten" role="note"><strong>Probe.</strong> Nichts wird gespeichert oder exportiert.</p>`
-        : F.schluessel ? "" : `<p class="hinweis-kasten" role="note"><strong>Speichern noch nicht möglich.</strong>
-        Der öffentliche Schlüssel der Prüfgruppe ist noch nicht hinterlegt; ohne ihn bleibt nichts im Gerät.</p>`);
-      // Eine Einwilligung setzt voraus, dass die verantwortliche Stelle genannt wird (Art. 13 Abs. 1 lit. a DSGVO)
+      // Gespeichert wird erst mit Schlüssel und benannter verantwortlicher Stelle: Einwilligung (Art. 13) und Information
+      // der Eigentümer:innen (Art. 14 DSGVO) müssen sie nennen. Die Probe speichert nie.
       const stelle = Boolean(F.datenschutz.verantwortlich);
       const mieteAn = probe || E.mietangaben_aktiv;
-      const speichernA = probe || Boolean(F.schluessel);
-      const speichernB = probe || (Boolean(F.schluessel) && stelle);
+      const speichernA = probe || (Boolean(F.schluessel) && stelle);
+      const speichernB = speichernA;
+      const ohneSchluessel = () => (probe ? `<p class="hinweis-kasten" role="note"><strong>Probe.</strong> Nichts wird gespeichert oder exportiert.</p>`
+        : !F.schluessel ? `<p class="hinweis-kasten" role="note"><strong>Speichern noch nicht möglich.</strong>
+        Der öffentliche Schlüssel der Prüfgruppe ist noch nicht hinterlegt; ohne ihn bleibt nichts im Gerät.</p>`
+        : !stelle ? `<p class="hinweis-kasten" role="note"><strong>Speichern noch nicht möglich.</strong>
+        Die verantwortliche Stelle ist noch nicht benannt; Einwilligung und Datenschutzhinweis müssen sie nennen.</p>` : "");
 
       async function uebersicht() {
         gewaehlt = null;
@@ -351,8 +354,7 @@
           <fieldset class="kacheln klein"><legend>Ausstattung <span class="meta">(optional)</span></legend>${auswahl("ausstattung", AUSSTATTUNG, null, "checkbox")}</fieldset>
           <label class="feld">Vermieter <span class="meta">(optional; nur Unternehmen, Genossenschaft oder öffentliche Hand, keine Privatpersonen)</span>
             <input name="vermieter_jp" maxlength="120" autocomplete="off"></label>
-          ${speichernB || !F.schluessel ? "" : `<p class="hinweis-kasten" role="note"><strong>Speichern noch nicht möglich.</strong>
-            Eine Einwilligung braucht die Angabe der verantwortlichen Stelle; sie ist noch nicht benannt.</p>`}
+          ${speichernB ? "" : ohneSchluessel()}
           <p class="knoepfe"><button class="knopf" type="submit"${speichernB ? "" : " disabled"}>${probe ? "Prüfen (Probe)" : "Verschlüsselt speichern"}</button>
             <button class="link-btn" type="button" id="abbrechen">Abbrechen</button></p></form>`;
         const form = $("#form-b");
