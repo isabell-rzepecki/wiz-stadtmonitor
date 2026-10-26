@@ -27,7 +27,7 @@ E = pg.STADT["wohnen_eigentum"]
 R = E["regeln"]
 KAT = {k["code"]: k for k in E["kategorien"]}
 GEBAEUDE = pg.ROOT / "data" / "geo" / "hvgg" / "gebaeude.geojson"
-VERBOTEN = {"name_privat_enc", "name_privat", "angabe_id", "erfassung_id", "nettokalt_eur", "wohnflaeche_m2", "einwilligung", "erfasser",
+VERBOTEN = {"name_privat_enc", "name_privat", "angabe_id", "erfassung_id", "nettokalt_eur", "wohnflaeche_m2", "eur_je_m2", "einwilligung", "erfasser",
             "vermieter_schluessel", "bemerkung", "lage_hinweis", "beleg_url", "letzte_erhoehung_jahr", "ausstattung"}
 
 
@@ -93,7 +93,16 @@ def anteile(je, geb, stand):
 
 def kennzahlen(werte):
     q = statistics.quantiles(werte, n=4, method="inclusive")
-    return {"median": round(statistics.median(werte), 2), "p25": round(q[0], 2), "p75": round(q[2], 2)}
+    k = {"median": runden(statistics.median(werte))}
+    if len(werte) >= R["mieten_spanne_min"]:  # DSFA: bei wenigen Angaben wären P25 und P75 echte Einzelwerte
+        k.update(p25=runden(q[0]), p75=runden(q[2]))
+    return k
+
+
+def runden(x):
+    """Auf die Rundungsstufe (0,10 €), damit kein veröffentlichter Wert eine einzelne Angabe auf den Cent genau zeigt."""
+    s = R["mieten_rundung_eur"]
+    return round(round(x / s) * s, 2)
 
 
 def mieten(freigegeben, geb, stand):
@@ -103,10 +112,10 @@ def mieten(freigegeben, geb, stand):
         if e["typ"] != "miete":
             continue
         r = e["datensatz"]
-        if not r.get("wohnflaeche_m2") or r["gebaeude_id"] not in geb:
+        qm = r.get("eur_je_m2") or (r["nettokalt_eur"] / r["wohnflaeche_m2"] if r.get("wohnflaeche_m2") else None)
+        if not qm or r["gebaeude_id"] not in geb:
             ohne += 1
             continue
-        qm = r["nettokalt_eur"] / r["wohnflaeche_m2"]
         zellen.setdefault((geb[r["gebaeude_id"]]["properties"]["o"], r.get("baujahr_klasse", "unbekannt")), []).append(qm)
         v = e.get("vermieter") or ""
         if v.startswith("JP:"):
@@ -121,8 +130,8 @@ def mieten(freigegeben, geb, stand):
         werte, gebs = [q for _, q in x], {g for g, _ in x}
         if len(werte) >= R["juristische_person_min_angaben"] and len(gebs) >= R["juristische_person_min_gebaeude"]:
             vermieter.append({"name": v[3:], "n": len(werte), "gebaeude": len(gebs), **kennzahlen(werte)})
-    return {"stand": stand, "einheit": "€ je m² Wohnfläche, nettokalt", "methode": "Median und Spanne P25–P75 (Quantile, inklusive Methode)",
-            "regeln": {k: R[k] for k in ("mieten_zelle_min", "juristische_person_min_angaben", "juristische_person_min_gebaeude")},
+    return {"stand": stand, "einheit": "€ je m² Wohnfläche, nettokalt", "methode": "Median ab der Mindestzahl, Spanne P25–P75 (Quantile, inklusive Methode) erst ab mieten_spanne_min Angaben; gerundet auf 0,10 €",
+            "regeln": {k: R[k] for k in ("mieten_zelle_min", "mieten_spanne_min", "mieten_rundung_eur", "juristische_person_min_angaben", "juristische_person_min_gebaeude")},
             "angaben_ohne_flaeche": ohne, "zellen": liste, "juristische_personen": vermieter}
 
 
@@ -154,6 +163,12 @@ def pruefe_ausgabe(ausgaben, private_namen):
         for f in d.get("features", []):
             if f["properties"]["kategorie"] in ("privat", "unklar") or ("name" in f["properties"] and not KAT[f["properties"]["kategorie"]]["name_veroeffentlichen"]):
                 raise Verstoss(f"{name}: Gebäude mit Kategorie {f['properties']['kategorie']} oder Name, der nicht veröffentlicht werden darf")
+        for z in [*d.get("zellen", []), *d.get("juristische_personen", [])]:
+            if "p25" in z and (z.get("n") or 0) < R["mieten_spanne_min"]:
+                raise Verstoss(f"{name}: Spanne unter der Mindestzahl {R['mieten_spanne_min']}")
+            for k in ("median", "p25", "p75"):
+                if z.get(k) is not None and abs(z[k] / R["mieten_rundung_eur"] - round(z[k] / R["mieten_rundung_eur"])) > 1e-6:
+                    raise Verstoss(f"{name}: {k} nicht auf {R['mieten_rundung_eur']} € gerundet")
         for z in d.get("zellen", []):
             if z.get("median") is not None and (z.get("n") or 0) < R["mieten_zelle_min"]:
                 raise Verstoss(f"{name}: Zelle unter der Mindestzahl")

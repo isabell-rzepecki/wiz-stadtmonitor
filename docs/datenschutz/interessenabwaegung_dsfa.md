@@ -45,3 +45,5 @@ Kriterien nach den Leitlinien der Datenschutzbehörden (WP 248); eine DSFA gilt 
 | Hindert an Rechtsausübung | nein | nein |
 
 **Ergebnis (Vorschlag).** Zwei oder mehr Kriterien treffen zumindest teilweise zu. Empfohlen wird eine kurze DSFA vor dem Start, mit den Schutzmaßnahmen oben als Kern.
+
+**Durchgeführt:** `dsfa.md` (26.10.2026). Restrisiko gering, keine Konsultation nach Art. 36; Freigabe durch die verantwortliche Stelle offen.

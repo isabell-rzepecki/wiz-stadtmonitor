@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ENDUNGEN_VERBOTEN = {".age", ".bin", ".sealed"}
 NAMEN_VERBOTEN = {"namenzugriff.tsv", "bestand.sealed"}
 DATEN = {".json", ".geojson", ".tsv", ".csv", ".jsonl", ".ndjson"}
-FELDER = {"name_privat_enc", "name_privat", "angabe_id", "nettokalt_eur", "wohnflaeche_m2", "einwilligung", "secret_key", "ciphertext"}
+FELDER = {"name_privat_enc", "name_privat", "angabe_id", "nettokalt_eur", "wohnflaeche_m2", "eur_je_m2", "einwilligung", "secret_key", "ciphertext"}
 # Schemata und Konfiguration beschreiben die Felder nur; sie enthalten keine Erfassungen
 ERLAUBT = {"docs/uebergabe-v0.4.2/schema_erfassung_eigentum.json", "docs/uebergabe-v0.4.2/schema_mietangabe.json", "config/stadt.json"}
 

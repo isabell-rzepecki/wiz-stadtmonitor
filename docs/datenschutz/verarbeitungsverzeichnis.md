@@ -21,10 +21,10 @@ Verantwortliche Stelle: [Leerstelle: Name, Anschrift, Kontakt]; Datenschutzbeauf
 - **Zweck:** wie V1, Vergleich tatsächlich gezahlter Mieten.
 - **Rechtsgrundlage:** Einwilligung, Art. 6 Abs. 1 lit. a DSGVO (versionierter Text, Zeitpunkt wird gespeichert).
 - **Betroffene:** Mietende.
-- **Daten:** Gebäudekennung, Nettokaltmiete, Wohnfläche (m², nur zur Berechnung €/m²) und Flächenklasse, Baujahrklasse, Vertragsbeginn, letzte Erhöhung, Ausstattung, optional Vermieter (nur juristische Person), Einwilligung. Keine Namen, keine Wohnungsnummer, kein Stockwerk.
-- **Empfänger:** Prüfgruppe. Öffentlich nur Median und Spanne ab 5 Angaben je Ortsbezirk und Baujahrklasse, je Unternehmen ab 5 Angaben aus 2 Gebäuden.
+- **Daten:** Gebäudekennung, Nettokaltmiete und Wohnfläche (m²; beim Einlesen zu €/m² verrechnet und verworfen), Flächenklasse, Baujahrklasse, Vertragsbeginn, letzte Erhöhung, Ausstattung, optional Vermieter (nur juristische Person), Einwilligung. Keine Namen, keine Wohnungsnummer, kein Stockwerk.
+- **Empfänger:** Prüfgruppe. Öffentlich nur der Median ab 5 Angaben je Ortsbezirk und Baujahrklasse, die Spanne ab 10, gerundet auf 0,10 €; je Unternehmen ab 5 Angaben aus 2 Gebäuden.
 - **Drittland:** keines.
-- **Löschung:** 24 Monate nach Eingang; bei Widerruf sofort. Die m²-Angabe wird nach Berechnung verworfen.
+- **Löschung:** 24 Monate nach Eingang; bei Widerruf sofort. Miete und Wohnfläche werden beim Einlesen verworfen; im Bestand bleibt der Preis je m² (`pruefen.py`, DSFA).
 - **Technische und organisatorische Maßnahmen:** wie V1; zusätzlich ein Widerrufscode für Mietende.
 
 ## V3 Bereitstellung der Website

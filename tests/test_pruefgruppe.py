@@ -141,7 +141,8 @@ class Pruefgruppe(unittest.TestCase):
         m = aus["mieten_aggregiert.json"]
         zelle = next(z for z in m["zellen"] if z["ortsbezirk"] == "gertenbach")
         self.assertEqual(zelle["n"], 6)
-        self.assertAlmostEqual(zelle["median"], round(425 / 60, 2))  # 400 … 450 € auf 60 m²
+        self.assertAlmostEqual(zelle["median"], 7.1)  # 400 … 450 € auf 60 m², Median 7,08 auf 0,10 € gerundet
+        self.assertNotIn("p25", zelle)  # Spanne erst ab 10 Angaben
         klein = next(z for z in m["zellen"] if z["ortsbezirk"] == "wendershausen")
         self.assertEqual((klein["n"], klein["hinweis"]), (None, "zu wenige Angaben"))
         self.assertNotIn("median", klein)
@@ -278,12 +279,31 @@ class Pruefgruppe(unittest.TestCase):
         self.assertFalse(pruefen.wechsel_faellig(self.schl, heute=tag))
         self.assertTrue(pruefen.wechsel_faellig(self.schl, heute=tag.replace(year=tag.year + 1, day=min(tag.day, 28))))
 
+    def test_datenminimierung_und_rundung(self):
+        # Beim Einlesen bleibt nur der Preis je m²; Miete und Fläche werden verworfen (sonst Fläche rückrechenbar)
+        b = [miete(G[0], 450, m2=72.0), miete(G[1], 500, m2=None)]
+        ar = self.arbeit()
+        pruefen.einlesen(ar, [self.export("miete", b)])
+        mit, ohne = (ar.eintraege[x["angabe_id"]]["datensatz"] for x in b)
+        self.assertEqual(mit["eur_je_m2"], 6.25)
+        self.assertNotIn("nettokalt_eur", mit)
+        self.assertNotIn("wohnflaeche_m2", mit)
+        self.assertEqual((ohne.get("nettokalt_eur"), ohne.get("eur_je_m2")), (500, None))
+        # Kennzahlen: ab 5 nur Median, ab 10 auch die Spanne; alles auf 0,10 € gerundet
+        fuenf, zehn = vo.kennzahlen([5.03, 6.17, 6.51, 7.02, 8.88]), vo.kennzahlen([5 + i * 0.37 for i in range(10)])
+        self.assertEqual(fuenf, {"median": 6.5})
+        self.assertEqual(set(zehn), {"median", "p25", "p75"})
+        for v in zehn.values():
+            self.assertAlmostEqual(v * 10, round(v * 10))
+
     def test_sperre_gegen_sensible_ausgaben(self):
-        gut = {"zellen": [{"ortsbezirk": "x", "n": 5, "median": 6.0, "p25": 5.0, "p75": 7.0}, {"ortsbezirk": "y", "n": None, "hinweis": "zu wenige Angaben"}],
+        gut = {"zellen": [{"ortsbezirk": "x", "n": 10, "median": 6.0, "p25": 5.1, "p75": 7.3}, {"ortsbezirk": "z", "n": 5, "median": 6.2},
+                          {"ortsbezirk": "y", "n": None, "hinweis": "zu wenige Angaben"}],
                "juristische_personen": [{"name": "A eG", "n": 5, "gebaeude": 2, "median": 6.0}]}
         vo.pruefe_ausgabe({"m": gut}, ["Erika Testname"])
         schlecht = [{"z": [{"nettokalt_eur": 400}]}, {"z": "V-017"}, {"z": "V-neu"}, {"z": str(uuid.uuid4())}, {"z": "Gebäude von Erika Testname"},
-                    {"zellen": [{"n": 3, "median": 6.0}]}, {"zellen": [{"n": None}]}, {"juristische_personen": [{"name": "A", "n": 5, "gebaeude": 1}]},
+                    {"zellen": [{"n": 3, "median": 6.0}]}, {"zellen": [{"n": None}]}, {"zellen": [{"n": 5, "median": 6.0, "p25": 5.0, "p75": 7.0}]},
+                    {"zellen": [{"n": 5, "median": 6.03}]}, {"z": [{"eur_je_m2": 7.08}]}, {"juristische_personen": [{"name": "A", "n": 5, "gebaeude": 1}]},
                     {"features": [{"properties": {"id": "x", "kategorie": "privat"}}]},
                     {"ortsbezirke": {"x": {"erfasst": 4, "kategorien": {"geno": 2}, "privat": None}}},
                     {"ortsbezirke": {"x": {"erfasst": 5, "kategorien": {}, "privat": 2}}}, {"a": {"name_privat_enc": {}}}]

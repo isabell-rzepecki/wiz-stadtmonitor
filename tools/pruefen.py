@@ -59,6 +59,15 @@ def einladung_pruefen(z, erfasst_am):
     return None
 
 
+def minimieren(rec):
+    """Datenminimierung (DSFA): Aus Miete und Wohnfläche wird beim Einlesen der Preis je m²; beide Ausgangswerte werden
+    verworfen, sonst ließe sich die Fläche zurückrechnen. Ohne Wohnfläche bleibt nur die Miete (keine Fläche ableitbar)."""
+    rec = dict(rec)
+    if rec.get("wohnflaeche_m2"):
+        rec["eur_je_m2"] = round(rec.pop("nettokalt_eur") / rec.pop("wohnflaeche_m2"), 2)
+    return rec
+
+
 def einlesen(arbeit, dateien, register=None):
     """Exportdateien entschlüsseln, gegen Schema und Freitextregeln prüfen; gültige Einträge in den Bestand, sonst abgewiesen.
     Liegt ein Einladungsregister vor (Standard: ARBEIT/einladungen.tsv), werden Einträge unbekannter, widerrufener oder
@@ -102,6 +111,8 @@ def einlesen(arbeit, dateien, register=None):
             if grund:
                 zeilen.append([e["id"], d["typ"], f"abgewiesen: {grund}", Path(datei).name])
                 continue
+            if d["typ"] == "miete":
+                rec = minimieren(rec)
             arbeit.eintraege[e["id"]] = {"typ": d["typ"], "datensatz": rec, "quelle": Path(datei).name, "erfasser": d.get("erfasser"),
                                          "eingelesen": pg.jetzt(), "status": "offen", "konflikt": None, "freigaben": [], "vermieter": None}
             arbeit.verlauf("eingelesen", e["id"])
@@ -174,7 +185,7 @@ def pruefen(arbeit):
         eigen = r.get("vermieter_schluessel")
         eigen = jp_namen.get(pg.name_normieren(eigen[3:]), eigen) if eigen else None
         _aendern(e, "vermieter", eigen or jp_je_geb.get(r["gebaeude_id"]))
-        gruppen.setdefault((r["gebaeude_id"], r["nettokalt_eur"], r["vertragsbeginn_jahr"], r["wohnflaeche_klasse"]), []).append(i)
+        gruppen.setdefault((r["gebaeude_id"], r.get("eur_je_m2", r.get("nettokalt_eur")), r["vertragsbeginn_jahr"], r["wohnflaeche_klasse"]), []).append(i)
     for ids in gruppen.values():
         for i in ids:
             _aendern(arbeit.eintraege[i], "konflikt", f"mögliche Dublette ({len(ids)} gleiche Angaben)" if len(ids) > 1 else None)
