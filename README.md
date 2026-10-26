@@ -52,6 +52,29 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
   - Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv), lesbar in [`DATA_SOURCES.md`](DATA_SOURCES.md), erzeugt mit `python tools/datenquellen.py`.
   - Die Namensnennungen auf der Seite kommen aus [`data/attribution.tsv`](data/attribution.tsv), nur für die tatsächlich genutzten Quellen.
 
+## Wohnen und Eigentum: Zweck, Methode, Datenschutz, Grenzen
+
+**Zweck.** Für die Stadt gibt es keinen Mietspiegel. Die Seite `wohnen.html` schafft eine Vergleichsgrundlage für tatsächlich gezahlte Mieten. Dafür braucht es Mietangaben von Mietenden und das Wissen, wer welche Gebäude vermietet: So lassen sich Mietende über das Gebäude ansprechen und Mieten je Vermieter vergleichen.
+
+**Methode.**
+- Öffentliche Grundlage (Pipeline): alle Gebäude aus ALKIS mit Höhe aus LoD2 (2D und 3D), Zensus 2022 (Gemeinde; Ortsbezirke als Näherung aus dem Gitter), Bodenrichtwerte 2022 und 2024, rechtlicher Rahmen als datierte Textbausteine.
+- Zwei getrennte Erfassungen in `erfassen.html` (nicht öffentlich verlinkt, Zugang über Einladungscode): Eigentum und Vermietung durch das Team; Mietangaben freiwillig mit Einwilligung. Getrennt wegen unterschiedlicher Betroffener und Rechtsgrundlagen.
+- Prüfung lokal bei der Prüfgruppe (`tools/pruefen.py`): entschlüsseln, gegen die Schemata prüfen, Dubletten, Vermieter-Schlüssel (`V-017` statt Namen; juristische Personen `JP:<Name>`), Freigabe nach dem Vier-Augen-Prinzip. Veröffentlichung (`tools/veroeffentlichen.py`) nur zusammengefasst nach `docs/uebergabe-v0.4.2/veroeffentlichungsregeln.tsv`.
+
+**Datenschutz.**
+- Kein Server, keine Datenbank. Jeder Eintrag wird im Gerät mit dem öffentlichen Schlüssel der Prüfgruppe versiegelt (libsodium sealed box); kein automatischer Upload, nur verschlüsselte Exportdateien.
+- Namen von Privatpersonen nur verschlüsselt, nie veröffentlicht; jede Entschlüsselung protokolliert.
+- Keine Rohdaten in ein Git-Repository: `.gitignore`, Pre-Commit-Hook und CI-Prüfung (`tools/sperre.py`) lehnen Exportdateien und Felder einzelner Erfassungen ab. Hook einrichten: `git config core.hooksPath .githooks`.
+- Sensible Felder bleiben per Konfiguration aus (`privat_namen_aktiv`, `mietangaben_aktiv`), bis verantwortliche Stelle, Einwilligungstext, Informationspflicht, Interessenabwägung, Verarbeitungsverzeichnis und Löschverfahren geklärt sind (Issue 28). Ohne öffentlichen Schlüssel (Issue 29) speichert die App nichts.
+
+**Grenzen.**
+- Kein Mietspiegel: Die Angaben ersetzen keine ortsübliche Vergleichsmiete nach § 558 BGB.
+- Mietangaben sind freiwillig und nicht repräsentativ.
+- Zensus-Werte haben den Stichtag 15.05.2022.
+- Die Eigentumskarte ist unvollständig: Sie zeigt nur, was belegt erfasst und geprüft wurde; der Erfassungsstand steht je Ortsbezirk dabei.
+
+Prüfschritte auf Geräten (Android, iOS, Screenreader): [`docs/pruefung-wohnen.md`](docs/pruefung-wohnen.md).
+
 ## Aktualisierung
 
 Der Workflow `.github/workflows/pages.yml` läuft täglich um 04:17 UTC und bei jedem Push. Er führt `python -m pipeline all` aus (Schritte: `python -m pipeline` ohne Angabe):
@@ -73,6 +96,8 @@ config/stadt.json   Alle stadtspezifischen Werte (Name, Gremien, Ortsbezirke, Ka
 site/               Seite (Leaflet, Zeitleiste, Liste, Prozesslinie; Tour in tour.js; Wohnen und Eigentum mit MapLibre GL und PMTiles), ohne Build-Schritt
 pipeline/           Python-Pipeline, je Quelle Abruf und Ableitung, dann build, check, package, site (python -m pipeline all)
 tools/kontrast.py   WCAG-Kontrastprüfung der Farb-Tokens aus config/stadt.json
+tools/einladung.py, pruefen.py, veroeffentlichen.py   Erfassung Wohnen und Eigentum: Einladungscodes, Prüfung und Veröffentlichung (nur lokal)
+tools/sperre.py     Sperre gegen personenbezogene Rohdaten (Pre-Commit-Hook .githooks/pre-commit, CI)
 tests/              Python-Tests, Browser-Tests (Playwright, axe-core), Testdaten
 phase0/             Bestandsaufnahme: Bericht, Stichprobe (TSV), Explorationsskripte
 docs/               Projektprompts (v0.1, Übergabe v0.2 mit Material), Recherche zu Datenquellen

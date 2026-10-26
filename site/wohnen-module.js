@@ -75,7 +75,7 @@ window.WohnenModule = (function () {
     const E = cfg.wohnen_eigentum, a = w && w.eigentum_anteile;
     const kat = E.kategorien.filter((k) => k.code !== "unklar").map((k) => `<li><span class="sw" style="background:${k.farbe || "transparent"}" aria-hidden="true"></span>
       ${esc(k.titel)}<span class="meta"> – ${esc(k.code === "privat" ? "nur als Anteil je Ortsbezirk, ohne Namen" : k.name_veroeffentlichen ? "mit Namen je Gebäude" : k.darstellung)}</span></li>`).join("");
-    const stand = a ? `<p>Geprüfte Erfassung, Stand ${datum(a.stand)}; Anteile je Ortsbezirk unter „Erfassungsstand“.</p>`
+    const stand = a ? `<p>Geprüfte Erfassung, Stand ${datum(a.stand)}. Auf der Karte unter „Eigentum (geprüfte Erfassung)“, sofern Gebäude juristischer Personen erfasst sind; Anzahl je Ortsbezirk unter „Erfassungsstand“.</p>`
       : `<p class="hinweis-kasten"><strong>Noch keine geprüfte Erfassung.</strong> Die Karte zeigt deshalb noch keine Eigentümer. Erfasst wird nur, was belegt ist; Privatpersonen erscheinen nie mit Namen.</p>`;
     const g = eig && eig.gesellschaften || [];
     const tab = (liste) => `<div class="tabelle"><table><thead><tr><th scope="col">Unternehmen</th><th scope="col">Rechtsform</th><th scope="col">Gesellschafter laut Bericht</th></tr></thead>
@@ -104,12 +104,14 @@ window.WohnenModule = (function () {
     const a = (w && w.eigentum_anteile && w.eigentum_anteile.ortsbezirke) || {};
     const o = (index && index.ortsteile) || {};
     const zeilen = cfg.ortsteile.filter((x) => o[x.slug]).map((x) => {
-      const n = o[x.slug].gebaeude, e = (a[x.slug] && a[x.slug].erfasst) || 0;
-      return `<tr><th scope="row">${esc(x.name)}</th><td>${zahl(n)}</td><td>${zahl(e)}</td><td>${zahl((100 * e) / n, 1)} %</td></tr>`;
+      const n = o[x.slug].gebaeude, ax = a[x.slug] || {}, e = ax.erfasst || 0;
+      const privat = ax.privat != null ? zahl(ax.privat) : ax.privat_hinweis ? `<span class="luecke">${ZU_WENIG}</span>` : "–";
+      return `<tr><th scope="row">${esc(x.name)}</th><td>${zahl(n)}</td><td>${zahl(e)}</td><td>${zahl((100 * e) / n, 1)} %</td><td>${privat}</td></tr>`;
     }).join("");
     return `<p>Anteil der Gebäude mit belegter Kategorie. Die Eigentumskarte zeigt nur, was erfasst ist; ein niedriger Anteil heißt nicht, dass es wenig Eigentum einer Art gibt.</p>
       <div class="tabelle"><table><caption class="visually-hidden">Erfassungsstand je Ortsbezirk</caption>
-      <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Gebäude</th><th scope="col">mit Kategorie</th><th scope="col">Anteil</th></tr></thead><tbody>${zeilen}</tbody></table></div>`;
+      <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Gebäude</th><th scope="col">mit Kategorie</th><th scope="col">Anteil</th><th scope="col">davon privat</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+      <p class="meta">Privat: nur als Anzahl ab ${zahl(cfg.wohnen_eigentum.regeln.privat_anteil_min)} Gebäuden; darunter auch nicht in „mit Kategorie“ enthalten.</p>`;
   }
 
   function tagesordnung() {

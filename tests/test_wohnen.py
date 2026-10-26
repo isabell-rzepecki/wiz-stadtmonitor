@@ -1,5 +1,6 @@
 """Wohnen und Boden: Zensusangaben, Spannen der Bodenrichtwerte, getrennte Mietbegriffe."""
 import json
+import sys
 import unittest
 
 from pipeline import config, wohnen
@@ -57,6 +58,16 @@ class Wohnen(unittest.TestCase):
         kat = {k["code"]: k for k in E["kategorien"]}
         self.assertFalse(kat["privat"]["name_veroeffentlichen"])  # R1, R2: privat nie mit Namen, nur als Anteil
         self.assertIsNone(kat["privat"]["farbe"])
+
+    def test_eigentumsfarben_kontrast(self):
+        # Kartenebene Eigentum: Nicht-Text-Kontrast mindestens 3:1 gegen Hintergrund und nicht erfasste Gebäude (WCAG 1.4.11)
+        sys.path.insert(0, str(config.ROOT / "tools"))
+        import kontrast
+        verh = lambda a, b: (max(kontrast.luminanz(a), kontrast.luminanz(b)) + 0.05) / (min(kontrast.luminanz(a), kontrast.luminanz(b)) + 0.05)  # noqa: E731
+        for k in config.STADT["wohnen_eigentum"]["kategorien"]:
+            if k["farbe"]:
+                for grund in ("#f2f2f2", "#e3ded9"):
+                    self.assertGreaterEqual(verh(k["farbe"], grund), 3, (k["code"], grund))
 
     def test_ohne_gepruefte_dateien_keine_werte(self):
         d = json.loads(wohnen.OUT.read_text(encoding="utf-8")) if wohnen.OUT.exists() else None

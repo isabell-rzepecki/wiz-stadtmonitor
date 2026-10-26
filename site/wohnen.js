@@ -34,11 +34,17 @@
     const [cfg, index, flaechen, wohnen, eigentum] = await Promise.all([json("stadt.json"), json("data/export/karte/gebaeude_index.json"),
       json("data/export/flaechen.json"), json("data/export/wohnen.json"), json("data/export/eigentum.json")]);
     const G = cfg.gebaeude, K = cfg.wohnen.boris.klassen;
+    // Eigentum: nur die geprüfte Datei aus tools/veroeffentlichen.py (juristische Personen je Gebäude; privat nie je Gebäude)
+    const eigDaten = wohnen && wohnen.eigentum_karte ? await json("data/export/karte/eigentum_gebaeude.json") : null;
+    const eigIndex = new Map(((eigDaten && eigDaten.features) || []).map((f) => [f.properties.id, f.properties]));
+    const KATS = cfg.wohnen_eigentum.kategorien.filter((k) => k.farbe && [...eigIndex.values()].some((p) => p.kategorie === k.code));
+    const eigFarbe = KATS.length ? ["match", ["get", "id"], ...KATS.flatMap((k) => [[...eigIndex.values()].filter((p) => p.kategorie === k.code).map((p) => p.id), k.farbe]), "#e3ded9"] : null;
     const params = new URLSearchParams(location.search);
     let ansicht = params.get("ansicht") === "3d" ? "3d" : "2d";
     let gewaehlt = params.get("gebaeude") || null;
     const stichtage = ((wohnen && wohnen.boris_verlauf && wohnen.boris_verlauf.stichtage) || []).slice().sort().reverse();
     const ebeneSel = $("#ebene");
+    if (eigFarbe) ebeneSel.innerHTML += '<option value="eigentum">Eigentum (geprüfte Erfassung)</option>';
     ebeneSel.innerHTML += stichtage.map((st) => `<option value="bodenrichtwerte:${esc(st)}">Bodenrichtwerte ${esc(datum(st))}</option>`).join("");
     ebeneSel.value = [...ebeneSel.options].some((o) => o.value === params.get("ebene")) ? params.get("ebene") : "funktion";
     const vorhanden = (index && index.ortsteile) || {};
@@ -64,13 +70,17 @@
     function legende() {
       const st = ebeneSel.value.startsWith("bodenrichtwerte:") ? ebeneSel.value.slice(16) : null;
       const sw = (f, t, k = "") => `<li><span class="sw${k}" style="${f ? `background:${f}` : ""}" aria-hidden="true"></span>${t}</li>`;
-      $("#legende").innerHTML = st
+      $("#legende").innerHTML = ebeneSel.value === "eigentum"
+        ? KATS.map((k) => sw(k.farbe, esc(k.titel))).join("") + sw("#e3ded9", "nicht erfasst, unklar oder Privatperson")
+        : st
         ? BRW_FARBEN.map((f, i) => sw(f, `${i === 0 ? `unter ${K[0]}` : i === K.length ? `ab ${K[K.length - 1]}` : `${K[i - 1]} bis unter ${K[i]}`} €/m²`)).join("")
           + sw("#6b625b", "Gebäude")
         : GRUPPEN.map((g) => sw(g.farbe, esc(g.titel))).join("") + sw("", `Höhe geschätzt (${zahl(G.standardhoehe_m)} m, ohne 3D-Modell)`, " sw-geschaetzt");
-      $("#hinweis").textContent = st
+      $("#hinweis").textContent = ebeneSel.value === "eigentum"
+        ? `Eigentum nach geprüfter Erfassung (zwei Freigaben), Stand ${datum(eigDaten.stand)}; unvollständig. Gebäude von Privatpersonen erscheinen nie einzeln, nur als Anzahl je Ortsbezirk (Erfassungsstand).`
+        : st
         ? `Bodenrichtwerte, Stichtag ${datum(st)}: ${cfg.wohnen.boris.filter}. Zonengrenzen können sich zwischen Stichtagen ändern. ${cfg.wohnen.boris.attribution}.`
-        : `${cfg.gebaeude3d.hinweis} Grundrisse aus ALKIS, Höhe aus den 3D-Gebäudemodellen LoD2; ohne passendes Modell gilt eine Standardhöhe. Eigentum und Vermietung zeigt die Karte nicht.`;
+        : `${cfg.gebaeude3d.hinweis} Grundrisse aus ALKIS, Höhe aus den 3D-Gebäudemodellen LoD2; ohne passendes Modell gilt eine Standardhöhe. Eigentum zeigt eine eigene Ebene, sobald geprüfte Erfassungen vorliegen.`;
     }
     legende();
     $("#mehr").open = !SCHMAL.matches;
@@ -137,13 +147,14 @@
     // Kartenebene: Gebäude nach Funktion oder Bodenrichtwertzonen eines Stichtags (Gebäude dann einheitlich grau)
     function setEbene() {
       const st = ebeneSel.value.startsWith("bodenrichtwerte:") ? ebeneSel.value.slice(16) : null;
+      const eig = ebeneSel.value === "eigentum";
       for (const id of ["zonen", "zonen-linie"]) {
         map.setLayoutProperty(id, "visibility", st ? "visible" : "none");
         map.setFilter(id, brwFilter(st || ""));
       }
-      map.setPaintProperty("flaeche", "fill-color", st ? "#6b625b" : farbe);
-      map.setPaintProperty("flaeche", "fill-opacity", st ? 0.6 : 0.85);
-      map.setPaintProperty("koerper", "fill-extrusion-color", st ? "#bdb6ae" : farbe);
+      map.setPaintProperty("flaeche", "fill-color", st ? "#6b625b" : eig ? eigFarbe : farbe);
+      map.setPaintProperty("flaeche", "fill-opacity", st ? 0.6 : eig ? 0.95 : 0.85);
+      map.setPaintProperty("koerper", "fill-extrusion-color", st ? "#bdb6ae" : eig ? eigFarbe : farbe);
       legende();
       zustand();
     }
@@ -172,6 +183,10 @@
       zustand();
     }
     const zoneHtml = (z) => `<dt>Bodenrichtwert</dt><dd>${zahl(z.wert)} €/m² <span class="meta">(${esc(z.art || "–")}, Gemarkung ${esc(z.gemarkung || "–")}, Stichtag ${esc(datum(z.stichtag))})</span></dd>`;
+    const eigHtml = (id) => {
+      const e = eigIndex.get(id);
+      return e ? `<dt>Eigentum</dt><dd>${esc(e.kategorie_titel)}${e.name ? `: ${esc(e.name)}` : ""} <span class="meta">(${esc(e.sicherheit)}, geprüfte Erfassung)</span></dd>` : "";
+    };
     function zeigeGebaeude(p, zone = null) {
       gewaehlt = p ? p.id : null;
       map.setFilter("auswahl", ["==", ["get", "id"], gewaehlt || ""]);
@@ -189,7 +204,7 @@
           <dt>Funktion (ALKIS)</dt><dd>${esc(p.f || "nicht angegeben")}</dd>
           <dt>Höhe</dt><dd>${zahl(p.h, 1)} m, ${esc(herkunft)}</dd>
           ${ot ? `<dt>Ortsteil</dt><dd>${esc(ot)}</dd>` : ""}
-          <dt>Kennung (ALKIS-OID)</dt><dd><code>${esc(p.id)}</code></dd>${zone ? zoneHtml(zone) : ""}</dl>
+          <dt>Kennung (ALKIS-OID)</dt><dd><code>${esc(p.id)}</code></dd>${zone ? zoneHtml(zone) : ""}${eigHtml(p.id)}</dl>
           <button type="button" class="link-btn" id="auswahl-weg">Auswahl aufheben</button>`;
         $("#auswahl-weg").addEventListener("click", () => { zeigeGebaeude(null); map.getCanvas().focus(); });
       }

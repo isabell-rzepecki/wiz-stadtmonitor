@@ -10,3 +10,11 @@ data/build/
 # Erzeugte Daten (Workflow) und Rohgeometrien mit Nutzungsbeschränkung (Bauleitplanung, nur nicht kommerziell)
 data/geo/restricted/
 data/export/
+# Erfassung Wohnen und Eigentum (W6): verschlüsselte Exporte, Bestände, Schlüssel und Protokolle nie im Repository
+*.age
+*.bin
+*.sealed
+export_*
+export-*
+intern/
+namenzugriff.tsv
