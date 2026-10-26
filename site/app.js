@@ -18,7 +18,6 @@
   // Beteiligungsverfahren der Bauleitplanung (Stufen und Fristen aus den Bekanntmachungen)
   const BETEILIGUNG_URL = "data/export/beteiligung.json";
   // Gebäude und Eigentum: städtische Gesellschaften (Beteiligungsbericht), ohne Personen
-  const EIGENTUM_URL = "data/export/eigentum.json";
   const BRW_URL = "data/export/karte/bodenrichtwerte.json";
   const DEFAULT_AREA = "stadt:alle";
   const RANK = { hoch: 3, mittel: 2, niedrig: 1 };
@@ -78,7 +77,7 @@
   const de = (n) => Number(n || 0).toLocaleString("de-DE");
   const get = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 
-  let wohnen = null, brwData = null, brwLayer = null, brw26Layer = null, wanderungData = null, wanderungLayer = {}, wanderungJahr = null, wahlen = null, beteiligung = null, eigentum = null;
+  let wohnen = null, brwData = null, brwLayer = null, brw26Layer = null, wanderungData = null, wanderungLayer = {}, wanderungJahr = null, wahlen = null, beteiligung = null;
   let cfg = null, data = null, flaechen = null, zeit = null, all = [], papers = [], area = null, selected = null, dataStand = null;
   let planData = null, planLayer = null, planOn = false, planShown = null, planFolge = 0, planListe = [];
   const umweltOn = new Set(), umweltData = {}, umweltLayers = {};
@@ -1024,8 +1023,7 @@
     const z = wohnen.zensus;
     const gem = z && z.gemeinden.find((g) => g.ars === cfg.stadt.ars);
     const ob = key && z && z.ortsbezirke[key];
-    const eing = (g, k) => (g.eingeschraenkt || []).includes(k);
-    const zelle = (g, k, d) => (g[k] == null ? "–" : eing(g, k) ? `(${num(g[k], d)})` : num(g[k], d));
+    const seite = `wohnen.html${o ? `?gebiet=ortsteil:${encodeURIComponent(o.slug)}` : ""}`;
     box.innerHTML = `<p class="hint">Gebiet: <strong>${esc(name)}</strong>${o ? ` (Gemarkung ${esc(o.gemarkung)})` : ""}. Die Werte beschreiben den Ort, nicht einzelne Vorgänge.</p>
       <section class="stat-block"><h3>Bodenrichtwerte</h3>
         <p class="stichtag">Stichtag ${brwStichtag()}</p>
@@ -1038,37 +1036,13 @@
           <dt>Eigentümerquote ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.eigentuemerquote, 1, "%")}</dd></dl>` : ""}
         ${gem ? `<dl class="facts"><dt>Bestandsmiete ${esc(cfg.stadt.name)}</dt><dd>${num(gem.nettokaltmiete_eur_m2, 2)} €/m²</dd>
           <dt>Leerstandsquote</dt><dd>${num(gem.leerstandsquote_pct, 1)} %</dd><dt>Eigentümerquote</dt><dd>${num(gem.eigentuemerquote_pct, 1)} %</dd></dl>` : ""}
-        <p class="hint">Angebotsmieten und eine ortsübliche Vergleichsmiete stehen hier nicht: siehe Begriffe.</p></section>
-      ${z.gemeinden.length ? `<section class="stat-block"><h3>Vergleich mit Nachbargemeinden (Zensus 2022)</h3>
-        <div class="table-wrap"><table class="compare"><caption class="visually-hidden">Bestandsmiete, Leerstands- und Eigentümerquote je Gemeinde, Stichtag 15.05.2022</caption>
-        <thead><tr><th scope="col">Gemeinde</th><th scope="col">Bestands&shy;miete €/m²</th><th scope="col">Leer&shy;stand %</th><th scope="col">Eigen&shy;tümer %</th></tr></thead>
-        <tbody>${z.gemeinden.map((g) => `<tr${g.ars === cfg.stadt.ars ? ' class="own"' : ""}><th scope="row">${esc(g.name)}</th><td>${zelle(g, "nettokaltmiete_eur_m2", 2)}</td>
-          <td>${zelle(g, "leerstandsquote_pct", 1)}</td><td>${zelle(g, "eigentuemerquote_pct", 1)}</td></tr>`).join("")}</tbody></table></div>
-        <p class="hint">Werte in Klammern: Aussagewert eingeschränkt. Gemeinden in Hessen, Niedersachsen und Thüringen.</p></section>` : ""}
-      <section class="stat-block"><h3>Rechtlicher Rahmen</h3><ul class="locs">${W.kontext.map((k) => `<li><strong>${esc(k.thema)}:</strong> ${esc(k.aussage)}
-        <br><span class="meta">Stand: ${esc(k.stand)}${k.link ? ` · ${link(k.link, "Quelle")}` : ""}</span></li>`).join("")}</ul></section>
-      <section class="stat-block"><h3>Begriffe</h3><dl class="glossar">${W.begriffe.map((b) => `<dt>${esc(b.begriff)}</dt><dd>${esc(b.text)}</dd>`).join("")}</dl></section>
-      <section class="stat-block"><h3>Immobilienmarktberichte</h3><ul class="locs">${W.berichte.map((b) => `<li>${link(b.link, esc(b.titel)) || esc(b.titel)}<br><span class="meta">${esc(b.herausgeber)}</span></li>`).join("")}</ul>
-        <p class="hint">${esc(W.berichte_hinweis)}</p></section>
-      ${eigentumHtml()}
+        <p class="hint">Kein Mietspiegel: Bestandsmieten aus dem Zensus sind keine ortsübliche Vergleichsmiete.</p></section>
+      <section class="stat-block"><h3>Mehr zu Wohnen und Eigentum</h3>
+        <p>Verlauf der Bodenrichtwerte, Vergleich mit Nachbargemeinden, Rechtsrahmen, Eigentum, Stand der Erfassung, Begriffe und alle Gebäude in 2D und 3D.</p>
+        <p><a class="btn btn-soft" href="${esc(seite)}">Seite Wohnen und Eigentum öffnen</a></p>
+        <p><button type="button" class="link-btn" data-ebene-on="gebaeude">Gebäude für öffentliche Zwecke auf der Karte</button></p></section>
       ${methode([`<strong>Bodenrichtwerte:</strong> ${esc(W.boris.filter)}. ${esc(W.boris.stichtag_hinweis)} ${esc(W.boris.attribution)}.`,
-        `<strong>Zensus:</strong> ${esc(z.naeherung)} Gemeindewerte aus der Regionaltabelle Gebäude und Wohnungen des Zensus 2022. ${esc(z.attribution)}.`,
-        eigentum ? `<p><strong>Gebäude und Eigentum:</strong> ${link(eigentum.bericht.url, `Beteiligungsbericht ${esc(String(eigentum.bericht.jahr))}`)}, ${esc(eigentum.bericht.stand)}. Personen (Geschäftsführung, Aufsichtsrat) werden nicht übernommen.</p><ul>${eigentum.grenzen.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""])}`;
-  }
-  function eigentumHtml() {
-    if (!eigentum) return "";
-    const zeile = (g) => `<tr><th scope="row">${esc(g.name)}${g.gegenstand ? `<br><span class="meta">${esc(g.gegenstand)}</span>` : ""}</th>
-      <td class="text">${esc(g.rechtsform || "–")}</td><td class="text">${esc(g.gesellschafter || "–")}</td></tr>`;
-    const tab = (liste, cap) => `<div class="table-wrap"><table class="compare"><caption class="visually-hidden">${esc(cap)}</caption>
-      <thead><tr><th scope="col">Unternehmen</th><th scope="col">Rechtsform</th><th scope="col">Gesellschafter laut Bericht</th></tr></thead>
-      <tbody>${liste.map(zeile).join("")}</tbody></table></div>`;
-    const pf = eigentum.gesellschaften.filter((g) => g.pflicht), fr = eigentum.gesellschaften.filter((g) => !g.pflicht);
-    return `<section class="stat-block"><h3>Gebäude und Eigentum</h3>
-      <p><button type="button" class="btn btn-soft" data-ebene-on="gebaeude">Gebäude für öffentliche Zwecke auf der Karte</button></p>
-      <p class="hint">Gebäudefunktion laut Liegenschaftskataster; sie beschreibt die Nutzung, nicht das Eigentum.</p>
-      ${pf.length ? `<h4>Beteiligungen und Eigenbetriebe der Stadt (Pflichtangaben, § 123a HGO)</h4>${tab(pf, "Beteiligungen und Eigenbetriebe")}` : ""}
-      ${fr.length ? `<details class="acc"><summary>Weitere Beteiligungen (freiwillige Angaben, ${fr.length})</summary>${tab(fr, "Weitere Beteiligungen")}</details>` : ""}
-      </section>`;
+        `<strong>Zensus:</strong> ${esc(z.naeherung)} Gemeindewerte aus der Regionaltabelle Gebäude und Wohnungen des Zensus 2022. ${esc(z.attribution)}.`])}`;
   }
   // --- Zuzug und Wegzug (amtliche Wanderungsstatistik, HSL) --------------------------------------------
   // Je Gemeinde nur Zu- und Fortzüge über die Gemeindegrenze; Herkunft und Ziel nur je Kreis. Keine Schätzung je Ortsteil.
@@ -1340,10 +1314,9 @@
   // --- Start -----------------------------------------------------------------------------------------
   async function start() {
     const json = (url) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const [c, d, f, credits, w, wa, be, ei] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json"),
-      json(WOHNEN_URL), json(WAHLEN_URL), json(BETEILIGUNG_URL), json(EIGENTUM_URL)]);
+    const [c, d, f, credits, w, wa, be] = await Promise.all([json(CONFIG_URL), json(DATA_URL), json(FLAECHEN_URL), json("namensnennungen.json"),
+      json(WOHNEN_URL), json(WAHLEN_URL), json(BETEILIGUNG_URL)]);
     beteiligung = be;
-    eigentum = ei;
     wohnen = w;
     wahlen = wa;
     if (credits && credits.length) $("#credits").innerHTML = credits.map((a) => `<li>${link(a.link, esc(a.text)) || esc(a.text)} <span class="hint">(${esc(a.lizenz)})</span></li>`).join("");

@@ -194,7 +194,7 @@ test("Umweltebenen: zuschaltbar, Legende mit Hinweis, Quelle unter © Quellen, Z
   await page.close();
 });
 
-test("Wohnen und Boden: Stichtage, getrennte Mietbegriffe, Vergleich, Ortsbezirk als Näherung, ohne Verstöße", async () => {
+test("Wohnen und Boden (Fenster): Kennzahlen mit Stichtag, Ortsbezirk als Näherung, Verweis auf die Seite, ohne Verstöße", async () => {
   const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
   await page.locator('[data-mega="mega-mitmachen"]').click();
   await page.locator("#cta-wohnen").click();
@@ -203,11 +203,9 @@ test("Wohnen und Boden: Stichtage, getrennte Mietbegriffe, Vergleich, Ortsbezirk
   assert.match(text, /Stichtag 15\.05\.2022/);
   assert.match(text, /Bestandsmiete Gertenbach/);
   assert.match(text, /Näherung/);
-  assert.match(text, /Angebotsmiete/);
-  assert.match(text, /Ortsübliche Vergleichsmiete/);
-  assert.ok(await page.locator("#wohnen table.compare tbody tr").count() >= 5);
-  assert.match(text, /Gebäude und Eigentum/);
-  assert.match(text, /Pflichtangaben/);
+  assert.match(text, /Kein Mietspiegel/);
+  assert.equal(await page.locator("#wohnen table").count(), 0);  // Tabellen nur auf der Seite
+  assert.equal(await page.locator('#wohnen a[href^="wohnen.html"]').getAttribute("href"), "wohnen.html?gebiet=ortsteil:gertenbach");
   assert.deepEqual(await axe(page), []);
   await page.locator("[data-brw-on]").click();
   assert.match(page.url(), /ebenen=bodenrichtwerte/);
@@ -360,10 +358,75 @@ test("Gebäude 2D/3D: Ortsteil aus dem Link, Gebäude anklicken, Umschalten, fr�
   assert.match(page.url(), /ansicht=3d/);
   assert.equal(await page.locator("#zurueck").getAttribute("href"), "./?gebiet=ortsteil:gertenbach");
   assert.deepEqual(errors, []);
+  // Kartenebene Bodenrichtwerte: Zonen des gewählten Stichtags, Legende mit Klassen, Zustand im Link
+  await page.locator("#ebene").selectOption("bodenrichtwerte:2022-01-01");
+  assert.match(page.url(), /ebene=bodenrichtwerte(:|%3A)2022-01-01/);
+  assert.match(await page.locator("#legende").textContent(), /unter 30 €\/m².*ab 80 €\/m²/s);
+  assert.match(await page.locator("#hinweis").textContent(), /Stichtag 01\.01\.2022/);
+  await page.waitForFunction(() => window.stadtmonitorWohnen.map.queryRenderedFeatures({ layers: ["zonen"] }).length > 0);
+  assert.ok(await page.evaluate(() => window.stadtmonitorWohnen.map.queryRenderedFeatures({ layers: ["zonen"] })
+    .every((f) => f.properties.stichtag === "2022-01-01" && f.properties.ez === "B")));
+  assert.deepEqual(errors, []);
   // frühere 3D-Ansicht: Weiterleitung mit Ortsteil
   await page.goto(SITE + "3d.html?gebiet=ortsteil:gertenbach");
   await page.waitForURL(/wohnen\.html\?gebiet=ortsteil(:|%3A)gertenbach&ansicht=3d/);
   await page.close();
+});
+
+test("Wohnen und Eigentum (Seite): Module mit Zweck, Mietniveau, Verlauf, Eigentum ohne Erfassung, Schwellen, Tagesordnung, ohne Verstöße", async () => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, bypassCSP: true });
+  await page.clock.setSystemTime(JETZT);
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+  await page.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
+  // erfundener Vorgang mit Bezug zum Wohnen (die Testdaten enthalten keinen)
+  const vorgang = { reference: "TEST/001/2026", name: "Bebauungsplan Testgebiet", date: "2026-10-01", verfahrenspunkt: false,
+    locations: [{ ortsteil: "Gertenbach" }], process: [{ gremium: "Ortsbeirat Gertenbach" }] };
+  await page.route("**/data/export/vorgaenge.json", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ vorgaenge: [vorgang] }) }));
+  await page.goto(SITE + "wohnen.html?gebiet=ortsteil:gertenbach", { waitUntil: "networkidle" });
+  const module = page.locator("#module");
+  assert.equal(await page.locator("#angaben-knopf").getAttribute("aria-expanded"), "true");
+  assert.match(await page.locator("#module-titel").textContent(), /Gertenbach/);
+  assert.match(await page.locator("#modul-zweck").textContent(), /keinen Mietspiegel.*Grenzen/s);
+  const miete = await page.locator("#modul-miete").textContent();
+  assert.match(miete, /Kein Mietspiegel/);
+  assert.match(miete, /Stichtag 15\.05\.2022/);
+  assert.match(miete, /Bestandsmiete Gertenbach/);
+  assert.ok(await page.locator("#modul-miete details.unter").nth(1).locator("tbody tr").count() >= 5);  // Nachbargemeinden
+  // Module aufklappen und Inhalte prüfen
+  for (const id of ["boden", "eigentum", "vergleich", "tagesordnung", "stand", "begriffe", "methode"]) await page.locator(`#modul-${id} > summary`).click();
+  assert.match(await page.locator("#modul-boden").textContent(), /01\.01\.2022.*01\.01\.2024.*Angebotsmieten/s);
+  const eig = await page.locator("#modul-eigentum").textContent();
+  assert.match(eig, /Noch keine geprüfte Erfassung/);
+  assert.match(eig, /Privatpersonen.*nur als Anteil je Ortsbezirk, ohne Namen/s);
+  assert.match(await page.locator("#modul-vergleich").textContent(), /Noch keine geprüften Mietangaben.*ab 5 Angaben.*Je privater Vermieter:in: nie/s);
+  await page.waitForFunction(() => !/Wird beim Öffnen geladen/.test(document.querySelector("#top-liste").textContent));
+  assert.equal(await page.locator("#top-liste a").getAttribute("href"), "./?gebiet=ortsteil:gertenbach#TEST%2F001%2F2026");
+  assert.match(await page.locator("#modul-stand").textContent(), /Gertenbach\s*[\d.]+\s*0\s*0,0 %/);
+  assert.match(await page.locator("#modul-begriffe").textContent(), /Ortsübliche Vergleichsmiete.*Median/s);
+  assert.deepEqual(await axe(page), []);
+  // Knopf in „Verlauf“ schaltet die Kartenebene auf den jüngsten Stichtag
+  await page.locator("#modul-boden [data-ebene]").click();
+  assert.equal(await page.locator("#ebene").inputValue(), "bodenrichtwerte:2024-01-01");
+  // anderer Ortsteil: Module neu, offene Module bleiben offen
+  await page.locator("#ortsteil").selectOption("");
+  assert.match(await page.locator("#module-titel").textContent(), /ganz /);
+  assert.equal(await page.locator("#modul-eigentum").evaluate((d) => d.open), true);
+  // ausblenden über „Angaben“
+  await page.locator("#angaben-knopf").click();
+  assert.equal(await module.isHidden(), true);
+  assert.deepEqual(errors, []);
+  await page.close();
+  // schmal: Module zuerst zu, „Angaben“ öffnet sie
+  const mobil = await browser.newPage({ viewport: { width: 390, height: 844 }, bypassCSP: true });
+  await mobil.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
+  await mobil.goto(SITE + "wohnen.html", { waitUntil: "networkidle" });
+  assert.equal(await mobil.locator("#module").isHidden(), true);
+  await mobil.locator("#angaben-knopf").click();
+  assert.equal(await mobil.locator("#module").isVisible(), true);
+  assert.deepEqual(await axe(mobil), []);
+  await mobil.close();
 });
 
 test("Tour: Start aus dem Startfenster, alle Schritte mit Pfeiltaste, Beispielvorgang, Esc beendet, ohne Verstöße", async () => {

@@ -33,6 +33,9 @@ BRW_GEO = config.GEO / "dl-de-zero" / "bodenrichtwerte_2024.geojson"
 BRW_GEO_JAHR = lambda jahr: config.GEO / "dl-de-zero" / f"bodenrichtwerte_{jahr}.geojson"  # noqa: E731
 ZENSUS = config.ROOT / "data" / "wohnen" / "zensus2022.json"  # Gemeinde und Nachbargemeinden (Regionaltabelle)
 ZENSUS_OB = config.ROOT / "data" / "wohnen" / "zensus_ortsbezirk.json"  # Ortsbezirke aus dem Gitter (Näherung)
+# Ausgaben der lokalen Prüfung (tools/veroeffentlichen.py): nur zusammengefasst und nach den Veröffentlichungsregeln
+EIGENTUM_ANTEILE = config.ROOT / "data" / "wohnen" / "eigentum_anteile_ortsbezirk.json"
+MIETEN = config.ROOT / "data" / "wohnen" / "mieten_aggregiert.json"
 REFERENZ = config.ROOT / "docs" / "uebergabe-v0.2" / "material" / "bodenrichtwerte_2024_spannen_gemarkung.tsv"
 OUT = config.EXPORT / "wohnen.json"
 KARTE = config.EXPORT / "karte" / "bodenrichtwerte.json"
@@ -284,7 +287,7 @@ def ortsbezirke(gem):
     return out
 
 
-def zonen_kacheln(stichtage):
+def zonen_kacheln(stichtage, ziel=None):
     """Zonen aller Stichtage als Vektorkacheln (Seite „Wohnen und Eigentum“), je Zone mit Stichtag, Wert, Art und Zustand."""
     feats = []
     for st in stichtage:
@@ -296,7 +299,7 @@ def zonen_kacheln(stichtage):
                               "properties": {"stichtag": st, "wert": pr["wert"], "art": pr.get("art"), "ez": pr.get("entwicklungszustand"),
                                              "gemarkung": pr.get("gemarkung")}})
     if feats:
-        kacheln.schreiben(feats, ZONEN_KACHELN, "bodenrichtwerte", 11, 15, attribution=W["boris"]["attribution"])
+        kacheln.schreiben(feats, ziel or ZONEN_KACHELN, "bodenrichtwerte", 11, 15, attribution=W["boris"]["attribution"])
 
 
 AUDIT_SPALTEN = ["bereich", "ebene", "schluessel", "name", "kennzahl", "stichtag", "wert", "status", "quelle"]
@@ -360,6 +363,9 @@ def build():
                                "spannen": {by_nr[k]["slug"] if k in by_nr else k: {st: sp_[k] for st, sp_ in vl.items() if k in sp_}
                                            for k in sorted({k for sp_ in vl.values() for k in sp_})}},
              "zensus": {k: alt.get(k) for k in ("stichtag", "attribution", "naeherung", "gemeinden")} if alt else None}
+    # Eigentum und Mieten erst, wenn geprüfte Dateien vorliegen; sonst null (die Seite zeigt den Stand der Erfassung)
+    for k, p in (("eigentum_anteile", EIGENTUM_ANTEILE), ("mieten", MIETEN)):
+        daten[k] = json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
     if alt:
         daten["zensus"]["ortsbezirke"] = {by_nr[k]["slug"]: v for k, v in alt.get("ortsbezirke", {}).items() if k in by_nr}
     OUT.parent.mkdir(parents=True, exist_ok=True)

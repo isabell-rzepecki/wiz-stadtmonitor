@@ -27,6 +27,8 @@ cp tests/fixtures/beteiligung_test.json "$TMP/test/data/export/beteiligung.json"
 cp tests/fixtures/eigentum.json "$TMP/test/data/export/eigentum.json"
 # Gebäude 2D/3D: Kacheln eines Ortsteils aus dem Stand im Repository (ALKIS und LoD2, HVBG, Geobasisdaten)
 python3 -c "from pathlib import Path; from pipeline import gebaeude; gebaeude.export(Path('$TMP/test/data/export/karte/gebaeude.pmtiles'), nur='gertenbach')" >/dev/null
+# Bodenrichtwertzonen 2022 und 2024 (HVBG, Datendienst; im Repository) für die Seite Wohnen und Eigentum
+python3 -c "from pathlib import Path; from pipeline import wohnen; wohnen.zonen_kacheln(['2022-01-01', '2024-01-01'], Path('$TMP/test/data/export/karte/bodenrichtwerte_zonen.pmtiles'))" >/dev/null
 # Zuzug und Wegzug: amtliche Zahlen (HSL) und Gemeindegrenzen (HVBG) aus dem Repository, wie im Export zusammengeführt
 python3 -c "import json; d=json.load(open('data/wanderung/wanderung.json')); d['geo']=json.load(open('data/geo/dl-de-zero/wanderung_geo.json')); json.dump(d, open('$TMP/test/data/export/wanderung.json','w'), ensure_ascii=False)"
 # freie Ports (ein belegter Port hätte sonst einen fremden Server getestet), dann warten, bis beide Server antworten
