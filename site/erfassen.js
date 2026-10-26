@@ -229,9 +229,11 @@
         await ablegen("eintraege", eintrag);
         await markieren();
       }
-      function gespeichert(text) {
+      function gespeichert(text, code = null) {
         titel("Gespeichert");
         inhalt.innerHTML = `<p class="erfolg" role="status">${esc(text)} Der Eintrag ist verschlüsselt im Gerät; lesen kann ihn nur die Prüfgruppe.</p>
+          ${code ? `<div class="widerruf"><p>Widerrufscode für diese Angabe:</p><p class="code" id="widerrufscode">${esc(code)}</p>
+            <p class="meta">Bitte notieren oder fotografieren. Mit diesem Code lässt sich die Angabe jederzeit löschen lassen; die App zeigt ihn nur jetzt.</p></div>` : ""}
           <p class="knoepfe"><button type="button" class="knopf" id="weiter">Nächstes Gebäude</button>
           <button type="button" class="knopf" id="zu-eintraege">Einträge und Export</button></p>`;
         $("#weiter").addEventListener("click", () => { uebersicht(); fokus(); });
@@ -355,7 +357,9 @@
           if (fehlerZeigen(form, fehler)) return;
           await speichern("miete", rec);
           form.reset();
-          gespeichert("Mietangabe gespeichert.");
+          // Widerrufscode: die ersten 8 Zeichen der zufälligen Kennung (tools/pruefen.py loeschen --code)
+          const c = rec.angabe_id.replace(/-/g, "").slice(0, 8).toUpperCase();
+          gespeichert("Mietangabe gespeichert.", `${c.slice(0, 4)}-${c.slice(4)}`);
         });
         fokus();
       }
