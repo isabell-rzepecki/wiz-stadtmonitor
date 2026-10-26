@@ -2,7 +2,7 @@
 
 > Entwurf vom 26.10.2026, keine Rechtsberatung (Issue 28).
 
-Verantwortliche Stelle: [Leerstelle: Name, Anschrift, Kontakt]; Datenschutzbeauftragte:r: [falls benannt]
+Verantwortliche Stelle: Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen; E-Mail post@wiz-o-mat.de (benannt am 26.10.2026). Datenschutzbeauftragte:r: nicht benannt; nach § 38 BDSG nicht erforderlich, solange weniger als 20 Personen ständig mit der Verarbeitung befasst sind.
 
 ## V1 Erfassung von Eigentum und Vermietung
 

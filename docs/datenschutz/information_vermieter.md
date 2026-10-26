@@ -2,7 +2,7 @@
 
 > Entwurf vom 26.10.2026, keine Rechtsberatung (Issue 28). Form festgelegt am 26.10.2026: öffentliche Information nach Art. 14 Abs. 5 lit. b DSGVO, siehe unten. Druckfassung: `site/aushang.html` (eine A4-Seite, Stelle und Kontakt aus `stadt.json`).
 
-**Wer verarbeitet?** [Leerstelle: verantwortliche Stelle mit Anschrift und Kontakt]
+**Wer verarbeitet?** Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen; E-Mail post@wiz-o-mat.de
 
 **Was und wozu?**
 - Für die Stadt gibt es keinen Mietspiegel. Wir erfassen deshalb je Gebäude, ob es einer Privatperson, einem Unternehmen, einer Genossenschaft, der öffentlichen Hand oder einer Kirche gehört und ob dort vermietet wird.
@@ -26,7 +26,7 @@
 - Widerspruch (Art. 21): Dann löschen wir die Angaben zu Ihren Gebäuden und erfassen sie nicht erneut.
 - Beschwerde bei der Aufsichtsbehörde, in Hessen beim Hessischen Beauftragten für Datenschutz und Informationsfreiheit.
 
-Kontakt für Widerspruch: [Leerstelle: Funktionsadresse der Stelle, nicht die private Adresse einer Person]
+Kontakt für Widerspruch: post@wiz-o-mat.de
 
 ## Form der Information (Art. 14 Abs. 5 lit. b DSGVO)
 

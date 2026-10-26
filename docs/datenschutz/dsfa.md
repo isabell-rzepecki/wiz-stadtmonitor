@@ -59,7 +59,7 @@ Nach den Maßnahmen ist das Restrisiko für alle Risiken **gering**, sobald die 
 
 ## 6. Voraussetzungen vor der ersten echten Erfassung
 
-- [ ] Verantwortliche Stelle mit Anschrift und Funktionsadresse in `config/stadt.json` (Issue 28)
+- [x] Verantwortliche Stelle mit Anschrift und Funktionsadresse in `config/stadt.json` (benannt am 26.10.2026)
 - [x] Form der Information nach Art. 14 festgelegt: öffentlich nach Abs. 5 lit. b, Datenschutzseite und Aushang an festgelegten Orten (`information_vermieter.md`, `site/aushang.html`)
 - [x] Einwilligungstext abgeschlossen: Fassung 2026-10-26-v3, geprüft gegen Art. 4 Nr. 11, 7 und 13 DSGVO (Zweck, Stelle, Datenkategorien, Speicherdauer, Freiwilligkeit, Widerruf mit Kontakt, Verweis auf Rechte); keine anwaltliche Prüfung
 - [ ] Interessenabwägung und Verarbeitungsverzeichnis von der Stelle bestätigen lassen
@@ -69,7 +69,7 @@ Nach den Maßnahmen ist das Restrisiko für alle Risiken **gering**, sobald die 
 
 | | |
 |---|---|
-| Verantwortliche Stelle | [Leerstelle] |
-| Datenschutzbeauftragte:r angehört (falls benannt, Art. 35 Abs. 2) | [Leerstelle] |
+| Verantwortliche Stelle | Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen; E-Mail post@wiz-o-mat.de |
+| Datenschutzbeauftragte:r angehört (falls benannt, Art. 35 Abs. 2) | nicht benannt (§ 38 BDSG) |
 | Ergebnis bestätigt am | [Leerstelle] |
 | Unterschrift | [Leerstelle] |
