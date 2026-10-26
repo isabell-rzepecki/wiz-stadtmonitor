@@ -499,7 +499,7 @@ test("Wohnen und Eigentum: Ebene Eigentum aus der geprüften Datei, privat nie j
 
 // Erfassung: Testschlüssel und Testcode nur im Test (die Konfiguration im Repository hat weder Schlüssel noch Codes)
 const TESTCODE = "ABCD-EFGH-JKMN-PQRS";
-async function erfassenSeite({ aktiv = true, zugang = true, viewport = { width: 1280, height: 800 } } = {}) {
+async function erfassenSeite({ aktiv = true, zugang = true, ohneStelle = false, viewport = { width: 1280, height: 800 } } = {}) {
   await sodium.ready;
   const kp = sodium.crypto_box_keypair(), V = sodium.base64_variants.ORIGINAL;
   const ctx = await browser.newContext({ viewport, acceptDownloads: true, serviceWorkers: "block", bypassCSP: true });
@@ -509,10 +509,11 @@ async function erfassenSeite({ aktiv = true, zugang = true, viewport = { width: 
   page.on("console", (m) => { if (m.type() === "error") page.errors.push(m.text()); });
   await page.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
   const hash = createHash("sha256").update(`wiz-einladung:${TESTCODE.replace(/-/g, "")}`).digest("hex");
-  page.konfig = { zugang };
+  page.konfig = { zugang, ohneStelle };
   await page.route("**/stadt.json", async (r) => {
     const res = await r.fetch(), c = await res.json();
-    if (aktiv) Object.assign(c.wohnen_eigentum, { privat_namen_aktiv: true, mietangaben_aktiv: true });
+    Object.assign(c.wohnen_eigentum, { privat_namen_aktiv: aktiv, mietangaben_aktiv: aktiv });
+    c.wohnen_eigentum.erfassung.datenschutz.verantwortlich = aktiv && !page.konfig.ohneStelle ? "Teststelle (erfunden)" : null;
     if (aktiv) c.wohnen_eigentum.erfassung.schluessel = { key_id: "test-1", alg: "libsodium-sealedbox-x25519", public_key: sodium.to_base64(kp.publicKey, V) };
     c.wohnen_eigentum.erfassung.einladungen = !page.konfig.zugang ? [] : page.konfig.bis ? [{ hash, bis: page.konfig.bis }] : [hash];
     await r.fulfill({ response: res, json: c });
@@ -572,6 +573,48 @@ test("Erfassung ohne Freigaben: Code nötig, ohne Schlüssel kein Speichern, Mie
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.context().close();
+});
+
+test("Erfassung als Probe: ohne Code und Schlüssel, Formulare prüfen, nichts gespeichert; Mietangabe ohne benannte Stelle nicht speicherbar", async () => {
+  const page = await erfassenSeite({ aktiv: false, zugang: false });
+  await page.locator("#probe").click();
+  await page.waitForFunction(() => window.stadtmonitorErfassen && window.stadtmonitorErfassen.map.loaded());
+  await page.selectOption("#ortsteil", "gertenbach");
+  await page.waitForFunction(() => window.stadtmonitorErfassen.map.queryRenderedFeatures({ layers: ["flaeche"] }).length > 0);
+  assert.equal(await page.locator("#probe-band").isVisible(), true);
+  assert.equal(await page.locator("#knopf-eintraege").isVisible(), false);
+  await page.locator("#tafel-inhalt").getByText("Erfasser-ID Probe").waitFor();
+  await gebaeudeAntippen(page);
+  await page.locator("#zu-b").click();  // in der Probe auch Mietangaben
+  await page.locator('#form-b button[type="submit"]').click();
+  assert.match(await page.locator(".fehlerliste").textContent(), /Einwilligung: fehlt/);
+  await page.locator('input[name="einwilligung"]').check();
+  await page.fill('input[name="nettokalt_eur"]', "450");
+  await page.selectOption('select[name="wohnflaeche_klasse"]', "60-79");
+  await page.fill('input[name="vertragsbeginn_jahr"]', "2019");
+  await page.locator('#form-b button[type="submit"]').click();
+  assert.match(await page.locator(".erfolg").textContent(), /Probe: Die Angaben sind gültig\. Nichts wurde gespeichert/);
+  assert.equal(await page.locator("#widerrufscode").count(), 0);
+  const n = await page.evaluate(async () => {
+    const d = await new Promise((ok) => { const r = indexedDB.open("wiz-erfassung"); r.onsuccess = () => ok(r.result); });
+    const z = (s) => new Promise((ok) => { const g = d.transaction(s).objectStore(s).count(); g.onsuccess = () => ok(g.result); });
+    return [await z("eintraege"), await z("meta")];
+  });
+  assert.deepEqual(n, [0, 0]);
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+  // echter Zugang mit Schlüssel, aber ohne benannte verantwortliche Stelle: Eigentum ja, Mietangabe nicht speicherbar
+  const p2 = await erfassenSeite({ ohneStelle: true });
+  await freischalten(p2);
+  await gebaeudeAntippen(p2);
+  await p2.locator("#zu-b").click();
+  assert.equal(await p2.locator('#form-b button[type="submit"]').isDisabled(), true);
+  assert.match(await p2.locator("#form-b").textContent(), /verantwortlichen Stelle/);
+  await p2.locator("#abbrechen").click();
+  await p2.locator("#zu-a").click();
+  assert.equal(await p2.locator('#form-a button[type="submit"]').isDisabled(), false);
+  await p2.context().close();
 });
 
 test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Export entschlüsselbar, kein Klartext im Gerät, Widerruf", async () => {

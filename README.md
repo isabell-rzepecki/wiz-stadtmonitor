@@ -65,7 +65,8 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - Kein Server, keine Datenbank. Jeder Eintrag wird im Gerät mit dem öffentlichen Schlüssel der Prüfgruppe versiegelt (libsodium sealed box); kein automatischer Upload, nur verschlüsselte Exportdateien.
 - Namen von Privatpersonen nur verschlüsselt, nie veröffentlicht; jede Entschlüsselung protokolliert.
 - Keine Rohdaten in ein Git-Repository: `.gitignore`, Pre-Commit-Hook und CI-Prüfung (`tools/sperre.py`) lehnen Exportdateien und Felder einzelner Erfassungen ab. Hook einrichten: `git config core.hooksPath .githooks`.
-- Sensible Felder bleiben per Konfiguration aus (`privat_namen_aktiv`, `mietangaben_aktiv`), bis verantwortliche Stelle, Einwilligungstext, Informationspflicht, Interessenabwägung, Verarbeitungsverzeichnis und Löschverfahren geklärt sind (Issue 28). Ohne öffentlichen Schlüssel (Issue 29) speichert die App nichts.
+- Namen von Privatpersonen bleiben per Konfiguration aus (`privat_namen_aktiv`), bis verantwortliche Stelle, Informationspflicht, Interessenabwägung, Verarbeitungsverzeichnis und Löschverfahren geklärt sind (Issue 28). Mietangaben (`mietangaben_aktiv`) sind seit 26.10.2026 freigegeben (Entscheidung der Projektleitung, abweichend von der Übergabe v0.4.2); gespeichert werden sie erst, wenn die verantwortliche Stelle im Datenschutzhinweis benannt ist, weil eine Einwilligung sie nennen muss. Ohne öffentlichen Schlüssel (Issue 29) speichert die App nichts.
+- Einrichtung lokal mit `tools/einrichten.py` (Schlüssel durch die Prüfgruppe, Einladungscodes durch die Ausgabestelle); die Seite trägt nur öffentlichen Schlüssel und Code-Hashes. Probemodus „Ohne Code ausprobieren“: Formulare wie echt, nichts wird gespeichert.
 
 **Grenzen.**
 - Kein Mietspiegel: Die Angaben ersetzen keine ortsübliche Vergleichsmiete nach § 558 BGB.
@@ -98,7 +99,7 @@ config/stadt.json   Alle stadtspezifischen Werte (Name, Gremien, Ortsbezirke, Ka
 site/               Seite (Leaflet, Zeitleiste, Liste, Prozesslinie; Tour in tour.js; Wohnen und Eigentum mit MapLibre GL und PMTiles), ohne Build-Schritt
 pipeline/           Python-Pipeline, je Quelle Abruf und Ableitung, dann build, check, package, site (python -m pipeline all)
 tools/kontrast.py   WCAG-Kontrastprüfung der Farb-Tokens aus config/stadt.json
-tools/einladung.py, pruefen.py, veroeffentlichen.py   Erfassung Wohnen und Eigentum: Einladungscodes, Prüfung und Veröffentlichung (nur lokal)
+tools/einrichten.py, einladung.py, pruefen.py, veroeffentlichen.py   Erfassung Wohnen und Eigentum: Einrichtung, Einladungscodes, Prüfung, Veröffentlichung (nur lokal)
 tools/sperre.py     Sperre gegen personenbezogene Rohdaten (Pre-Commit-Hook .githooks/pre-commit, CI)
 tests/              Python-Tests, Browser-Tests (Playwright, axe-core), Testdaten
 phase0/             Bestandsaufnahme: Bericht, Stichprobe (TSV), Explorationsskripte

@@ -98,6 +98,8 @@
     const heute = new Date().toISOString().slice(0, 10);
     const einladung = (hash) => F.einladungen.map((x) => (typeof x === "string" ? { hash: x } : x)).find((x) => x.hash === hash);
     const abgelaufen = (e) => Boolean(e && e.bis && e.bis < heute);
+    // Probemodus: Formulare und Prüfungen wie echt, ohne Code; nichts wird gespeichert oder exportiert
+    let probe = false;
     let zugang = await meta("zugang");
     const ez = zugang && einladung(zugang.hash);
     if (zugang && (!ez || abgelaufen(ez))) {
@@ -115,7 +117,16 @@
           placeholder="XXXX-XXXX-XXXX-XXXX" required aria-describedby="code-hinweis"></label>
           <p id="code-hinweis" class="meta">Aus dem Code entsteht eine pseudonyme Erfasser-ID; ein Name wird nicht gespeichert.</p>
           <p id="code-fehler" class="fehler" role="alert" hidden></p>
-          <button class="knopf" type="submit">Freischalten</button></form>`;
+          <button class="knopf" type="submit">Freischalten</button></form>
+        <p><button type="button" class="link-btn" id="probe">Ohne Code ausprobieren</button></p>
+        <p class="meta">Probe: Formulare und Prüfungen wie echt; nichts wird gespeichert oder exportiert.</p>`;
+      $("#probe").addEventListener("click", () => {
+        probe = true;
+        zugang = { erfasser: "Probe" };
+        $("#probe-band").hidden = false;
+        document.body.classList.add("probe");
+        hauptteil();
+      });
       $("#zugang").addEventListener("submit", async (e) => {
         e.preventDefault();
         const c = normieren($("#code").value);
@@ -133,7 +144,7 @@
 
     async function hauptteil() {
       $("#ortsteil-wahl").hidden = false;
-      $("#knopf-eintraege").hidden = false;
+      $("#knopf-eintraege").hidden = probe;
       const vorhanden = (index && index.ortsteile) || {};
       const sel = $("#ortsteil");
       sel.innerHTML = `<option value="">ganze Stadt</option>` + cfg.ortsteile.filter((o) => vorhanden[o.slug]).map((o) => `<option value="${esc(o.slug)}">${esc(o.name)}</option>`).join("");
@@ -174,8 +185,14 @@
         map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: SCHMAL.matches ? { top: 150, bottom: 260, left: 20, right: 20 } : { top: 90, bottom: 40, left: 40, right: 460 },
           duration: 0, maxZoom: 17 });
       }
-      const ohneSchluessel = () => (F.schluessel ? "" : `<p class="hinweis-kasten" role="note"><strong>Speichern noch nicht möglich.</strong>
+      const ohneSchluessel = () => (probe ? `<p class="hinweis-kasten" role="note"><strong>Probe.</strong> Nichts wird gespeichert oder exportiert.</p>`
+        : F.schluessel ? "" : `<p class="hinweis-kasten" role="note"><strong>Speichern noch nicht möglich.</strong>
         Der öffentliche Schlüssel der Prüfgruppe ist noch nicht hinterlegt; ohne ihn bleibt nichts im Gerät.</p>`);
+      // Eine Einwilligung setzt voraus, dass die verantwortliche Stelle genannt wird (Art. 13 Abs. 1 lit. a DSGVO)
+      const stelle = Boolean(F.datenschutz.verantwortlich);
+      const mieteAn = probe || E.mietangaben_aktiv;
+      const speichernA = probe || Boolean(F.schluessel);
+      const speichernB = probe || (Boolean(F.schluessel) && stelle);
 
       async function uebersicht() {
         gewaehlt = null;
@@ -198,11 +215,11 @@
         titel("Gebäude");
         inhalt.innerHTML = `${gebaeudeKopf(p)}${ohneSchluessel()}
           <p class="knoepfe"><button type="button" class="knopf" id="zu-a">Eigentum und Vermietung erfassen</button>
-          <button type="button" class="knopf" id="zu-b"${E.mietangaben_aktiv ? "" : " disabled aria-describedby=\"b-aus\""}>Mietangabe erfassen</button></p>
-          ${E.mietangaben_aktiv ? "" : '<p id="b-aus" class="meta">Mietangaben sind noch nicht freigegeben (Datenschutzfragen offen).</p>'}
+          <button type="button" class="knopf" id="zu-b"${mieteAn ? "" : " disabled aria-describedby=\"b-aus\""}>Mietangabe erfassen</button></p>
+          ${mieteAn ? "" : '<p id="b-aus" class="meta">Mietangaben sind noch nicht freigegeben (Datenschutzfragen offen).</p>'}
           <button type="button" class="link-btn" id="zurueck">Zurück zur Übersicht</button>`;
         $("#zu-a").addEventListener("click", () => formularA(p));
-        if (E.mietangaben_aktiv) $("#zu-b").addEventListener("click", () => formularB(p));
+        if (mieteAn) $("#zu-b").addEventListener("click", () => formularB(p));
         $("#zurueck").addEventListener("click", () => { uebersicht(); fokus(); });
         if (SCHMAL.matches) tafel.scrollTop = 0;
         fokus();
@@ -229,6 +246,7 @@
       });
 
       async function speichern(typ, rec, gebaeudeId) {
+        if (probe) return;
         const schl = F.schluessel;
         const eintrag = { id: rec.erfassung_id || rec.angabe_id, typ, erstellt: rec.erfasst_am, exportiert: null, alg: ALG, key_id: schl.key_id,
           ciphertext: await versiegeln(JSON.stringify(rec), schl) };
@@ -238,13 +256,14 @@
       }
       function gespeichert(text, code = null) {
         titel("Gespeichert");
-        inhalt.innerHTML = `<p class="erfolg" role="status">${esc(text)} Der Eintrag ist verschlüsselt im Gerät; lesen kann ihn nur die Prüfgruppe.</p>
-          ${code ? `<div class="widerruf"><p>Widerrufscode für diese Angabe:</p><p class="code" id="widerrufscode">${esc(code)}</p>
+        inhalt.innerHTML = `${probe ? `<p class="erfolg" role="status">Probe: Die Angaben sind gültig. Nichts wurde gespeichert.</p>`
+          : `<p class="erfolg" role="status">${esc(text)} Der Eintrag ist verschlüsselt im Gerät; lesen kann ihn nur die Prüfgruppe.</p>`}
+          ${code && !probe ? `<div class="widerruf"><p>Widerrufscode für diese Angabe:</p><p class="code" id="widerrufscode">${esc(code)}</p>
             <p class="meta">Bitte notieren oder fotografieren. Mit diesem Code lässt sich die Angabe jederzeit löschen lassen; die App zeigt ihn nur jetzt.</p></div>` : ""}
           <p class="knoepfe"><button type="button" class="knopf" id="weiter">Nächstes Gebäude</button>
-          <button type="button" class="knopf" id="zu-eintraege">Einträge und Export</button></p>`;
+          ${probe ? "" : '<button type="button" class="knopf" id="zu-eintraege">Einträge und Export</button>'}</p>`;
         $("#weiter").addEventListener("click", () => { uebersicht(); fokus(); });
-        $("#zu-eintraege").addEventListener("click", eintraege);
+        if (!probe) $("#zu-eintraege").addEventListener("click", eintraege);
         fokus();
       }
 
@@ -270,7 +289,7 @@
           <label class="feld">Lage <span class="meta">(optional; Straße ohne Hausnummer oder Bezeichnung)</span> <input name="lage_hinweis" maxlength="80" autocomplete="off"></label>
           <label class="feld">Bemerkung <span class="meta">(optional; keine Namen, keine Kontaktdaten, keine Hausnummern)</span>
             <textarea name="bemerkung" maxlength="200" rows="3"></textarea></label>
-          <p class="knoepfe"><button class="knopf" type="submit"${F.schluessel ? "" : " disabled"}>Verschlüsselt speichern</button>
+          <p class="knoepfe"><button class="knopf" type="submit"${speichernA ? "" : " disabled"}>${probe ? "Prüfen (Probe)" : "Verschlüsselt speichern"}</button>
             <button class="link-btn" type="button" id="abbrechen">Abbrechen</button></p></form>`;
         const form = $("#form-a");
         form.addEventListener("change", () => {
@@ -300,7 +319,7 @@
             if (t) fehler.push({ name: n, feld: FELDNAMEN[n], text: t });
           }
           if (fehlerZeigen(form, fehler)) return;
-          if (k === "privat" && E.privat_namen_aktiv && w("name_privat")) {
+          if (k === "privat" && E.privat_namen_aktiv && w("name_privat") && !probe) {
             rec.name_privat_enc = { alg: ALG, key_id: F.schluessel.key_id, ciphertext: await versiegeln(w("name_privat"), F.schluessel) };
             form.elements.name_privat.value = "";
           }
@@ -332,7 +351,9 @@
           <fieldset class="kacheln klein"><legend>Ausstattung <span class="meta">(optional)</span></legend>${auswahl("ausstattung", AUSSTATTUNG, null, "checkbox")}</fieldset>
           <label class="feld">Vermieter <span class="meta">(optional; nur Unternehmen, Genossenschaft oder öffentliche Hand, keine Privatpersonen)</span>
             <input name="vermieter_jp" maxlength="120" autocomplete="off"></label>
-          <p class="knoepfe"><button class="knopf" type="submit"${F.schluessel ? "" : " disabled"}>Verschlüsselt speichern</button>
+          ${speichernB || !F.schluessel ? "" : `<p class="hinweis-kasten" role="note"><strong>Speichern noch nicht möglich.</strong>
+            Eine Einwilligung braucht die Angabe der verantwortlichen Stelle; sie ist noch nicht benannt.</p>`}
+          <p class="knoepfe"><button class="knopf" type="submit"${speichernB ? "" : " disabled"}>${probe ? "Prüfen (Probe)" : "Verschlüsselt speichern"}</button>
             <button class="link-btn" type="button" id="abbrechen">Abbrechen</button></p></form>`;
         const form = $("#form-b");
         let zeitpunkt = null;
