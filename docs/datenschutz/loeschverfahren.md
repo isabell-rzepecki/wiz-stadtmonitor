@@ -1,6 +1,6 @@
 # Lösch- und Widerspruchsverfahren
 
-> Entwurf vom 26.10.2026, keine Rechtsberatung (Issue 28). Kontakt: [Leerstelle: Funktionsadresse der verantwortlichen Stelle, etwa datenschutz@…, nicht die private Adresse einer Person; festgelegt 26.10.2026]. Eintrag in `config/stadt.json` (`wohnen_eigentum.erfassung.datenschutz.kontakt_widerspruch`); Datenschutzseite und App übernehmen ihn beim nächsten Veröffentlichen.
+> Entwurf vom 26.10.2026, keine Rechtsberatung (Issue 28). Kontakt: post@wiz-o-mat.de (Funktionsadresse, benannt am 26.10.2026). Eintrag in `config/stadt.json` (`wohnen_eigentum.erfassung.datenschutz.kontakt_widerspruch`); Datenschutzseite und App übernehmen ihn beim nächsten Veröffentlichen.
 
 ## Speicherdauer
 

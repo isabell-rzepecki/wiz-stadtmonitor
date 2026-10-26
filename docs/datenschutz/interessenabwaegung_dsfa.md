@@ -2,7 +2,7 @@
 
 > Entwurf vom 26.10.2026, keine Rechtsberatung. Vor der ersten echten Erfassung von der verantwortlichen Stelle zu prüfen und zu unterzeichnen (Issue 28).
 
-Verantwortliche Stelle: [Leerstelle: Name, Anschrift, Kontakt]
+Verantwortliche Stelle: Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen; E-Mail post@wiz-o-mat.de (benannt am 26.10.2026; Quelle für Seite und App: `config/stadt.json`)
 
 ## 1. Interessenabwägung (Art. 6 Abs. 1 lit. f DSGVO)
 

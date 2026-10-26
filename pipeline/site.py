@@ -19,7 +19,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
     (out / "schemas").mkdir()
     for name, quelle in (("erfassung_eigentum.json", "schema_erfassung_eigentum.json"), ("mietangabe.json", "schema_mietangabe.json")):
         shutil.copy2(config.ROOT / "docs" / "uebergabe-v0.4.2" / quelle, out / "schemas" / name)
-    for seite in ("datenschutz.html", "aushang.html"):
+    for seite in ("datenschutz.html", "impressum.html", "aushang.html"):
         datenschutz_ausfuellen(out / seite)
     # Fehlerseite: GitHub Pages liefert sie für jeden Pfad aus, ein relativer Link führte dort ins Leere
     p404 = out / "404.html"

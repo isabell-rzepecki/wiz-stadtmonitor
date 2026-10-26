@@ -2,8 +2,9 @@
 // ca. 3 MB) werden beim Installieren gespeichert. Abrufe aus dem Netz zuerst, bei fehlendem Netz aus dem Speicher.
 // Die Gebäudedatei kommt immer aus dem Speicher; Bereichsabfragen (Range) beantwortet der Worker aus der ganzen Datei.
 // Gespeichert werden nur öffentliche Dateien; Einträge liegen versiegelt in IndexedDB, nie in diesem Speicher.
-const SPEICHER = "wiz-erfassung-v1";
+const SPEICHER = "wiz-erfassung-v2";
 const DATEIEN = ["erfassen.html", "erfassen.js", "erfassen-pruefung.js", "erfassen.css", "wohnen.css", "page.css", "favicon.svg", "erfassen.webmanifest",
+  "datenschutz.html", "impressum.html",
   "stadt.json", "schemas/erfassung_eigentum.json", "schemas/mietangabe.json", "data/export/karte/gebaeude_index.json",
   "vendor/maplibre/maplibre-gl-csp.js", "vendor/maplibre/maplibre-gl-csp-worker.js", "vendor/maplibre/maplibre-gl.css", "vendor/pmtiles/pmtiles.js",
   "vendor/libsodium/libsodium.js", "vendor/libsodium/libsodium-wrappers.js"];

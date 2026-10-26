@@ -37,6 +37,19 @@ class Seite(unittest.TestCase):
                 D.clear()
                 D.update(alt)
 
+    def test_impressum_aus_konfiguration(self):
+        # Impressum (§ 5 DDG, § 18 Abs. 2 MStV): Stelle und Kontakt aus stadt.json, keine Leerstelle, wenn benannt
+        with tempfile.TemporaryDirectory() as d:
+            out = site.build(Path(d) / "_site", mit_daten=False)
+            text = (out / "impressum.html").read_text(encoding="utf-8")
+            D = site.config.STADT["wohnen_eigentum"]["erfassung"]["datenschutz"]
+            if D["verantwortlich"]:
+                self.assertNotIn("[Leerstelle", text)
+                self.assertEqual(text.count(D["verantwortlich"].splitlines()[0]), 2)
+                self.assertIn(D["kontakt_widerspruch"], text)
+            for seite in ("index.html", "datenschutz.html", "erfassen.html"):
+                self.assertIn('href="impressum.html"', (out / seite).read_text(encoding="utf-8"), seite)
+
     def test_aushang_art14(self):
         # Aushang nach Art. 14 Abs. 5 lit. b: Stadt, Hinweis zu Namen passend zum Schalter, QR-Code zur Datenschutzseite
         with tempfile.TemporaryDirectory() as d:
