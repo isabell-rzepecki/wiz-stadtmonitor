@@ -2,8 +2,8 @@ regel_id	gegenstand	regel	begruendung
 R1	Namen von Privatpersonen	nie veröffentlichen; nur verschlüsselt im Gerät und in Exportdateien	Datenminimierung; kein öffentliches Interesse an Einzelpersonen
 R2	Kategorie „privat“ je Gebäude	nicht je Gebäude zeigen; nur Anteil je Ortsbezirk	zusammen mit Adresse personenbeziehbar
 R3	Juristische Personen	Name und Kategorie je Gebäude zeigen	kein Personenbezug; öffentliches Interesse an Eigentumsstruktur
-R4	Mieten je Ortsbezirk und Baujahrklasse	Median und Spanne (P25–P75) ab 5 Angaben je Zelle	Schutz einzelner Mietender vor Wiedererkennung
-R5	Mieten je juristischer Person	Median und Spanne ab 5 Angaben aus mindestens 2 Gebäuden	Vergleich großer Vermieter ohne Rückschluss auf einzelne Haushalte
+R4	Mieten je Ortsbezirk und Baujahrklasse	Median ab 5 Angaben je Zelle, Spanne (P25–P75) ab 10 Angaben; Werte auf 0,10 € gerundet (DSFA 26.10.2026)	Schutz einzelner Mietender vor Wiedererkennung
+R5	Mieten je juristischer Person	Median ab 5 Angaben aus mindestens 2 Gebäuden, Spanne ab 10 Angaben; gerundet auf 0,10 €	Vergleich großer Vermieter ohne Rückschluss auf einzelne Haushalte
 R6	Mieten je privater Vermieter:in	nie veröffentlichen, auch nicht pseudonym	Mieteinnahmen je Person wären ein Finanzprofil; Mietende wären bei kleinen Vermietern erkennbar
 R7	Einzelne Mietangaben	nie veröffentlichen	Wiedererkennbarkeit über Gebäude
 R8	Zellen unter Schwellenwert	als „zu wenige Angaben“ ausweisen, nicht als 0 oder leer ohne Hinweis	Transparenz über Datenlage

@@ -90,14 +90,14 @@ window.WohnenModule = (function () {
 
   function mietvergleich(cfg, w) {
     const R = cfg.wohnen_eigentum.regeln, m = w && w.mieten;
-    const regeln = `<ul><li>Je Ortsbezirk und Baujahrklasse: Median und Spanne ab ${zahl(R.mieten_zelle_min)} Angaben.</li>
+    const regeln = `<ul><li>Je Ortsbezirk und Baujahrklasse: Median ab ${zahl(R.mieten_zelle_min)} Angaben, Spanne ab ${zahl(R.mieten_spanne_min)}; gerundet auf 0,10 €.</li>
       <li>Je Unternehmen, Genossenschaft oder öffentlicher Hand: ab ${zahl(R.juristische_person_min_angaben)} Angaben aus mindestens ${zahl(R.juristische_person_min_gebaeude)} Gebäuden.</li>
       <li>Je privater Vermieter:in: nie, auch nicht unter einem Kürzel.</li><li>Einzelne Angaben: nie.</li></ul>`;
     if (!m || !m.zellen || !m.zellen.length) {
       return `<p class="hinweis-kasten"><strong>Noch keine geprüften Mietangaben.</strong> ${cfg.wohnen_eigentum.mietangaben_aktiv ? "" : "Die Erfassung ist noch nicht freigegeben."}</p>${regeln}`;
     }
     const zeile = (c) => `<tr><th scope="row">${esc(c.ortsbezirk_name || c.ortsbezirk)}</th><td>${esc(c.baujahr_klasse)}</td>
-      <td>${c.n >= R.mieten_zelle_min && c.median != null ? `${zahl(c.median, 2)} (${zahl(c.p25, 2)}–${zahl(c.p75, 2)})` : `<span class="luecke">${ZU_WENIG}</span>`}</td></tr>`;
+      <td>${c.n >= R.mieten_zelle_min && c.median != null ? `${zahl(c.median, 2)}${c.p25 != null ? ` (${zahl(c.p25, 2)}–${zahl(c.p75, 2)})` : ""}` : `<span class="luecke">${ZU_WENIG}</span>`}</td></tr>`;
     return `<p class="stichtag">Stand ${datum(m.stand)}</p><div class="tabelle"><table><caption class="visually-hidden">Nettokaltmiete je Ortsbezirk und Baujahrklasse</caption>
       <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Baujahr</th><th scope="col">€/m² Median (Spanne)</th></tr></thead><tbody>${m.zellen.map(zeile).join("")}</tbody></table></div>${regeln}`;
   }

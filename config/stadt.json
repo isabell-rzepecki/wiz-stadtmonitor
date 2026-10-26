@@ -1260,6 +1260,8 @@
     "regeln": {
       "privat_anteil_min": 5,
       "mieten_zelle_min": 5,
+      "mieten_spanne_min": 10,
+      "mieten_rundung_eur": 0.1,
       "juristische_person_min_angaben": 5,
       "juristische_person_min_gebaeude": 2,
       "quelle": "docs/uebergabe-v0.4.2/veroeffentlichungsregeln.tsv"

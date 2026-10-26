@@ -9,7 +9,7 @@
   - Die Prüfgruppe prüft das mindestens vierteljährlich.
 - **Exportdateien (.bin):** Nach dem Einlesen löscht die Prüfgruppe sie sofort; der Inhalt liegt dann nur noch im versiegelten Bestand.
 - **Im Gerät der erfassenden Person:** Exportierte Einträge löschen, sobald die Prüfgruppe den Eingang bestätigt hat („Exportierte löschen“).
-- **Wohnfläche in m²:** wird nur zur Berechnung von €/m² genutzt und nicht veröffentlicht.
+- **Miete und Wohnfläche in m²:** beim Einlesen zu €/m² verrechnet und verworfen; im Bestand bleibt nur der Preis je m².
 - **Zugriffsprotokoll** (`namenzugriff.tsv`): [Leerstelle: Aufbewahrung, Vorschlag 24 Monate].
 
 ## Widerruf einer Mietangabe (Art. 7 Abs. 3 DSGVO)
@@ -20,7 +20,7 @@
 4. Mit `python tools/veroeffentlichen.py` werden die öffentlichen Werte neu berechnet und veröffentlicht.
 5. Bestätigung an die mietende Person innerhalb eines Monats (Art. 12 Abs. 3 DSGVO).
 
-Ohne Code: Suche über Gebäude, Vertragsbeginn und Miete. Ist das nicht eindeutig, werden alle in Frage kommenden Angaben gelöscht.
+Ohne Code: Suche über Gebäude, Vertragsbeginn und Preis je m² (Miete geteilt durch Wohnfläche). Ist das nicht eindeutig, werden alle in Frage kommenden Angaben gelöscht.
 
 ## Widerspruch von Vermieter:innen (Art. 21 DSGVO)
 
