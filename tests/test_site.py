@@ -47,6 +47,9 @@ class Seite(unittest.TestCase):
                 self.assertNotIn("[Leerstelle", text)
                 self.assertEqual(text.count(D["verantwortlich"].splitlines()[0]), 2)
                 self.assertIn(D["kontakt_widerspruch"], text)
+            if D["verantwortlich"]:  # auch im Abschnitt „Über“ der Startseite
+                self.assertIn(f'<span data-feld="verantwortlich_name">{D["verantwortlich"].splitlines()[0]}</span>',
+                              (out / "index.html").read_text(encoding="utf-8"))
             for seite in ("index.html", "datenschutz.html", "erfassen.html"):
                 self.assertIn('href="impressum.html"', (out / seite).read_text(encoding="utf-8"), seite)
 

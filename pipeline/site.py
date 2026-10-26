@@ -19,7 +19,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
     (out / "schemas").mkdir()
     for name, quelle in (("erfassung_eigentum.json", "schema_erfassung_eigentum.json"), ("mietangabe.json", "schema_mietangabe.json")):
         shutil.copy2(config.ROOT / "docs" / "uebergabe-v0.4.2" / quelle, out / "schemas" / name)
-    for seite in ("datenschutz.html", "impressum.html", "aushang.html"):
+    for seite in ("datenschutz.html", "impressum.html", "aushang.html", "index.html"):
         datenschutz_ausfuellen(out / seite)
     # Fehlerseite: GitHub Pages liefert sie für jeden Pfad aus, ein relativer Link führte dort ins Leere
     p404 = out / "404.html"
@@ -52,7 +52,9 @@ def datenschutz_ausfuellen(seite):
     adresse = (config.SITE_URL or "").rstrip("/") + "/datenschutz.html" if config.SITE_URL else ""
     namen = ("Bei Privatpersonen kann der Name erfasst sein; er ist nur verschlüsselt gespeichert und dient allein der Prüfung."
              if E["privat_namen_aktiv"] else "Namen von Privatpersonen werden derzeit nicht erfasst.")
-    spans = {"stadt": html.escape(config.STADT["stadt"]["name"]), "namen": namen, "adresse": html.escape(adresse) if adresse else None}
+    name = (D.get("verantwortlich") or "").splitlines()[0] if D.get("verantwortlich") else None
+    spans = {"stadt": html.escape(config.STADT["stadt"]["name"]), "namen": namen, "adresse": html.escape(adresse) if adresse else None,
+             "verantwortlich_name": html.escape(name) if name else None}
     for feld, wert in spans.items():
         if wert:
             text = re.sub(rf'<span data-feld="{feld}">.*?</span>', f'<span data-feld="{feld}">{wert}</span>', text, flags=re.S)
