@@ -68,7 +68,7 @@ window.WohnenModule = (function () {
         <tbody>${reihen.map(([k, n]) => `<tr${k === slug ? ' class="own"' : ""}><th scope="row">${esc(n)}</th>${v.stichtage.map((s) => `<td>${sp((v.spannen[k] || {})[s])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
       <p><button type="button" class="knopf" data-ebene="bodenrichtwerte">Zonen auf der Karte zeigen</button></p>
       <p class="meta">Stichtag 01.01.2026: nur als Karte der HVBG, in der Hauptkarte unter „Weitere Ebenen“ (Bilder eines fremden Servers erst nach dem Einschalten).</p>
-      <h4>Angebotsmieten</h4><p><span class="luecke">keine Angabe</span>. Angebotsmieten gibt es frei nur auf Kreisebene (INKAR, BBSR); deren Lizenz und Herkunft sind noch nicht geprüft. Angebotsmieten privater Portale übernimmt die Seite nicht.</p>`;
+      <h4>Angebotsmieten</h4><p><span class="luecke">keine Angabe</span>. Angebotsmieten gibt es frei nur je Kreis: vom BBSR aus Inseraten von Immobilienportalen und Zeitungen aufbereitet (Datenlizenz Deutschland – Namensnennung 2.0). Die Seite übernimmt sie als Kreiswert, sobald die Datenquelle (INKAR) wieder erreichbar ist. Eigene Abrufe aus Immobilienportalen gibt es nicht.</p>`;
   }
 
   function eigentum(cfg, w, eig) {
