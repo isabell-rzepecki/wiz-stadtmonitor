@@ -18,6 +18,7 @@ import veroeffentlichen as vo  # noqa: E402
 GEB = json.loads((config.ROOT / "data" / "geo" / "hvgg" / "gebaeude.geojson").read_text(encoding="utf-8"))["features"]
 G = [f["properties"]["id"] for f in GEB if f["properties"]["o"] == "gertenbach"][:12]
 W = [f["properties"]["id"] for f in GEB if f["properties"]["o"] == "wendershausen"][:2]
+PW = "Testpassphrase 2026"  # nur im Test
 ZEIT = iter(f"2026-10-26T08:{m:02d}:00.000Z" for m in range(60))
 
 
@@ -48,8 +49,8 @@ class Pruefgruppe(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         self.schl_datei = self.tmp / "schluessel" / "pg.json"
-        self.pub = pg.schluessel_erzeugen(self.schl_datei)
-        self.schl = pg.Schluessel(self.schl_datei)
+        self.pub = pg.schluessel_erzeugen(self.schl_datei, PW, stufe="interaktiv")
+        self.schl = pg.Schluessel(self.schl_datei, PW)
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
@@ -188,6 +189,46 @@ class Pruefgruppe(unittest.TestCase):
         self.assertNotIn(b[1]["angabe_id"], self.arbeit().eintraege)
         self.assertIn(a[2]["erfassung_id"], self.arbeit().eintraege)
 
+    def test_passphrase_und_schluesselwechsel(self):
+        # privater Schlüssel nur verschlüsselt in der Datei; ohne oder mit falscher Passphrase nicht nutzbar
+        roh = self.schl_datei.read_text(encoding="utf-8")
+        self.assertNotIn("secret_key", roh)
+        self.assertIn("argon2id", roh)
+        for falsch in (None, "falsche Passphrase 1"):
+            with self.assertRaises(pg.Abbruch):
+                pg.Schluessel(self.schl_datei, falsch)
+        with self.assertRaises(pg.Abbruch):
+            pg.schluessel_erzeugen(self.tmp / "kurz.json", "kurz", stufe="interaktiv")
+        # Bestand mit Namen anlegen, dann Schlüssel wechseln
+        a = [eigentum(G[0], "privat", name_privat="Erika Testname"), eigentum(G[1], "geno", name="Wohnbau Test eG")]
+        alt_export = self.export("eigentum", a)
+        ar = self.arbeit()
+        pruefen.einlesen(ar, [alt_export])
+        alt_id = self.schl.key_id
+        neu = pruefen.schluessel_wechsel(ar, stufe="interaktiv")
+        self.assertNotEqual(neu["key_id"], alt_id)
+        schl = pg.Schluessel(self.schl_datei, PW)
+        self.assertEqual(schl.key_id, neu["key_id"])
+        self.assertTrue(schl.kennt(alt_id))  # alte Exporte bleiben lesbar
+        ar2 = pg.Arbeit(self.tmp / "arbeit", schl, "P-1")
+        enc = ar2.eintraege[a[0]["erfassung_id"]]["datensatz"]["name_privat_enc"]
+        self.assertEqual(enc["key_id"], neu["key_id"])
+        self.assertEqual(ar2.name_oeffnen(a[0]["erfassung_id"], "Test"), "Erika Testname")
+        # der Bestand ist mit dem neuen Schlüssel versiegelt: ohne den alten Schlüssel lesbar
+        nur_neu = self.tmp / "nur_neu.json"
+        d = json.loads(self.schl_datei.read_text(encoding="utf-8"))
+        nur_neu.write_text(json.dumps({**d, "frueher": []}), encoding="utf-8")
+        self.assertIn(a[1]["erfassung_id"], pg.Arbeit(self.tmp / "arbeit", pg.Schluessel(nur_neu, PW), "P-1").eintraege)
+        # Kompromittierung: alter Schlüssel gesperrt, Exporte mit ihm werden abgewiesen
+        pub_vorher = dict(self.pub, key_id=neu["key_id"], public_key=neu["public_key"])
+        self.pub = pub_vorher
+        neuer_export = self.export("eigentum", [eigentum(G[2], "kom", name="Stadt")])
+        pruefen.schluessel_wechsel(ar2, kompromittiert=True, stufe="interaktiv")
+        ar3 = pg.Arbeit(self.tmp / "arbeit", pg.Schluessel(self.schl_datei, PW), "P-1")
+        n, zeilen = pruefen.einlesen(ar3, [neuer_export])
+        self.assertEqual(n, 0)
+        self.assertIn("gesperrter Schlüssel", zeilen[0][2])
+
     def test_sperre_gegen_sensible_ausgaben(self):
         gut = {"zellen": [{"ortsbezirk": "x", "n": 5, "median": 6.0, "p25": 5.0, "p75": 7.0}, {"ortsbezirk": "y", "n": None, "hinweis": "zu wenige Angaben"}],
                "juristische_personen": [{"name": "A eG", "n": 5, "gebaeude": 2, "median": 6.0}]}
@@ -205,9 +246,9 @@ class Pruefgruppe(unittest.TestCase):
         with self.assertRaises(pg.Abbruch):
             pg.Arbeit(config.ROOT / "data" / "pruefung", self.schl, "P-1")
         with self.assertRaises(pg.Abbruch):
-            pg.schluessel_erzeugen(config.ROOT / "schluessel.json")
+            pg.schluessel_erzeugen(config.ROOT / "schluessel.json", PW, stufe="interaktiv")
         with self.assertRaises(pg.Abbruch):
-            pg.schluessel_erzeugen(self.schl_datei)  # nie überschreiben
+            pg.schluessel_erzeugen(self.schl_datei, PW, stufe="interaktiv")  # nie überschreiben
         with self.assertRaises(pg.Abbruch):
             pg.Arbeit(self.tmp / "arbeit", self.schl, "Erika")  # Prüfer-ID pseudonym
         self.assertEqual(self.schl_datei.stat().st_mode & 0o777, 0o600)

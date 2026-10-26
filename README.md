@@ -73,7 +73,7 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - Zensus-Werte haben den Stichtag 15.05.2022.
 - Die Eigentumskarte ist unvollständig: Sie zeigt nur, was belegt erfasst und geprüft wurde; der Erfassungsstand steht je Ortsbezirk dabei.
 
-Entwürfe zur Datenschutz-Klärung (Interessenabwägung und DSFA-Vorprüfung, Verarbeitungsverzeichnis, Löschverfahren, Information für Vermieter:innen; keine Rechtsberatung): [`docs/datenschutz/`](docs/datenschutz/).
+Entwürfe zur Datenschutz-Klärung (Interessenabwägung und DSFA-Vorprüfung, Verarbeitungsverzeichnis, Löschverfahren, Information für Vermieter:innen, Prüfgruppe und Schlüsselverfahren; keine Rechtsberatung): [`docs/datenschutz/`](docs/datenschutz/).
 
 Prüfschritte auf Geräten (Android, iOS, Screenreader): [`docs/pruefung-wohnen.md`](docs/pruefung-wohnen.md).
 

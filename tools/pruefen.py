@@ -15,6 +15,8 @@ Aufruf (ARBEIT und SCHLUESSEL außerhalb jedes Git-Repositorys):
   python tools/pruefen.py widerspruch -a ARBEIT -s SCHLUESSEL -p P-1 GEBAEUDE… --grund TEXT   Eigentum zu den Gebäuden
                                      (und allen Gebäuden derselben Person) löschen, Gebäude auf die Sperrliste
   python tools/pruefen.py fristen    -a ARBEIT -s SCHLUESSEL -p P-1 [--loeschen]   Einträge nach der Speicherdauer
+  python tools/pruefen.py schluessel-wechsel -a ARBEIT -s SCHLUESSEL -p P-1 [--kompromittiert] [--neue-passphrase]
+Die Passphrase der Schlüsseldatei wird abgefragt (docs/datenschutz/schluesselverfahren.md).
 
 Ausgabe: ARBEIT/audit/pruefung_<datum>.tsv, ohne Namen von Privatpersonen und ohne Mietbeträge.
 """
@@ -48,11 +50,13 @@ def einlesen(arbeit, dateien):
             raise pg.Abbruch(f"{Path(datei).name}: keine Exportdatei der Erfassung (Format, Version, Typ oder Verfahren unbekannt).")
         for e in d["eintraege"]:
             grund = None
-            if e.get("key_id") != arbeit.schl.key_id:
+            if e.get("key_id") in arbeit.schl.gesperrt:
+                grund = f"gesperrter Schlüssel ({e.get('key_id')})"
+            elif not arbeit.schl.kennt(e.get("key_id")):
                 grund = f"anderer Schlüssel ({e.get('key_id')})"
             else:
                 try:
-                    rec = json.loads(arbeit.schl.oeffnen(e["ciphertext"]))
+                    rec = json.loads(arbeit.schl.oeffnen(e["ciphertext"], e["key_id"]))
                 except Exception:  # noqa: BLE001 – Inhalt nie ausgeben
                     rec, grund = None, "nicht entschlüsselbar"
             if not grund:
@@ -228,6 +232,21 @@ def widerspruch(arbeit, gebaeude, grund):
     return weg, ziele
 
 
+def schluessel_wechsel(arbeit, kompromittiert=False, neue_passphrase=None, stufe="moderat"):
+    """Neues Schlüsselpaar: Namen von Privatpersonen und den Bestand mit dem neuen Schlüssel neu versiegeln. Der bisherige
+    Schlüssel bleibt zum Öffnen alter Exporte; bei Kompromittierung wird er gesperrt (Exporte mit ihm weist einlesen ab)."""
+    alt = arbeit.schl.key_id
+    oeffentlich = arbeit.schl.wechseln(kompromittiert, neue_passphrase, stufe)
+    for i, e in arbeit.eintraege.items():
+        enc = e["datensatz"].get("name_privat_enc")
+        if enc and enc.get("key_id") != oeffentlich["key_id"]:
+            name = arbeit.name_oeffnen(i, "Schlüsselwechsel")
+            enc.update(key_id=oeffentlich["key_id"], ciphertext=pg.versiegeln(oeffentlich["public_key"], name.encode()))
+    arbeit.verlauf(f"Schlüsselwechsel {alt} → {oeffentlich['key_id']}{' (alter Schlüssel gesperrt)' if kompromittiert else ''}")
+    arbeit.speichern()
+    return oeffentlich
+
+
 def fristen(arbeit, loeschen_=False, heute=None):
     """Einträge, deren Eingang länger als die Speicherdauer zurückliegt; auf Wunsch löschen."""
     heute = heute or date.today()
@@ -247,7 +266,7 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="befehl", required=True)
     s = sub.add_parser("schluessel")
     s.add_argument("datei")
-    for name in ("einlesen", "pruefen", "freigeben", "verwerfen", "name", "zusammenfuehren", "loeschen", "widerspruch", "fristen"):
+    for name in ("einlesen", "pruefen", "freigeben", "verwerfen", "name", "zusammenfuehren", "loeschen", "widerspruch", "fristen", "schluessel-wechsel"):
         p = sub.add_parser(name)
         p.add_argument("-a", "--arbeit", required=True)
         p.add_argument("-s", "--schluessel", required=True)
@@ -266,6 +285,9 @@ def main(argv=None):
             p.add_argument("gebaeude", nargs="+")
         if name == "fristen":
             p.add_argument("--loeschen", action="store_true")
+        if name == "schluessel-wechsel":
+            p.add_argument("--kompromittiert", action="store_true", help="alten Schlüssel sperren")
+            p.add_argument("--neue-passphrase", action="store_true", help="neue Passphrase abfragen")
         if name in ("verwerfen", "loeschen", "widerspruch"):
             p.add_argument("--grund", required=True)
         if name == "name":
@@ -277,10 +299,10 @@ def main(argv=None):
             p.add_argument("aufgeben")
     a = ap.parse_args(argv)
     if a.befehl == "schluessel":
-        print(json.dumps(pg.schluessel_erzeugen(a.datei), ensure_ascii=False))
+        print(json.dumps(pg.schluessel_erzeugen(a.datei, pg.passphrase_abfragen(a.datei, neu=True)), ensure_ascii=False))
         print("In config/stadt.json unter wohnen_eigentum.erfassung.schluessel eintragen (nur diesen öffentlichen Teil).", file=sys.stderr)
         return
-    arbeit = pg.Arbeit(a.arbeit, pg.Schluessel(a.schluessel), a.pruefer)
+    arbeit = pg.Arbeit(a.arbeit, pg.Schluessel(a.schluessel, pg.passphrase_abfragen(a.schluessel)), a.pruefer)
     if a.befehl == "einlesen":
         neu, zeilen = einlesen(arbeit, a.dateien)
         print(f"{neu} aufgenommen, {sum(1 for z in zeilen if z[2].startswith('abgewiesen'))} abgewiesen")
@@ -305,6 +327,10 @@ def main(argv=None):
     elif a.befehl == "fristen":
         f = fristen(arbeit, a.loeschen)
         print(f"{len(f)} Einträge älter als {SPEICHERDAUER} Monate" + (" gelöscht" if a.loeschen else " (mit --loeschen löschen)"))
+    elif a.befehl == "schluessel-wechsel":
+        neu = schluessel_wechsel(arbeit, a.kompromittiert, pg.passphrase_abfragen(a.schluessel, neu=True) if a.neue_passphrase else None)
+        print(json.dumps(neu, ensure_ascii=False))
+        print("Neuen öffentlichen Teil in config/stadt.json eintragen und veröffentlichen.", file=sys.stderr)
 
 
 if __name__ == "__main__":
