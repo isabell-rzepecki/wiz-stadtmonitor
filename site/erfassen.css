@@ -48,3 +48,6 @@ dialog ul { padding-left: 18px; }
   .tafel { max-height: 55dvh; }
   .netz { bottom: auto; top: 140px; }
 }
+.probe-band { margin: 0; padding: 4px 10px; border-radius: 10px; background: #fff4d6; border: 2px dashed #8a6d1f; color: #1a1a1a; font-weight: 700; font-size: 14px; }
+.probe-band a { color: var(--accent-ink); }
+@media (max-width: 700px) { .probe-band { order: 4; flex: 1 1 100%; text-align: center; } .probe .maplibregl-ctrl-top-right, .probe .netz { top: 200px; } }

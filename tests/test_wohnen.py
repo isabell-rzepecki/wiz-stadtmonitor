@@ -48,10 +48,12 @@ class Wohnen(unittest.TestCase):
         self.assertNotIn("2026-01-01", stichtage)
 
     def test_wohnen_eigentum_sicher_voreingestellt(self):
-        # sensible Felder aus, bis die Datenschutzfragen geklärt sind; Schwellen wie in den Veröffentlichungsregeln (R4, R5)
+        # Namen von Privatpersonen aus, bis die Datenschutzfragen geklärt sind; Mietangaben seit 26.10.2026 freigegeben
+        # (Entscheidung der Projektleitung; gespeichert wird erst mit Schlüssel und benannter verantwortlicher Stelle).
+        # Schwellen wie in den Veröffentlichungsregeln (R4, R5)
         E = config.STADT["wohnen_eigentum"]
         self.assertIs(E["privat_namen_aktiv"], False)
-        self.assertIs(E["mietangaben_aktiv"], False)
+        self.assertIs(E["mietangaben_aktiv"], True)
         regeln = {z.split("\t")[0]: z.split("\t")[2] for z in (config.ROOT / E["regeln"]["quelle"]).read_text(encoding="utf-8").splitlines()[1:] if z}
         self.assertIn(f"ab {E['regeln']['mieten_zelle_min']} Angaben", regeln["R4"])
         self.assertIn(f"ab {E['regeln']['juristische_person_min_angaben']} Angaben aus mindestens {E['regeln']['juristische_person_min_gebaeude']} Gebäuden", regeln["R5"])

@@ -12,6 +12,7 @@ from pipeline import config
 
 sys.path.insert(0, str(config.ROOT / "tools"))
 import einladung  # noqa: E402
+import einrichten  # noqa: E402
 
 SITE = config.ROOT / "site"
 F = config.STADT["wohnen_eigentum"]["erfassung"]
@@ -45,6 +46,40 @@ class Erfassung(unittest.TestCase):
             self.assertEqual(einladung.bis_datum(date(2026, 1, 31), 1), "2026-02-28")
             with self.assertRaises(SystemExit):
                 einladung.ausgeben(1, config.ROOT / "einladungen.tsv", 12)  # nie in einem Git-Repository
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_einrichten_schreibt_nur_oeffentliches_in_stadt_json(self):
+        # Kopie der echten stadt.json: Schlüssel und Codes eintragen, Rest der Datei bleibt Zeichen für Zeichen gleich
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            stadt = tmp / "stadt.json"
+            original = (config.ROOT / "config" / "stadt.json").read_text(encoding="utf-8")
+            stadt.write_text(original, encoding="utf-8")
+            pub, blatt = einrichten.schluessel(tmp / "pg" / "pg.json", tmp / "druck", "Testpassphrase 1", stadt, stufe="interaktiv")
+            aus, karten = einrichten.codes(3, tmp / "einladungen.tsv", tmp / "druck", stadt, heute=date(2026, 10, 26))
+            F = json.loads(stadt.read_text(encoding="utf-8"))["wohnen_eigentum"]["erfassung"]
+            self.assertEqual(F["schluessel"], pub)
+            self.assertEqual(F["einladungen"], [e for _, _, e in aus])
+            text = stadt.read_text(encoding="utf-8")
+            self.assertNotRegex(text, r"secret|argon2id")
+            for c, _, _ in aus:
+                self.assertNotIn(c, text)
+                self.assertIn(c, karten.read_text(encoding="utf-8"))
+            self.assertEqual(karten.stat().st_mode & 0o777, 0o600)
+            self.assertIn("<svg", blatt.read_text(encoding="utf-8"))
+            # außerhalb der beiden Felder unverändert: zurückgesetzt ergibt sich die Datei Zeichen für Zeichen
+            alt = json.loads(original)["wohnen_eigentum"]["erfassung"]
+            kopie = tmp / "kopie.json"
+            kopie.write_text(text, encoding="utf-8")
+            einrichten.stadt_setzen(kopie, schluessel=alt["schluessel"], einladungen=alt["einladungen"])
+            self.assertEqual(kopie.read_text(encoding="utf-8"), original)
+            # Widerruf entfernt genau einen Hash
+            self.assertEqual(einrichten.widerrufen(aus[0][1], tmp / "einladungen.tsv", stadt, heute=date(2026, 11, 2)), 1)
+            F = json.loads(stadt.read_text(encoding="utf-8"))["wohnen_eigentum"]["erfassung"]
+            self.assertEqual([e["hash"] for e in F["einladungen"]], [aus[1][2]["hash"], aus[2][2]["hash"]])
+            with self.assertRaises(SystemExit):  # Druckblätter nie im Repository
+                einrichten.codes(1, tmp / "einladungen.tsv", config.ROOT / "druck", stadt)
         finally:
             shutil.rmtree(tmp)
 

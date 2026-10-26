@@ -1159,7 +1159,7 @@
   "wohnen_eigentum": {
     "_hinweis": "Seite Wohnen und Eigentum (Übergabe v0.4.2, docs/uebergabe-v0.4.2/). Eigentum und Mieten erscheinen nur aus geprüften, freigegebenen Dateien (tools/veroeffentlichen.py) und nur nach den Veröffentlichungsregeln. Sensible Felder bleiben aus, bis die Datenschutzfragen geklärt sind (Issue 28).",
     "privat_namen_aktiv": false,
-    "mietangaben_aktiv": false,
+    "mietangaben_aktiv": true,
     "zweck": "Für Witzenhausen gibt es keinen Mietspiegel. Die Seite soll eine Vergleichsgrundlage für tatsächlich gezahlte Mieten schaffen: aus freiwilligen Angaben von Mietenden und aus dem Wissen, wer welche Gebäude vermietet. Beides wird getrennt erhoben und nur zusammengefasst veröffentlicht.",
     "grenzen": [
       "Kein Mietspiegel: Die Angaben ersetzen keine ortsübliche Vergleichsmiete nach § 558 BGB.",
