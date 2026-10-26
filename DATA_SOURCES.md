@@ -253,9 +253,9 @@ Status laut Register: `verifiziert`, `teilweise`, `zu prüfen`, `zu verifizieren
 
 | Quelle | Anbieter | Lizenz | Namensnennung | Status | Test | Nutzung |
 |---|---|---|---|---|---|---|
-| [KdU-Angemessenheitsrichtwerte WMK (Stand 01.01.2023)](https://harald-thome.de/files/pdf/KdU%20New/KdU%20Werra-Mei%C3%9Fner%20Kreis%20-%2001.01.2023.pdf) (`kdu_wmk_2023`) | Jobcenter Werra-Meißner (Kopie harald-thome.de) | keine offene Lizenz | – | nicht prüfbar | Kopie bei harald-thome.de HTTP 404 (23.10.2026) | keine Beträge im Stadtmonitor |
+| [KdU-Angemessenheitsrichtwerte WMK (Stand 01.01.2023)](https://harald-thome.de/files/pdf/KdU%20New/KdU%20Werra-Mei%C3%9Fner%20Kreis%20-%2001.01.2023.pdf) (`kdu_wmk_2023`) | Jobcenter Werra-Meißner (Kopie harald-thome.de) | keine offene Lizenz | – | ersetzt durch kdu_merkblatt_wmk (amtlich, Stand Januar 2024) | Kopie bei harald-thome.de HTTP 404 (23.10.2026) | keine Beträge im Stadtmonitor |
 | [Jobcenter Werra-Meißner – Unterkunftskosten](https://jobcenter-werra-meissner.de/geldleistungen/unterkunftskosten/) (`kdu_jobcenter`) | Jobcenter Werra-Meißner | keine offene Lizenz | – | verlinkt | nicht geprüft | Auskunftsstelle im Panel |
-| [Merkblatt Anmietung von Wohnraum](https://www.werra-meissner-kreis.de/fileadmin/01_Homepage_Kreisverwaltung/Fachbereiche_und_Einrichtungen/FB6_Soziales_und_Senioren/6.1_Sicherung_Aktivierung_der_Lebensgrundlagen/Merkblatt_KdU.pdf) (`kdu_merkblatt_wmk`) | Kreisausschuss WMK | keine offene Lizenz | – | teilweise | nicht geprüft | Verfahren (aus Ergänzungsregister 10/2026, eigene Prüfung bei Nutzung) |
+| [Merkblatt Anmietung von Wohnraum, Richtwerte KdU (Stand Januar 2024)](https://www.werra-meissner-kreis.de/fileadmin/01_Homepage_Kreisverwaltung/Fachbereiche_und_Einrichtungen/FB6_Soziales_und_Senioren/6.1_Sicherung_Aktivierung_der_Lebensgrundlagen/Merkblatt_KdU.pdf) (`kdu_merkblatt_wmk`) | Kreisausschuss WMK | keine offene Lizenz; übernommen nur die Richtwerte (Zahlen) mit Quellenangabe, Dokument nicht gespiegelt | – | verifiziert, eingebunden | HTTP 200 am 26.10.2026; Tabelle gelesen | Rechtlicher Rahmen auf der Seite Wohnen und Eigentum (stadt.json wohnen.kontext) |
 
 ## ÖPNV
 

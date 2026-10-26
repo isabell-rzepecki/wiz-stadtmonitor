@@ -54,7 +54,9 @@ window.WohnenModule = (function () {
           <td>${zelle(g, "leerstandsquote_pct", 1)}</td><td>${zelle(g, "eigentuemerquote_pct", 1)}</td></tr>`).join("")}</tbody></table></div>
         <p class="meta">Werte in Klammern: Aussagewert eingeschränkt.</p></details>
       <h4>Rechtlicher Rahmen</h4><ul class="liste">${W.kontext.map((k) => `<li><strong>${esc(k.thema)}:</strong> ${esc(k.aussage)}
-        <br><span class="meta">Stand: ${esc(k.stand)}${k.link ? ` · ${link(k.link, "Quelle")}` : ""}</span></li>`).join("")}</ul>`;
+        ${k.tabelle ? `<div class="tabelle"><table><caption>${esc(k.tabelle.titel)}</caption><thead><tr>${k.tabelle.kopf.map((x) => `<th scope="col">${esc(x)}</th>`).join("")}</tr></thead>
+          <tbody>${k.tabelle.zeilen.map((z) => `<tr>${z.map((x, i) => (i ? `<td>${esc(x)}</td>` : `<th scope="row">${esc(x)}</th>`)).join("")}</tr>`).join("")}</tbody></table></div>` : "<br>"}
+        <span class="meta">Stand: ${esc(k.stand)}${k.link ? ` · ${link(k.link, "Quelle")}` : ""}</span></li>`).join("")}</ul>`;
   }
 
   function verlauf(cfg, w, slug) {

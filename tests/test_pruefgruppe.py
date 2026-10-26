@@ -127,6 +127,9 @@ class Pruefgruppe(unittest.TestCase):
         aus = vo.veroeffentlichen(ar1, ziel, cfg={"mietangaben_aktiv": True})
         karte = json.loads((ziel / "data" / "wohnen" / "eigentum_gebaeude.geojson").read_text(encoding="utf-8"))
         props = {f["properties"]["id"]: f["properties"] for f in karte["features"]}
+        for d in aus.values():  # Issue 31: jede Datei mit Lizenz und Namensnennung
+            self.assertEqual((d["lizenz"], d["lizenz_url"]), ("CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/deed.de"))
+            self.assertIn("© HVBG", d["namensnennung"])
         self.assertEqual(props[G[0]]["name"], "Wohnbau Test eG")
         self.assertEqual(props[G[9]]["kategorie"], "kom")
         self.assertNotIn("name", props[G[6]])  # sonstige juristische Person: Name erst nach Prüfung

@@ -47,6 +47,15 @@ class Wohnen(unittest.TestCase):
         stichtage = [v["stichtag"] for v in config.STADT["wohnen"]["boris_verlauf"]["stichtage"]]
         self.assertNotIn("2026-01-01", stichtage)
 
+    def test_kdu_richtwerte_amtlich_mit_stand(self):
+        # Issue 7: Richtwerte aus dem Merkblatt des Kreises (Stand Januar 2024), mit Stand und Quelle; Zeilen vollständig
+        k = next(x for x in config.STADT["wohnen"]["kontext"] if x["thema"].startswith("Kosten der Unterkunft"))
+        self.assertIn("Januar 2024", k["stand"])
+        self.assertIn("werra-meissner-kreis.de", k["link"])
+        t = k["tabelle"]
+        self.assertTrue(all(len(z) == len(t["kopf"]) for z in t["zeilen"]))
+        self.assertEqual([z[2] for z in t["zeilen"]][:2], ["377,52 €", "428,80 €"])
+
     def test_wohnen_eigentum_sicher_voreingestellt(self):
         # Namen von Privatpersonen aus, bis die Datenschutzfragen geklärt sind; Mietangaben seit 26.10.2026 freigegeben
         # (Entscheidung der Projektleitung; gespeichert wird erst mit Schlüssel und benannter verantwortlicher Stelle).
