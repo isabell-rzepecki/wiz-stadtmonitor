@@ -1,4 +1,4 @@
-/* Wohnen und Eigentum: Karte vollflächig, Leiste oben, Angaben unten links (aufgebaut wie die frühere 3D-Ansicht) */
+/* Wohnen und Eigentum: Karte vollflächig, Leiste oben, Karte und Legende unten links, Module rechts (schmal: unten, über „Angaben“) */
 html, body.wohnen { height: 100%; }
 body.wohnen { overflow: hidden; }
 .leiste { position: fixed; z-index: 10; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
@@ -27,6 +27,51 @@ body.wohnen { overflow: hidden; }
 .legende .sw { width: 14px; height: 14px; border-radius: 3px; flex: none; }
 .legende .sw-geschaetzt { background: repeating-linear-gradient(-45deg, #5c534c 0 2px, #fff 2px 5px); border: 1px solid #5c534c; }
 .maplibregl-ctrl-top-right { top: 84px; }
+body.wohnen:has(.module:not([hidden])) .maplibregl-ctrl-top-right { right: 436px; }
+.ebene { margin: 0 0 6px; font-size: 14px; }
+.ebene select { min-height: 40px; font-size: 14px; }
+.knopf-angaben { font: inherit; font-weight: 700; min-height: 40px; padding: 6px 14px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--text); cursor: pointer; }
+.knopf-angaben[aria-expanded="true"] { background: var(--accent-tint); color: var(--accent-ink); border-color: transparent; }
+.module { position: fixed; z-index: 11; top: 84px; right: 12px; bottom: 56px; width: 412px; overflow-y: auto; overscroll-behavior: contain;
+  padding: 12px 16px 16px; border-radius: 14px; background: rgba(255, 255, 255, 0.98); box-shadow: 0 8px 32px rgba(26, 26, 26, 0.12); font-size: 14px; line-height: 1.5; }
+.module[hidden] { display: none; }
+.module h2 { margin: 0 0 8px; font: 400 22px/1.2 "Lilita One", system-ui, sans-serif; }
+.module h2 span { color: var(--muted); }
+.module h2:focus { outline: none; }
+.modul { border-top: 1px solid var(--line); }
+.modul > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; list-style: none; }
+.modul > summary::-webkit-details-marker { display: none; }
+.modul > summary::before { content: "▸"; color: var(--accent-ink); }
+.modul[open] > summary::before { content: "▾"; }
+.modul h3 { margin: 0; font: 400 17px/1.2 "Lilita One", system-ui, sans-serif; }
+.modul h4 { margin: 12px 0 4px; font-size: 14px; }
+.modul-inhalt { padding: 0 0 10px; }
+.modul p, .modul ul { margin: 0 0 8px; }
+.modul ul { padding-left: 18px; }
+.modul .lead { color: var(--muted); }
+.modul .meta, .modul .stichtag { color: var(--muted); font-size: 13px; }
+.modul .stichtag { font-weight: 700; }
+.modul .luecke { font-style: italic; color: var(--muted); }
+.hinweis-kasten { padding: 8px 10px; border-radius: 10px; background: var(--accent-tint); }
+.fakten { margin: 0 0 8px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+.fakten dt { color: var(--muted); }
+.fakten dd { margin: 0; text-align: right; }
+.glossar dt { font-weight: 700; margin-top: 6px; }
+.glossar dd { margin: 0; }
+.liste { list-style: none; padding: 0 !important; }
+.liste li { margin: 0 0 8px; }
+.unter { margin: 4px 0 8px; }
+.unter > summary { cursor: pointer; min-height: 36px; display: flex; align-items: center; color: var(--accent-ink); font-weight: 700; }
+.tabelle { overflow-x: auto; margin: 4px 0 6px; }
+.tabelle table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabelle th, .tabelle td { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+.tabelle th[scope="row"], .tabelle th:first-child, .tabelle td.text { text-align: left; }
+.tabelle thead th { font-weight: 700; }
+.tabelle tr.own { background: var(--accent-tint); }
+.legende-kat { list-style: none; padding: 0 !important; display: grid; gap: 4px; }
+.legende-kat .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; border: 1px solid var(--line); vertical-align: -1px; }
+.knopf { font: inherit; font-weight: 700; min-height: 40px; padding: 6px 12px; border-radius: 12px; border: 0; background: var(--accent-tint); color: var(--accent-ink); cursor: pointer; }
+@media (max-width: 1000px) { .info { max-width: min(300px, calc(100% - 24px)); } .module { width: min(412px, 52vw); } body.wohnen:has(.module:not([hidden])) .maplibregl-ctrl-top-right { right: calc(min(412px, 52vw) + 24px); } }
 .maplibregl-ctrl-attrib { font: 12px/1.4 "Space Mono", ui-monospace, monospace; }
 .maplibregl-ctrl-attrib a { color: var(--text); text-decoration: underline; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -36,6 +81,9 @@ body.wohnen { overflow: hidden; }
   .wahl { order: 3; flex: 1 1 60%; }
   .wahl select { flex: 1; min-width: 0; font-size: 16px; }
   .umschalter { order: 4; }
+  .knopf-angaben { order: 5; min-height: 46px; }
+  .module { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; max-height: 62dvh; z-index: 12; }
+  body.wohnen:has(.module:not([hidden])) .maplibregl-ctrl-top-right { right: 0; }
   .maplibregl-ctrl-top-right { top: 186px; }
   .info { bottom: 12px; right: 56px; max-height: 45dvh; }
 }

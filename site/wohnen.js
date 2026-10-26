@@ -3,7 +3,8 @@
 // für tatsächlich gezahlte Mieten schaffen. Grundlage dafür sind die Gebäude mit ihrer ALKIS-OID als Schlüssel; dieselbe
 // Kennung gilt in 2D, in 3D und später in der Erfassung. Eigentum und Mieten zeigt die Seite erst nach der Prüfung und
 // nur nach den Veröffentlichungsregeln (docs/uebergabe-v0.4.2/veroeffentlichungsregeln.tsv).
-// Daten: data/export/karte/gebaeude.pmtiles (Vektorkacheln, pipeline/gebaeude.py) und gebaeude_index.json.
+// Daten: data/export/karte/gebaeude.pmtiles (Vektorkacheln, pipeline/gebaeude.py) und gebaeude_index.json; Bodenrichtwertzonen aller
+// Stichtage mit Datendienst in bodenrichtwerte_zonen.pmtiles (pipeline/wohnen.py). Die Module rechts stehen in wohnen-module.js.
 (function () {
   "use strict";
   const $ = (s) => document.querySelector(s);
@@ -23,22 +24,55 @@
   ];
   const farbe = ["match", ["get", "f"], ...GRUPPEN.slice(0, 3).flatMap((g) => [g.werte, g.farbe]), GRUPPEN[3].farbe];
   const geschaetzt = ["==", ["get", "hq"], "geschätzt"];
+  // Bodenrichtwerte: gleicher Filter wie in der Hauptkarte (baureifes Wohn- und Mischbauland), Klassen laut stadt.json
+  const BRW_FARBEN = ["#f6e7cf", "#ecc58f", "#dd9a5a", "#bf6a34", "#86401f"];
+  const brwFilter = (st) => ["all", ["==", ["get", "stichtag"], st], ["==", ["get", "ez"], "B"],
+    ["in", ["slice", ["coalesce", ["get", "art"], ""], 0, 1], ["literal", ["W", "M"]]]];
+  const datum = (iso) => new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   async function start() {
-    const [cfg, index, flaechen] = await Promise.all([json("stadt.json"), json("data/export/karte/gebaeude_index.json"), json("data/export/flaechen.json")]);
-    const G = cfg.gebaeude;
+    const [cfg, index, flaechen, wohnen, eigentum] = await Promise.all([json("stadt.json"), json("data/export/karte/gebaeude_index.json"),
+      json("data/export/flaechen.json"), json("data/export/wohnen.json"), json("data/export/eigentum.json")]);
+    const G = cfg.gebaeude, K = cfg.wohnen.boris.klassen;
     const params = new URLSearchParams(location.search);
     let ansicht = params.get("ansicht") === "3d" ? "3d" : "2d";
     let gewaehlt = params.get("gebaeude") || null;
+    const stichtage = ((wohnen && wohnen.boris_verlauf && wohnen.boris_verlauf.stichtage) || []).slice().sort().reverse();
+    const ebeneSel = $("#ebene");
+    ebeneSel.innerHTML += stichtage.map((st) => `<option value="bodenrichtwerte:${esc(st)}">Bodenrichtwerte ${esc(datum(st))}</option>`).join("");
+    ebeneSel.value = [...ebeneSel.options].some((o) => o.value === params.get("ebene")) ? params.get("ebene") : "funktion";
     const vorhanden = (index && index.ortsteile) || {};
     const liste = cfg.ortsteile.filter((o) => vorhanden[o.slug]);
     const sel = $("#ortsteil");
     sel.innerHTML = `<option value="">ganze Stadt</option>` + liste.map((o) => `<option value="${esc(o.slug)}">${esc(o.name)}</option>`).join("");
     const gebiet = (params.get("gebiet") || "").replace(/^ortsteil:/, "");
     sel.value = liste.some((o) => o.slug === gebiet) ? gebiet : "";
-    $("#legende").innerHTML = GRUPPEN.map((g) => `<li><span class="sw" style="background:${g.farbe}" aria-hidden="true"></span>${esc(g.titel)}</li>`).join("")
-      + `<li><span class="sw sw-geschaetzt" aria-hidden="true"></span>Höhe geschätzt (${zahl(G.standardhoehe_m)} m, ohne 3D-Modell)</li>`;
-    $("#hinweis").textContent = `${cfg.gebaeude3d.hinweis} Grundrisse aus ALKIS, Höhe aus den 3D-Gebäudemodellen LoD2; ohne passendes Modell gilt eine Standardhöhe. Eigentum und Vermietung zeigt die Karte nicht.`;
+
+    // Module rechts (auf schmalen Bildschirmen über „Angaben“ ein- und ausblenden)
+    const knopf = $("#angaben-knopf"), aside = $("#module");
+    function angaben(offen) { aside.hidden = !offen; knopf.setAttribute("aria-expanded", String(offen)); }
+    angaben(!SCHMAL.matches);
+    knopf.addEventListener("click", () => { const offen = aside.hidden; angaben(offen); if (offen) $("#module-titel").focus(); });
+    $("#module-titel").tabIndex = -1;
+    function module() {
+      const o = cfg.ortsteile.find((x) => x.slug === sel.value);
+      $("#module-gebiet").textContent = `– ${o ? o.name : `ganz ${cfg.stadt.name}`}`;
+      WohnenModule.render($("#module-inhalt"), { cfg, wohnen, eigentum, index, slug: sel.value || null });
+    }
+    module();
+
+    function legende() {
+      const st = ebeneSel.value.startsWith("bodenrichtwerte:") ? ebeneSel.value.slice(16) : null;
+      const sw = (f, t, k = "") => `<li><span class="sw${k}" style="${f ? `background:${f}` : ""}" aria-hidden="true"></span>${t}</li>`;
+      $("#legende").innerHTML = st
+        ? BRW_FARBEN.map((f, i) => sw(f, `${i === 0 ? `unter ${K[0]}` : i === K.length ? `ab ${K[K.length - 1]}` : `${K[i - 1]} bis unter ${K[i]}`} €/m²`)).join("")
+          + sw("#6b625b", "Gebäude")
+        : GRUPPEN.map((g) => sw(g.farbe, esc(g.titel))).join("") + sw("", `Höhe geschätzt (${zahl(G.standardhoehe_m)} m, ohne 3D-Modell)`, " sw-geschaetzt");
+      $("#hinweis").textContent = st
+        ? `Bodenrichtwerte, Stichtag ${datum(st)}: ${cfg.wohnen.boris.filter}. Zonengrenzen können sich zwischen Stichtagen ändern. ${cfg.wohnen.boris.attribution}.`
+        : `${cfg.gebaeude3d.hinweis} Grundrisse aus ALKIS, Höhe aus den 3D-Gebäudemodellen LoD2; ohne passendes Modell gilt eine Standardhöhe. Eigentum und Vermietung zeigt die Karte nicht.`;
+    }
+    legende();
     $("#mehr").open = !SCHMAL.matches;
     if (!index) { $("#stand").textContent = "Noch keine Gebäudedaten."; return; }
 
@@ -46,15 +80,22 @@
     const protokoll = new pmtiles.Protocol();
     maplibregl.addProtocol("pmtiles", protokoll.tile);
     const kacheln = new URL("data/export/karte/gebaeude.pmtiles", location.href).href;
+    const zonen = new URL("data/export/karte/bodenrichtwerte_zonen.pmtiles", location.href).href;
+    const brwFarbe = ["step", ["get", "wert"], BRW_FARBEN[0], ...K.flatMap((k, i) => [k, BRW_FARBEN[i + 1]])];
     const map = new maplibregl.Map({
       container: "karte", center: [cfg.karte.zentrum[1], cfg.karte.zentrum[0]], zoom: 14, maxPitch: 70,
       style: { version: 8, sources: {
         basis: { type: "raster", tiles: [cfg.karte.hintergrund.grau], tileSize: 256, maxzoom: cfg.karte.hintergrund.max_zoom, attribution: cfg.karte.hintergrund.attribution },
         gebaeude: { type: "vector", url: `pmtiles://${kacheln}`, attribution: esc(G.attribution) },
+        zonen: { type: "vector", url: `pmtiles://${zonen}`, attribution: esc(cfg.wohnen.boris.attribution) },
         grenze: { type: "geojson", data: { type: "FeatureCollection", features: [] } } },
       layers: [
         { id: "hintergrund", type: "background", paint: { "background-color": "#f2f2f2" } },
         { id: "basis", type: "raster", source: "basis", paint: { "raster-saturation": -1, "raster-opacity": 0.9 } },
+        { id: "zonen", type: "fill", source: "zonen", "source-layer": "bodenrichtwerte", layout: { visibility: "none" }, filter: brwFilter(""),
+          paint: { "fill-color": brwFarbe, "fill-opacity": 0.8 } },
+        { id: "zonen-linie", type: "line", source: "zonen", "source-layer": "bodenrichtwerte", layout: { visibility: "none" }, filter: brwFilter(""),
+          paint: { "line-color": "#5c534c", "line-width": 1 } },
         { id: "flaeche", type: "fill", source: "gebaeude", "source-layer": "gebaeude", filter: ["!", geschaetzt],
           paint: { "fill-color": farbe, "fill-opacity": 0.85 } },
         { id: "umriss", type: "line", source: "gebaeude", "source-layer": "gebaeude", minzoom: 15, paint: { "line-color": "#1a1a1a", "line-width": 0.4, "line-opacity": 0.5 } },
@@ -93,9 +134,23 @@
       if (bewegen) map.easeTo({ pitch: a === "3d" ? 55 : 0, bearing: a === "3d" ? -20 : 0, duration: dauer });
       zustand();
     }
+    // Kartenebene: Gebäude nach Funktion oder Bodenrichtwertzonen eines Stichtags (Gebäude dann einheitlich grau)
+    function setEbene() {
+      const st = ebeneSel.value.startsWith("bodenrichtwerte:") ? ebeneSel.value.slice(16) : null;
+      for (const id of ["zonen", "zonen-linie"]) {
+        map.setLayoutProperty(id, "visibility", st ? "visible" : "none");
+        map.setFilter(id, brwFilter(st || ""));
+      }
+      map.setPaintProperty("flaeche", "fill-color", st ? "#6b625b" : farbe);
+      map.setPaintProperty("flaeche", "fill-opacity", st ? 0.6 : 0.85);
+      map.setPaintProperty("koerper", "fill-extrusion-color", st ? "#bdb6ae" : farbe);
+      legende();
+      zustand();
+    }
     function zustand() {
       const u = new URL(location.href);
       u.searchParams.set("ansicht", ansicht);
+      if (ebeneSel.value !== "funktion") u.searchParams.set("ebene", ebeneSel.value); else u.searchParams.delete("ebene");
       if (sel.value) u.searchParams.set("gebiet", `ortsteil:${sel.value}`); else u.searchParams.delete("gebiet");
       if (gewaehlt) u.searchParams.set("gebaeude", gewaehlt); else u.searchParams.delete("gebaeude");
       history.replaceState(null, "", u);
@@ -112,15 +167,20 @@
       const f = slug && flaechen && flaechen.features.find((x) => x.properties.slug === slug);
       map.getSource("grenze").setData(f ? { type: "FeatureCollection", features: [f] } : { type: "FeatureCollection", features: [] });
       const b = slug ? vorhanden[slug].kern : cfg.karte.bbox;
-      if (bewegen) map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: SCHMAL.matches ? { top: 150, bottom: 140, left: 20, right: 20 } : { top: 90, bottom: 60, left: 400, right: 60 }, duration: dauer, maxZoom: 17 });
+      if (bewegen) map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: SCHMAL.matches ? { top: 150, bottom: 140, left: 20, right: 20 } : { top: 90, bottom: 60, left: 400, right: aside.hidden ? 60 : 460 }, duration: dauer, maxZoom: 17 });
       stand();
       zustand();
     }
-    function zeigeGebaeude(p) {
+    const zoneHtml = (z) => `<dt>Bodenrichtwert</dt><dd>${zahl(z.wert)} €/m² <span class="meta">(${esc(z.art || "–")}, Gemarkung ${esc(z.gemarkung || "–")}, Stichtag ${esc(datum(z.stichtag))})</span></dd>`;
+    function zeigeGebaeude(p, zone = null) {
       gewaehlt = p ? p.id : null;
       map.setFilter("auswahl", ["==", ["get", "id"], gewaehlt || ""]);
       const box = $("#gebaeude");
-      box.hidden = !p;
+      box.hidden = !p && !zone;
+      if (!p && zone) {
+        box.innerHTML = `<h3>Bodenrichtwertzone</h3><dl>${zoneHtml(zone)}</dl><button type="button" class="link-btn" id="auswahl-weg">Auswahl aufheben</button>`;
+        $("#auswahl-weg").addEventListener("click", () => { zeigeGebaeude(null); map.getCanvas().focus(); });
+      }
       if (p) {
         const herkunft = p.hq === "geschätzt" ? `geschätzt (Standardhöhe, kein 3D-Modell gefunden)`
           : `gemessen (${p.hq === "Bauwerk" ? "Bauwerk" : "3D-Gebäudemodell LoD2"}, ${p.z === "gleich" ? "über die Kennung" : "über die Lage"} zugeordnet)`;
@@ -129,7 +189,7 @@
           <dt>Funktion (ALKIS)</dt><dd>${esc(p.f || "nicht angegeben")}</dd>
           <dt>Höhe</dt><dd>${zahl(p.h, 1)} m, ${esc(herkunft)}</dd>
           ${ot ? `<dt>Ortsteil</dt><dd>${esc(ot)}</dd>` : ""}
-          <dt>Kennung (ALKIS-OID)</dt><dd><code>${esc(p.id)}</code></dd></dl>
+          <dt>Kennung (ALKIS-OID)</dt><dd><code>${esc(p.id)}</code></dd>${zone ? zoneHtml(zone) : ""}</dl>
           <button type="button" class="link-btn" id="auswahl-weg">Auswahl aufheben</button>`;
         $("#auswahl-weg").addEventListener("click", () => { zeigeGebaeude(null); map.getCanvas().focus(); });
       }
@@ -142,11 +202,26 @@
       setAnsicht(ansicht, false);
       if (ansicht === "3d") map.jumpTo({ pitch: 55, bearing: -20 });
       zeigeGebiet(true);
-      sel.addEventListener("change", () => { zeigeGebaeude(null); zeigeGebiet(true); });
+      setEbene();
+      sel.addEventListener("change", () => { zeigeGebaeude(null); zeigeGebiet(true); module(); });
+      ebeneSel.addEventListener("change", () => { zeigeGebaeude(null); setEbene(); });
+      $("#module-inhalt").addEventListener("click", (e) => {
+        if (!e.target.closest("[data-ebene]") || !stichtage.length) return;
+        ebeneSel.value = `bodenrichtwerte:${stichtage[0]}`;
+        setEbene();
+        if (SCHMAL.matches) angaben(false);
+        ebeneSel.focus();
+      });
       $("#ansicht-2d").addEventListener("click", () => setAnsicht("2d"));
       $("#ansicht-3d").addEventListener("click", () => setAnsicht("3d"));
-      for (const ebene of [...EBENEN_2D.slice(0, 2), ...EBENEN_3D]) {
-        map.on("click", ebene, (e) => { if (e.features && e.features[0]) zeigeGebaeude(e.features[0].properties); });
+      const KLICK = [...EBENEN_2D.slice(0, 2), ...EBENEN_3D];
+      map.on("click", (e) => {
+        const ebenen = [...KLICK, ...(ebeneSel.value === "funktion" ? [] : ["zonen"])].filter((id) => map.getLayoutProperty(id, "visibility") !== "none");
+        const fs = map.queryRenderedFeatures(e.point, { layers: ebenen });
+        const g = fs.find((f) => f.layer.id !== "zonen"), z = fs.find((f) => f.layer.id === "zonen");
+        if (g || z) zeigeGebaeude(g ? g.properties : null, z ? z.properties : null);
+      });
+      for (const ebene of [...KLICK, "zonen"]) {
         map.on("mouseenter", ebene, () => { map.getCanvas().style.cursor = "pointer"; });
         map.on("mouseleave", ebene, () => { map.getCanvas().style.cursor = ""; });
       }
