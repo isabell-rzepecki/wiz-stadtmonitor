@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Erfassung Wohnen und Eigentum (geschlossener Kreis, nicht öffentlich verlinkt). MapLibre, PMTiles und libsodium lokal in
+       vendor/; libsodium braucht WebAssembly ('wasm-unsafe-eval' erlaubt nur das Übersetzen von WebAssembly, kein eval). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; child-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://sgx.geodatenzentrum.de; connect-src 'self' https://sgx.geodatenzentrum.de; object-src 'none'; base-uri 'self'; form-action 'none'; manifest-src 'self'">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Erfassung – Stadtmonitor</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="erfassen.webmanifest">
+  <meta name="theme-color" content="#b8352e">
+  <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
+  <link rel="stylesheet" href="page.css">
+  <link rel="stylesheet" href="wohnen.css">
+  <link rel="stylesheet" href="erfassen.css">
+</head>
+<body class="wohnen erfassen">
+  <header class="leiste">
+    <span class="page-brand"><img src="favicon.svg" width="32" height="32" alt=""><span class="marke">Erfassung</span></span>
+    <label class="wahl" hidden id="ortsteil-wahl">Ortsteil <select id="ortsteil"></select></label>
+    <button type="button" class="knopf-angaben" id="knopf-eintraege" hidden>Einträge <span id="anzahl">0</span></button>
+    <button type="button" class="knopf-angaben" id="knopf-datenschutz" aria-haspopup="dialog">Datenschutz</button>
+  </header>
+  <main id="inhalt">
+    <h1 class="visually-hidden">Erfassung Wohnen und Eigentum</h1>
+    <div id="karte" role="region" aria-label="Karte der Gebäude; ein Gebäude antippen, um es zu erfassen"></div>
+    <p id="netz" class="netz" role="status" aria-live="polite"></p>
+    <section class="module tafel" id="tafel" aria-live="polite" aria-labelledby="tafel-titel">
+      <h2 id="tafel-titel" tabindex="-1">Wird geladen</h2>
+      <div id="tafel-inhalt"></div>
+    </section>
+  </main>
+  <dialog id="datenschutz" aria-labelledby="datenschutz-titel">
+    <h2 id="datenschutz-titel">Datenschutzhinweis</h2>
+    <div id="datenschutz-inhalt"></div>
+    <form method="dialog"><button class="knopf" value="zu">Schließen</button></form>
+  </dialog>
+  <script src="vendor/maplibre/maplibre-gl-csp.js"></script>
+  <script src="vendor/pmtiles/pmtiles.js"></script>
+  <script src="vendor/libsodium/libsodium.js"></script>
+  <script src="vendor/libsodium/libsodium-wrappers.js"></script>
+  <script src="erfassen-pruefung.js"></script>
+  <script src="erfassen.js"></script>
+</body>
+</html>

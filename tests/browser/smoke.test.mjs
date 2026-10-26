@@ -5,7 +5,9 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { createHash } from "node:crypto";
 import { chromium } from "playwright";
+import sodium from "libsodium-wrappers";
 
 const SITE = process.env.SITE || "http://127.0.0.1:8766/";
 const SITE_LEER = process.env.SITE_LEER || "http://127.0.0.1:8765/";
@@ -427,6 +429,188 @@ test("Wohnen und Eigentum (Seite): Module mit Zweck, Mietniveau, Verlauf, Eigent
   assert.equal(await mobil.locator("#module").isVisible(), true);
   assert.deepEqual(await axe(mobil), []);
   await mobil.close();
+});
+
+// Erfassung: Testschlüssel und Testcode nur im Test (die Konfiguration im Repository hat weder Schlüssel noch Codes)
+const TESTCODE = "ABCD-EFGH-JKMN-PQRS";
+async function erfassenSeite({ aktiv = true, zugang = true, viewport = { width: 1280, height: 800 } } = {}) {
+  await sodium.ready;
+  const kp = sodium.crypto_box_keypair(), V = sodium.base64_variants.ORIGINAL;
+  const ctx = await browser.newContext({ viewport, acceptDownloads: true, serviceWorkers: "block", bypassCSP: true });
+  const page = await ctx.newPage();
+  page.errors = [];
+  page.on("pageerror", (e) => page.errors.push(String(e)));
+  page.on("console", (m) => { if (m.type() === "error") page.errors.push(m.text()); });
+  await page.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
+  const hash = createHash("sha256").update(`wiz-einladung:${TESTCODE.replace(/-/g, "")}`).digest("hex");
+  page.konfig = { zugang };
+  await page.route("**/stadt.json", async (r) => {
+    const res = await r.fetch(), c = await res.json();
+    if (aktiv) Object.assign(c.wohnen_eigentum, { privat_namen_aktiv: true, mietangaben_aktiv: true });
+    if (aktiv) c.wohnen_eigentum.erfassung.schluessel = { key_id: "test-1", alg: "libsodium-sealedbox-x25519", public_key: sodium.to_base64(kp.publicKey, V) };
+    c.wohnen_eigentum.erfassung.einladungen = page.konfig.zugang ? [hash] : [];
+    await r.fulfill({ response: res, json: c });
+  });
+  page.oeffnen = (ct) => JSON.parse(sodium.to_string(sodium.crypto_box_seal_open(sodium.from_base64(ct, V), kp.publicKey, kp.privateKey)));
+  page.oeffnenText = (ct) => sodium.to_string(sodium.crypto_box_seal_open(sodium.from_base64(ct, V), kp.publicKey, kp.privateKey));
+  await page.goto(SITE + "erfassen.html", { waitUntil: "networkidle" });
+  return page;
+}
+async function freischalten(page) {
+  await page.fill("#code", "abcd efgh jkmn pqrs");
+  await page.locator("#zugang button").click();
+  await page.waitForFunction(() => window.stadtmonitorErfassen && window.stadtmonitorErfassen.map.loaded());
+  await page.selectOption("#ortsteil", "gertenbach");
+  await page.waitForFunction(() => window.stadtmonitorErfassen.map.queryRenderedFeatures({ layers: ["flaeche"] }).length > 0);
+}
+async function gebaeudeAntippen(page) {
+  const pt = await page.evaluate(() => {
+    const m = window.stadtmonitorErfassen.map, f = m.queryRenderedFeatures({ layers: ["flaeche"] })[0];
+    const ring = f.geometry.type === "Polygon" ? f.geometry.coordinates[0] : f.geometry.coordinates[0][0];
+    const q = m.project([ring.reduce((s, c) => s + c[0], 0) / ring.length, ring.reduce((s, c) => s + c[1], 0) / ring.length]);
+    const r = m.getCanvas().getBoundingClientRect();
+    return { x: r.left + q.x, y: r.top + q.y };
+  });
+  await page.mouse.click(pt.x, pt.y);
+  await page.locator("#zu-a").waitFor();
+}
+const exportDatei = async (page, typ) => {
+  const [dl] = await Promise.all([page.waitForEvent("download"), page.locator(`[data-export="${typ}"]`).click()]);
+  return { name: dl.suggestedFilename(), inhalt: JSON.parse(readFileSync(await dl.path(), "utf8")) };
+};
+
+test("Erfassung ohne Freigaben: Code nötig, ohne Schlüssel kein Speichern, Mietangaben aus, Datenschutzhinweis, ohne Verstöße", async () => {
+  const page = await erfassenSeite({ aktiv: false });
+  assert.equal(await page.locator("#tafel-titel").textContent(), "Zugang");
+  assert.equal(await page.locator("#ortsteil-wahl").isVisible(), false);
+  assert.deepEqual(await axe(page), []);
+  await page.fill("#code", "1234");
+  await page.locator("#zugang button").click();
+  assert.match(await page.locator("#code-fehler").textContent(), /16 Zeichen/);
+  await page.fill("#code", "ZZZZ-ZZZZ-ZZZZ-ZZZZ");
+  await page.locator("#zugang button").click();
+  await page.waitForFunction(() => /nicht \(mehr\) gültig/.test(document.querySelector("#code-fehler").textContent));
+  await freischalten(page);
+  assert.match(await page.locator("#tafel-inhalt").textContent(), /Speichern noch nicht möglich.*Erfasser-ID E-227c7469/s);
+  await gebaeudeAntippen(page);
+  assert.equal(await page.locator("#zu-b").isDisabled(), true);
+  await page.locator("#zu-a").click();
+  assert.equal(await page.locator('#form-a button[type="submit"]').isDisabled(), true);
+  await page.locator('input[name="kategorie"][value="privat"]').check();
+  assert.equal(await page.locator('input[name="name_privat"]').count(), 0);  // Namensfeld nicht freigegeben
+  assert.match(await page.locator("#feld-privat").textContent(), /nicht freigegeben/);
+  await page.locator("#knopf-datenschutz").click();
+  assert.match(await page.locator("#datenschutz").textContent(), /keinen automatischen Upload.*Verantwortlich.*noch nicht benannt/s);
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
+test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Export entschlüsselbar, kein Klartext im Gerät, Widerruf", async () => {
+  const page = await erfassenSeite();
+  await freischalten(page);
+  // Formular A: Hausnummer abgewiesen, Name der Privatperson zusätzlich versiegelt
+  await gebaeudeAntippen(page);
+  const id = (await page.locator("#tafel-inhalt code").textContent()).trim();
+  await page.locator("#zu-a").click();
+  await page.locator('#form-a button[type="submit"]').click();
+  assert.match(await page.locator(".fehlerliste").textContent(), /Eigentum: fehlt.*Beleg: fehlt/s);
+  await page.locator('input[name="kategorie"][value="privat"]').check();
+  await page.fill('input[name="name_privat"]', "Erika Testname");
+  await page.selectOption('select[name="beleg_art"]', "ortskenntnis");
+  await page.fill('input[name="lage_hinweis"]', "Hauptstraße 12");
+  await page.fill('textarea[name="bemerkung"]', "Kontakt test@example.org");
+  await page.locator('#form-a button[type="submit"]').click();
+  const fa = await page.locator(".fehlerliste").textContent();
+  assert.match(fa, /Lage: keine Ziffern/);
+  assert.match(fa, /Bemerkung: keine E-Mail-Adressen/);
+  assert.equal(await page.locator('input[name="lage_hinweis"]').getAttribute("aria-invalid"), "true");
+  assert.deepEqual(await axe(page), []);
+  await page.fill('input[name="lage_hinweis"]', "Hauptstraße");
+  await page.fill('textarea[name="bemerkung"]', "");
+  await page.locator('#form-a button[type="submit"]').click();
+  await page.locator(".erfolg").waitFor();
+  // Formular B: ohne Einwilligung nicht speicherbar; Fläche ergibt die Klasse
+  await page.locator("#weiter").click();
+  await gebaeudeAntippen(page);
+  await page.locator("#zu-b").click();
+  await page.fill('input[name="nettokalt_eur"]', "450");
+  await page.fill('input[name="wohnflaeche_m2"]', "72");
+  await page.fill('input[name="vertragsbeginn_jahr"]', "2019");
+  assert.equal(await page.locator('select[name="wohnflaeche_klasse"]').inputValue(), "60-79");
+  assert.match(await page.locator("#je-m2").textContent(), /6,25 € je m²/);
+  await page.locator('#form-b button[type="submit"]').click();
+  assert.match(await page.locator(".fehlerliste").textContent(), /Einwilligung: fehlt/);
+  assert.deepEqual(await axe(page), []);
+  await page.locator('input[name="einwilligung"]').check();
+  await page.locator('input[name="erfassungsweg"][value="im_gespraech_mit_team"]').check();
+  await page.locator('#form-b button[type="submit"]').click();
+  await page.locator(".erfolg").waitFor();
+  // im Gerät nur versiegelte Einträge
+  const ablage = await page.evaluate(async () => {
+    const d = await new Promise((ok) => { const r = indexedDB.open("wiz-erfassung"); r.onsuccess = () => ok(r.result); });
+    return new Promise((ok) => { const g = d.transaction("eintraege").objectStore("eintraege").getAll(); g.onsuccess = () => ok(g.result); });
+  });
+  assert.equal(ablage.length, 2);
+  assert.doesNotMatch(JSON.stringify(ablage), /Erika|Testname|450|Hauptstra|60-79/);
+  assert.deepEqual(Object.keys(ablage.find((e) => e.typ === "miete")).sort(), ["alg", "ciphertext", "erstellt", "exportiert", "id", "key_id", "typ"]);
+  // Export je Formular, mit dem Testschlüssel entschlüsselbar und gegen die Schemata gültig
+  await page.locator("#zu-eintraege").click();
+  const a = await exportDatei(page, "eigentum");
+  assert.equal(a.name, `eigentum_E-227c7469_${new Date().toISOString().slice(0, 10)}.bin`);
+  assert.equal(a.inhalt.anzahl, 1);
+  const ra = page.oeffnen(a.inhalt.eintraege[0].ciphertext);
+  assert.equal(ra.objekt.id, id);
+  assert.equal(ra.kategorie, "privat");
+  assert.equal(ra.vermieter_schluessel, "V-neu");
+  assert.equal(ra.erfasser, "E-227c7469");
+  assert.equal(page.oeffnenText(ra.name_privat_enc.ciphertext), "Erika Testname");
+  assert.doesNotMatch(JSON.stringify(ra), /Erika/);
+  const b = await exportDatei(page, "miete");
+  assert.match(b.name, /^mieten_E-227c7469_/);
+  const rb = page.oeffnen(b.inhalt.eintraege[0].ciphertext);
+  assert.deepEqual([rb.nettokalt_eur, rb.wohnflaeche_m2, rb.wohnflaeche_klasse, rb.vertragsbeginn_jahr, rb.erfassungsweg, rb.erfasser],
+    [450, 72, "60-79", 2019, "im_gespraech_mit_team", "E-227c7469"]);
+  assert.equal(rb.einwilligung.erteilt, true);
+  assert.equal(rb.einwilligung.textversion.startsWith("entwurf-"), true);
+  for (const [schema, rec] of [["erfassung_eigentum", ra], ["mietangabe", rb]]) {
+    const s = await (await fetch(SITE + `schemas/${schema}.json`)).json();
+    assert.deepEqual(await page.evaluate(([s, r]) => window.ErfassenPruefung.schema(s, r), [s, rec]), []);
+  }
+  assert.match(await page.locator("#export-meldung").textContent(), /1 Eintrag\)/);
+  // exportierte löschen
+  page.once("dialog", (d) => d.accept());
+  await page.locator("#loeschen").click();
+  await page.waitForFunction(() => /gelöscht/.test(document.querySelector("#export-meldung").textContent));
+  assert.equal(await page.locator("#anzahl").textContent(), "0");
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  // Widerruf: Hash nicht mehr in der Konfiguration
+  page.konfig.zugang = false;
+  await page.reload({ waitUntil: "networkidle" });
+  assert.match(await page.locator("#tafel-inhalt").textContent(), /widerrufen/);
+  await page.context().close();
+});
+
+test("Erfassung offline: Service Worker speichert Programm und Gebäude, Bereichsabfragen aus dem Speicher", async () => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, bypassCSP: true });
+  const page = await ctx.newPage();
+  await page.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
+  await page.goto(SITE + "erfassen.html", { waitUntil: "networkidle" });
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.waitForFunction(async () => !!(await caches.match(new URL("data/export/karte/gebaeude.pmtiles", location.href).href)));
+  await ctx.setOffline(true);
+  await page.reload({ waitUntil: "load" });
+  await page.locator("#code").waitFor();
+  assert.match(await page.locator("#netz").textContent(), /Offline/);
+  const r = await page.evaluate(async () => {
+    const x = await fetch("data/export/karte/gebaeude.pmtiles", { headers: { Range: "bytes=0-126" } });
+    return { status: x.status, laenge: (await x.arrayBuffer()).byteLength, bereich: x.headers.get("Content-Range") };
+  });
+  assert.equal(r.status, 206);
+  assert.equal(r.laenge, 127);
+  assert.match(r.bereich, /^bytes 0-126\/\d+$/);
+  await ctx.close();
 });
 
 test("Tour: Start aus dem Startfenster, alle Schritte mit Pfeiltaste, Beispielvorgang, Esc beendet, ohne Verstöße", async () => {

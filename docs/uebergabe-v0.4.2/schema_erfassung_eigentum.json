@@ -132,7 +132,7 @@
     },
     "vermieter_schluessel": {
       "type": "string",
-      "pattern": "^(V-\\d{3,5}|JP:.+)$",
+      "pattern": "^(V-\\d{3,5}|V-neu|JP:.+)$",
       "description": "Privatperson: interner Schlüssel V-nnn (von der Prüfgruppe vergeben, im Gerät vorläufig 'V-neu'); juristische Person: 'JP:' + normierter Name"
     },
     "vermietet": {

@@ -1,0 +1,11 @@
+{
+  "name": "Stadtmonitor – Erfassung Wohnen und Eigentum",
+  "short_name": "Erfassung",
+  "start_url": "erfassen.html",
+  "scope": "./erfassen",
+  "display": "standalone",
+  "lang": "de",
+  "background_color": "#fdf6f4",
+  "theme_color": "#b8352e",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

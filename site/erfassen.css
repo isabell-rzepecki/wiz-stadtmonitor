@@ -1,0 +1,47 @@
+/* Erfassung: gleiche Grundlage wie die Seite Wohnen und Eigentum (wohnen.css), Tafel rechts bzw. unten, große Schaltflächen */
+.erfassen .leiste .page-brand { margin-right: auto; }
+.leiste [hidden] { display: none !important; }
+.erfassen .page-brand .marke { color: inherit; }
+.tafel { display: block; }
+.tafel h2 { margin-bottom: 10px; }
+.tafel form { display: grid; gap: 12px; }
+.feld { display: grid; gap: 4px; font-weight: 700; }
+.feld input, .feld select, .feld textarea { font: inherit; font-weight: 400; min-height: 44px; padding: 8px 10px; border-radius: 10px; border: 1px solid #8a8285; background: #fff; color: var(--text); width: 100%; }
+.feld textarea { min-height: 80px; resize: vertical; }
+[aria-invalid="true"] { border-color: var(--accent-ink) !important; outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend { font-weight: 700; padding: 0; margin-bottom: 6px; }
+.kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.kacheln.klein { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+.kacheln legend { grid-column: 1 / -1; }
+.wahlknopf { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 10px; border-radius: 12px; border: 1px solid #8a8285; background: #fff; cursor: pointer; line-height: 1.25; }
+.wahlknopf:has(input:checked) { border-color: var(--accent-ink); background: var(--accent-tint); font-weight: 700; }
+.wahlknopf:has(input:focus-visible) { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.wahlknopf span { min-width: 0; overflow-wrap: anywhere; hyphens: auto; }
+.wahlknopf input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent-ink); flex: none; }
+.einwilligung { padding: 10px; border-radius: 12px; background: var(--accent-tint); }
+.einwilligung p { margin: 0 0 8px; }
+.knoepfe { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.knopf:disabled { opacity: 0.55; cursor: not-allowed; }
+.fehler { color: var(--accent-ink); font-weight: 700; }
+.fehlerliste { padding: 8px 12px; border-radius: 10px; border: 2px solid var(--accent-ink); }
+.fehlerliste p, .fehlerliste ul { margin: 0; }
+.erfolg { padding: 8px 10px; border-radius: 10px; background: rgba(44, 118, 82, 0.12); color: #1f5a3d; font-weight: 700; }
+.exportblock { border-top: 1px solid var(--line); padding-top: 6px; }
+.exportblock h3 { margin: 0 0 4px; font: 400 17px/1.2 "Lilita One", system-ui, sans-serif; }
+.tafel .fakten { margin: 0 0 10px; }
+.tafel .fakten dd { overflow-wrap: anywhere; }
+.netz { position: fixed; z-index: 12; left: 12px; bottom: 12px; margin: 0; max-width: 340px; padding: 6px 10px; border-radius: 10px; background: #1a1a1a; color: #fff; font-size: 13px; }
+.netz:empty { display: none; }
+dialog { max-width: min(560px, calc(100% - 32px)); border: 0; border-radius: 16px; padding: 16px 20px; box-shadow: 0 8px 32px rgba(26, 26, 26, 0.25); font-size: 15px; line-height: 1.5; }
+dialog::backdrop { background: rgba(26, 26, 26, 0.4); }
+dialog h2 { margin: 0 0 8px; font: 400 22px/1.2 "Lilita One", system-ui, sans-serif; }
+dialog ul { padding-left: 18px; }
+@media (max-width: 700px) {
+  .erfassen .wahl { order: 3; }
+  .erfassen .knopf-angaben { order: 2; font-size: 15px; padding: 6px 10px; }
+  .erfassen .marke { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .erfassen .maplibregl-ctrl-top-right { top: 140px; }
+  .tafel { max-height: 55dvh; }
+  .netz { bottom: auto; top: 140px; }
+}
