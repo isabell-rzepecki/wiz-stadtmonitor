@@ -747,6 +747,15 @@
         80
       ]
     },
+    "boris_verlauf": {
+      "_hinweis": "Frühere Stichtage für den Verlauf der Spannen je Gemarkung (gleicher Filter wie boris). Zonengrenzen können sich zwischen Stichtagen ändern; verglichen werden nur Spannen. Stichtag 2026 nur als Kartendienst (kein WFS).",
+      "stichtage": [
+        {
+          "stichtag": "2022-01-01",
+          "url": "https://www.gds.hessen.de/wfs2/boris/cgi-bin/brw/2022/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=boris:BR_BodenrichtwertZonal&COUNT=5000"
+        }
+      ]
+    },
     "zensus": {
       "stichtag": "2022-05-15",
       "attribution": "© Statistische Ämter des Bundes und der Länder, 2024, dl-de/by-2-0",

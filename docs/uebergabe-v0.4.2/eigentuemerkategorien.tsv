@@ -1,0 +1,12 @@
+code	kategorie	name_erfassen	name_veroeffentlichen	oeffentliche_darstellung	hinweis
+kom	Stadt Witzenhausen (inkl. Eigenbetriebe)	ja	ja	Fläche farbig	Abgleich mit Beteiligungsbericht/Liegenschaftsliste der Stadt
+kreis	Werra-Meißner-Kreis (inkl. Gesellschaften)	ja	ja	Fläche farbig	z. B. Schulen in Kreisträgerschaft
+land	Land Hessen	ja	ja	Fläche farbig	LBIH, Hessen-Forst, Universität Kassel
+bund	Bund	ja	ja	Fläche farbig	BImA, Deutsche Bahn (bundeseigen)
+kirche	Kirche / Religionsgemeinschaft	ja	ja	Fläche farbig	Körperschaft des öffentlichen Rechts
+geno	Wohnungsgenossenschaft	ja	ja	Fläche farbig	eingetragene Genossenschaft (eG)
+wu_oeff	Öffentliches/kommunales Wohnungsunternehmen	ja	ja	Fläche farbig	Gesellschafter öffentlich
+wu_priv	Privates Wohnungs- oder Immobilienunternehmen	ja	ja	Fläche farbig	nur Kapitalgesellschaften (GmbH, AG, SE, KG mit Kapitalgesellschaft als Komplementär)
+jp_sonst	Sonstige juristische Person (Verein, Stiftung, Unternehmen)	ja	ja	Fläche farbig	Prüfen, ob der Name eine natürliche Person erkennbar macht (z. B. „Müller Immobilien GmbH“): dann nur Kategorie
+privat	Privatperson / Personengesellschaft (GbR, e. K.)	ja, nur intern (im Gerät verschlüsselt)	nein	nur aggregiert (Ortsbezirk/Baublock, Mindestzahl)	GbR und Einzelkaufleute wie natürliche Personen; Name nie im Klartext gespeichert oder übertragen, nur für Berechtigte entschlüsselbar
+unklar	Unklar / nicht ermittelbar	nein	nein	nicht dargestellt	–

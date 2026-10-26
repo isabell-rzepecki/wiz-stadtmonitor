@@ -30,7 +30,9 @@ from . import audit, config, net
 W = config.STADT["wohnen"]
 RAW = config.RAW / "wohnen"
 BRW_GEO = config.GEO / "dl-de-zero" / "bodenrichtwerte_2024.geojson"
-ZENSUS = config.ROOT / "data" / "wohnen" / "zensus2022.json"
+BRW_GEO_JAHR = lambda jahr: config.GEO / "dl-de-zero" / f"bodenrichtwerte_{jahr}.geojson"  # noqa: E731
+ZENSUS = config.ROOT / "data" / "wohnen" / "zensus2022.json"  # Gemeinde und Nachbargemeinden (Regionaltabelle)
+ZENSUS_OB = config.ROOT / "data" / "wohnen" / "zensus_ortsbezirk.json"  # Ortsbezirke aus dem Gitter (Näherung)
 REFERENZ = config.ROOT / "docs" / "uebergabe-v0.2" / "material" / "bodenrichtwerte_2024_spannen_gemarkung.tsv"
 OUT = config.EXPORT / "wohnen.json"
 KARTE = config.EXPORT / "karte" / "bodenrichtwerte.json"
@@ -68,6 +70,8 @@ def fetch():
     w, s, o, n = unary_union([g for _, g in _gemarkungen()]).bounds
     bbox = f"&BBOX={s - 0.005},{w - 0.005},{n + 0.005},{o + 0.005},urn:ogc:def:crs:EPSG::4326"
     _laden(RAW / f"boris_{W['boris']['stichtag'][:4]}.gml", W["boris"]["url"] + bbox, "boris")
+    for v in W["boris_verlauf"]["stichtage"]:  # frühere Stichtage, gleicher Ausschnitt
+        _laden(RAW / f"boris_{v['stichtag'][:4]}.gml", v["url"] + bbox, "boris")
     _laden(RAW / "regionaltabelle.xlsx", W["zensus"]["regionaltabelle"], "zensus_gem")
     for k, g in W["zensus"]["gitter"].items():
         _laden(RAW / f"{k}.zip", g["url"], "zensus_gitter")
@@ -96,8 +100,9 @@ def _polygon(text, utm):
     return g if g.is_valid else g.buffer(0)
 
 
-def zonen():
-    p = RAW / f"boris_{W['boris']['stichtag'][:4]}.gml"
+def zonen(stichtag=None):
+    """Zonen der Gemeinde zum Stichtag (Standard: wohnen.boris.stichtag) aus den Rohdaten; None ohne Rohdaten."""
+    p = RAW / f"boris_{(stichtag or W['boris']['stichtag'])[:4]}.gml"
     if not p.exists():
         return None
     utm = Transformer.from_crs("EPSG:25832", "EPSG:4326", always_xy=True).transform
@@ -132,20 +137,40 @@ def spannen(liste):
     return {k: {**v, "arten": sorted(v["arten"])} for k, v in out.items()}
 
 
-def _boris(gem):
-    liste = zonen()
+def zonen_mit_stand(stichtag, url):
+    """Zonen zum Stichtag: aus den Rohdaten (dann auch ins Repository geschrieben) oder aus dem Stand im Repository."""
+    jahr = stichtag[:4]
+    ziel = BRW_GEO_JAHR(jahr)
+    liste = zonen(stichtag)
     if not liste:  # keine Rohdaten oder keine Zonen gelesen: Stand im Repository
-        if not BRW_GEO.exists():
+        if not ziel.exists():
             return None
-        d = json.loads(BRW_GEO.read_text(encoding="utf-8"))
-        liste = [{**f["properties"], "geometry": shape(f["geometry"])} for f in d["features"]]
-    else:
-        feats = [{"type": "Feature", "properties": {k: v for k, v in z.items() if k != "geometry"},
-                  "geometry": json.loads(json.dumps(mapping(z["geometry"].simplify(0.00001, preserve_topology=True))),
-                                         parse_float=lambda x: round(float(x), 6))} for z in liste]
-        BRW_GEO.write_text(json.dumps({"type": "FeatureCollection", "license": W["boris"]["lizenz"], "attribution": W["boris"]["attribution"],
-                                       "source": W["boris"]["url"], "stichtag": W["boris"]["stichtag"], "retrieved": net.abrufdatum(RAW / f"boris_{W['boris']['stichtag'][:4]}.gml"),
-                                       "features": feats}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        d = json.loads(ziel.read_text(encoding="utf-8"))
+        return [{**f["properties"], "geometry": shape(f["geometry"])} for f in d["features"]]
+    feats = [{"type": "Feature", "properties": {k: v for k, v in z.items() if k != "geometry"},
+              "geometry": json.loads(json.dumps(mapping(z["geometry"].simplify(0.00001, preserve_topology=True))),
+                                     parse_float=lambda x: round(float(x), 6))} for z in liste]
+    attribution = re.sub(r"Stichtag \d\d\.\d\d\.\d{4}", f"Stichtag {stichtag[8:10]}.{stichtag[5:7]}.{jahr}", W["boris"]["attribution"])
+    ziel.write_text(json.dumps({"type": "FeatureCollection", "license": W["boris"]["lizenz"], "attribution": attribution,
+                                "source": url, "stichtag": stichtag, "retrieved": net.abrufdatum(RAW / f"boris_{jahr}.gml"),
+                                "features": feats}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    return liste
+
+
+def verlauf():
+    """{stichtag: {gemarkung_nr: Spanne}} für den aktuellen und die früheren Stichtage (Wohn- und Mischbauland)."""
+    out = {}
+    for v in [*W["boris_verlauf"]["stichtage"], {"stichtag": W["boris"]["stichtag"], "url": W["boris"]["url"]}]:
+        liste = zonen_mit_stand(v["stichtag"], v["url"])
+        if liste:
+            out[v["stichtag"]] = spannen(liste)
+    return dict(sorted(out.items()))
+
+
+def _boris(gem):
+    liste = zonen_mit_stand(W["boris"]["stichtag"], W["boris"]["url"])
+    if not liste:
+        return None
     sp = spannen(liste)
     # Abgleich mit der Referenztabelle der Übergabe (abgeleitet, ungeprüft)
     namen = {p["gmk_nr"]: p["gemarkung"] for p, _ in gem}
@@ -258,30 +283,72 @@ def ortsbezirke(gem):
     return out
 
 
+AUDIT_SPALTEN = ["bereich", "ebene", "schluessel", "name", "kennzahl", "stichtag", "wert", "status", "quelle"]
+
+
+def pruefprotokoll(zensus, vl, by_nr):
+    """audit/wohnen_<datum>.tsv: jede ausgewiesene Zahl mit Ebene, Stichtag, Status (Wert, Lücke mit Grund) und Quelle."""
+    zeilen = []
+    for g in (zensus or {}).get("gemeinden", []):
+        for k in ("nettokaltmiete_eur_m2", "leerstandsquote_pct", "eigentuemerquote_pct"):
+            zeilen.append({"bereich": "Zensus", "ebene": "Gemeinde", "schluessel": g["ars"], "name": g["name"], "kennzahl": k,
+                           "stichtag": W["zensus"]["stichtag"], "wert": g.get(k),
+                           "status": "Lücke (ohne Wert)" if g.get(k) is None else "eingeschränkt" if k in g.get("eingeschraenkt", []) else "Wert",
+                           "quelle": "Regionaltabelle Gebäude und Wohnungen"})
+    for nr, e in (zensus or {}).get("ortsbezirke", {}).items():
+        for k, m in e.items():
+            zeilen.append({"bereich": "Zensus", "ebene": "Ortsbezirk (Näherung)", "schluessel": nr, "name": by_nr.get(nr, {}).get("name", nr),
+                           "kennzahl": k, "stichtag": W["zensus"]["stichtag"], "wert": m.get("wert"),
+                           "status": f"Wert ({m.get('methode')}, {m['zellen']} Zellen, {m['zellen_ohne_wert']} ohne Wert)" if m.get("wert") is not None
+                           else f"Lücke ({m.get('grund', 'ohne Wert')})", "quelle": "100-m-Gitter"})
+    for st, sp in vl.items():
+        for nr, v in sp.items():
+            zeilen.append({"bereich": "Bodenrichtwerte", "ebene": "Stadt" if nr == "stadt" else "Gemarkung", "schluessel": nr,
+                           "name": by_nr.get(nr, {}).get("name", nr), "kennzahl": "Spanne Wohn- und Mischbauland (€/m²)", "stichtag": st,
+                           "wert": f"{v['min']:g}–{v['max']:g}", "status": f"Wert ({v['zonen']} Zonen)", "quelle": "BORIS Hessen (WFS)"})
+    for k in W.get("kontext", []):
+        zeilen.append({"bereich": "Rechtsrahmen", "ebene": "Stadt", "schluessel": "", "name": k["thema"], "kennzahl": "Text",
+                       "stichtag": k["stand"], "wert": "", "status": "datierter Text", "quelle": k["link"]})
+    audit.tabelle(f"wohnen_{date.today().isoformat()}.tsv", AUDIT_SPALTEN, zeilen)
+
+
 def build():
     gem = _gemarkungen()
     sp = _boris(gem)
     alt = json.loads(ZENSUS.read_text(encoding="utf-8")) if ZENSUS.exists() else {}
+    # Ortsbezirke: eigene Datei; Übergang aus dem früheren gemeinsamen Stand in zensus2022.json
+    alt_ob = json.loads(ZENSUS_OB.read_text(encoding="utf-8")) if ZENSUS_OB.exists() else {"ortsbezirke": alt.pop("ortsbezirke", {})}
     gd, ob = gemeinden(), ortsbezirke(gem)
-    if gd is not None or ob is not None:
-        neu = {"license": "dl-de/by-2.0", "attribution": W["zensus"]["attribution"], "stichtag": W["zensus"]["stichtag"],
-               "retrieved": net.abrufdatum(RAW / "regionaltabelle.xlsx", *RAW.glob("*.zip")), "naeherung": W["zensus"]["naeherung"],
-               "gemeinden": gd if gd is not None else alt.get("gemeinden", []),
-               "ortsbezirke": ob if ob is not None else alt.get("ortsbezirke", {})}
-        ZENSUS.parent.mkdir(parents=True, exist_ok=True)
-        ZENSUS.write_text(json.dumps(neu, ensure_ascii=False, indent=1), encoding="utf-8")
-        alt = neu
-    elif not alt:
+    kopf = {"license": "dl-de/by-2.0", "attribution": W["zensus"]["attribution"], "stichtag": W["zensus"]["stichtag"]}
+    ZENSUS.parent.mkdir(parents=True, exist_ok=True)
+    if gd is not None:
+        alt = {**kopf, "retrieved": net.abrufdatum(RAW / "regionaltabelle.xlsx"), "gemeinden": gd}
+        ZENSUS.write_text(json.dumps(alt, ensure_ascii=False, indent=1), encoding="utf-8")
+    if ob is not None:
+        namen = {p["gmk_nr"]: p["gemarkung"] for p, _ in gem}
+        alt_ob = {**kopf, "retrieved": net.abrufdatum(*(RAW / f"{k}.zip" for k in W["zensus"]["gitter"])),
+                  "kennzeichnung": "Näherung", "naeherung": W["zensus"]["naeherung"], "mindestzellen": W["zensus"]["mindestzellen"],
+                  "gemarkungen": {nr: namen.get(nr) for nr in ob}, "ortsbezirke": ob}
+        ZENSUS_OB.write_text(json.dumps(alt_ob, ensure_ascii=False, indent=1), encoding="utf-8")
+    if not alt and not alt_ob.get("ortsbezirke"):
         print("Zensus: keine Rohdaten und kein Stand im Repository")
+    if alt:  # für die Ausgabe zusammengeführt (Gemeinde und Ortsbezirke getrennt gekennzeichnet)
+        alt = {**alt, "naeherung": W["zensus"]["naeherung"], "ortsbezirke": alt_ob.get("ortsbezirke", {})}
     by_nr = {o["gemarkung_nr"]: o for o in config.STADT["ortsteile"]}
+    vl = verlauf()
     daten = {"generated_at": date.today().isoformat(),
              "boris": {"stichtag": W["boris"]["stichtag"], "attribution": W["boris"]["attribution"], "filter": W["boris"]["filter"],
                        "spannen": {by_nr[k]["slug"] if k in by_nr else k: v for k, v in (sp or {}).items()}},
+             # Verlauf der Spannen je Ortsbezirk über die Stichtage mit Datendienst (2026 nur als Karte)
+             "boris_verlauf": {"stichtage": list(vl), "hinweis": W["boris_verlauf"]["_hinweis"],
+                               "spannen": {by_nr[k]["slug"] if k in by_nr else k: {st: sp_[k] for st, sp_ in vl.items() if k in sp_}
+                                           for k in sorted({k for sp_ in vl.values() for k in sp_})}},
              "zensus": {k: alt.get(k) for k in ("stichtag", "attribution", "naeherung", "gemeinden")} if alt else None}
     if alt:
         daten["zensus"]["ortsbezirke"] = {by_nr[k]["slug"]: v for k, v in alt.get("ortsbezirke", {}).items() if k in by_nr}
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(daten, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    pruefprotokoll(alt, vl, by_nr)
     wiz = next((g for g in (alt.get("gemeinden") or []) if g["ars"] == ARS), None) if alt else None
     if wiz and alt.get("ortsbezirke"):  # Plausibilität: gewichtete Gittermiete aller Ortsbezirke gegen den Gemeindewert
         m = [e["miete"] for e in alt["ortsbezirke"].values() if e.get("miete", {}).get("wert")]

@@ -27,10 +27,24 @@ class Wohnen(unittest.TestCase):
         self.assertEqual(d["license"], "dl-de/by-2.0")
         wiz = next(g for g in d["gemeinden"] if g["ars"] == config.STADT["stadt"]["ars"])
         self.assertAlmostEqual(wiz["nettokaltmiete_eur_m2"], 5.09)
-        for e in d["ortsbezirke"].values():  # unter der Mindestzahl an Zellen kein Wert
+        ob = json.loads(wohnen.ZENSUS_OB.read_text(encoding="utf-8"))
+        self.assertEqual(ob["kennzeichnung"], "Näherung")
+        self.assertEqual(len(ob["ortsbezirke"]), len(config.STADT["ortsteile"]))
+        for e in ob["ortsbezirke"].values():  # unter der Mindestzahl an Zellen kein Wert; „–“ nie als 0
             for m in e.values():
-                if m["zellen"] < config.STADT["wohnen"]["zensus"]["mindestzellen"]:
+                if m["zellen"] < ob["mindestzellen"]:
                     self.assertIsNone(m["wert"])
+                self.assertNotEqual(m["wert"], 0)
+
+    def test_bodenrichtwerte_verlauf(self):
+        # beide Stichtage mit Datendienst im Repository; 2026 gibt es nur als Kartendienst
+        for jahr in ("2022", "2024"):
+            d = json.loads(wohnen.BRW_GEO_JAHR(jahr).read_text(encoding="utf-8"))
+            self.assertEqual(d["stichtag"][:4], jahr)
+            self.assertIn(f"01.01.{jahr}", d["attribution"])
+            self.assertTrue(d["features"])
+        stichtage = [v["stichtag"] for v in config.STADT["wohnen"]["boris_verlauf"]["stichtage"]]
+        self.assertNotIn("2026-01-01", stichtage)
 
 
 if __name__ == "__main__":

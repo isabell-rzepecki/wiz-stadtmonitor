@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/<account>/wiz-stadtmonitor/schemas/mietangabe.json",
+  "title": "Freiwillige Mietangabe von Mietenden (wiz-stadtmonitor, v0.4.2)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "angabe_id",
+    "gebaeude_id",
+    "nettokalt_eur",
+    "wohnflaeche_klasse",
+    "vertragsbeginn_jahr",
+    "einwilligung",
+    "erfasst_am",
+    "erfassungsweg"
+  ],
+  "properties": {
+    "angabe_id": {
+      "type": "string",
+      "description": "UUID v4"
+    },
+    "gebaeude_id": {
+      "type": "string",
+      "description": "ALKIS-OID; keine Wohnungsnummer, kein Stockwerk"
+    },
+    "vermieter_schluessel": {
+      "type": "string",
+      "description": "falls bekannt; sonst leer – Zuordnung durch die Prüfgruppe"
+    },
+    "nettokalt_eur": {
+      "type": "number",
+      "minimum": 50,
+      "maximum": 5000
+    },
+    "wohnflaeche_klasse": {
+      "enum": [
+        "<40",
+        "40-59",
+        "60-79",
+        "80-99",
+        "100-119",
+        ">=120"
+      ]
+    },
+    "wohnflaeche_m2": {
+      "type": "number",
+      "minimum": 10,
+      "maximum": 400,
+      "description": "optional; wird nur zur Berechnung €/m² genutzt und danach verworfen"
+    },
+    "baujahr_klasse": {
+      "enum": [
+        "<1919",
+        "1919-1948",
+        "1949-1978",
+        "1979-1990",
+        "1991-2010",
+        ">2010",
+        "unbekannt"
+      ]
+    },
+    "vertragsbeginn_jahr": {
+      "type": "integer",
+      "minimum": 1950,
+      "maximum": 2030
+    },
+    "letzte_erhoehung_jahr": {
+      "type": "integer",
+      "minimum": 1950,
+      "maximum": 2030
+    },
+    "ausstattung": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "balkon",
+          "einbaukueche",
+          "aufzug",
+          "zentralheizung",
+          "neubaustandard"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "einwilligung": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "erteilt",
+        "textversion",
+        "zeitpunkt"
+      ],
+      "properties": {
+        "erteilt": {
+          "const": true
+        },
+        "textversion": {
+          "type": "string"
+        },
+        "zeitpunkt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "erfasst_am": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "erfassungsweg": {
+      "enum": [
+        "selbst",
+        "im_gespraech_mit_team"
+      ]
+    },
+    "erfasser": {
+      "type": "string",
+      "description": "bei im_gespraech_mit_team: pseudonyme Team-ID"
+    }
+  }
+}
