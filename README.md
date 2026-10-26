@@ -66,6 +66,7 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - Namen von Privatpersonen nur verschlüsselt, nie veröffentlicht; jede Entschlüsselung protokolliert.
 - Keine Rohdaten in ein Git-Repository: `.gitignore`, Pre-Commit-Hook und CI-Prüfung (`tools/sperre.py`) lehnen Exportdateien und Felder einzelner Erfassungen ab. Hook einrichten: `git config core.hooksPath .githooks`.
 - Namen von Privatpersonen bleiben per Konfiguration aus (`privat_namen_aktiv`), bis verantwortliche Stelle, Informationspflicht, Interessenabwägung, Verarbeitungsverzeichnis und Löschverfahren geklärt sind (Issue 28). Mietangaben (`mietangaben_aktiv`) sind seit 26.10.2026 freigegeben (Entscheidung der Projektleitung, abweichend von der Übergabe v0.4.2); gespeichert wird in der App erst, wenn öffentlicher Schlüssel (Issue 29) und verantwortliche Stelle (Issue 28) eingetragen sind, weil Einwilligung und Information der Eigentümer:innen die Stelle nennen müssen. Stelle und Kontakt (eine Funktionsadresse) stehen an einer Stelle, `wohnen_eigentum.erfassung.datenschutz` in `config/stadt.json`; Datenschutzseite und App übernehmen sie.
+- Inbetriebnahme: Ablaufkarten je Rolle in [`docs/inbetriebnahme/`](docs/inbetriebnahme/); vorher `python tools/generalprobe.py` (ganze Kette mit Wegwerf-Schlüssel, nichts landet im Repository).
 - Einrichtung lokal mit `tools/einrichten.py` (Schlüssel durch die Prüfgruppe, Einladungscodes durch die Ausgabestelle); die Seite trägt nur öffentlichen Schlüssel und Code-Hashes. Probemodus „Ohne Code ausprobieren“: Formulare wie echt, nichts wird gespeichert.
 
 **Grenzen.**
@@ -99,7 +100,7 @@ config/stadt.json   Alle stadtspezifischen Werte (Name, Gremien, Ortsbezirke, Ka
 site/               Seite (Leaflet, Zeitleiste, Liste, Prozesslinie; Tour in tour.js; Wohnen und Eigentum mit MapLibre GL und PMTiles), ohne Build-Schritt
 pipeline/           Python-Pipeline, je Quelle Abruf und Ableitung, dann build, check, package, site (python -m pipeline all)
 tools/kontrast.py   WCAG-Kontrastprüfung der Farb-Tokens aus config/stadt.json
-tools/einrichten.py, einladung.py, pruefen.py, veroeffentlichen.py   Erfassung Wohnen und Eigentum: Einrichtung, Einladungscodes, Prüfung, Veröffentlichung (nur lokal)
+tools/einrichten.py, generalprobe.py, einladung.py, pruefen.py, veroeffentlichen.py   Erfassung Wohnen und Eigentum: Einrichtung, Generalprobe, Einladungscodes, Prüfung, Veröffentlichung (nur lokal)
 tools/sperre.py     Sperre gegen personenbezogene Rohdaten (Pre-Commit-Hook .githooks/pre-commit, CI)
 tests/              Python-Tests, Browser-Tests (Playwright, axe-core), Testdaten
 phase0/             Bestandsaufnahme: Bericht, Stichprobe (TSV), Explorationsskripte
