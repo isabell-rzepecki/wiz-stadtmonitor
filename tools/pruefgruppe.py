@@ -166,6 +166,80 @@ def passphrase_abfragen(datei, neu=False):
     return getpass.getpass("Passphrase: ") if "secret_enc" in d else None
 
 
+# --- Sicherung auf Papier ----------------------------------------------------------------------------------------
+# Die Schlüsseldatei bleibt dabei mit der Passphrase geschützt; der Ausdruck allein öffnet nichts. Format: nummerierte
+# Zeilen „NNN TEXT PRÜF“ (Base64 in Stücken zu 60 Zeichen, PRÜF = 4 Hexziffern aus SHA-256), Zeile 000 mit Anzahl und
+# Prüfsumme. Dieselben Zeilen stehen in den QR-Codes (je bis zu 5), damit Scannen und Abtippen dasselbe ergeben.
+ZEILE = re.compile(r"^\s*(\d{3})\s+(\S+)\s+([0-9a-f]{4})\s*$")
+
+
+def _pruef(nr, text):
+    return hashlib.sha256(f"{nr:03d}{text}".encode()).hexdigest()[:4]
+
+
+def ausdruck_zeilen(datei):
+    d = json.loads(ausserhalb_git(datei).read_text(encoding="utf-8"))
+    if any("secret_key" in e for e in [d, *d.get("frueher", [])]):
+        raise Abbruch("Die Datei enthält einen Schlüssel ohne Passphrase; zuerst schluessel-wechsel --neue-passphrase.")
+    roh = base64.b64encode(json.dumps(d, separators=(",", ":")).encode()).decode()
+    stuecke = [roh[i:i + 60] for i in range(0, len(roh), 60)]
+    kopf = f"WIZPG1:{len(stuecke)}:{hashlib.sha256(roh.encode()).hexdigest()[:16]}"
+    return [f"{i:03d} {t} {_pruef(i, t)}" for i, t in enumerate([kopf, *stuecke])], d
+
+
+def ausdruck(datei, ziel):
+    """Druckbare HTML-Seite (QR-Codes und Zeilen zum Abtippen) außerhalb jedes Git-Repositorys; nach dem Druck löschen."""
+    import segno  # noqa: PLC0415 – nur für den Ausdruck gebraucht
+    zeilen, d = ausdruck_zeilen(datei)
+    ziel = ausserhalb_git(ziel)
+    if ziel.exists():
+        raise Abbruch(f"{ziel} gibt es schon.")
+    bloecke = [zeilen[i:i + 5] for i in range(0, len(zeilen), 5)]
+    qr = "".join(f'<figure>{segno.make(chr(10).join(b), error="m").svg_inline(scale=4)}<figcaption>Zeilen {b[0][:3]}–{b[-1][:3]}</figcaption></figure>'
+                 for b in bloecke)
+    ids = ", ".join(e["key_id"] for e in [d, *d.get("frueher", [])])
+    html = f"""<!doctype html><meta charset="utf-8"><title>Sicherung Schlüssel Prüfgruppe</title>
+<style>body{{font:12px/1.4 monospace;margin:16mm}}figure{{display:inline-block;margin:0 12px 12px 0}}pre{{font-size:11px}}</style>
+<h1>Sicherung der Schlüsseldatei der Prüfgruppe</h1>
+<p>Erstellt {datetime.now():%d.%m.%Y}. Schlüssel: {ids}. Aktuell: {d["key_id"]}.</p>
+<p>Nur mit der Passphrase nutzbar; die Passphrase liegt getrennt. Wiederherstellen: QR-Codes scannen oder Zeilen abtippen,
+als Textdatei speichern, dann <code>python tools/pruefen.py schluessel-zurueck TEXTDATEI ZIEL</code>.</p>
+{qr}<pre>{chr(10).join(zeilen)}</pre>"""
+    ziel.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(ziel, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(html)
+    return ziel
+
+
+def aus_ausdruck(text, ziel):
+    """Schlüsseldatei aus gescannten oder abgetippten Zeilen; jede Zeile und das Ganze werden geprüft, nichts überschrieben."""
+    gelesen = {}
+    for z in text.splitlines():
+        m = ZEILE.match(z)
+        if not m:
+            continue
+        nr, t, p = int(m[1]), m[2], m[3]
+        if _pruef(nr, t) != p:
+            raise Abbruch(f"Zeile {nr:03d}: Prüfziffern passen nicht (Tippfehler?).")
+        gelesen[nr] = t
+    kopf = gelesen.get(0, "").split(":")
+    if len(kopf) != 3 or kopf[0] != "WIZPG1":
+        raise Abbruch("Zeile 000 fehlt oder ist keine Sicherung der Prüfgruppe.")
+    fehlen = [f"{i:03d}" for i in range(1, int(kopf[1]) + 1) if i not in gelesen]
+    if fehlen:
+        raise Abbruch(f"Es fehlen Zeilen: {', '.join(fehlen)}.")
+    roh = "".join(gelesen[i] for i in range(1, int(kopf[1]) + 1))
+    if hashlib.sha256(roh.encode()).hexdigest()[:16] != kopf[2]:
+        raise Abbruch("Prüfsumme der Sicherung passt nicht.")
+    ziel = ausserhalb_git(ziel)
+    if ziel.exists():
+        raise Abbruch(f"{ziel} gibt es schon; ein Schlüssel wird nie überschrieben.")
+    ziel.parent.mkdir(parents=True, exist_ok=True)
+    _schreiben(ziel, json.loads(base64.b64decode(roh)))
+    return ziel
+
+
 def versiegeln(public_key_b64, daten: bytes):
     return b64(SealedBox(PublicKey(base64.b64decode(public_key_b64))).encrypt(daten))
 
