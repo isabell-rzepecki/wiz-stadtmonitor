@@ -279,6 +279,16 @@ class Pruefgruppe(unittest.TestCase):
         self.assertFalse(pruefen.wechsel_faellig(self.schl, heute=tag))
         self.assertTrue(pruefen.wechsel_faellig(self.schl, heute=tag.replace(year=tag.year + 1, day=min(tag.day, 28))))
 
+    def test_zugriffsprotokoll_nach_24_monaten_gekuerzt(self):
+        # Festlegung 26.10.2026: Zugriffsprotokoll so lange wie die Rohdaten; fristen --loeschen kürzt es
+        ar = self.arbeit()
+        p = ar.pfad / "namenzugriff.tsv"
+        p.write_text("zeit\tpruefer\tdatensatz\tzweck\n2024-01-05T10:00:00Z\tP-1\tx\tPrüfung\n2026-09-01T10:00:00Z\tP-2\ty\tPrüfung\n", encoding="utf-8")
+        pruefen.fristen(ar, True, heute=pruefen.date(2026, 10, 26))
+        zeilen = p.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(zeilen[0], "zeit\tpruefer\tdatensatz\tzweck")
+        self.assertEqual([z.split("\t")[2] for z in zeilen[1:]], ["y"])
+
     def test_datenminimierung_und_rundung(self):
         # Beim Einlesen bleibt nur der Preis je m²; Miete und Fläche werden verworfen (sonst Fläche rückrechenbar)
         b = [miete(G[0], 450, m2=72.0), miete(G[1], 500, m2=None)]
