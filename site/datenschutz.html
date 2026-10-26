@@ -39,6 +39,16 @@
     </ul>
     <p>Diese Angaben verlassen Ihr Gerät nicht; sie sind für die von Ihnen gewünschten Funktionen erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Sie können sie jederzeit über die Einstellungen Ihres Browsers löschen.</p>
 
+    <h2>Wohnen und Eigentum</h2>
+    <p><strong>Zweck.</strong> Für die Stadt gibt es keinen Mietspiegel. Die Seite „Wohnen und Eigentum“ soll eine Vergleichsgrundlage für tatsächlich gezahlte Mieten schaffen. Dafür braucht es Mietangaben von Mietenden und das Wissen, wer welche Gebäude vermietet: So lassen sich Mietende über das Gebäude ansprechen und Mieten je Vermieter vergleichen.</p>
+    <p><strong>Zwei getrennte Erfassungen.</strong> Eigentum und Vermietung erfasst ein Team aus öffentlichen Belegen (etwa Handelsregister, Beteiligungsbericht, Bauschild); Rechtsgrundlage ist das berechtigte Interesse an Transparenz über die Eigentumsstruktur, Art. 6 Abs. 1 lit. f DSGVO. Mietangaben machen Mietende freiwillig mit Einwilligung, Art. 6 Abs. 1 lit. a DSGVO. Beide haben unterschiedliche Betroffene und werden getrennt erhoben, gespeichert und geprüft.</p>
+    <p><strong>Ohne Server.</strong> Die Erfassung läuft im Browser der erfassenden Person. Jeder Eintrag wird beim Speichern mit dem öffentlichen Schlüssel der Prüfgruppe verschlüsselt und nur so im Gerät abgelegt. Es gibt keinen Upload: Einträge verlassen das Gerät nur als verschlüsselte Datei, die die erfassende Person selbst an die Prüfgruppe gibt. Die Prüfgruppe verarbeitet sie lokal, nicht bei GitHub und in keinem Git-Repository.</p>
+    <p><strong>Namen.</strong> Namen von Privatpersonen (auch GbR und Einzelkaufleute) werden nur verschlüsselt gespeichert, dienen allein der Prüfung und dem Erkennen von Dubletten und werden nie veröffentlicht; jede Entschlüsselung wird protokolliert. Private Vermieter:innen erhalten einen internen Schlüssel statt des Namens. Namen von Unternehmen, Genossenschaften, öffentlicher Hand und Kirchen dürfen erscheinen. Keine Fotos von Personen, keine Klingelschilder, keine Namen aus Grundbuchauszügen Dritter.</p>
+    <p><strong>Veröffentlichung.</strong> Nur zusammengefasst und nach festen Mindestzahlen: Mieten je Ortsbezirk und Baujahrklasse ab 5 Angaben, je Unternehmen ab 5 Angaben aus mindestens 2 Gebäuden; nie einzelne Angaben und nie ein Vergleich je privater Vermieter:in. Gebäude von Privatpersonen erscheinen nie einzeln, nur als Anzahl je Ortsbezirk.</p>
+    <p><strong>Widerspruch und Löschung.</strong> Mietende können ihre Einwilligung jederzeit widerrufen; Vermieter:innen können der Erfassung widersprechen. Die Angabe wird dann gelöscht. Kontakt:</p>
+    <p class="offen">[Leerstelle: verantwortliche Stelle und Kontakt für Widerspruch und Löschung folgen; bis dahin ist die Erfassung nicht in Betrieb.]</p>
+    <p>Im Gerät der erfassenden Person speichert die Erfassung die verschlüsselten Einträge, die pseudonyme Erfasser-ID (IndexedDB <code>wiz-erfassung</code>) und für die Nutzung ohne Netz das Programm und die Gebäudedaten (Cache-Speicher); das ist für die gewünschte Funktion erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+
     <h2>Personen in den Tagesordnungen</h2>
     <p>Die Tagesordnungen stammen aus den amtlichen Bekanntmachungen der Stadt. Wohnadressen von Privatpersonen werden nicht verortet; Namen von Privatpersonen werden in Karte und Suche nicht hervorgehoben.</p>
 

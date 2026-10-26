@@ -36,6 +36,8 @@ ZENSUS_OB = config.ROOT / "data" / "wohnen" / "zensus_ortsbezirk.json"  # Ortsbe
 # Ausgaben der lokalen Prüfung (tools/veroeffentlichen.py): nur zusammengefasst und nach den Veröffentlichungsregeln
 EIGENTUM_ANTEILE = config.ROOT / "data" / "wohnen" / "eigentum_anteile_ortsbezirk.json"
 MIETEN = config.ROOT / "data" / "wohnen" / "mieten_aggregiert.json"
+EIGENTUM_GEBAEUDE = config.ROOT / "data" / "wohnen" / "eigentum_gebaeude.geojson"  # nur juristische Personen (R2, R3)
+EIGENTUM_KARTE = config.EXPORT / "karte" / "eigentum_gebaeude.json"
 REFERENZ = config.ROOT / "docs" / "uebergabe-v0.2" / "material" / "bodenrichtwerte_2024_spannen_gemarkung.tsv"
 OUT = config.EXPORT / "wohnen.json"
 KARTE = config.EXPORT / "karte" / "bodenrichtwerte.json"
@@ -366,6 +368,13 @@ def build():
     # Eigentum und Mieten erst, wenn geprüfte Dateien vorliegen; sonst null (die Seite zeigt den Stand der Erfassung)
     for k, p in (("eigentum_anteile", EIGENTUM_ANTEILE), ("mieten", MIETEN)):
         daten[k] = json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+    # Eigentumskarte (Seite Wohnen und Eigentum): nur die geprüfte Datei; ohne sie keine Ebene
+    EIGENTUM_KARTE.parent.mkdir(parents=True, exist_ok=True)
+    daten["eigentum_karte"] = EIGENTUM_GEBAEUDE.exists()
+    if EIGENTUM_GEBAEUDE.exists():
+        EIGENTUM_KARTE.write_text(EIGENTUM_GEBAEUDE.read_text(encoding="utf-8"), encoding="utf-8")
+    else:
+        EIGENTUM_KARTE.unlink(missing_ok=True)
     if alt:
         daten["zensus"]["ortsbezirke"] = {by_nr[k]["slug"]: v for k, v in alt.get("ortsbezirke", {}).items() if k in by_nr}
     OUT.parent.mkdir(parents=True, exist_ok=True)

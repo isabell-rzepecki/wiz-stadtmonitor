@@ -434,6 +434,61 @@ test("Wohnen und Eigentum (Seite): Module mit Zweck, Mietniveau, Verlauf, Eigent
   await mobil.close();
 });
 
+test("Wohnen und Eigentum: Ebene Eigentum aus der geprüften Datei, privat nie je Gebäude, Erfassungsstand, ohne Verstöße", async () => {
+  // erfundene geprüfte Erfassungen über echten Gebäuden des Ortsteils (Gebäude: HVBG; Kategorien und Namen erfunden)
+  const geb = JSON.parse(readFileSync(new URL("../../data/geo/hvgg/gebaeude.geojson", import.meta.url), "utf8")).features
+    .filter((f) => f.properties.o === "gertenbach" && f.geometry.type === "Polygon").slice(0, 40);
+  const mitte = (f) => { const r = f.geometry.coordinates[0].slice(0, -1); return [r.reduce((s, c) => s + c[0], 0) / r.length, r.reduce((s, c) => s + c[1], 0) / r.length]; };
+  const eig = { type: "FeatureCollection", stand: "2026-10-26", features: geb.map((f, i) => ({ type: "Feature", geometry: f.geometry,
+    properties: { id: f.properties.id, kategorie: i % 2 ? "kom" : "geno", kategorie_titel: i % 2 ? "Stadt" : "Wohnungsgenossenschaft",
+      sicherheit: "gesichert", beleg: "ortskenntnis", ...(i % 2 ? {} : { name: "Wohnbau Test eG" }) } })) };
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, bypassCSP: true });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+  await page.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
+  await page.route("**/data/export/wohnen.json", async (r) => {
+    const res = await r.fetch(), w = await res.json();
+    w.eigentum_karte = true;
+    w.eigentum_anteile = { stand: "2026-10-26", ortsbezirke: { gertenbach: { gebaeude: 1295, erfasst: 40, kategorien: { geno: 20, kom: 20 }, privat: null,
+      privat_hinweis: "zu wenige Angaben; nicht in „erfasst“ enthalten" } } };
+    await r.fulfill({ response: res, json: w });
+  });
+  await page.route("**/data/export/karte/eigentum_gebaeude.json", (r) => r.fulfill({ json: eig }));
+  await page.goto(SITE + "wohnen.html?gebiet=ortsteil:gertenbach&ebene=eigentum", { waitUntil: "networkidle" });
+  await page.waitForFunction(() => window.stadtmonitorWohnen && window.stadtmonitorWohnen.map.loaded());
+  assert.equal(await page.locator("#ebene").inputValue(), "eigentum");
+  const legende = await page.locator("#legende").textContent();
+  assert.match(legende, /Stadt.*Wohnungsgenossenschaft|Wohnungsgenossenschaft.*Stadt/s);
+  assert.match(legende, /Privatperson/);
+  assert.match(await page.locator("#hinweis").textContent(), /nie einzeln/);
+  // ein erfasstes Gebäude anklicken: Kategorie und Name der juristischen Person
+  let getroffen = false;
+  for (const f of geb.filter((x, i) => i % 2 === 0)) {
+    const pt = await page.evaluate(async (c) => {
+      const m = window.stadtmonitorWohnen.map;
+      m.jumpTo({ center: c, zoom: 18 });
+      await new Promise((ok) => m.once("idle", ok));
+      const p = m.project(c), r = m.getCanvas().getBoundingClientRect();
+      return { x: r.left + p.x, y: r.top + p.y, id: (m.queryRenderedFeatures(p, { layers: ["flaeche"] })[0] || { properties: {} }).properties.id };
+    }, mitte(f));
+    if (pt.id !== f.properties.id) continue;
+    await page.mouse.click(pt.x, pt.y);
+    await page.locator("#gebaeude").waitFor();
+    assert.match(await page.locator("#gebaeude").textContent(), /Eigentum\s*Wohnungsgenossenschaft: Wohnbau Test eG/);
+    getroffen = true;
+    break;
+  }
+  assert.ok(getroffen, "kein erfasstes Gebäude anklickbar");
+  await page.locator("#modul-stand > summary").click();
+  assert.match(await page.locator("#modul-stand").textContent(), /Gertenbach\s*[\d.]+\s*40\s*[\d,]+ %\s*zu wenige Angaben/);
+  await page.locator("#modul-eigentum > summary").click();
+  assert.match(await page.locator("#modul-eigentum").textContent(), /Geprüfte Erfassung, Stand 26\.10\.2026/);
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(errors, []);
+  await page.close();
+});
+
 // Erfassung: Testschlüssel und Testcode nur im Test (die Konfiguration im Repository hat weder Schlüssel noch Codes)
 const TESTCODE = "ABCD-EFGH-JKMN-PQRS";
 async function erfassenSeite({ aktiv = true, zugang = true, viewport = { width: 1280, height: 800 } } = {}) {
@@ -520,6 +575,14 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
   await page.locator("#zu-a").click();
   await page.locator('#form-a button[type="submit"]').click();
   assert.match(await page.locator(".fehlerliste").textContent(), /Eigentum: fehlt.*Beleg: fehlt/s);
+  // Screenreader: Fehlerliste als Meldung mit Fokus, Gruppen mit Legende, jedes Feld mit Namen
+  assert.equal(await page.evaluate(() => document.activeElement.classList.contains("fehlerliste")), true);
+  assert.equal(await page.locator(".fehlerliste").getAttribute("role"), "alert");
+  for (const g of ["Wem gehört das Gebäude?", "Werden Wohnungen vermietet?", "Wie sicher ist die Angabe?"]) await page.getByRole("group", { name: g }).waitFor();
+  await page.getByRole("radio", { name: /Privatperson/ }).waitFor();
+  await page.getByRole("combobox", { name: "Beleg" }).waitFor();
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll("#form-a input, #form-a select, #form-a textarea")]
+    .filter((x) => x.type !== "hidden" && !x.closest("[hidden]") && !(x.labels && x.labels.length)).length), 0);
   await page.locator('input[name="kategorie"][value="privat"]').check();
   await page.fill('input[name="name_privat"]', "Erika Testname");
   await page.selectOption('select[name="beleg_art"]', "ortskenntnis");
@@ -546,6 +609,10 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
   assert.match(await page.locator("#je-m2").textContent(), /6,25 € je m²/);
   await page.locator('#form-b button[type="submit"]').click();
   assert.match(await page.locator(".fehlerliste").textContent(), /Einwilligung: fehlt/);
+  await page.getByRole("group", { name: "Einwilligung" }).waitFor();
+  await page.getByRole("checkbox", { name: "Ich willige ein." }).waitFor();
+  await page.getByRole("spinbutton", { name: /Nettokaltmiete im Monat/ }).waitFor();
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll("#form-b input, #form-b select")].filter((x) => !(x.labels && x.labels.length)).length), 0);
   assert.deepEqual(await axe(page), []);
   await page.locator('input[name="einwilligung"]').check();
   await page.locator('input[name="erfassungsweg"][value="im_gespraech_mit_team"]').check();
