@@ -78,10 +78,13 @@ def schluessel(datei, druck, passphrase, stadt_json=STADT_JSON, stufe="moderat")
 
 def codes(anzahl, register, druck, stadt_json=STADT_JSON, heute=None):
     heute = heute or date.today()
-    F = json.loads(Path(stadt_json).read_text(encoding="utf-8"))["wohnen_eigentum"]["erfassung"]
+    stadt = json.loads(Path(stadt_json).read_text(encoding="utf-8"))
+    F = stadt["wohnen_eigentum"]["erfassung"]
+    adresse = stadt["projekt"]["site_url"].rstrip("/") + "/erfassen.html"
     aus = einladung.ausgeben(anzahl, register, F["einladung_gueltig_monate"], heute)
     karten = "".join(f"""<div class="karte"><p class="kopf">Einladung zur Erfassung Wohnen und Eigentum</p>
 <p class="code">{c}</p><p>Gültig bis {e['bis'][8:10]}.{e['bis'][5:7]}.{e['bis'][:4]}. Erfasser-ID {eid}.</p>
+<p>Erfassungsseite: <strong>{adresse}</strong></p>
 <p class="klein">Code in der App eingeben, dann diesen Zettel vernichten. Nicht abfotografieren, nicht weitergeben.</p></div>"""
                      for c, eid, e in aus)
     blatt = _druckblatt(Path(druck) / f"einladungscodes_{heute.isoformat()}_{aus[0][1]}.html", f"""<!doctype html><meta charset="utf-8">

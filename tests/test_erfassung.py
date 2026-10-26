@@ -66,6 +66,7 @@ class Erfassung(unittest.TestCase):
             for c, _, _ in aus:
                 self.assertNotIn(c, text)
                 self.assertIn(c, karten.read_text(encoding="utf-8"))
+            self.assertIn("erfassen.html", karten.read_text(encoding="utf-8"))
             self.assertEqual(karten.stat().st_mode & 0o777, 0o600)
             self.assertIn("<svg", blatt.read_text(encoding="utf-8"))
             # außerhalb der beiden Felder unverändert: zurückgesetzt ergibt sich die Datei Zeichen für Zeichen
