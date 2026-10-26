@@ -14,8 +14,11 @@ Aufruf (ARBEIT und SCHLUESSEL außerhalb jedes Git-Repositorys):
   python tools/pruefen.py loeschen   -a ARBEIT -s SCHLUESSEL -p P-1 (ID|--code XXXX-XXXX) --grund TEXT   Widerruf: ganz entfernen
   python tools/pruefen.py widerspruch -a ARBEIT -s SCHLUESSEL -p P-1 GEBAEUDE… --grund TEXT   Eigentum zu den Gebäuden
                                      (und allen Gebäuden derselben Person) löschen, Gebäude auf die Sperrliste
-  python tools/pruefen.py fristen    -a ARBEIT -s SCHLUESSEL -p P-1 [--loeschen]   Einträge nach der Speicherdauer
+  python tools/pruefen.py fristen    -a ARBEIT -s SCHLUESSEL -p P-1 [--loeschen]   Einträge nach der Speicherdauer;
+                                     meldet auch den fälligen Schlüsselwechsel (jährlich)
   python tools/pruefen.py schluessel-wechsel -a ARBEIT -s SCHLUESSEL -p P-1 [--kompromittiert] [--neue-passphrase]
+  python tools/pruefen.py schluessel-ausdruck SCHLUESSEL DRUCK.html    Sicherung auf Papier (QR-Codes und Zeilen)
+  python tools/pruefen.py schluessel-zurueck TEXTDATEI SCHLUESSEL      Schlüsseldatei aus der Papiersicherung
 Die Passphrase der Schlüsseldatei wird abgefragt (docs/datenschutz/schluesselverfahren.md).
 
 Ausgabe: ARBEIT/audit/pruefung_<datum>.tsv, ohne Namen von Privatpersonen und ohne Mietbeträge.
@@ -23,7 +26,7 @@ Ausgabe: ARBEIT/audit/pruefung_<datum>.tsv, ohne Namen von Privatpersonen und oh
 import argparse
 import json
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
@@ -32,6 +35,7 @@ import einladung
 import pruefgruppe as pg
 
 SPEICHERDAUER = pg.STADT["wohnen_eigentum"]["erfassung"]["speicherdauer_monate"]
+WECHSEL = pg.STADT["wohnen_eigentum"]["erfassung"]["schluessel_wechsel_monate"]
 
 FORMAT = "wiz-stadtmonitor-erfassung"
 JP_KATEGORIEN = {k["code"] for k in pg.STADT["wohnen_eigentum"]["kategorien"]} - {"privat", "unklar"}
@@ -282,11 +286,28 @@ def fristen(arbeit, loeschen_=False, heute=None):
     return faellig
 
 
+def wechsel_faellig(schluessel, heute=None):
+    """Regelmäßiger Schlüsselwechsel (schluessel_wechsel_monate); das Datum steht in der Kennung (pg-JJJJMMTT-…)."""
+    heute = heute or date.today()
+    try:
+        erzeugt = datetime.strptime(schluessel.key_id.split("-")[1], "%Y%m%d").date()
+    except (IndexError, ValueError):
+        return True
+    j, m = divmod(erzeugt.year * 12 + erzeugt.month - 1 + WECHSEL, 12)
+    return heute >= date(j, m + 1, min(erzeugt.day, 28))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="befehl", required=True)
     s = sub.add_parser("schluessel")
     s.add_argument("datei")
+    s = sub.add_parser("schluessel-ausdruck", help="Sicherung auf Papier (HTML mit QR-Codes)")
+    s.add_argument("datei")
+    s.add_argument("ziel")
+    s = sub.add_parser("schluessel-zurueck", help="Schlüsseldatei aus der Papiersicherung")
+    s.add_argument("text", help="gescannte oder abgetippte Zeilen als Textdatei")
+    s.add_argument("ziel")
     for name in ("einlesen", "pruefen", "freigeben", "verwerfen", "name", "zusammenfuehren", "loeschen", "widerspruch", "fristen", "schluessel-wechsel"):
         p = sub.add_parser(name)
         p.add_argument("-a", "--arbeit", required=True)
@@ -324,6 +345,12 @@ def main(argv=None):
         print(json.dumps(pg.schluessel_erzeugen(a.datei, pg.passphrase_abfragen(a.datei, neu=True)), ensure_ascii=False))
         print("In config/stadt.json unter wohnen_eigentum.erfassung.schluessel eintragen (nur diesen öffentlichen Teil).", file=sys.stderr)
         return
+    if a.befehl == "schluessel-ausdruck":
+        print(f"Ausdruck {pg.ausdruck(a.datei, a.ziel)}: lokal drucken (kein Netzwerkdrucker mit Speicher), Ausdruck prüfen, Datei danach löschen.")
+        return
+    if a.befehl == "schluessel-zurueck":
+        print(f"Schlüsseldatei {pg.aus_ausdruck(Path(a.text).read_text(encoding='utf-8'), a.ziel)}; mit der Passphrase prüfen, Textdatei löschen.")
+        return
     arbeit = pg.Arbeit(a.arbeit, pg.Schluessel(a.schluessel, pg.passphrase_abfragen(a.schluessel)), a.pruefer)
     if a.befehl == "einlesen":
         if not a.register and not (arbeit.pfad / "einladungen.tsv").exists():
@@ -351,6 +378,8 @@ def main(argv=None):
     elif a.befehl == "fristen":
         f = fristen(arbeit, a.loeschen)
         print(f"{len(f)} Einträge älter als {SPEICHERDAUER} Monate" + (" gelöscht" if a.loeschen else " (mit --loeschen löschen)"))
+        if wechsel_faellig(arbeit.schl):
+            print(f"Schlüsselwechsel fällig (alle {WECHSEL} Monate): schluessel-wechsel, danach neue Papiersicherung.")
     elif a.befehl == "schluessel-wechsel":
         neu = schluessel_wechsel(arbeit, a.kompromittiert, pg.passphrase_abfragen(a.schluessel, neu=True) if a.neue_passphrase else None)
         print(json.dumps(neu, ensure_ascii=False))

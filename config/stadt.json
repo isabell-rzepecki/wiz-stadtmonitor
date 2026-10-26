@@ -1272,6 +1272,7 @@
       "app_version": "0.4.2-w4",
       "speicherdauer_monate": 24,
       "einladung_gueltig_monate": 12,
+      "schluessel_wechsel_monate": 12,
       "einladungen": [],
       "schluessel": null,
       "einwilligung": {

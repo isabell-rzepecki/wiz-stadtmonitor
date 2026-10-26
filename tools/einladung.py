@@ -58,7 +58,10 @@ def bis_datum(ab: date, monate: int) -> str:
 
 def register_lesen(pfad):
     p = Path(pfad)
-    return list(csv.DictReader(p.open(encoding="utf-8"), delimiter="\t")) if p.exists() else []
+    if not p.exists():
+        return []
+    with p.open(encoding="utf-8") as f:
+        return list(csv.DictReader(f, delimiter="\t"))
 
 
 def register_schreiben(pfad, zeilen):

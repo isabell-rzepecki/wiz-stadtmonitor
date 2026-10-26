@@ -247,6 +247,34 @@ class Pruefgruppe(unittest.TestCase):
         self.assertEqual(n, 0)
         self.assertIn("gesperrter Schlüssel", zeilen[0][2])
 
+    def test_papiersicherung_und_wechselrhythmus(self):
+        # Ausdruck: Datei bleibt mit der Passphrase geschützt; Zeilen mit Prüfziffern, QR-Codes mit denselben Zeilen
+        for _ in range(3):  # einige frühere Schlüssel, damit mehrere QR-Codes entstehen
+            self.schl.wechseln(stufe="interaktiv")
+        html = pg.ausdruck(self.schl_datei, self.tmp / "druck" / "sicherung.html")
+        text = html.read_text(encoding="utf-8")
+        self.assertEqual(html.stat().st_mode & 0o777, 0o600)
+        self.assertIn("<svg", text)
+        self.assertNotIn("secret_key", text)
+        zeilen, _ = pg.ausdruck_zeilen(self.schl_datei)
+        self.assertGreater(len(zeilen), 10)
+        # abgetippt mit Leerzeilen und fremdem Text drumherum: gleiche Datei zurück, mit Passphrase nutzbar
+        ziel = pg.aus_ausdruck("Sicherung\n\n" + "\n".join(zeilen) + "\nEnde", self.tmp / "zurueck" / "pg.json")
+        self.assertEqual(json.loads(ziel.read_text(encoding="utf-8")), json.loads(self.schl_datei.read_text(encoding="utf-8")))
+        self.assertEqual(pg.Schluessel(ziel, PW).key_id, self.schl.key_id)
+        # Tippfehler, fehlende Zeile, kein Überschreiben, nie im Repository
+        tippfehler = zeilen[:3] + [zeilen[3][:6] + ("A" if zeilen[3][6] != "A" else "B") + zeilen[3][7:]] + zeilen[4:]
+        for kaputt, ort in (("\n".join(tippfehler), "a.json"), ("\n".join(zeilen[:2] + zeilen[3:]), "b.json"),
+                            ("\n".join(zeilen), "zurueck/pg.json")):
+            with self.assertRaises(pg.Abbruch):
+                pg.aus_ausdruck(kaputt, self.tmp / ort)
+        with self.assertRaises(pg.Abbruch):
+            pg.ausdruck(self.schl_datei, config.ROOT / "sicherung.html")
+        # jährlicher Wechsel: fällig ab 12 Monaten nach dem Datum in der Kennung
+        tag = pruefen.datetime.strptime(self.schl.key_id.split("-")[1], "%Y%m%d").date()
+        self.assertFalse(pruefen.wechsel_faellig(self.schl, heute=tag))
+        self.assertTrue(pruefen.wechsel_faellig(self.schl, heute=tag.replace(year=tag.year + 1, day=min(tag.day, 28))))
+
     def test_sperre_gegen_sensible_ausgaben(self):
         gut = {"zellen": [{"ortsbezirk": "x", "n": 5, "median": 6.0, "p25": 5.0, "p75": 7.0}, {"ortsbezirk": "y", "n": None, "hinweis": "zu wenige Angaben"}],
                "juristische_personen": [{"name": "A eG", "n": 5, "gebaeude": 2, "median": 6.0}]}
