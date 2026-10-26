@@ -1265,7 +1265,31 @@
         "begriff": "Mindestzahl",
         "text": "Eine Zelle (etwa Ortsbezirk und Baujahrklasse) erscheint erst ab 5 Angaben, ein Vergleich je Unternehmen erst ab 5 Angaben aus mindestens 2 Gebäuden. Darunter steht „zu wenige Angaben“; so lassen sich einzelne Mietende nicht wiedererkennen."
       }
-    ]
+    ],
+    "erfassung": {
+      "_hinweis": "Erfassungs-App erfassen.html (W4), nicht öffentlich verlinkt. Zugang über Einladungscodes: hier stehen nur deren SHA-256-Hashes (tools/einladung.py); Widerruf durch Entfernen des Hashes (Issue 30). Ohne öffentlichen Schlüssel der Prüfgruppe (Issue 29) speichert die App nichts. Die App kennt keinen privaten Schlüssel.",
+      "app_version": "0.4.2-w4",
+      "einladungen": [],
+      "schluessel": null,
+      "einwilligung": {
+        "version": "entwurf-2026-10-26",
+        "status": "Entwurf, rechtlich noch nicht geprüft (Issue 28)",
+        "text": "Ich gebe die Miete meiner Wohnung freiwillig an. Ich willige ein, dass meine Angabe (Gebäude, Nettokaltmiete, Wohnflächen- und Baujahrklasse, Jahr des Vertragsbeginns und der letzten Erhöhung, Ausstattung) verschlüsselt an die Prüfgruppe geht und dort geprüft wird. Veröffentlicht werden nur zusammengefasste Werte ab 5 Angaben, nie meine einzelne Angabe. Ich kann die Einwilligung jederzeit widerrufen; dann wird meine Angabe gelöscht."
+      },
+      "datenschutz": {
+        "verantwortlich": null,
+        "kontakt_widerspruch": null,
+        "status": "Entwurf; verantwortliche Stelle und Kontakt noch nicht benannt (Issue 28)",
+        "punkte": [
+          "Zweck: eine Vergleichsgrundlage für tatsächlich gezahlte Mieten, weil es keinen Mietspiegel gibt.",
+          "Eigentum und Vermietung erfasst das Team; Mietangaben machen Mietende freiwillig mit Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Beides wird getrennt erhoben, gespeichert und geprüft.",
+          "Jeder Eintrag wird beim Speichern im Gerät mit dem öffentlichen Schlüssel der Prüfgruppe verschlüsselt. Das Gerät kann ihn danach selbst nicht mehr lesen.",
+          "Es gibt keinen automatischen Upload. Die Einträge verlassen das Gerät nur als verschlüsselte Exportdatei, die Sie selbst weitergeben.",
+          "Namen von Privatpersonen werden nie veröffentlicht; private Vermieter:innen erhalten nur einen internen Schlüssel. Keine Fotos, keine Klingelschilder, keine Namen aus Grundbuchauszügen Dritter.",
+          "Veröffentlicht werden nur zusammengefasste Werte nach festen Mindestzahlen."
+        ]
+      }
+    }
   },
   "gebaeude": {
     "_hinweis": "Gebäude für die Seite „Wohnen und Eigentum“: alle Grundrisse aus ALKIS vereinfacht (Schlüssel: ALKIS-OID), Höhe aus den 3D-Gebäudemodellen LoD2 (gebaeude3d). Zuordnung über die OID (LoD2 trägt die 16-stellige AdV-OID, ALKIS vereinfacht dieselbe mit dem Zusatz „BL“), sonst räumlich (Punkt im LoD2-Grundriss liegt im ALKIS-Grundriss); ohne Treffer Standardhöhe, gekennzeichnet als geschätzt.",

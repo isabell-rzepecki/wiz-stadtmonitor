@@ -105,4 +105,6 @@ Weitere Lizenzen:
 - Leaflet: BSD-2
 - Leaflet.markercluster: MIT
 - MapLibre GL JS 4.7.1 (CSP-Fassung, `site/vendor/maplibre/`): BSD-3
+- PMTiles 4.4.1 (`site/vendor/pmtiles/`): BSD-3
+- libsodium.js 0.8.4 (`site/vendor/libsodium/`, Verschlüsselung in der Erfassung): ISC
 - Schriften: SIL OFL 1.1

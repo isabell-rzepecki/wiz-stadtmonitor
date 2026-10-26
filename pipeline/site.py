@@ -13,6 +13,10 @@ def build(out=config.SITE_OUT, mit_daten=True):
     shutil.copytree(config.SITE_SRC, out)
     shutil.copy2(config.STADT_JSON, out / "stadt.json")
     namensnennungen(out / "namensnennungen.json")
+    # Schemata der Erfassung (Übergabe v0.4.2): eine Quelle für die Prüfung im Gerät und die Prüfskripte
+    (out / "schemas").mkdir()
+    for name, quelle in (("erfassung_eigentum.json", "schema_erfassung_eigentum.json"), ("mietangabe.json", "schema_mietangabe.json")):
+        shutil.copy2(config.ROOT / "docs" / "uebergabe-v0.4.2" / quelle, out / "schemas" / name)
     # Fehlerseite: GitHub Pages liefert sie für jeden Pfad aus, ein relativer Link führte dort ins Leere
     p404 = out / "404.html"
     if p404.exists() and config.SITE_URL:
