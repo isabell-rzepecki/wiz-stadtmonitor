@@ -1,6 +1,6 @@
 # Lösch- und Widerspruchsverfahren
 
-> Entwurf vom 26.10.2026, keine Rechtsberatung (Issue 28). Kontakt: post@wiz-o-mat.de (Funktionsadresse, benannt am 26.10.2026). Eintrag in `config/stadt.json` (`wohnen_eigentum.erfassung.datenschutz.kontakt_widerspruch`); Datenschutzseite und App übernehmen ihn beim nächsten Veröffentlichen.
+> Stand 26.10.2026, bestätigt durch die verantwortliche Stelle (Issue 28). Keine Rechtsberatung. Kontakt: post@wiz-o-mat.de (Funktionsadresse, benannt am 26.10.2026). Eintrag in `config/stadt.json` (`wohnen_eigentum.erfassung.datenschutz.kontakt_widerspruch`); Datenschutzseite und App übernehmen ihn beim nächsten Veröffentlichen.
 
 ## Speicherdauer
 
@@ -10,7 +10,7 @@
 - **Exportdateien (.bin):** Nach dem Einlesen löscht die Prüfgruppe sie sofort; der Inhalt liegt dann nur noch im versiegelten Bestand.
 - **Im Gerät der erfassenden Person:** Exportierte Einträge löschen, sobald die Prüfgruppe den Eingang bestätigt hat („Exportierte löschen“).
 - **Miete und Wohnfläche in m²:** beim Einlesen zu €/m² verrechnet und verworfen; im Bestand bleibt nur der Preis je m².
-- **Zugriffsprotokoll** (`namenzugriff.tsv`): [Leerstelle: Aufbewahrung, Vorschlag 24 Monate].
+- **Zugriffsprotokoll** (`namenzugriff.tsv`): 24 Monate wie die Rohdaten (festgelegt am 26.10.2026); `fristen --loeschen` entfernt ältere Zeilen.
 
 ## Widerruf einer Mietangabe (Art. 7 Abs. 3 DSGVO)
 

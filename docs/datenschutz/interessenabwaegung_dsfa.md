@@ -1,6 +1,6 @@
 # Interessenabwägung und Vorprüfung DSFA: Erfassung von Eigentum und Vermietung
 
-> Entwurf vom 26.10.2026, keine Rechtsberatung. Vor der ersten echten Erfassung von der verantwortlichen Stelle zu prüfen und zu unterzeichnen (Issue 28).
+> Stand 26.10.2026, bestätigt durch die verantwortliche Stelle am 26.10.2026 (Issue 28). Keine Rechtsberatung.
 
 Verantwortliche Stelle: Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen; E-Mail post@wiz-o-mat.de (benannt am 26.10.2026; Quelle für Seite und App: `config/stadt.json`)
 
@@ -26,7 +26,7 @@ Verantwortliche Stelle: Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen;
 - Freigabe nach dem Vier-Augen-Prinzip; Speicherdauer 24 Monate (Löschverfahren).
 - Widerspruch jederzeit (Art. 21), siehe Löschverfahren.
 
-**Ergebnis (Vorschlag).** Mit diesen Maßnahmen überwiegt das Interesse an einer Vergleichsgrundlage, sofern die Informationspflicht (Art. 14) erfüllt und der Widerspruch einfach möglich ist. Die Entscheidung trifft die verantwortliche Stelle.
+**Ergebnis.** Mit diesen Maßnahmen überwiegt das Interesse an einer Vergleichsgrundlage, sofern die Informationspflicht (Art. 14) erfüllt und der Widerspruch einfach möglich ist. Die verantwortliche Stelle hat das am 26.10.2026 bestätigt.
 
 ## 2. Vorprüfung Datenschutz-Folgenabschätzung (Art. 35 DSGVO)
 
@@ -44,6 +44,6 @@ Kriterien nach den Leitlinien der Datenschutzbehörden (WP 248); eine DSFA gilt 
 | Neue Technologien | nein | nein |
 | Hindert an Rechtsausübung | nein | nein |
 
-**Ergebnis (Vorschlag).** Zwei oder mehr Kriterien treffen zumindest teilweise zu. Empfohlen wird eine kurze DSFA vor dem Start, mit den Schutzmaßnahmen oben als Kern.
+**Ergebnis.** Zwei oder mehr Kriterien treffen zumindest teilweise zu. Empfohlen wird eine kurze DSFA vor dem Start, mit den Schutzmaßnahmen oben als Kern.
 
-**Durchgeführt:** `dsfa.md` (26.10.2026). Restrisiko gering, keine Konsultation nach Art. 36; Freigabe durch die verantwortliche Stelle offen.
+**Durchgeführt:** `dsfa.md` (26.10.2026). Restrisiko gering, keine Konsultation nach Art. 36; bestätigt durch die verantwortliche Stelle am 26.10.2026.

@@ -1,6 +1,6 @@
 # Datenschutz-Folgenabschätzung (Art. 35 DSGVO): Erfassung Wohnen und Eigentum
 
-> Inhaltlich abgeschlossen am 26.10.2026 (Issue 28). Keine Rechtsberatung. Wirksam erst mit der Freigabe durch die verantwortliche Stelle (Abschnitt 7).
+> Abgeschlossen und bestätigt am 26.10.2026 durch die verantwortliche Stelle (Abschnitt 7, Issue 28). Keine Rechtsberatung.
 > Vorprüfung: `interessenabwaegung_dsfa.md`, Abschnitt 2. Verarbeitungen: `verarbeitungsverzeichnis.md` (V1, V2).
 
 ## 1. Gegenstand und Methode
@@ -62,7 +62,7 @@ Nach den Maßnahmen ist das Restrisiko für alle Risiken **gering**, sobald die 
 - [x] Verantwortliche Stelle mit Anschrift und Funktionsadresse in `config/stadt.json` (benannt am 26.10.2026)
 - [x] Form der Information nach Art. 14 festgelegt: öffentlich nach Abs. 5 lit. b, Datenschutzseite und Aushang an festgelegten Orten (`information_vermieter.md`, `site/aushang.html`)
 - [x] Einwilligungstext abgeschlossen: Fassung 2026-10-26-v3, geprüft gegen Art. 4 Nr. 11, 7 und 13 DSGVO (Zweck, Stelle, Datenkategorien, Speicherdauer, Freiwilligkeit, Widerruf mit Kontakt, Verweis auf Rechte); keine anwaltliche Prüfung
-- [ ] Interessenabwägung und Verarbeitungsverzeichnis von der Stelle bestätigen lassen
+- [x] Interessenabwägung und Verarbeitungsverzeichnis von der Stelle bestätigt (26.10.2026)
 - [ ] Inbetriebnahme nach Issue 53 (Prüfgruppe, Schlüssel, Ausgabestelle, Codes, Generalprobe)
 
 ## 7. Freigabe
@@ -71,5 +71,5 @@ Nach den Maßnahmen ist das Restrisiko für alle Risiken **gering**, sobald die 
 |---|---|
 | Verantwortliche Stelle | Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen; E-Mail post@wiz-o-mat.de |
 | Datenschutzbeauftragte:r angehört (falls benannt, Art. 35 Abs. 2) | nicht benannt (§ 38 BDSG) |
-| Ergebnis bestätigt am | [Leerstelle] |
-| Unterschrift | [Leerstelle] |
+| Ergebnis bestätigt am | 26.10.2026, Ergebnis unverändert (Restrisiko gering, keine Konsultation nach Art. 36) |
+| Unterschrift | elektronisch bestätigt durch Isabell Rzepecki, Issue 28 (26.10.2026); für einen Ausdruck: ______________________ |

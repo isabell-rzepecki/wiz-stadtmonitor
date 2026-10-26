@@ -1,6 +1,6 @@
 # Information für Eigentümer:innen und Vermieter:innen (Art. 14 DSGVO)
 
-> Entwurf vom 26.10.2026, keine Rechtsberatung (Issue 28). Form festgelegt am 26.10.2026: öffentliche Information nach Art. 14 Abs. 5 lit. b DSGVO, siehe unten. Druckfassung: `site/aushang.html` (eine A4-Seite, Stelle und Kontakt aus `stadt.json`).
+> Stand 26.10.2026, bestätigt durch die verantwortliche Stelle (Issue 28). Keine Rechtsberatung. Form festgelegt am 26.10.2026: öffentliche Information nach Art. 14 Abs. 5 lit. b DSGVO, siehe unten. Druckfassung: `site/aushang.html` (eine A4-Seite, Stelle und Kontakt aus `stadt.json`).
 
 **Wer verarbeitet?** Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen; E-Mail post@wiz-o-mat.de
 

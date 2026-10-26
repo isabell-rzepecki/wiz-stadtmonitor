@@ -1,6 +1,6 @@
 # Verzeichnis von Verarbeitungstätigkeiten (Art. 30 DSGVO)
 
-> Entwurf vom 26.10.2026, keine Rechtsberatung (Issue 28).
+> Stand 26.10.2026, bestätigt durch die verantwortliche Stelle am 26.10.2026 (Issue 28). Keine Rechtsberatung.
 
 Verantwortliche Stelle: Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen; E-Mail post@wiz-o-mat.de (benannt am 26.10.2026). Datenschutzbeauftragte:r: nicht benannt; nach § 38 BDSG nicht erforderlich, solange weniger als 20 Personen ständig mit der Verarbeitung befasst sind.
 

@@ -294,7 +294,18 @@ def fristen(arbeit, loeschen_=False, heute=None):
             arbeit.eintraege.pop(i)
             arbeit.verlauf(f"gelöscht (Speicherdauer {SPEICHERDAUER} Monate)", i)
         arbeit.speichern()
+        protokoll_kuerzen(arbeit.pfad / "namenzugriff.tsv", grenze)
     return faellig
+
+
+def protokoll_kuerzen(pfad, grenze):
+    """Zugriffsprotokoll: Zeilen älter als die Speicherdauer entfernen (Löschverfahren, Festlegung 26.10.2026)."""
+    if not pfad.exists():
+        return 0
+    zeilen = pfad.read_text(encoding="utf-8").splitlines()
+    bleiben = [zeilen[0]] + [z for z in zeilen[1:] if z[:10] >= grenze.isoformat()]
+    pfad.write_text("\n".join(bleiben) + "\n", encoding="utf-8")
+    return len(zeilen) - len(bleiben)
 
 
 def wechsel_faellig(schluessel, heute=None):
