@@ -1,6 +1,6 @@
 # Information für Eigentümer:innen und Vermieter:innen (Art. 14 DSGVO)
 
-> Entwurf vom 26.10.2026, keine Rechtsberatung (Issue 28). Veröffentlichung: Datenschutzseite (Abschnitt „Wohnen und Eigentum“) und als Aushang oder Flyer [Leerstelle: Ort, etwa Aushang bei Initiativen, Amtsblatt-Anzeige].
+> Entwurf vom 26.10.2026, keine Rechtsberatung (Issue 28). Form festgelegt am 26.10.2026: öffentliche Information nach Art. 14 Abs. 5 lit. b DSGVO, siehe unten. Druckfassung: `site/aushang.html` (eine A4-Seite, Stelle und Kontakt aus `stadt.json`).
 
 **Wer verarbeitet?** [Leerstelle: verantwortliche Stelle mit Anschrift und Kontakt]
 
@@ -10,7 +10,7 @@
 
 **Welche Daten über Sie, woher?**
 - Kategorie und Gebäude stammen aus öffentlichen Belegen (Handelsregister, Bekanntmachungen, Bauschild, Presse, Websites) und aus Ortskenntnis.
-- Bei Privatpersonen kann der Name erfasst sein. Er ist nur verschlüsselt gespeichert und dient allein der Prüfung und dem Bündeln von Gebäuden derselben Person.
+- Namen von Privatpersonen werden derzeit nicht erfasst (`privat_namen_aktiv: false`). Wird das eingeschaltet: Der Name ist nur verschlüsselt gespeichert und dient allein der Prüfung und dem Bündeln von Gebäuden derselben Person; Aushang und Datenschutzseite passen sich an.
 
 **Was wird veröffentlicht?**
 - Namen von Privatpersonen nie.
@@ -28,4 +28,18 @@
 
 Kontakt für Widerspruch: [Leerstelle: Funktionsadresse der Stelle, nicht die private Adresse einer Person]
 
-**Hinweis zur Form (zu entscheiden).** Eine Einzelbenachrichtigung jeder Person setzt voraus, ihre Anschrift zu ermitteln, also weitere Daten zu erheben. Zu prüfen ist, ob stattdessen öffentliche Information nach Art. 14 Abs. 5 lit. b DSGVO genügt (Datenschutzseite, Aushang). Das ist in der Interessenabwägung zu begründen.
+## Form der Information (Art. 14 Abs. 5 lit. b DSGVO)
+
+**Festlegung:** keine Einzelbenachrichtigung, sondern öffentliche Information.
+
+**Begründung:**
+- Eine Einzelbenachrichtigung setzte voraus, Namen und Anschriften der Eigentümer:innen zu ermitteln. Das Grundbuch ist dafür nicht zugänglich; es wären zusätzliche personenbezogene Daten zu erheben. Das widerspräche der Datenminimierung und wäre unverhältnismäßig.
+- Erfasst wird nur die Kategorie je Gebäude; Namen von Privatpersonen derzeit nicht. Veröffentlicht wird nichts je Privatperson.
+
+**Geeignete Maßnahmen** (Art. 14 Abs. 5 lit. b Satz 2):
+1. Information auf der Datenschutzseite, Abschnitt „Wohnen und Eigentum“, dauerhaft.
+2. Aushang (`aushang.html`, A4 mit QR-Code) vor Beginn der Erfassung, etwa bei Initiativen, Mieterverein, Stadtbibliothek und Bürgerhäusern. [Leerstelle: Orte, festgelegt von der Stelle]
+3. Hinweis bei Beginn der Erfassung in einer öffentlichen Bekanntmachung oder Pressemitteilung der Stelle.
+4. Auf Nachfrage zeigen Erfassende den Datenschutzhinweis der App.
+
+Die Information wird vor Beginn der Erfassung gegeben, also innerhalb der Frist des Art. 14 Abs. 3 lit. a.

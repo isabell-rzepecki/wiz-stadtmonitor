@@ -47,7 +47,7 @@ E = Eintrittswahrscheinlichkeit, S = Schwere; jeweils vor den Maßnahmen, danach
 | R3 | Unbefugte greifen auf den Bestand zu (Diebstahl, Schlüssel) → Offenlegung von Mieten und Kategorien | überschaubar / substanziell → **Risiko** | Bestand und Exporte nur versiegelt. Privater Schlüssel nur mit Passphrase nutzbar (Argon2id). Papiersicherung im Tresor, Passphrase getrennt. Jährlicher Wechsel, bei Verdacht sofort. Meldewege nach Art. 33 und 34 (`schluesselverfahren.md`) | gering |
 | R4 | Befugte missbrauchen ihren Zugang (Prüfgruppe, Erfassende) → Profilbildung, Zweckentfremdung | überschaubar / substanziell → **Risiko** | Vier-Augen-Freigabe; Zugriffsprotokoll, das eine Person ohne Schlüssel durchsieht. Freitext ohne Namen, Kontaktdaten und Hausnummern (App und Einlesen). Namensfeld abgeschaltet. Codes widerrufbar und befristet | gering |
 | R5 | Ein Gerät mit Erfassungen geht verloren → Offenlegung | überschaubar / überschaubar → geringes Risiko | Im Gerät liegt alles versiegelt; lesbar sind nur Gebäudekennungen der Eigentumserfassung und die pseudonyme ID. Nach bestätigtem Eingang „Exportierte löschen“ | gering |
-| R6 | Einwilligung unwirksam oder Information fehlt → Rechte nicht ausübbar | substanziell / überschaubar → **Risiko** | Speichern ist gesperrt, solange keine Stelle benannt ist. Einwilligungstext versioniert, Zeitpunkt gespeichert. Datenschutzhinweis in der App, Widerrufscode. Offen: Form der Information nach Art. 14 | gering, sobald Abschnitt 6 erfüllt ist |
+| R6 | Einwilligung unwirksam oder Information fehlt → Rechte nicht ausübbar | substanziell / überschaubar → **Risiko** | Speichern ist gesperrt, solange keine Stelle benannt ist. Einwilligungstext versioniert, Zeitpunkt gespeichert. Datenschutzhinweis in der App, Widerrufscode. Information nach Art. 14 Abs. 5 lit. b: Datenschutzseite, Aushang, Hinweis bei Beginn | gering, sobald Abschnitt 6 erfüllt ist |
 | R7 | Eigentum wird falsch zugeordnet → falsche öffentliche Angabe | überschaubar / geringfügig → geringes Risiko | Beleg und Sicherheit, zwei Freigaben, Konfliktprüfung. Öffentlich nur juristische Personen; Widerspruch und Korrektur möglich | gering |
 | R8 | Rohdaten gelangen in ein Git-Repository → dauerhafte Veröffentlichung | überschaubar / groß → **Risiko** | Werkzeuge verweigern Pfade in Git. Sperre im Pre-Commit-Hook und in der CI. `.gitignore`. Die Generalprobe arbeitet nur außerhalb des Repositorys | gering |
 
@@ -60,7 +60,7 @@ Nach den Maßnahmen ist das Restrisiko für alle Risiken **gering**, sobald die 
 ## 6. Voraussetzungen vor der ersten echten Erfassung
 
 - [ ] Verantwortliche Stelle mit Anschrift und Funktionsadresse in `config/stadt.json` (Issue 28)
-- [ ] Form der Information nach Art. 14 festlegen (Datenschutzseite allein oder zusätzlich ein Aushang)
+- [x] Form der Information nach Art. 14 festgelegt: öffentlich nach Abs. 5 lit. b, Datenschutzseite und Aushang (`information_vermieter.md`, `site/aushang.html`); offen sind nur die Orte des Aushangs
 - [ ] Einwilligungstext rechtlich prüfen lassen und als endgültige Version kennzeichnen
 - [ ] Interessenabwägung und Verarbeitungsverzeichnis von der Stelle bestätigen lassen
 - [ ] Inbetriebnahme nach Issue 53 (Prüfgruppe, Schlüssel, Ausgabestelle, Codes, Generalprobe)
