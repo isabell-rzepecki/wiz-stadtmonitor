@@ -96,7 +96,13 @@ class Erfassung(unittest.TestCase):
             self.assertEqual(set(F["schluessel"]), {"key_id", "alg", "public_key"})
         text = json.dumps(config.STADT["wohnen_eigentum"])
         self.assertNotRegex(text, r"(?i)secret|private_key|privat_schluessel")
-        self.assertTrue(F["einwilligung"]["version"])
+        W = F["einwilligung"]
+        self.assertTrue(W["version"])
+        # Fassung v3: abgeschlossen, Stelle und Kontakt als Platzhalter (die App setzt sie aus dem Datenschutzblock ein)
+        self.assertNotIn("entwurf", W["version"].lower())
+        self.assertIn("keine anwaltliche Prüfung", W["status"])
+        for teil in ("{stelle}", "{kontakt}", "Zweck", "Widerrufscode", "keine Nachteile", "24 Monate", "Aufsichtsbehörde"):
+            self.assertIn(teil, W["text"])
 
     def test_nicht_oeffentlich_verlinkt(self):
         for name in ("index.html", "app.js", "wohnen.html", "wohnen.js", "wohnen-module.js"):

@@ -19,7 +19,7 @@ Verantwortliche Stelle: [Leerstelle: Name, Anschrift, Kontakt]; Datenschutzbeauf
 ## V2 Freiwillige Mietangaben
 
 - **Zweck:** wie V1, Vergleich tatsächlich gezahlter Mieten.
-- **Rechtsgrundlage:** Einwilligung, Art. 6 Abs. 1 lit. a DSGVO (versionierter Text, Zeitpunkt wird gespeichert).
+- **Rechtsgrundlage:** Einwilligung, Art. 6 Abs. 1 lit. a DSGVO (versionierter Text, Fassung 2026-10-26-v3 in `config/stadt.json`; Version und Zeitpunkt werden gespeichert).
 - **Betroffene:** Mietende.
 - **Daten:** Gebäudekennung, Nettokaltmiete und Wohnfläche (m²; beim Einlesen zu €/m² verrechnet und verworfen), Flächenklasse, Baujahrklasse, Vertragsbeginn, letzte Erhöhung, Ausstattung, optional Vermieter (nur juristische Person), Einwilligung. Keine Namen, keine Wohnungsnummer, kein Stockwerk.
 - **Empfänger:** Prüfgruppe. Öffentlich nur der Median ab 5 Angaben je Ortsbezirk und Baujahrklasse, die Spanne ab 10, gerundet auf 0,10 €; je Unternehmen ab 5 Angaben aus 2 Gebäuden.

@@ -336,15 +336,19 @@
       function formularB(p) {
         titel("Mietangabe");
         const W = F.einwilligung;
+        // Stelle und Kontakt aus stadt.json in den versionierten Text; ohne Stelle speichert die App ohnehin nicht
+        const stelleName = (F.datenschutz.verantwortlich || "").split("\n")[0] || "die verantwortliche Stelle (noch nicht benannt)";
+        const wText = W.text.replace("{stelle}", stelleName).replace("{kontakt}", F.datenschutz.kontakt_widerspruch || "der Kontaktadresse im Datenschutzhinweis");
         inhalt.innerHTML = `${gebaeudeKopf(p)}<form id="form-b" novalidate>
           <div class="fehlerliste" tabindex="-1" role="alert" hidden></div>
-          <fieldset class="einwilligung"><legend>Einwilligung</legend><p>${esc(W.text)}</p><p class="meta">Fassung ${esc(W.version)} · ${esc(W.status)}</p>
+          <fieldset class="einwilligung"><legend>Einwilligung</legend><p>${esc(wText)}</p>
+            <p class="meta">Fassung ${esc(W.version)} · ${esc(W.status)} · <button type="button" class="link-btn" id="zu-datenschutz">Datenschutzhinweis öffnen</button></p>
             <label class="wahlknopf"><input type="checkbox" name="einwilligung" value="ja"> <span>Ich willige ein.</span></label></fieldset>
           <fieldset class="kacheln klein"><legend>Wer füllt aus?</legend>${auswahl("erfassungsweg", { selbst: "Mieter:in selbst", im_gespraech_mit_team: "im Gespräch mit dem Team" }, "selbst")}</fieldset>
           <p class="meta">Keine Wohnungsnummer, kein Stockwerk, keine Namen von Mietenden.</p>
           <label class="feld">Nettokaltmiete im Monat (€) <input name="nettokalt_eur" type="number" inputmode="decimal" min="50" max="5000" step="0.01" required></label>
-          <label class="feld">Wohnfläche in m² <span class="meta">(optional; nur für den Preis je m², bleibt verschlüsselt)</span>
-            <input name="wohnflaeche_m2" type="number" inputmode="decimal" min="10" max="400" step="0.1"></label>
+          <label class="feld">Wohnfläche in m² <span class="meta">(nur für den Preis je m²; danach gelöscht)</span>
+            <input name="wohnflaeche_m2" type="number" inputmode="decimal" min="10" max="400" step="0.1" required></label>
           <label class="feld">Wohnfläche <select name="wohnflaeche_klasse" required><option value="">bitte wählen</option>
             ${FLAECHE.map(([, v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("")}</select></label>
           <p class="meta" id="je-m2" aria-live="polite"></p>
@@ -359,6 +363,7 @@
             <button class="link-btn" type="button" id="abbrechen">Abbrechen</button></p></form>`;
         const form = $("#form-b");
         let zeitpunkt = null;
+        $("#zu-datenschutz").addEventListener("click", () => $("#datenschutz").showModal());
         form.elements.einwilligung.addEventListener("change", (e) => { zeitpunkt = e.target.checked ? new Date().toISOString() : null; });
         form.addEventListener("input", () => {
           const m2 = parseFloat(form.elements.wohnflaeche_m2.value), eur = parseFloat(form.elements.nettokalt_eur.value);

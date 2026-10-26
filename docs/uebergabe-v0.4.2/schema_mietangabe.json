@@ -8,6 +8,7 @@
     "angabe_id",
     "gebaeude_id",
     "nettokalt_eur",
+    "wohnflaeche_m2",
     "wohnflaeche_klasse",
     "vertragsbeginn_jahr",
     "einwilligung",

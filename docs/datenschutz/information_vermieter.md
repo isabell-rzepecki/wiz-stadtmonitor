@@ -38,7 +38,12 @@ Kontakt für Widerspruch: [Leerstelle: Funktionsadresse der Stelle, nicht die pr
 
 **Geeignete Maßnahmen** (Art. 14 Abs. 5 lit. b Satz 2):
 1. Information auf der Datenschutzseite, Abschnitt „Wohnen und Eigentum“, dauerhaft.
-2. Aushang (`aushang.html`, A4 mit QR-Code) vor Beginn der Erfassung, etwa bei Initiativen, Mieterverein, Stadtbibliothek und Bürgerhäusern. [Leerstelle: Orte, festgelegt von der Stelle]
+2. Aushang (`aushang.html`, A4 mit QR-Code) vor Beginn der Erfassung, festgelegt am 26.10.2026:
+   - Stadtbibliothek und Bürgerbüro (mit Erlaubnis der Stadt);
+   - Dorfgemeinschaftshäuser der Ortsteile, damit alle Ortsbezirke erreicht werden;
+   - Mieterberatung oder Mieterverein der Region, Initiativen und schwarze Bretter am Universitätsstandort.
+
+   Der Aushang hängt während der ganzen Erfassung und wird nach einer Änderung der Stelle oder des Textes neu gedruckt (Datum auf dem Ausdruck).
 3. Hinweis bei Beginn der Erfassung in einer öffentlichen Bekanntmachung oder Pressemitteilung der Stelle.
 4. Auf Nachfrage zeigen Erfassende den Datenschutzhinweis der App.
 
