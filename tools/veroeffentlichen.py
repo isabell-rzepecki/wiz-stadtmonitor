@@ -199,7 +199,7 @@ def main(argv=None):
     ap.add_argument("-p", "--pruefer", required=True)
     ap.add_argument("--ziel", default=str(pg.ROOT))
     a = ap.parse_args(argv)
-    aus = veroeffentlichen(pg.Arbeit(a.arbeit, pg.Schluessel(a.schluessel), a.pruefer), a.ziel)
+    aus = veroeffentlichen(pg.Arbeit(a.arbeit, pg.Schluessel(a.schluessel, pg.passphrase_abfragen(a.schluessel)), a.pruefer), a.ziel)
     print("geschrieben:", ", ".join(aus), "– danach: python -m pipeline wohnen")
 
 

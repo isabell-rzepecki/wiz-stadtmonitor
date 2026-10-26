@@ -19,7 +19,11 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
+import nacl.exceptions
+import nacl.pwhash
+import nacl.utils
 from nacl.public import PrivateKey, PublicKey, SealedBox
+from nacl.secret import SecretBox
 
 ROOT = Path(__file__).resolve().parent.parent
 ALG = "libsodium-sealedbox-x25519"
@@ -44,32 +48,122 @@ def ausserhalb_git(pfad):
 
 
 # --- Schlüssel ---------------------------------------------------------------------------------------------------
-def schluessel_erzeugen(datei):
-    """Neues Schlüsselpaar; die Datei (mit privatem Schlüssel) nur für die Schlüsselinhaber:innen. Gibt den öffentlichen Teil zurück."""
-    datei = ausserhalb_git(datei)
-    if datei.exists():
-        raise Abbruch(f"{datei} gibt es schon; ein Schlüssel wird nie überschrieben.")
+STUFEN = {"moderat": (nacl.pwhash.argon2id.OPSLIMIT_MODERATE, nacl.pwhash.argon2id.MEMLIMIT_MODERATE),
+          "interaktiv": (nacl.pwhash.argon2id.OPSLIMIT_INTERACTIVE, nacl.pwhash.argon2id.MEMLIMIT_INTERACTIVE)}  # interaktiv nur für Tests
+
+
+def _schuetzen(geheim: bytes, passphrase, stufe="moderat"):
+    """Privaten Schlüssel mit der Passphrase verschlüsseln (Argon2id, XSalsa20-Poly1305)."""
+    if not passphrase or len(passphrase) < 12:
+        raise Abbruch("Passphrase mit mindestens 12 Zeichen angeben.")
+    ops, mem = STUFEN[stufe]
+    salz = nacl.utils.random(nacl.pwhash.argon2id.SALTBYTES)
+    k = nacl.pwhash.argon2id.kdf(SecretBox.KEY_SIZE, passphrase.encode(), salz, opslimit=ops, memlimit=mem)
+    return {"kdf": "argon2id", "opslimit": ops, "memlimit": mem, "salt": b64(salz), "ciphertext": b64(SecretBox(k).encrypt(geheim))}
+
+
+def _entsperren(enc, passphrase):
+    if passphrase is None:
+        raise Abbruch("Die Schlüsseldatei ist mit einer Passphrase geschützt; bitte angeben.")
+    k = nacl.pwhash.argon2id.kdf(SecretBox.KEY_SIZE, passphrase.encode(), base64.b64decode(enc["salt"]),
+                                 opslimit=enc["opslimit"], memlimit=enc["memlimit"])
+    try:
+        return SecretBox(k).decrypt(base64.b64decode(enc["ciphertext"]))
+    except nacl.exceptions.CryptoError:
+        raise Abbruch("Passphrase falsch oder Schlüsseldatei beschädigt.") from None
+
+
+def _neues_paar(passphrase, stufe):
     k = PrivateKey.generate()
     pub = bytes(k.public_key)
     oeffentlich = {"key_id": f"pg-{datetime.now():%Y%m%d}-{hashlib.sha256(pub).hexdigest()[:8]}", "alg": ALG, "public_key": b64(pub)}
-    datei.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(datei, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    return oeffentlich, {**oeffentlich, "secret_enc": _schuetzen(bytes(k), passphrase, stufe)}
+
+
+def _schreiben(datei, inhalt, neu=True):
+    tmp = datei.with_suffix(".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:
-        json.dump({**oeffentlich, "secret_key": b64(bytes(k))}, f)
+        json.dump(inhalt, f)
+    if neu and datei.exists():
+        tmp.unlink()
+        raise Abbruch(f"{datei} gibt es schon; ein Schlüssel wird nie überschrieben.")
+    tmp.replace(datei)
+
+
+def schluessel_erzeugen(datei, passphrase, stufe="moderat"):
+    """Neues Schlüsselpaar; der private Teil liegt nur mit der Passphrase verschlüsselt in der Datei.
+    Datei und Passphrase nur bei den Schlüsselinhaber:innen. Gibt den öffentlichen Teil für stadt.json zurück."""
+    datei = ausserhalb_git(datei)
+    if datei.exists():
+        raise Abbruch(f"{datei} gibt es schon; ein Schlüssel wird nie überschrieben.")
+    oeffentlich, eintrag = _neues_paar(passphrase, stufe)
+    datei.parent.mkdir(parents=True, exist_ok=True)
+    _schreiben(datei, {"version": 2, **eintrag, "frueher": [], "gesperrt": []})
     return oeffentlich
 
 
 class Schluessel:
-    def __init__(self, datei):
-        d = json.loads(ausserhalb_git(datei).read_text(encoding="utf-8"))
-        self.key_id, self.alg = d["key_id"], d["alg"]
-        self.privat = PrivateKey(base64.b64decode(d["secret_key"]))
-        self.oeffentlich = self.privat.public_key
-        if b64(bytes(self.oeffentlich)) != d["public_key"]:
-            raise Abbruch("Schlüsseldatei beschädigt: öffentlicher und privater Teil passen nicht zusammen.")
+    """Aktueller Schlüssel der Prüfgruppe und frühere (für ältere Exporte und Bestände); gesperrte Kennungen nach einer
+    Kompromittierung. Frühere Dateien ohne Passphrase (Feld secret_key) werden noch gelesen."""
 
-    def oeffnen(self, ciphertext_b64):
-        return SealedBox(self.privat).decrypt(base64.b64decode(ciphertext_b64))
+    def __init__(self, datei, passphrase=None):
+        self.datei = ausserhalb_git(datei)
+        self.d = json.loads(self.datei.read_text(encoding="utf-8"))
+        self.passphrase = passphrase
+        self.key_id, self.alg = self.d["key_id"], self.d["alg"]
+        self.paare = {}
+        for e in [self.d, *self.d.get("frueher", [])]:
+            geheim = base64.b64decode(e["secret_key"]) if "secret_key" in e else _entsperren(e["secret_enc"], passphrase)
+            k = PrivateKey(geheim)
+            if b64(bytes(k.public_key)) != e["public_key"]:
+                raise Abbruch("Schlüsseldatei beschädigt: öffentlicher und privater Teil passen nicht zusammen.")
+            self.paare[e["key_id"]] = k
+        self.privat = self.paare[self.key_id]
+        self.oeffentlich = self.privat.public_key
+        self.gesperrt = set(self.d.get("gesperrt", []))
+
+    def kennt(self, key_id):
+        return key_id in self.paare and key_id not in self.gesperrt
+
+    def oeffnen(self, ciphertext_b64, key_id=None):
+        """Mit dem Schlüssel der Kennung entschlüsseln; ohne Kennung zuerst mit dem aktuellen, dann mit früheren."""
+        ct = base64.b64decode(ciphertext_b64)
+        kandidaten = [self.paare[key_id]] if key_id else [self.privat, *(k for i, k in self.paare.items() if i != self.key_id)]
+        for k in kandidaten:
+            try:
+                return SealedBox(k).decrypt(ct)
+            except nacl.exceptions.CryptoError:
+                continue
+        raise nacl.exceptions.CryptoError("mit keinem Schlüssel der Prüfgruppe zu öffnen")
+
+    def wechseln(self, kompromittiert=False, neue_passphrase=None, stufe="moderat"):
+        """Neues aktuelles Paar; das bisherige bleibt als früheres (zum Öffnen alter Exporte), bei Kompromittierung gesperrt."""
+        pw = neue_passphrase or self.passphrase
+        oeffentlich, eintrag = _neues_paar(pw, stufe)
+        alt = {k: v for k, v in self.d.items() if k not in ("version", "frueher", "gesperrt")}
+        if "secret_key" in alt:  # frühere Datei ohne Passphrase: jetzt geschützt ablegen
+            alt["secret_enc"] = _schuetzen(base64.b64decode(alt.pop("secret_key")), pw, stufe)
+        frueher = [alt, *self.d.get("frueher", [])]
+        if neue_passphrase:  # alle früheren Schlüssel unter der neuen Passphrase
+            frueher = [{**f, "secret_enc": _schuetzen(bytes(self.paare[f["key_id"]]), pw, stufe)} for f in frueher]
+            frueher = [{k: v for k, v in f.items() if k != "secret_key"} for f in frueher]
+        gesperrt = sorted(self.gesperrt | ({self.key_id} if kompromittiert else set()))
+        _schreiben(self.datei, {"version": 2, **eintrag, "frueher": frueher, "gesperrt": gesperrt}, neu=False)
+        self.__init__(self.datei, pw)
+        return oeffentlich
+
+
+def passphrase_abfragen(datei, neu=False):
+    """Passphrase für die Kommandozeile (nie als Argument, damit sie nicht in der Shell-Historie landet)."""
+    import getpass
+    if neu:
+        a, b = getpass.getpass("Neue Passphrase (mindestens 12 Zeichen): "), getpass.getpass("Wiederholen: ")
+        if a != b:
+            raise Abbruch("Passphrasen stimmen nicht überein.")
+        return a
+    d = json.loads(Path(datei).read_text(encoding="utf-8"))
+    return getpass.getpass("Passphrase: ") if "secret_enc" in d else None
 
 
 def versiegeln(public_key_b64, daten: bytes):
@@ -127,7 +221,7 @@ class Arbeit:
             if neu:
                 w.writerow(["zeit", "pruefer", "datensatz", "zweck"])
             w.writerow([jetzt(), self.pruefer, eintrag_id, zweck])
-        return self.schl.oeffnen(enc["ciphertext"]).decode()
+        return self.schl.oeffnen(enc["ciphertext"], enc.get("key_id") if enc.get("key_id") in self.schl.paare else None).decode()
 
     def freigegeben(self, e):
         return e["status"] == "offen" and not e.get("konflikt") and len(set(e["freigaben"])) >= 2
