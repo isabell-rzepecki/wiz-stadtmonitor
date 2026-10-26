@@ -180,6 +180,9 @@ def veroeffentlichen(arbeit, ziel=pg.ROOT, cfg=E):
     namen = [arbeit.name_oeffnen(i, "Veröffentlichungsprüfung") for i, e in arbeit.eintraege.items()
              if e["typ"] == "eigentum" and e["datensatz"].get("name_privat_enc")]
     pruefe_ausgabe(ausgaben, namen)
+    L = pg.STADT["wohnen_eigentum"]["lizenz"]  # Issue 31: jede Datei trägt Lizenz und Namensnennung
+    for d in ausgaben.values():
+        d.update(lizenz=L["name"], lizenz_url=L["url"], namensnennung=L["namensnennung"])
     ordner = Path(ziel) / "data" / "wohnen"
     ordner.mkdir(parents=True, exist_ok=True)
     for name, d in ausgaben.items():

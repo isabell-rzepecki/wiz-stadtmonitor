@@ -818,9 +818,14 @@
       },
       {
         "thema": "Kosten der Unterkunft (KdU)",
-        "aussage": "Angemessenheitsgrenzen legt der Werra-Meißner-Kreis fest. Ein aktueller Stand war nicht öffentlich abrufbar. Amtlich belegt ist eine Handlungsanweisung von 2018; eine Sekundärquelle nennt Werte mit Stand 01.01.2023 (nicht geprüft), eine Fortschreibung ist beauftragt. Der Stadtmonitor nennt deshalb keine Beträge. Auskunft: Jobcenter Werra-Meißner.",
-        "stand": "23.10.2026",
-        "link": "https://jobcenter-werra-meissner.de/geldleistungen/unterkunftskosten/"
+        "aussage": "Angemessene Unterkunftskosten nach § 22 SGB II und § 35 SGB XII legt der Werra-Meißner-Kreis fest. Für Bad Sooden-Allendorf, Neu-Eichenberg und Witzenhausen gelten laut Merkblatt des Kreises diese Richtwerte für die Bruttokaltmiete (Grundmiete einschließlich Betriebskosten, ohne Heizkosten). Eine Fortschreibung ist beauftragt; im Einzelfall entscheidet das Jobcenter bzw. der Fachbereich 6 des Kreises.",
+        "tabelle": {
+          "titel": "Richtwerte Bruttokaltmiete im Monat, ohne Heizkosten",
+          "kopf": ["Personen", "Wohnfläche", "Richtwert"],
+          "zeilen": [["1", "50 m²", "377,52 €"], ["2", "60 m²", "428,80 €"], ["3", "75 m²", "525,16 €"], ["4", "87 m²", "582,56 €"], ["5", "99 m²", "651,00 €"], ["jede weitere", "+ 12 m²", "+ 78,12 €"]]
+        },
+        "stand": "Merkblatt Stand Januar 2024, geprüft am 26.10.2026",
+        "link": "https://www.werra-meissner-kreis.de/fileadmin/01_Homepage_Kreisverwaltung/Fachbereiche_und_Einrichtungen/FB6_Soziales_und_Senioren/6.1_Sicherung_Aktivierung_der_Lebensgrundlagen/Merkblatt_KdU.pdf"
       }
     ],
     "berichte": [
@@ -1158,6 +1163,12 @@
   },
   "wohnen_eigentum": {
     "_hinweis": "Seite Wohnen und Eigentum (Übergabe v0.4.2, docs/uebergabe-v0.4.2/). Eigentum und Mieten erscheinen nur aus geprüften, freigegebenen Dateien (tools/veroeffentlichen.py) und nur nach den Veröffentlichungsregeln. Sensible Felder bleiben aus, bis die Datenschutzfragen geklärt sind (Issue 28).",
+    "lizenz": {
+      "_hinweis": "Lizenz der veröffentlichten Dateien data/wohnen/* (Issue 31, Entscheidung 26.10.2026); Quellen ALKIS und LoD2 sind dl-de/zero-2.0 bzw. ohne Einschränkung (§ 18 HVGG) und damit vereinbar.",
+      "name": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/deed.de",
+      "namensnennung": "Stadtmonitor, Erfassung Wohnen und Eigentum (geprüfte Erfassungen); Gebäude: Geobasisdaten © HVBG"
+    },
     "privat_namen_aktiv": false,
     "mietangaben_aktiv": true,
     "zweck": "Für Witzenhausen gibt es keinen Mietspiegel. Die Seite soll eine Vergleichsgrundlage für tatsächlich gezahlte Mieten schaffen: aus freiwilligen Angaben von Mietenden und aus dem Wissen, wer welche Gebäude vermietet. Beides wird getrennt erhoben und nur zusammengefasst veröffentlicht.",
