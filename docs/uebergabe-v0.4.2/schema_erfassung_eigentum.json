@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/<account>/wiz-stadtmonitor/schemas/erfassung_eigentum.json",
+  "title": "Erfassung Eigentum/Vermietung (wiz-stadtmonitor, v0.4.2)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "erfassung_id",
+    "objekt",
+    "kategorie",
+    "beleg_art",
+    "sicherheit",
+    "erfasst_am",
+    "erfasser"
+  ],
+  "properties": {
+    "erfassung_id": {
+      "type": "string",
+      "description": "UUID v4, im Gerät erzeugt"
+    },
+    "objekt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "typ",
+        "id"
+      ],
+      "properties": {
+        "typ": {
+          "enum": [
+            "gebaeude",
+            "flurstueck"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "description": "ALKIS-OID des Gebäudes (z. B. DEHE061500000ThCBL) bzw. Flurstückskennzeichen; identisch in 2D- und 3D-Ansicht"
+        },
+        "gemarkung": {
+          "type": "string"
+        },
+        "lage_hinweis": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Straße ohne Hausnummer oder Objektbezeichnung"
+        }
+      }
+    },
+    "kategorie": {
+      "enum": [
+        "kom",
+        "kreis",
+        "land",
+        "bund",
+        "kirche",
+        "geno",
+        "wu_oeff",
+        "wu_priv",
+        "jp_sonst",
+        "privat",
+        "unklar"
+      ]
+    },
+    "name_juristische_person": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Nur erlaubt, wenn kategorie nicht privat/unklar"
+    },
+    "beleg_art": {
+      "enum": [
+        "eigentuemer_website",
+        "handelsregister",
+        "beteiligungsbericht",
+        "bekanntmachung_stadt",
+        "bauschild",
+        "presse",
+        "eigener_grundbuchauszug",
+        "ortskenntnis"
+      ]
+    },
+    "beleg_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "sicherheit": {
+      "enum": [
+        "gesichert",
+        "wahrscheinlich",
+        "unklar"
+      ]
+    },
+    "bemerkung": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Keine Personennamen im Klartext, keine Kontaktdaten"
+    },
+    "erfasst_am": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "erfasser": {
+      "type": "string",
+      "description": "Pseudonyme Erfasser-ID aus dem Einladungscode, kein Klarname"
+    },
+    "app_version": {
+      "type": "string"
+    },
+    "name_privat_enc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "alg",
+        "key_id",
+        "ciphertext"
+      ],
+      "description": "Name einer Privatperson, im Gerät verschlüsselt (Public-Key-Verfahren, z. B. libsodium sealed box oder age) mit dem Schlüssel der Prüfgruppe. Nie im Klartext.",
+      "properties": {
+        "alg": {
+          "enum": [
+            "libsodium-sealedbox-x25519",
+            "age-x25519"
+          ]
+        },
+        "key_id": {
+          "type": "string"
+        },
+        "ciphertext": {
+          "type": "string",
+          "contentEncoding": "base64"
+        }
+      }
+    },
+    "vermieter_schluessel": {
+      "type": "string",
+      "pattern": "^(V-\\d{3,5}|JP:.+)$",
+      "description": "Privatperson: interner Schlüssel V-nnn (von der Prüfgruppe vergeben, im Gerät vorläufig 'V-neu'); juristische Person: 'JP:' + normierter Name"
+    },
+    "vermietet": {
+      "enum": [
+        "ja",
+        "nein",
+        "teilweise",
+        "unbekannt"
+      ],
+      "description": "Ob im Gebäude Wohnungen vermietet werden"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kategorie": {
+            "enum": [
+              "privat",
+              "unklar"
+            ]
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": [
+            "name_juristische_person"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kategorie": {
+            "not": {
+              "const": "privat"
+            }
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": [
+            "name_privat_enc"
+          ]
+        }
+      }
+    }
+  ]
+}

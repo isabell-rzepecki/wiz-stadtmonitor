@@ -33,7 +33,7 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 - **Wohnen und Boden:**
   - Es gibt keinen Mietspiegel für Witzenhausen, also keine ortsübliche Vergleichsmiete. Angebotsmieten privater Portale werden nicht übernommen. Die drei Begriffe stehen getrennt im Glossar und nie in einer Zahl.
   - Mietwerte stammen nur aus dem Zensus 2022 (Bestandsmiete, Stichtag 15.05.2022).
-  - Bodenrichtwerte stehen immer mit ihrem Stichtag. Zonen und Spannen beruhen auf dem Stichtag 01.01.2024 (Datendienst). Den Stichtag 01.01.2026 gibt es nur als Kartendienst der HVBG; er erscheint als eigene Bildebene ohne Spannen und wird nicht mit 2024 vermischt.
+  - Bodenrichtwerte stehen immer mit ihrem Stichtag. Zonen und Spannen beruhen auf dem Stichtag 01.01.2024 (Datendienst); für den Verlauf kommen die Spannen zum 01.01.2022 hinzu (`bodenrichtwerte_2022.geojson`). Zonengrenzen können sich zwischen Stichtagen ändern, verglichen werden nur Spannen je Gemarkung. Den Stichtag 01.01.2026 gibt es nur als Kartendienst der HVBG; er erscheint als eigene Bildebene ohne Spannen und wird nicht mit 2024 vermischt.
   - Werte je Ortsbezirk aus Gitterzellen sind Näherungen. Die Zellen werden über ihren Mittelpunkt einer Gemarkung zugeordnet; geheim gehaltene Zellen zählen nicht als null; unter 5 Zellen mit Wert wird nichts ausgewiesen. Die Leerstandsquote steht nur für die Gemeinde.
   - Rechtlicher Kontext (Mietenstufe, Mieterschutzverordnung, KdU) ist datierter Text mit Quelle, kein Datensatz. KdU-Beträge werden nicht genannt, weil kein aktueller Stand belegt ist.
 - **Wahlen und Gremien:**

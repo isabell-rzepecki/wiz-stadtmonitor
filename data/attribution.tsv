@@ -3,7 +3,7 @@ wp_media	amtliche Werke (Bestätigung ausstehend)	Quelle: Amtliche Bekanntmachun
 vg_shp,hako_lage	dl-de/zero-2.0	Geobasisdaten: © Hessische Verwaltung für Bodenmanagement und Geoinformation (HVBG), dl-de/zero-2.0 (freiwillig)	https://www.govdata.de/dl-de/zero-2-0	ja
 basemap	CC BY 4.0	© basemap.de / BKG (Jahr) – Datenquellen: © GeoBasis-DE	https://basemap.de	ja
 bplan,fplan	nur nicht kommerziell	Geltungsbereiche Bauleitplanung: Magistrat der Stadt Witzenhausen – Nutzung nur für nicht kommerzielle Zwecke		ja
-boris	Nutzung ohne Einschränkung oder Bedingung	Bodenrichtwerte: Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH, Stichtag 01.01.2024; Zonen vereinfacht, Spannen eigene Berechnung		ja
+boris,boris2022	Nutzung ohne Einschränkung oder Bedingung	Bodenrichtwerte: Gutachterausschüsse für Immobilienwerte des Landes Hessen / ZGGH, Stichtage 01.01.2022 und 01.01.2024; Zonen vereinfacht, Spannen eigene Berechnung		ja
 uesg,tws	CC BY 4.0	Darstellung auf der Grundlage von Daten des Hessischen Landesamtes für Naturschutz, Umwelt und Geologie (HLNUG)	https://creativecommons.org/licenses/by/4.0/deed.de	ja
 schutzgeb	frei nutzbar, keine Weiterveräußerung	Darstellung auf der Grundlage von Daten des Hessischen Ministeriums für Landwirtschaft und Umwelt, Weinbau, Forsten, Jagd und Heimat (HMLU); Naturparke: Landesbetrieb HessenForst		ja
 zensus_gem,zensus_gitter,zensus_miete_gitter,zensus_eigentum_gitter	dl-de/by-2.0	© Statistische Ämter des Bundes und der Länder, 2024, dl-de/by-2-0	https://www.govdata.de/dl-de/by-2-0	ja
