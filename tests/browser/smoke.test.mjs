@@ -575,7 +575,7 @@ test("Erfassung ohne Freigaben: Code nötig, ohne Schlüssel kein Speichern, Mie
   await page.context().close();
 });
 
-test("Erfassung als Probe: ohne Code und Schlüssel, Formulare prüfen, nichts gespeichert; Mietangabe ohne benannte Stelle nicht speicherbar", async () => {
+test("Erfassung als Probe: ohne Code und Schlüssel, Formulare prüfen, nichts gespeichert; ohne benannte Stelle nichts speicherbar", async () => {
   const page = await erfassenSeite({ aktiv: false, zugang: false });
   await page.locator("#probe").click();
   await page.waitForFunction(() => window.stadtmonitorErfassen && window.stadtmonitorErfassen.map.loaded());
@@ -604,16 +604,17 @@ test("Erfassung als Probe: ohne Code und Schlüssel, Formulare prüfen, nichts g
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.context().close();
-  // echter Zugang mit Schlüssel, aber ohne benannte verantwortliche Stelle: Eigentum ja, Mietangabe nicht speicherbar
+  // echter Zugang mit Schlüssel, aber ohne benannte verantwortliche Stelle: nichts speicherbar, Hinweis sichtbar
   const p2 = await erfassenSeite({ ohneStelle: true });
   await freischalten(p2);
+  assert.match(await p2.locator("#tafel-inhalt").textContent(), /verantwortliche Stelle ist noch nicht benannt/);
   await gebaeudeAntippen(p2);
   await p2.locator("#zu-b").click();
   assert.equal(await p2.locator('#form-b button[type="submit"]').isDisabled(), true);
-  assert.match(await p2.locator("#form-b").textContent(), /verantwortlichen Stelle/);
+  assert.match(await p2.locator("#form-b").textContent(), /verantwortliche Stelle ist noch nicht benannt/);
   await p2.locator("#abbrechen").click();
   await p2.locator("#zu-a").click();
-  assert.equal(await p2.locator('#form-a button[type="submit"]').isDisabled(), false);
+  assert.equal(await p2.locator('#form-a button[type="submit"]').isDisabled(), true);
   await p2.context().close();
 });
 

@@ -26,6 +26,6 @@
 - Widerspruch (Art. 21): Dann löschen wir die Angaben zu Ihren Gebäuden und erfassen sie nicht erneut.
 - Beschwerde bei der Aufsichtsbehörde, in Hessen beim Hessischen Beauftragten für Datenschutz und Informationsfreiheit.
 
-Kontakt für Widerspruch: [Leerstelle]
+Kontakt für Widerspruch: [Leerstelle: Funktionsadresse der Stelle, nicht die private Adresse einer Person]
 
 **Hinweis zur Form (zu entscheiden).** Eine Einzelbenachrichtigung jeder Person setzt voraus, ihre Anschrift zu ermitteln, also weitere Daten zu erheben. Zu prüfen ist, ob stattdessen öffentliche Information nach Art. 14 Abs. 5 lit. b DSGVO genügt (Datenschutzseite, Aushang). Das ist in der Interessenabwägung zu begründen.
