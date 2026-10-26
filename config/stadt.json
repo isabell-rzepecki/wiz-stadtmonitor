@@ -1247,6 +1247,7 @@
       }
     ],
     "regeln": {
+      "privat_anteil_min": 5,
       "mieten_zelle_min": 5,
       "juristische_person_min_angaben": 5,
       "juristische_person_min_gebaeude": 2,
