@@ -159,6 +159,24 @@ class Pruefgruppe(unittest.TestCase):
         pruefen.loeschen(ar, b[0]["angabe_id"], "Einwilligung widerrufen")
         self.assertNotIn(b[0]["angabe_id"], self.arbeit().eintraege)
 
+    def test_einladungsregister_beim_einlesen(self):
+        import einladung
+        reg = self.tmp / "arbeit" / "einladungen.tsv"
+        zeile = {"erfasser_id": "E-0000test", "hash": "0" * 64, "ausgegeben": "2026-10-01", "gueltig_bis": "2027-10-01", "widerrufen": ""}
+        einladung.register_schreiben(reg, [zeile])
+        ar = self.arbeit()
+        self.assertEqual(pruefen.einlesen(ar, [self.export("miete", [miete(G[0], 400)])])[0], 1)
+        # Widerruf am Vortag: Einträge vom 26.10. werden abgewiesen; unbekannte ID ebenso
+        einladung.register_schreiben(reg, [{**zeile, "widerrufen": "2026-10-25"}])
+        n, z = pruefen.einlesen(self.arbeit(), [self.export("miete", [miete(G[1], 410)])])
+        self.assertEqual(n, 0)
+        self.assertIn("nach Widerruf", z[0][2])
+        einladung.register_schreiben(reg, [{**zeile, "erfasser_id": "E-anders00"}])
+        n, z = pruefen.einlesen(self.arbeit(), [self.export("miete", [miete(G[2], 420)])])
+        self.assertIn("nicht im Einladungsregister", z[0][2])
+        self.assertIn("nach Ablauf", pruefen.einladung_pruefen({**zeile, "gueltig_bis": "2026-10-20"}, "2026-10-26T08:00:00Z"))
+        self.assertIn("vor Ausgabe", pruefen.einladung_pruefen(zeile, "2026-09-30T08:00:00Z"))
+
     def test_widerruf_widerspruch_fristen(self):
         b = [miete(G[0], 410), miete(G[1], 420)]
         a = [eigentum(G[2], "privat", name_privat="Erika Testname"), eigentum(G[3], "privat", name_privat="erika testname"),

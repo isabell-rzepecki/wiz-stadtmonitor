@@ -1,8 +1,12 @@
 """Erfassungs-App (W4): Einladungscodes wie in der App, sichere Voreinstellungen, kein öffentlicher Link, Offline-Liste vollständig."""
 import json
 import re
+import shutil
 import sys
+import tempfile
 import unittest
+from datetime import date
+from pathlib import Path
 
 from pipeline import config
 
@@ -24,10 +28,34 @@ class Erfassung(unittest.TestCase):
         self.assertRegex(c, r"^[0-9A-HJKMNP-TV-Z]{4}(-[0-9A-HJKMNP-TV-Z]{4}){3}$")
         self.assertFalse(einladung.gueltig("ABCD-EFGH"))
 
+    def test_einladungsregister(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            reg = tmp / "einladungen.tsv"
+            aus = einladung.ausgeben(2, reg, 12, heute=date(2026, 10, 26))
+            self.assertEqual([e["bis"] for _, _, e in aus], ["2027-10-26", "2027-10-26"])
+            text = reg.read_text(encoding="utf-8")
+            for code, eid, e in aus:  # Register mit ID und Hash, nie mit dem Code
+                self.assertIn(eid, text)
+                self.assertIn(e["hash"], text)
+                self.assertNotIn(code, text)
+            einladung.widerrufen(aus[0][1], reg, heute=date(2026, 11, 2))
+            z = {r["erfasser_id"]: r for r in einladung.register_lesen(reg)}
+            self.assertEqual((z[aus[0][1]]["widerrufen"], z[aus[1][1]]["widerrufen"]), ("2026-11-02", ""))
+            self.assertEqual(einladung.bis_datum(date(2026, 1, 31), 1), "2026-02-28")
+            with self.assertRaises(SystemExit):
+                einladung.ausgeben(1, config.ROOT / "einladungen.tsv", 12)  # nie in einem Git-Repository
+        finally:
+            shutil.rmtree(tmp)
+
     def test_konfiguration_ohne_geheimnisse(self):
         # nur Hashes und höchstens ein öffentlicher Schlüssel; nie ein privater Schlüssel oder ein Klartextcode
-        for h in F["einladungen"]:
+        for e in F["einladungen"]:  # {hash, bis} oder (früher) nur der Hash
+            h = e if isinstance(e, str) else e["hash"]
             self.assertRegex(h, r"^[0-9a-f]{64}$")
+            if isinstance(e, dict):
+                self.assertEqual(set(e), {"hash", "bis"})
+                self.assertRegex(e["bis"], r"^\d{4}-\d{2}-\d{2}$")
         if F["schluessel"]:
             self.assertEqual(set(F["schluessel"]), {"key_id", "alg", "public_key"})
         text = json.dumps(config.STADT["wohnen_eigentum"])

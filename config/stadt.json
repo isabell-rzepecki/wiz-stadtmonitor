@@ -1268,9 +1268,10 @@
       }
     ],
     "erfassung": {
-      "_hinweis": "Erfassungs-App erfassen.html (W4), nicht öffentlich verlinkt. Zugang über Einladungscodes: hier stehen nur deren SHA-256-Hashes (tools/einladung.py); Widerruf durch Entfernen des Hashes (Issue 30). Ohne öffentlichen Schlüssel der Prüfgruppe (Issue 29) speichert die App nichts. Die App kennt keinen privaten Schlüssel.",
+      "_hinweis": "Erfassungs-App erfassen.html (W4), nicht öffentlich verlinkt. Zugang über Einladungscodes: hier stehen nur deren SHA-256-Hashes mit Ablaufdatum (Felder hash und bis, tools/einladung.py); Widerruf durch Entfernen des Eintrags (Issue 30, docs/datenschutz/einladungsverfahren.md). Ohne öffentlichen Schlüssel der Prüfgruppe (Issue 29) speichert die App nichts. Die App kennt keinen privaten Schlüssel.",
       "app_version": "0.4.2-w4",
       "speicherdauer_monate": 24,
+      "einladung_gueltig_monate": 12,
       "einladungen": [],
       "schluessel": null,
       "einwilligung": {

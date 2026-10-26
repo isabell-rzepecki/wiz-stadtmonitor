@@ -28,6 +28,7 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
 
+import einladung
 import pruefgruppe as pg
 
 SPEICHERDAUER = pg.STADT["wohnen_eigentum"]["erfassung"]["speicherdauer_monate"]
@@ -40,10 +41,28 @@ def validator(typ):
     return Draft202012Validator(json.loads(pg.SCHEMAS[typ].read_text(encoding="utf-8")), format_checker=FormatChecker())
 
 
-def einlesen(arbeit, dateien):
-    """Exportdateien entschlüsseln, gegen Schema und Freitextregeln prüfen; gültige Einträge in den Bestand, sonst abgewiesen."""
+def einladung_pruefen(z, erfasst_am):
+    """Grund zur Abweisung nach dem Einladungsregister (tools/einladung.py) oder None. Maßgeblich ist der Erfassungstag."""
+    if z is None:
+        return "Erfasser-ID nicht im Einladungsregister"
+    tag = erfasst_am[:10]
+    if tag < z["ausgegeben"]:
+        return "vor Ausgabe des Einladungscodes erfasst"
+    if z.get("widerrufen") and tag > z["widerrufen"]:
+        return f"nach Widerruf des Einladungscodes ({z['widerrufen']}) erfasst"
+    if tag > z["gueltig_bis"]:
+        return f"nach Ablauf des Einladungscodes ({z['gueltig_bis']}) erfasst"
+    return None
+
+
+def einlesen(arbeit, dateien, register=None):
+    """Exportdateien entschlüsseln, gegen Schema und Freitextregeln prüfen; gültige Einträge in den Bestand, sonst abgewiesen.
+    Liegt ein Einladungsregister vor (Standard: ARBEIT/einladungen.tsv), werden Einträge unbekannter, widerrufener oder
+    abgelaufener Erfasser-IDs abgewiesen."""
     v = {t: validator(t) for t in pg.SCHEMAS}
     zeilen, neu = [], 0
+    reg_pfad = Path(register) if register else arbeit.pfad / "einladungen.tsv"
+    reg = {z["erfasser_id"]: z for z in einladung.register_lesen(reg_pfad)} if reg_pfad.exists() else None
     for datei in dateien:
         d = json.loads(Path(datei).read_text(encoding="utf-8"))
         if d.get("format") != FORMAT or d.get("version") != 1 or d.get("typ") not in pg.SCHEMAS or d.get("alg") != pg.ALG:
@@ -69,6 +88,8 @@ def einlesen(arbeit, dateien):
                 grund = (pg.freitext(rec["objekt"].get("lage_hinweis"), ohne_ziffern=True) or pg.freitext(rec.get("bemerkung")))
             if not grund and d["typ"] == "miete" and rec.get("vermieter_schluessel", "").startswith("V-"):
                 grund = "Vermieter-Schlüssel V-… darf in Mietangaben nicht stehen"
+            if not grund and reg is not None:
+                grund = einladung_pruefen(reg.get(d.get("erfasser")), rec["erfasst_am"])
             if not grund and d["typ"] == "eigentum" and rec["objekt"]["id"] in arbeit.d.get("sperrliste", []):
                 grund = "Widerspruch zu diesem Gebäude (Sperrliste)"
             if not grund and e["id"] in arbeit.eintraege:
@@ -273,6 +294,7 @@ def main(argv=None):
         p.add_argument("-p", "--pruefer", required=True)
         if name == "einlesen":
             p.add_argument("dateien", nargs="+")
+            p.add_argument("--register", help="Einladungsregister (Standard: ARBEIT/einladungen.tsv)")
         if name == "freigeben":
             p.add_argument("ids", nargs="*")
             p.add_argument("--alle", action="store_true", help="alle offenen Einträge ohne Konflikt")
@@ -304,7 +326,9 @@ def main(argv=None):
         return
     arbeit = pg.Arbeit(a.arbeit, pg.Schluessel(a.schluessel, pg.passphrase_abfragen(a.schluessel)), a.pruefer)
     if a.befehl == "einlesen":
-        neu, zeilen = einlesen(arbeit, a.dateien)
+        if not a.register and not (arbeit.pfad / "einladungen.tsv").exists():
+            print("Hinweis: kein Einladungsregister; Erfasser-IDs werden nicht geprüft.", file=sys.stderr)
+        neu, zeilen = einlesen(arbeit, a.dateien, a.register)
         print(f"{neu} aufgenommen, {sum(1 for z in zeilen if z[2].startswith('abgewiesen'))} abgewiesen")
     elif a.befehl == "pruefen":
         p, zeilen = pruefen(arbeit)

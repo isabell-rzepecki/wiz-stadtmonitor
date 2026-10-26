@@ -93,12 +93,17 @@
     $("#knopf-datenschutz").addEventListener("click", () => dlg.showModal());
     dlg.querySelector("button").addEventListener("click", (e) => { e.preventDefault(); dlg.close(); });
 
-    // Zugang über Einladungscode; widerrufene Codes (Hash nicht mehr in der Liste) sperren die App
+    // Zugang über Einladungscode: Einträge {hash, bis} (früher nur der Hash). Widerrufene Codes (Eintrag entfernt) und
+    // abgelaufene (bis vor heute) sperren die App beim nächsten Start mit aktueller Konfiguration.
+    const heute = new Date().toISOString().slice(0, 10);
+    const einladung = (hash) => F.einladungen.map((x) => (typeof x === "string" ? { hash: x } : x)).find((x) => x.hash === hash);
+    const abgelaufen = (e) => Boolean(e && e.bis && e.bis < heute);
     let zugang = await meta("zugang");
-    if (zugang && !F.einladungen.includes(zugang.hash)) {
+    const ez = zugang && einladung(zugang.hash);
+    if (zugang && (!ez || abgelaufen(ez))) {
       await loeschen("meta", "zugang");
       zugang = null;
-      zugangFormular("Dieser Zugang wurde widerrufen. Bitte einen neuen Einladungscode eingeben.");
+      zugangFormular(ez ? "Dieser Zugang ist abgelaufen. Bitte einen neuen Einladungscode eingeben." : "Dieser Zugang wurde widerrufen. Bitte einen neuen Einladungscode eingeben.");
     } else if (!zugang) zugangFormular();
     else hauptteil();
 
@@ -117,7 +122,9 @@
         const fehler = (t) => { const p = $("#code-fehler"); p.textContent = t; p.hidden = false; $("#code").setAttribute("aria-invalid", "true"); $("#code").focus(); };
         if (c.length !== 16 || [...c].some((z) => !ZEICHEN.includes(z))) return fehler("Der Code hat 16 Zeichen (Ziffern und Buchstaben).");
         const hash = await sha256(`wiz-einladung:${c}`);
-        if (!F.einladungen.includes(hash)) return fehler("Dieser Code ist nicht (mehr) gültig.");
+        const e2 = einladung(hash);
+        if (!e2) return fehler("Dieser Code ist nicht (mehr) gültig.");
+        if (abgelaufen(e2)) return fehler(`Dieser Code ist abgelaufen (gültig bis ${e2.bis.split("-").reverse().join(".")}).`);
         zugang = { key: "zugang", hash, erfasser: `E-${(await sha256(`wiz-erfasser:${c}`)).slice(0, 8)}`, seit: new Date().toISOString() };
         await ablegen("meta", zugang);
         hauptteil();
