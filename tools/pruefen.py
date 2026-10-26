@@ -11,7 +11,10 @@ Aufruf (ARBEIT und SCHLUESSEL außerhalb jedes Git-Repositorys):
   python tools/pruefen.py verwerfen  -a ARBEIT -s SCHLUESSEL -p P-1 ID --grund TEXT
   python tools/pruefen.py name       -a ARBEIT -s SCHLUESSEL -p P-1 ID --oeffentlich|--nur-kategorie
   python tools/pruefen.py zusammenfuehren -a … V-003 V-007             zwei Vermieter-Schlüssel als dieselbe Person führen
-  python tools/pruefen.py loeschen   -a ARBEIT -s SCHLUESSEL -p P-1 ID --grund TEXT   Widerruf oder Widerspruch: ganz entfernen
+  python tools/pruefen.py loeschen   -a ARBEIT -s SCHLUESSEL -p P-1 (ID|--code XXXX-XXXX) --grund TEXT   Widerruf: ganz entfernen
+  python tools/pruefen.py widerspruch -a ARBEIT -s SCHLUESSEL -p P-1 GEBAEUDE… --grund TEXT   Eigentum zu den Gebäuden
+                                     (und allen Gebäuden derselben Person) löschen, Gebäude auf die Sperrliste
+  python tools/pruefen.py fristen    -a ARBEIT -s SCHLUESSEL -p P-1 [--loeschen]   Einträge nach der Speicherdauer
 
 Ausgabe: ARBEIT/audit/pruefung_<datum>.tsv, ohne Namen von Privatpersonen und ohne Mietbeträge.
 """
@@ -24,6 +27,8 @@ from pathlib import Path
 from jsonschema import Draft202012Validator, FormatChecker
 
 import pruefgruppe as pg
+
+SPEICHERDAUER = pg.STADT["wohnen_eigentum"]["erfassung"]["speicherdauer_monate"]
 
 FORMAT = "wiz-stadtmonitor-erfassung"
 JP_KATEGORIEN = {k["code"] for k in pg.STADT["wohnen_eigentum"]["kategorien"]} - {"privat", "unklar"}
@@ -60,6 +65,8 @@ def einlesen(arbeit, dateien):
                 grund = (pg.freitext(rec["objekt"].get("lage_hinweis"), ohne_ziffern=True) or pg.freitext(rec.get("bemerkung")))
             if not grund and d["typ"] == "miete" and rec.get("vermieter_schluessel", "").startswith("V-"):
                 grund = "Vermieter-Schlüssel V-… darf in Mietangaben nicht stehen"
+            if not grund and d["typ"] == "eigentum" and rec["objekt"]["id"] in arbeit.d.get("sperrliste", []):
+                grund = "Widerspruch zu diesem Gebäude (Sperrliste)"
             if not grund and e["id"] in arbeit.eintraege:
                 zeilen.append([e["id"], d["typ"], "schon im Bestand", Path(datei).name])
                 continue
@@ -189,6 +196,15 @@ def zusammenfuehren(arbeit, behalten, aufgeben):
     arbeit.speichern()
 
 
+def code_zu_id(arbeit, code):
+    """Widerrufscode aus der App (die ersten 8 Zeichen der Kennung, als XXXX-XXXX) zur Kennung."""
+    c = code.replace("-", "").strip().lower()
+    treffer = [i for i in arbeit.eintraege if i.replace("-", "")[:8] == c]
+    if len(treffer) != 1:
+        raise pg.Abbruch(f"Widerrufscode {code}: {len(treffer)} Einträge gefunden.")
+    return treffer[0]
+
+
 def loeschen(arbeit, i, grund):
     """Widerruf oder Widerspruch: Eintrag ganz entfernen; im Verlauf bleibt nur Kennung, Zeit und Grund."""
     arbeit.eintraege.pop(i)
@@ -196,12 +212,42 @@ def loeschen(arbeit, i, grund):
     arbeit.speichern()
 
 
+def widerspruch(arbeit, gebaeude, grund):
+    """Widerspruch von Vermieter:innen (Art. 21 DSGVO): Eigentumseinträge zu den Gebäuden und zu allen Gebäuden mit demselben
+    privaten Vermieter-Schlüssel löschen; die Gebäude kommen auf die Sperrliste und werden nicht erneut aufgenommen."""
+    eig = {i: e for i, e in arbeit.eintraege.items() if e["typ"] == "eigentum"}
+    ziele = set(gebaeude)
+    schluessel = {e["vermieter"] for e in eig.values() if e["datensatz"]["objekt"]["id"] in ziele and (e.get("vermieter") or "").startswith("V-")}
+    ziele |= {e["datensatz"]["objekt"]["id"] for e in eig.values() if e.get("vermieter") in schluessel}
+    weg = [i for i, e in eig.items() if e["datensatz"]["objekt"]["id"] in ziele]
+    for i in weg:
+        arbeit.eintraege.pop(i)
+        arbeit.verlauf(f"gelöscht ({grund})", i)
+    arbeit.d["sperrliste"] = sorted(set(arbeit.d.get("sperrliste", [])) | ziele)
+    arbeit.speichern()
+    return weg, ziele
+
+
+def fristen(arbeit, loeschen_=False, heute=None):
+    """Einträge, deren Eingang länger als die Speicherdauer zurückliegt; auf Wunsch löschen."""
+    heute = heute or date.today()
+    j, m = divmod(heute.year * 12 + heute.month - 1 - SPEICHERDAUER, 12)
+    grenze = date(j, m + 1, min(heute.day, 28))
+    faellig = [i for i, e in arbeit.eintraege.items() if date.fromisoformat(e["eingelesen"][:10]) < grenze]
+    if loeschen_:
+        for i in faellig:
+            arbeit.eintraege.pop(i)
+            arbeit.verlauf(f"gelöscht (Speicherdauer {SPEICHERDAUER} Monate)", i)
+        arbeit.speichern()
+    return faellig
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="befehl", required=True)
     s = sub.add_parser("schluessel")
     s.add_argument("datei")
-    for name in ("einlesen", "pruefen", "freigeben", "verwerfen", "name", "zusammenfuehren", "loeschen"):
+    for name in ("einlesen", "pruefen", "freigeben", "verwerfen", "name", "zusammenfuehren", "loeschen", "widerspruch", "fristen"):
         p = sub.add_parser(name)
         p.add_argument("-a", "--arbeit", required=True)
         p.add_argument("-s", "--schluessel", required=True)
@@ -211,9 +257,16 @@ def main(argv=None):
         if name == "freigeben":
             p.add_argument("ids", nargs="*")
             p.add_argument("--alle", action="store_true", help="alle offenen Einträge ohne Konflikt")
-        if name in ("verwerfen", "loeschen", "name"):
+        if name in ("verwerfen", "name"):
             p.add_argument("id")
-        if name in ("verwerfen", "loeschen"):
+        if name == "loeschen":
+            p.add_argument("id", nargs="?")
+            p.add_argument("--code", help="Widerrufscode aus der App (XXXX-XXXX)")
+        if name == "widerspruch":
+            p.add_argument("gebaeude", nargs="+")
+        if name == "fristen":
+            p.add_argument("--loeschen", action="store_true")
+        if name in ("verwerfen", "loeschen", "widerspruch"):
             p.add_argument("--grund", required=True)
         if name == "name":
             g = p.add_mutually_exclusive_group(required=True)
@@ -243,7 +296,15 @@ def main(argv=None):
     elif a.befehl == "zusammenfuehren":
         zusammenfuehren(arbeit, a.behalten, a.aufgeben)
     elif a.befehl == "loeschen":
-        loeschen(arbeit, a.id, a.grund)
+        if bool(a.id) == bool(a.code):
+            raise pg.Abbruch("Kennung oder --code angeben (nicht beides).")
+        loeschen(arbeit, a.id or code_zu_id(arbeit, a.code), a.grund)
+    elif a.befehl == "widerspruch":
+        weg, ziele = widerspruch(arbeit, a.gebaeude, a.grund)
+        print(f"{len(weg)} Einträge gelöscht, {len(ziele)} Gebäude auf der Sperrliste")
+    elif a.befehl == "fristen":
+        f = fristen(arbeit, a.loeschen)
+        print(f"{len(f)} Einträge älter als {SPEICHERDAUER} Monate" + (" gelöscht" if a.loeschen else " (mit --loeschen löschen)"))
 
 
 if __name__ == "__main__":

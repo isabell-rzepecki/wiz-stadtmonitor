@@ -158,6 +158,36 @@ class Pruefgruppe(unittest.TestCase):
         pruefen.loeschen(ar, b[0]["angabe_id"], "Einwilligung widerrufen")
         self.assertNotIn(b[0]["angabe_id"], self.arbeit().eintraege)
 
+    def test_widerruf_widerspruch_fristen(self):
+        b = [miete(G[0], 410), miete(G[1], 420)]
+        a = [eigentum(G[2], "privat", name_privat="Erika Testname"), eigentum(G[3], "privat", name_privat="erika testname"),
+             eigentum(G[4], "privat", name_privat="Otto Probe"), eigentum(G[5], "geno", name="Wohnbau Test eG")]
+        ar = self.arbeit()
+        pruefen.einlesen(ar, [self.export("miete", b), self.export("eigentum", a)])
+        pruefen.pruefen(ar)
+        # Widerruf über den Code aus der App (erste 8 Zeichen der Kennung als XXXX-XXXX)
+        c = b[0]["angabe_id"].replace("-", "")[:8].upper()
+        pruefen.loeschen(ar, pruefen.code_zu_id(ar, f"{c[:4]}-{c[4:]}"), "Widerruf")
+        self.assertNotIn(b[0]["angabe_id"], ar.eintraege)
+        self.assertIn(b[1]["angabe_id"], ar.eintraege)
+        with self.assertRaises(pg.Abbruch):
+            pruefen.code_zu_id(ar, "0000-0000")
+        # Widerspruch zu einem Gebäude: alle Gebäude derselben Person, Sperrliste, kein erneutes Einlesen
+        weg, ziele = pruefen.widerspruch(ar, [G[2]], "Widerspruch")
+        self.assertEqual(ziele, {G[2], G[3]})
+        self.assertEqual(set(weg), {a[0]["erfassung_id"], a[1]["erfassung_id"]})
+        self.assertIn(a[2]["erfassung_id"], ar.eintraege)  # andere Person bleibt
+        neu, zeilen = pruefen.einlesen(self.arbeit(), [self.export("eigentum", [eigentum(G[3], "kom", name="Stadt")])])
+        self.assertEqual(neu, 0)
+        self.assertIn("Sperrliste", zeilen[0][2])
+        # Speicherdauer: Einträge älter als 24 Monate
+        ar = self.arbeit()
+        ar.eintraege[b[1]["angabe_id"]]["eingelesen"] = "2024-09-30T10:00:00+00:00"
+        self.assertEqual(pruefen.fristen(ar, heute=pruefen.date(2026, 10, 26)), [b[1]["angabe_id"]])
+        pruefen.fristen(ar, True, heute=pruefen.date(2026, 10, 26))
+        self.assertNotIn(b[1]["angabe_id"], self.arbeit().eintraege)
+        self.assertIn(a[2]["erfassung_id"], self.arbeit().eintraege)
+
     def test_sperre_gegen_sensible_ausgaben(self):
         gut = {"zellen": [{"ortsbezirk": "x", "n": 5, "median": 6.0, "p25": 5.0, "p75": 7.0}, {"ortsbezirk": "y", "n": None, "hinweis": "zu wenige Angaben"}],
                "juristische_personen": [{"name": "A eG", "n": 5, "gebaeude": 2, "median": 6.0}]}

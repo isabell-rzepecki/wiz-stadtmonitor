@@ -27,6 +27,9 @@ legend { font-weight: 700; padding: 0; margin-bottom: 6px; }
 .fehlerliste { padding: 8px 12px; border-radius: 10px; border: 2px solid var(--accent-ink); }
 .fehlerliste p, .fehlerliste ul { margin: 0; }
 .erfolg { padding: 8px 10px; border-radius: 10px; background: rgba(44, 118, 82, 0.12); color: #1f5a3d; font-weight: 700; }
+.widerruf { padding: 10px 12px; border-radius: 12px; border: 2px dashed var(--accent-ink); }
+.widerruf p { margin: 0 0 6px; }
+.widerruf .code { font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: var(--text); }
 .exportblock { border-top: 1px solid var(--line); padding-top: 6px; }
 .exportblock h3 { margin: 0 0 4px; font: 400 17px/1.2 "Lilita One", system-ui, sans-serif; }
 .tafel .fakten { margin: 0 0 10px; }

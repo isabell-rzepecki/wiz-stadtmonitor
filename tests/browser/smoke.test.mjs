@@ -618,6 +618,8 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
   await page.locator('input[name="erfassungsweg"][value="im_gespraech_mit_team"]').check();
   await page.locator('#form-b button[type="submit"]').click();
   await page.locator(".erfolg").waitFor();
+  const widerrufscode = (await page.locator("#widerrufscode").textContent()).trim();
+  assert.match(widerrufscode, /^[0-9A-F]{4}-[0-9A-F]{4}$/);
   // im Gerät nur versiegelte Einträge
   const ablage = await page.evaluate(async () => {
     const d = await new Promise((ok) => { const r = indexedDB.open("wiz-erfassung"); r.onsuccess = () => ok(r.result); });
@@ -644,6 +646,7 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
   assert.deepEqual([rb.nettokalt_eur, rb.wohnflaeche_m2, rb.wohnflaeche_klasse, rb.vertragsbeginn_jahr, rb.erfassungsweg, rb.erfasser],
     [450, 72, "60-79", 2019, "im_gespraech_mit_team", "E-227c7469"]);
   assert.equal(rb.einwilligung.erteilt, true);
+  assert.equal(rb.angabe_id.replace(/-/g, "").slice(0, 8).toUpperCase(), widerrufscode.replace("-", ""));
   assert.equal(rb.einwilligung.textversion.startsWith("entwurf-"), true);
   for (const [schema, rec] of [["erfassung_eigentum", ra], ["mietangabe", rb]]) {
     const s = await (await fetch(SITE + `schemas/${schema}.json`)).json();

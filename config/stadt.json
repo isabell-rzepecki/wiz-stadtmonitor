@@ -1270,12 +1270,13 @@
     "erfassung": {
       "_hinweis": "Erfassungs-App erfassen.html (W4), nicht öffentlich verlinkt. Zugang über Einladungscodes: hier stehen nur deren SHA-256-Hashes (tools/einladung.py); Widerruf durch Entfernen des Hashes (Issue 30). Ohne öffentlichen Schlüssel der Prüfgruppe (Issue 29) speichert die App nichts. Die App kennt keinen privaten Schlüssel.",
       "app_version": "0.4.2-w4",
+      "speicherdauer_monate": 24,
       "einladungen": [],
       "schluessel": null,
       "einwilligung": {
-        "version": "entwurf-2026-10-26",
+        "version": "entwurf-2026-10-26-v2",
         "status": "Entwurf, rechtlich noch nicht geprüft (Issue 28)",
-        "text": "Ich gebe die Miete meiner Wohnung freiwillig an. Ich willige ein, dass meine Angabe (Gebäude, Nettokaltmiete, Wohnflächen- und Baujahrklasse, Jahr des Vertragsbeginns und der letzten Erhöhung, Ausstattung) verschlüsselt an die Prüfgruppe geht und dort geprüft wird. Veröffentlicht werden nur zusammengefasste Werte ab 5 Angaben, nie meine einzelne Angabe. Ich kann die Einwilligung jederzeit widerrufen; dann wird meine Angabe gelöscht."
+        "text": "Ich gebe die Miete meiner Wohnung freiwillig an. Ich willige ein, dass meine Angabe (Gebäude, Nettokaltmiete, Wohnfläche, Baujahrklasse, Jahr des Vertragsbeginns und der letzten Erhöhung, Ausstattung und, falls ich ihn angebe, der Vermieter, sofern es ein Unternehmen ist) verschlüsselt an die Prüfgruppe der verantwortlichen Stelle geht und dort geprüft wird. Die Wohnfläche dient nur der Berechnung des Preises je Quadratmeter. Veröffentlicht werden nur zusammengefasste Werte ab 5 Angaben, nie meine einzelne Angabe; weitergegeben wird nichts. Gespeichert wird höchstens 24 Monate. Ich kann die Einwilligung jederzeit ohne Angabe von Gründen widerrufen, mit dem Widerrufscode, den ich nach dem Speichern erhalte; dann wird meine Angabe gelöscht. Die bis dahin erfolgte Verarbeitung bleibt rechtmäßig."
       },
       "datenschutz": {
         "verantwortlich": null,
@@ -1287,7 +1288,9 @@
           "Jeder Eintrag wird beim Speichern im Gerät mit dem öffentlichen Schlüssel der Prüfgruppe verschlüsselt. Das Gerät kann ihn danach selbst nicht mehr lesen.",
           "Es gibt keinen automatischen Upload. Die Einträge verlassen das Gerät nur als verschlüsselte Exportdatei, die Sie selbst weitergeben.",
           "Namen von Privatpersonen werden nie veröffentlicht; private Vermieter:innen erhalten nur einen internen Schlüssel. Keine Fotos, keine Klingelschilder, keine Namen aus Grundbuchauszügen Dritter.",
-          "Veröffentlicht werden nur zusammengefasste Werte nach festen Mindestzahlen."
+          "Veröffentlicht werden nur zusammengefasste Werte nach festen Mindestzahlen.",
+          "Gespeichert wird bei der Prüfgruppe höchstens 24 Monate; Exportdateien löscht sie nach dem Einlesen.",
+          "Nach einer Mietangabe zeigt die App einen Widerrufscode. Damit lässt sich die Angabe jederzeit löschen lassen; Vermieter:innen können der Erfassung ihrer Gebäude widersprechen."
         ]
       }
     }
