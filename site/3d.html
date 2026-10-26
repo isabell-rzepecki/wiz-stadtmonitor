@@ -3,34 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- 3D-Ansicht: MapLibre GL (lokal in vendor/maplibre, CSP-Fassung mit eigener Worker-Datei); Kacheln von basemap.de -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; child-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://sgx.geodatenzentrum.de; connect-src 'self' https://sgx.geodatenzentrum.de; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <title>3D-Ansicht – Stadtmonitor</title>
-  <meta name="description" content="Gebäude als vereinfachtes 3D-Modell je Ortsteil, aus den 3D-Gebäudemodellen der HVBG.">
+  <meta name="robots" content="noindex">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
   <link rel="stylesheet" href="page.css">
-  <link rel="stylesheet" href="3d.css">
 </head>
-<body class="ansicht3d">
-  <header class="bar3d">
-    <a class="page-brand" href="./"><img src="favicon.svg" width="32" height="32" alt="">Stadtmonitor</a>
-    <label class="wahl3d">Ortsteil <select id="ortsteil3d"></select></label>
-    <a class="page-back" id="zurueck" href="./">Zur Karte</a>
-  </header>
-  <main id="inhalt">
-    <h1 class="visually-hidden">3D-Ansicht der Gebäude</h1>
-    <div id="karte3d" role="region" aria-label="3D-Karte der Gebäude; mit Pfeiltasten verschieben, mit Umschalt und Pfeiltasten drehen und neigen"></div>
-    <section class="info3d" aria-live="polite">
-      <p id="stand3d" class="hint3d"></p>
-      <details id="mehr3d">
-        <summary>Legende und Hinweise</summary>
-        <ul class="legende3d" id="legende3d"></ul>
-        <p class="hint3d" id="hinweis3d"></p>
-      </details>
-    </section>
+<body>
+  <main class="page">
+    <h1>Die 3D-Ansicht ist umgezogen</h1>
+    <p>Die Gebäude in 2D und 3D zeigt jetzt die Seite <a href="wohnen.html?ansicht=3d">Wohnen und Eigentum</a>.</p>
   </main>
-  <script src="vendor/maplibre/maplibre-gl-csp.js"></script>
   <script src="3d.js"></script>
 </body>
 </html>

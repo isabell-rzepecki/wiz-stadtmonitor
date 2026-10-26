@@ -25,7 +25,7 @@ from pyproj import Transformer
 from shapely.geometry import MultiPolygon, Point, Polygon, mapping, shape
 from shapely.ops import transform, unary_union
 
-from . import audit, config, net
+from . import audit, config, kacheln, net
 
 W = config.STADT["wohnen"]
 RAW = config.RAW / "wohnen"
@@ -36,6 +36,7 @@ ZENSUS_OB = config.ROOT / "data" / "wohnen" / "zensus_ortsbezirk.json"  # Ortsbe
 REFERENZ = config.ROOT / "docs" / "uebergabe-v0.2" / "material" / "bodenrichtwerte_2024_spannen_gemarkung.tsv"
 OUT = config.EXPORT / "wohnen.json"
 KARTE = config.EXPORT / "karte" / "bodenrichtwerte.json"
+ZONEN_KACHELN = config.EXPORT / "karte" / "bodenrichtwerte_zonen.pmtiles"  # alle Stichtage mit Datendienst, Attribut stichtag
 GMDE = config.STADT["stadt"]["gemeindeschluessel"]  # 06636016
 ARS = config.STADT["stadt"]["ars"]
 ALTER = 365 * 86400
@@ -283,6 +284,21 @@ def ortsbezirke(gem):
     return out
 
 
+def zonen_kacheln(stichtage):
+    """Zonen aller Stichtage als Vektorkacheln (Seite „Wohnen und Eigentum“), je Zone mit Stichtag, Wert, Art und Zustand."""
+    feats = []
+    for st in stichtage:
+        p = BRW_GEO_JAHR(st[:4])
+        if p.exists():
+            for f in json.loads(p.read_text(encoding="utf-8"))["features"]:
+                pr = f["properties"]
+                feats.append({"type": "Feature", "geometry": f["geometry"],
+                              "properties": {"stichtag": st, "wert": pr["wert"], "art": pr.get("art"), "ez": pr.get("entwicklungszustand"),
+                                             "gemarkung": pr.get("gemarkung")}})
+    if feats:
+        kacheln.schreiben(feats, ZONEN_KACHELN, "bodenrichtwerte", 11, 15, attribution=W["boris"]["attribution"])
+
+
 AUDIT_SPALTEN = ["bereich", "ebene", "schluessel", "name", "kennzahl", "stichtag", "wert", "status", "quelle"]
 
 
@@ -349,6 +365,7 @@ def build():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(daten, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     pruefprotokoll(alt, vl, by_nr)
+    zonen_kacheln(vl)
     wiz = next((g for g in (alt.get("gemeinden") or []) if g["ars"] == ARS), None) if alt else None
     if wiz and alt.get("ortsbezirke"):  # Plausibilität: gewichtete Gittermiete aller Ortsbezirke gegen den Gemeindewert
         m = [e["miete"] for e in alt["ortsbezirke"].values() if e.get("miete", {}).get("wert")]

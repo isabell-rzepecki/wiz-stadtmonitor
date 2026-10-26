@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Wohnen und Eigentum: MapLibre GL (CSP-Fassung, eigene Worker-Datei) und PMTiles, beide lokal in vendor/; Kacheln von basemap.de -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; child-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://sgx.geodatenzentrum.de; connect-src 'self' https://sgx.geodatenzentrum.de; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>Wohnen und Eigentum – Stadtmonitor</title>
+  <meta name="description" content="Alle Gebäude der Stadt in 2D und 3D: Grundriss aus ALKIS, gemessene Höhe aus den 3D-Gebäudemodellen der HVBG.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
+  <link rel="stylesheet" href="page.css">
+  <link rel="stylesheet" href="wohnen.css">
+</head>
+<body class="wohnen">
+  <header class="leiste">
+    <a class="page-brand" href="./"><img src="favicon.svg" width="32" height="32" alt="">Stadtmonitor</a>
+    <label class="wahl">Ortsteil <select id="ortsteil"></select></label>
+    <div class="umschalter" role="group" aria-label="Darstellung">
+      <button type="button" id="ansicht-2d" aria-pressed="true">2D</button>
+      <button type="button" id="ansicht-3d" aria-pressed="false">3D</button>
+    </div>
+    <a class="page-back" id="zurueck" href="./">Zur Karte</a>
+  </header>
+  <main id="inhalt">
+    <h1 class="visually-hidden">Wohnen und Eigentum: Gebäude in 2D und 3D</h1>
+    <div id="karte" role="region" aria-label="Karte der Gebäude; mit Pfeiltasten verschieben, in 3D mit Umschalt und Pfeiltasten drehen und neigen. Ein Klick auf ein Gebäude zeigt seine Angaben."></div>
+    <section class="info" aria-labelledby="info-titel">
+      <h2 id="info-titel" class="visually-hidden">Angaben</h2>
+      <p id="stand" class="stand" aria-live="polite"></p>
+      <div id="gebaeude" class="gebaeude" aria-live="polite" hidden></div>
+      <details id="mehr">
+        <summary>Legende und Hinweise</summary>
+        <ul class="legende" id="legende"></ul>
+        <p class="hinweis" id="hinweis"></p>
+      </details>
+    </section>
+  </main>
+  <script src="vendor/maplibre/maplibre-gl-csp.js"></script>
+  <script src="vendor/pmtiles/pmtiles.js"></script>
+  <script src="wohnen.js"></script>
+</body>
+</html>

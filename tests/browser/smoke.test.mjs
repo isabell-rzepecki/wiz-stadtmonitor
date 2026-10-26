@@ -1,5 +1,5 @@
 // Browser-Prüfung der zusammengestellten Seite (Playwright, Chromium; aufgebaut wie in der RIS-Karte Bonn):
-// Start ohne Daten, 3D-Ansicht, Gebiet mit Vorgang und Prozesslinie, Termine, Zeitleiste, mobil, Dunkelmodus.
+// Start ohne Daten, Gebäude 2D/3D, Gebiet mit Vorgang und Prozesslinie, Termine, Zeitleiste, mobil, Dunkelmodus.
 // Barrierefreiheit mit axe-core (WCAG 2.1 A und AA). Aufruf über tests/browser/run.sh.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
@@ -17,7 +17,7 @@ let browser;
 const JETZT = new Date("2026-10-24T10:00:00Z");
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
 
-// WebGL für die 3D-Ansicht (MapLibre) über die Software-Darstellung
+// WebGL für die Gebäude in 2D/3D (MapLibre) über die Software-Darstellung
 const ARGS = ["--use-gl=swiftshader", "--enable-unsafe-swiftshader"];
 before(async () => { browser = await chromium.launch({ args: ARGS, ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}) }); });
 after(async () => { await browser?.close(); });
@@ -322,29 +322,47 @@ test("Mobil: Kartenoptionen in einem Menü, ohne Verstöße", async () => {
   await page.close();
 });
 
-test("3D-Ansicht: Ortsteil aus dem Link, Höhenangaben, Hinweis und Namensnennung, Weg zurück, ohne Verstöße", async () => {
-  const karte = await open(SITE, "?gebiet=ortsteil:kernstadt");
+test("Gebäude 2D/3D: Ortsteil aus dem Link, Gebäude anklicken, Umschalten, frühere 3D-Seite leitet weiter, ohne Verstöße", async () => {
+  const karte = await open(SITE, "?gebiet=ortsteil:gertenbach");
   await kartenoptionen(karte);
-  const link = karte.locator(".map-3d");
-  await link.click();
-  await karte.waitForURL(/3d\.html\?gebiet=ortsteil(:|%3A)kernstadt/);
+  await karte.locator(".map-3d").click();
+  await karte.waitForURL(/wohnen\.html\?ansicht=3d&gebiet=ortsteil(:|%3A)gertenbach/);
   await karte.close();
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, bypassCSP: true });
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
+  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
   await page.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
-  await page.goto(SITE + "3d.html?gebiet=ortsteil:kernstadt", { waitUntil: "networkidle" });
-  await page.waitForFunction(() => /Objekte/.test(document.querySelector("#stand3d").textContent));
-  assert.match(await page.locator("#stand3d").textContent(), /^Kernstadt: [\d.]+ Objekte, Höhe Median [\d,]+ m/);
-  assert.equal(await page.locator("#ortsteil3d").inputValue(), "kernstadt");
-  assert.match(await page.locator("#hinweis3d").textContent(), /Dachformen und Geländehöhe werden nicht dargestellt/);
-  assert.match(await page.locator(".maplibregl-ctrl-attrib").textContent(), /HVBG.*vereinfacht/);
-  await page.locator("#ortsteil3d").selectOption("ermschwerd");
-  await page.waitForFunction(() => /^Ermschwerd/.test(document.querySelector("#stand3d").textContent));
-  assert.match(page.url(), /gebiet=ortsteil%3Aermschwerd/);
-  assert.equal(await page.locator("#zurueck").getAttribute("href"), "./?gebiet=ortsteil:ermschwerd");
+  await page.goto(SITE + "wohnen.html?gebiet=ortsteil:gertenbach", { waitUntil: "networkidle" });
+  await page.waitForFunction(() => /^Gertenbach: [\d.]+ Gebäude/.test(document.querySelector("#stand").textContent));
+  assert.equal(await page.locator("#ortsteil").inputValue(), "gertenbach");
+  assert.match(await page.locator("#legende").textContent(), /Höhe geschätzt/);
+  assert.match(await page.locator(".maplibregl-ctrl-attrib").textContent(), /HVBG.*ALKIS/);
+  // ein Gebäude anklicken: Angaben mit Funktion, Höhe und Kennung (ALKIS-OID), Kennung im Link
+  await page.waitForFunction(() => window.stadtmonitorWohnen && window.stadtmonitorWohnen.map.loaded()
+    && window.stadtmonitorWohnen.map.queryRenderedFeatures({ layers: ["flaeche"] }).length > 0);
+  const punkt = await page.evaluate(() => {
+    const m = window.stadtmonitorWohnen.map, f = m.queryRenderedFeatures({ layers: ["flaeche"] })[0];
+    const ring = f.geometry.type === "Polygon" ? f.geometry.coordinates[0] : f.geometry.coordinates[0][0];
+    const p = m.project([ring.reduce((s, c) => s + c[0], 0) / ring.length, ring.reduce((s, c) => s + c[1], 0) / ring.length]);
+    const r = m.getCanvas().getBoundingClientRect();
+    return { x: r.left + p.x, y: r.top + p.y };
+  });
+  await page.mouse.click(punkt.x, punkt.y);
+  await page.locator("#gebaeude").waitFor();
+  assert.match(await page.locator("#gebaeude").textContent(), /Funktion \(ALKIS\).*Höhe.*m.*ALKIS-OID.*DEHE/s);
+  assert.match(page.url(), /gebaeude=DEHE/);
   assert.deepEqual(await axe(page), []);
+  // 3D: Körper statt Flächen, Zustand im Link
+  await page.locator("#ansicht-3d").click();
+  assert.equal(await page.locator("#ansicht-3d").getAttribute("aria-pressed"), "true");
+  assert.equal(await page.evaluate(() => window.stadtmonitorWohnen.map.getLayoutProperty("koerper", "visibility")), "visible");
+  assert.match(page.url(), /ansicht=3d/);
+  assert.equal(await page.locator("#zurueck").getAttribute("href"), "./?gebiet=ortsteil:gertenbach");
   assert.deepEqual(errors, []);
+  // frühere 3D-Ansicht: Weiterleitung mit Ortsteil
+  await page.goto(SITE + "3d.html?gebiet=ortsteil:gertenbach");
+  await page.waitForURL(/wohnen\.html\?gebiet=ortsteil(:|%3A)gertenbach&ansicht=3d/);
   await page.close();
 });
 
