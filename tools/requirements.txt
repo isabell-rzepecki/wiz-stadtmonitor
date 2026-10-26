@@ -1,0 +1,2 @@
+pynacl>=1.5,<2
+jsonschema>=4.20,<5

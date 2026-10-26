@@ -3,7 +3,10 @@
 // Barrierefreiheit mit axe-core (WCAG 2.1 A und AA). Aufruf über tests/browser/run.sh.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import { chromium } from "playwright";
@@ -451,6 +454,8 @@ async function erfassenSeite({ aktiv = true, zugang = true, viewport = { width: 
     c.wohnen_eigentum.erfassung.einladungen = page.konfig.zugang ? [hash] : [];
     await r.fulfill({ response: res, json: c });
   });
+  page.schluesseldatei = (dir) => { const p = join(dir, "pg.json"); writeFileSync(p, JSON.stringify({ key_id: "test-1", alg: "libsodium-sealedbox-x25519",
+    public_key: sodium.to_base64(kp.publicKey, V), secret_key: sodium.to_base64(kp.privateKey, V) })); return p; };
   page.oeffnen = (ct) => JSON.parse(sodium.to_string(sodium.crypto_box_seal_open(sodium.from_base64(ct, V), kp.publicKey, kp.privateKey)));
   page.oeffnenText = (ct) => sodium.to_string(sodium.crypto_box_seal_open(sodium.from_base64(ct, V), kp.publicKey, kp.privateKey));
   await page.goto(SITE + "erfassen.html", { waitUntil: "networkidle" });
@@ -578,6 +583,14 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
     assert.deepEqual(await page.evaluate(([s, r]) => window.ErfassenPruefung.schema(s, r), [s, rec]), []);
   }
   assert.match(await page.locator("#export-meldung").textContent(), /1 Eintrag\)/);
+  // Exportdateien der App im Prüfskript der Prüfgruppe (Python, PyNaCl) einlesen
+  const dir = mkdtempSync(join(tmpdir(), "pruefung-"));
+  try {
+    const dateien = [a, b].map((x) => { const p = join(dir, x.name); writeFileSync(p, JSON.stringify(x.inhalt)); return p; });
+    const aus = execFileSync("python3", ["tools/pruefen.py", "einlesen", "-a", join(dir, "arbeit"), "-s", page.schluesseldatei(dir), "-p", "P-test", ...dateien],
+      { cwd: new URL("../..", import.meta.url).pathname, encoding: "utf8" });
+    assert.match(aus, /^2 aufgenommen, 0 abgewiesen/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
   // exportierte löschen
   page.once("dialog", (d) => d.accept());
   await page.locator("#loeschen").click();
