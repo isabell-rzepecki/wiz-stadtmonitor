@@ -26,16 +26,15 @@
   <main id="inhalt">
     <h1 class="visually-hidden">Wohnen und Eigentum</h1>
     <div id="karte" role="region" aria-label="Karte der Gebäude; mit Pfeiltasten verschieben, in 3D mit Umschalt und Pfeiltasten drehen und neigen. Ein Klick auf ein Gebäude zeigt seine Angaben."></div>
-    <section class="info" aria-labelledby="info-titel">
-      <h2 id="info-titel" class="visually-hidden">Karte</h2>
-      <label class="wahl ebene">Karte <select id="ebene"><option value="funktion">Gebäude nach Funktion</option></select></label>
-      <p id="stand" class="stand" aria-live="polite"></p>
-      <div id="gebaeude" class="gebaeude" aria-live="polite" hidden></div>
-      <details id="mehr">
-        <summary>Legende und Hinweise</summary>
+    <section class="info" aria-labelledby="info-knopf">
+      <h2 class="info-titel"><button type="button" class="info-knopf" id="info-knopf" aria-expanded="true" aria-controls="info-inhalt">Karte und Legende</button></h2>
+      <div id="info-inhalt">
+        <label class="wahl ebene">Karte <select id="ebene"><option value="funktion">Gebäude nach Funktion</option></select></label>
+        <p id="stand" class="stand" aria-live="polite"></p>
+        <div id="gebaeude" class="gebaeude" aria-live="polite" hidden></div>
         <ul class="legende" id="legende"></ul>
         <p class="hinweis" id="hinweis"></p>
-      </details>
+      </div>
     </section>
     <aside class="module" id="module" aria-labelledby="module-titel">
       <h2 id="module-titel">Wohnen und Eigentum <span id="module-gebiet"></span></h2>

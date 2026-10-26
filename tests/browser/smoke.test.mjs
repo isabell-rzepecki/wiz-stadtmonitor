@@ -428,6 +428,14 @@ test("Wohnen und Eigentum (Seite): Module mit Zweck, Mietniveau, Verlauf, Eigent
   await mobil.route("https://sgx.geodatenzentrum.de/**", (r) => r.fulfill({ contentType: "image/png", body: PNG }));
   await mobil.goto(SITE + "wohnen.html", { waitUntil: "networkidle" });
   assert.equal(await mobil.locator("#module").isHidden(), true);
+  // Kasten unten links: schmal zunächst eingeklappt, der Knopf klappt ihn auf und wieder zu
+  const infoKnopf = mobil.locator("#info-knopf");
+  assert.equal(await infoKnopf.getAttribute("aria-expanded"), "false");
+  assert.equal(await mobil.locator("#ebene").isHidden(), true);
+  await infoKnopf.click();
+  assert.equal(await mobil.locator("#ebene").isVisible(), true);
+  await infoKnopf.click();
+  assert.equal(await mobil.locator("#legende").isHidden(), true);
   await mobil.locator("#angaben-knopf").click();
   assert.equal(await mobil.locator("#module").isVisible(), true);
   assert.deepEqual(await axe(mobil), []);

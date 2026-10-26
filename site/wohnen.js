@@ -83,7 +83,11 @@
         : `${cfg.gebaeude3d.hinweis} Grundrisse aus ALKIS, Höhe aus den 3D-Gebäudemodellen LoD2; ohne passendes Modell gilt eine Standardhöhe. Eigentum zeigt eine eigene Ebene, sobald geprüfte Erfassungen vorliegen.`;
     }
     legende();
-    $("#mehr").open = !SCHMAL.matches;
+    // Kasten unten links einklappbar; schmal zunächst zu, damit die Karte frei bleibt
+    const infoKnopf = $("#info-knopf"), infoInhalt = $("#info-inhalt");
+    const infoZeigen = (offen) => { infoInhalt.hidden = !offen; infoKnopf.setAttribute("aria-expanded", String(offen)); };
+    infoZeigen(!SCHMAL.matches);
+    infoKnopf.addEventListener("click", () => infoZeigen(infoInhalt.hidden));
     if (!index) { $("#stand").textContent = "Noch keine Gebäudedaten."; return; }
 
     maplibregl.setWorkerUrl("vendor/maplibre/maplibre-gl-csp-worker.js");
@@ -192,6 +196,7 @@
       map.setFilter("auswahl", ["==", ["get", "id"], gewaehlt || ""]);
       const box = $("#gebaeude");
       box.hidden = !p && !zone;
+      if (!box.hidden) infoZeigen(true);
       if (!p && zone) {
         box.innerHTML = `<h3>Bodenrichtwertzone</h3><dl>${zoneHtml(zone)}</dl><button type="button" class="link-btn" id="auswahl-weg">Auswahl aufheben</button>`;
         $("#auswahl-weg").addEventListener("click", () => { zeigeGebaeude(null); map.getCanvas().focus(); });
@@ -225,6 +230,7 @@
         ebeneSel.value = `bodenrichtwerte:${stichtage[0]}`;
         setEbene();
         if (SCHMAL.matches) angaben(false);
+        infoZeigen(true);
         ebeneSel.focus();
       });
       $("#ansicht-2d").addEventListener("click", () => setAnsicht("2d"));
