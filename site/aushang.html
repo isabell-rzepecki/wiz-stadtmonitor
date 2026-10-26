@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>Aushang: Erfassung von Eigentum und Vermietung – Stadtmonitor</title>
+  <meta name="description" content="Information nach Art. 14 DSGVO für Eigentümer:innen und Vermieter:innen, als A4-Seite zum Ausdrucken.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <!-- Öffentliche Information nach Art. 14 Abs. 5 lit. b DSGVO (Issue 28). Zweck: Für die Stadt gibt es keinen Mietspiegel;
+       die Erfassung soll eine Vergleichsgrundlage für tatsächlich gezahlte Mieten schaffen. Stelle, Kontakt, Stadt und QR-Code
+       füllt der Seitenbau aus config/stadt.json (pipeline/site.py). -->
+  <style>
+    @page { size: A4; margin: 14mm; }
+    body { font: 11pt/1.4 system-ui, sans-serif; color: #1a1a1a; background: #fff; max-width: 182mm; margin: 0 auto; padding: 12px; }
+    h1 { font-size: 19pt; line-height: 1.15; margin: 0 0 4px; }
+    .unter { margin: 0 0 10px; color: #444; }
+    h2 { font-size: 11.5pt; margin: 10px 0 2px; }
+    p, ul { margin: 0 0 4px; }
+    ul { padding-left: 18px; }
+    .fuss { display: flex; gap: 14px; align-items: flex-start; margin-top: 12px; border-top: 1px solid #999; padding-top: 8px; }
+    .fuss svg { width: 30mm; height: 30mm; flex: none; }
+    .offen { color: #8a1c17; }
+    .druck { margin: 12px 0 0; }
+    @media print { .druck { display: none; } }
+  </style>
+</head>
+<body>
+  <h1>Wer besitzt und vermietet die Wohnungen in <span data-feld="stadt">unserer Stadt</span>?</h1>
+  <p class="unter">Information für Eigentümer:innen und Vermieter:innen nach Art. 14 DSGVO</p>
+
+  <h2>Worum es geht</h2>
+  <p>Für die Stadt gibt es keinen Mietspiegel. Damit eine Vergleichsgrundlage für tatsächlich gezahlte Mieten entsteht, erfassen wir je Gebäude, ob es einer Privatperson, einem Unternehmen, einer Genossenschaft, der öffentlichen Hand oder einer Kirche gehört und ob dort vermietet wird. Rechtsgrundlage ist das berechtigte Interesse (Art. 6 Abs. 1 lit. f DSGVO).</p>
+
+  <h2>Woher die Angaben stammen</h2>
+  <p>Aus öffentlichen Belegen (Handelsregister, Bekanntmachungen, Bauschilder, Presse, Websites) und aus Ortskenntnis. <span data-feld="namen">Namen von Privatpersonen werden derzeit nicht erfasst.</span></p>
+
+  <h2>Was veröffentlicht wird</h2>
+  <ul>
+    <li>Gebäude von Privatpersonen nie einzeln, nur als Anzahl je Ortsbezirk ab 5 Gebäuden.</li>
+    <li>Namen von Privatpersonen nie, und kein Mietvergleich je privater Vermieter:in.</li>
+    <li>Unternehmen, Genossenschaften, öffentliche Hand und Kirchen mit Namen.</li>
+  </ul>
+
+  <h2>Wer die Angaben erhält, wie lange</h2>
+  <p>Nur die Prüfgruppe der verantwortlichen Stelle; verschlüsselt, keine Weitergabe, keine Übermittlung in Drittländer. Gelöscht wird spätestens 24 Monate nach Eingang.</p>
+
+  <h2>Ihre Rechte</h2>
+  <p>Auskunft, Berichtigung, Löschung, Einschränkung (Art. 15–18). <strong>Widerspruch</strong> (Art. 21): Wir löschen dann die Angaben zu Ihren Gebäuden und erfassen sie nicht erneut. Beschwerde bei der Aufsichtsbehörde: Der Hessische Beauftragte für Datenschutz und Informationsfreiheit, Wiesbaden.</p>
+
+  <div class="fuss">
+    <div data-feld="qr"></div>
+    <div>
+      <h2>Verantwortlich</h2>
+      <p class="offen" data-feld="verantwortlich">[Leerstelle: Name und Anschrift der verantwortlichen Stelle folgen.]</p>
+      <h2>Kontakt für Widerspruch und Auskunft</h2>
+      <p class="offen" data-feld="kontakt_widerspruch">[Leerstelle: Funktionsadresse folgt.]</p>
+      <p>Ausführlich: <span data-feld="adresse">Datenschutzseite des Stadtmonitors</span></p>
+    </div>
+  </div>
+  <p class="druck"><a href="datenschutz.html">Zur Datenschutzseite</a> · Diese Seite ist zum Ausdrucken (A4) gedacht.</p>
+</body>
+</html>

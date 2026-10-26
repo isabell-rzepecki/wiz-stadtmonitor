@@ -37,6 +37,20 @@ class Seite(unittest.TestCase):
                 D.clear()
                 D.update(alt)
 
+    def test_aushang_art14(self):
+        # Aushang nach Art. 14 Abs. 5 lit. b: Stadt, Hinweis zu Namen passend zum Schalter, QR-Code zur Datenschutzseite
+        with tempfile.TemporaryDirectory() as d:
+            seite = Path(d) / "aushang.html"
+            seite.write_text((site.config.SITE_SRC / "aushang.html").read_text(encoding="utf-8"), encoding="utf-8")
+            site.datenschutz_ausfuellen(seite)
+            text = seite.read_text(encoding="utf-8")
+            self.assertIn(f'<span data-feld="stadt">{site.config.STADT["stadt"]["name"]}</span>', text)
+            if not site.config.STADT["wohnen_eigentum"]["privat_namen_aktiv"]:
+                self.assertIn("Namen von Privatpersonen werden derzeit nicht erfasst.", text)
+            self.assertIn("<svg", text)
+            self.assertIn("datenschutz.html", text)
+            self.assertIn("Art. 14", text)
+
 
 if __name__ == "__main__":
     unittest.main()
