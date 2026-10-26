@@ -590,7 +590,7 @@ test("Erfassung als Probe: ohne Code und Schlüssel, Formulare prüfen, nichts g
   assert.match(await page.locator(".fehlerliste").textContent(), /Einwilligung: fehlt/);
   await page.locator('input[name="einwilligung"]').check();
   await page.fill('input[name="nettokalt_eur"]', "450");
-  await page.selectOption('select[name="wohnflaeche_klasse"]', "60-79");
+  await page.fill('input[name="wohnflaeche_m2"]', "65");
   await page.fill('input[name="vertragsbeginn_jahr"]', "2019");
   await page.locator('#form-b button[type="submit"]').click();
   assert.match(await page.locator(".erfolg").textContent(), /Probe: Die Angaben sind gültig\. Nichts wurde gespeichert/);
@@ -661,6 +661,13 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
   assert.match(await page.locator("#je-m2").textContent(), /6,25 € je m²/);
   await page.locator('#form-b button[type="submit"]').click();
   assert.match(await page.locator(".fehlerliste").textContent(), /Einwilligung: fehlt/);
+  // Fassung v3: Stelle und Kontakt eingesetzt, keine Platzhalter sichtbar, Datenschutzhinweis erreichbar
+  const wtext = await page.locator(".einwilligung").textContent();
+  assert.match(wtext, /Ich willige ein, dass Teststelle \(erfunden\) meine Angabe/);
+  assert.doesNotMatch(wtext, /\{stelle\}|\{kontakt\}/);
+  await page.locator("#zu-datenschutz").click();
+  assert.equal(await page.locator("#datenschutz").isVisible(), true);
+  await page.locator("#datenschutz button").click();
   await page.getByRole("group", { name: "Einwilligung" }).waitFor();
   await page.getByRole("checkbox", { name: "Ich willige ein." }).waitFor();
   await page.getByRole("spinbutton", { name: /Nettokaltmiete im Monat/ }).waitFor();
@@ -678,7 +685,8 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
     return new Promise((ok) => { const g = d.transaction("eintraege").objectStore("eintraege").getAll(); g.onsuccess = () => ok(g.result); });
   });
   assert.equal(ablage.length, 2);
-  assert.doesNotMatch(JSON.stringify(ablage), /Erika|Testname|450|Hauptstra|60-79/);
+  // Klartextmerkmale statt bloßer Ziffern: „450“ kann zufällig in Kennung, Zeitstempel oder Chiffrat vorkommen
+  assert.doesNotMatch(JSON.stringify(ablage), /Erika|Testname|nettokalt|wohnflaeche|Hauptstra|60-79/);
   assert.deepEqual(Object.keys(ablage.find((e) => e.typ === "miete")).sort(), ["alg", "ciphertext", "erstellt", "exportiert", "id", "key_id", "typ"]);
   // Export je Formular, mit dem Testschlüssel entschlüsselbar und gegen die Schemata gültig
   await page.locator("#zu-eintraege").click();
@@ -699,7 +707,7 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
     [450, 72, "60-79", 2019, "im_gespraech_mit_team", "E-227c7469"]);
   assert.equal(rb.einwilligung.erteilt, true);
   assert.equal(rb.angabe_id.replace(/-/g, "").slice(0, 8).toUpperCase(), widerrufscode.replace("-", ""));
-  assert.equal(rb.einwilligung.textversion.startsWith("entwurf-"), true);
+  assert.equal(rb.einwilligung.textversion, "2026-10-26-v3");
   for (const [schema, rec] of [["erfassung_eigentum", ra], ["mietangabe", rb]]) {
     const s = await (await fetch(SITE + `schemas/${schema}.json`)).json();
     assert.deepEqual(await page.evaluate(([s, r]) => window.ErfassenPruefung.schema(s, r), [s, rec]), []);

@@ -61,7 +61,7 @@ def einladung_pruefen(z, erfasst_am):
 
 def minimieren(rec):
     """Datenminimierung (DSFA): Aus Miete und Wohnfläche wird beim Einlesen der Preis je m²; beide Ausgangswerte werden
-    verworfen, sonst ließe sich die Fläche zurückrechnen. Ohne Wohnfläche bleibt nur die Miete (keine Fläche ableitbar)."""
+    verworfen, sonst ließe sich die Fläche zurückrechnen. Die Wohnfläche ist Pflicht (Schema, Einwilligung v3)."""
     rec = dict(rec)
     if rec.get("wohnflaeche_m2"):
         rec["eur_je_m2"] = round(rec.pop("nettokalt_eur") / rec.pop("wohnflaeche_m2"), 2)

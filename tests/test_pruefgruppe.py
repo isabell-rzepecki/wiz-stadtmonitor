@@ -81,7 +81,7 @@ class Pruefgruppe(unittest.TestCase):
              eigentum(G[7], "unklar"), konflikt_a, konflikt_b, *dublette,
              eigentum(G[8], "privat", objekt={"typ": "gebaeude", "id": G[8], "lage_hinweis": "Hauptstraße 12"}),  # Hausnummer: abgewiesen
              {**eigentum(G[8], "privat"), "name_juristische_person": "x"}]                                              # Schema: abgewiesen
-        b = [miete(G[i % 3], 400 + 10 * i) for i in range(6)] + [miete(W[0], 500), miete(W[1], 520), miete(G[0], 450, m2=None)]
+        b = [miete(G[i % 3], 400 + 10 * i) for i in range(6)] + [miete(W[0], 500), miete(W[1], 520)]
         ar = self.arbeit()
         neu, zeilen = pruefen.einlesen(ar, [self.export("eigentum", a), self.export("miete", b), self.export("eigentum", [eigentum(G[11], "bund")], key_id="fremd")])
         self.assertEqual(neu, len(a) - 2 + len(b))
@@ -146,7 +146,7 @@ class Pruefgruppe(unittest.TestCase):
         klein = next(z for z in m["zellen"] if z["ortsbezirk"] == "wendershausen")
         self.assertEqual((klein["n"], klein["hinweis"]), (None, "zu wenige Angaben"))
         self.assertNotIn("median", klein)
-        self.assertEqual(m["angaben_ohne_flaeche"], 1)
+        self.assertEqual(m["angaben_ohne_flaeche"], 0)
         self.assertEqual([j["name"] for j in m["juristische_personen"]], ["Wohnbau Test eG"])  # 6 Angaben aus 3 Gebäuden
         text = "".join(p.read_text(encoding="utf-8") for p in (ziel / "data" / "wohnen").iterdir())
         for verboten in ("Erika", "Otto", "Hans", "V-0", "angabe_id", "nettokalt_eur"):
@@ -283,12 +283,14 @@ class Pruefgruppe(unittest.TestCase):
         # Beim Einlesen bleibt nur der Preis je m²; Miete und Fläche werden verworfen (sonst Fläche rückrechenbar)
         b = [miete(G[0], 450, m2=72.0), miete(G[1], 500, m2=None)]
         ar = self.arbeit()
-        pruefen.einlesen(ar, [self.export("miete", b)])
-        mit, ohne = (ar.eintraege[x["angabe_id"]]["datensatz"] for x in b)
+        _, zeilen = pruefen.einlesen(ar, [self.export("miete", b)])
+        mit = ar.eintraege[b[0]["angabe_id"]]["datensatz"]
         self.assertEqual(mit["eur_je_m2"], 6.25)
         self.assertNotIn("nettokalt_eur", mit)
         self.assertNotIn("wohnflaeche_m2", mit)
-        self.assertEqual((ohne.get("nettokalt_eur"), ohne.get("eur_je_m2")), (500, None))
+        # Wohnfläche ist Pflicht (Einwilligung v3: Miete und Fläche werden immer gelöscht)
+        self.assertNotIn(b[1]["angabe_id"], ar.eintraege)
+        self.assertTrue(any(z[0] == b[1]["angabe_id"] and z[2].startswith("abgewiesen: Schema") for z in zeilen), zeilen)
         # Kennzahlen: ab 5 nur Median, ab 10 auch die Spanne; alles auf 0,10 € gerundet
         fuenf, zehn = vo.kennzahlen([5.03, 6.17, 6.51, 7.02, 8.88]), vo.kennzahlen([5 + i * 0.37 for i in range(10)])
         self.assertEqual(fuenf, {"median": 6.5})

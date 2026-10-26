@@ -1289,9 +1289,9 @@
       "einladungen": [],
       "schluessel": null,
       "einwilligung": {
-        "version": "entwurf-2026-10-26-v2",
-        "status": "Entwurf, rechtlich noch nicht geprüft (Issue 28)",
-        "text": "Ich gebe die Miete meiner Wohnung freiwillig an. Ich willige ein, dass meine Angabe (Gebäude, Nettokaltmiete, Wohnfläche, Baujahrklasse, Jahr des Vertragsbeginns und der letzten Erhöhung, Ausstattung und, falls ich ihn angebe, der Vermieter, sofern es ein Unternehmen ist) verschlüsselt an die Prüfgruppe der verantwortlichen Stelle geht und dort geprüft wird. Die Wohnfläche dient nur der Berechnung des Preises je Quadratmeter. Veröffentlicht werden nur zusammengefasste Werte ab 5 Angaben, nie meine einzelne Angabe; weitergegeben wird nichts. Gespeichert wird höchstens 24 Monate. Ich kann die Einwilligung jederzeit ohne Angabe von Gründen widerrufen, mit dem Widerrufscode, den ich nach dem Speichern erhalte; dann wird meine Angabe gelöscht. Die bis dahin erfolgte Verarbeitung bleibt rechtmäßig."
+        "version": "2026-10-26-v3",
+        "status": "Abgeschlossen am 26.10.2026; geprüft gegen Art. 4 Nr. 11, 7 und 13 DSGVO, keine anwaltliche Prüfung",
+        "text": "Ich gebe die Miete meiner Wohnung freiwillig an. Zweck: Für die Stadt gibt es keinen Mietspiegel; aus vielen Angaben soll eine Vergleichsgrundlage für tatsächlich gezahlte Mieten entstehen. Ich willige ein, dass {stelle} meine Angabe (Gebäude, Nettokaltmiete, Wohnfläche, Baujahrklasse, Jahr des Vertragsbeginns und der letzten Erhöhung, Ausstattung und, falls ich ihn angebe, den Vermieter, sofern er ein Unternehmen ist) zu diesem Zweck verarbeitet. Die Angabe geht verschlüsselt an die Prüfgruppe der Stelle. Dort wird aus Miete und Wohnfläche der Preis je Quadratmeter berechnet; Miete und Wohnfläche werden danach gelöscht. Das Gebäude dient nur der Zuordnung zu Ortsbezirk und Vermieter. Veröffentlicht werden nur zusammengefasste, gerundete Werte ab 5 Angaben, nie meine einzelne Angabe und nie mein Gebäude; weitergegeben wird nichts. Gespeichert wird höchstens 24 Monate. Ohne Einwilligung entstehen mir keine Nachteile. Ich kann sie jederzeit ohne Angabe von Gründen widerrufen, mit dem Widerrufscode, den ich nach dem Speichern erhalte, bei {kontakt}; dann wird meine Angabe gelöscht. Die bis dahin erfolgte Verarbeitung bleibt rechtmäßig. Weitere Informationen und meine Rechte, auch die Beschwerde bei der Aufsichtsbehörde: Datenschutzhinweis."
       },
       "datenschutz": {
         "verantwortlich": null,

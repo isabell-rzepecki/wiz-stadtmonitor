@@ -61,7 +61,7 @@ Nach den Maßnahmen ist das Restrisiko für alle Risiken **gering**, sobald die 
 
 - [ ] Verantwortliche Stelle mit Anschrift und Funktionsadresse in `config/stadt.json` (Issue 28)
 - [x] Form der Information nach Art. 14 festgelegt: öffentlich nach Abs. 5 lit. b, Datenschutzseite und Aushang (`information_vermieter.md`, `site/aushang.html`); offen sind nur die Orte des Aushangs
-- [ ] Einwilligungstext rechtlich prüfen lassen und als endgültige Version kennzeichnen
+- [x] Einwilligungstext abgeschlossen: Fassung 2026-10-26-v3, geprüft gegen Art. 4 Nr. 11, 7 und 13 DSGVO (Zweck, Stelle, Datenkategorien, Speicherdauer, Freiwilligkeit, Widerruf mit Kontakt, Verweis auf Rechte); keine anwaltliche Prüfung
 - [ ] Interessenabwägung und Verarbeitungsverzeichnis von der Stelle bestätigen lassen
 - [ ] Inbetriebnahme nach Issue 53 (Prüfgruppe, Schlüssel, Ausgabestelle, Codes, Generalprobe)
 
