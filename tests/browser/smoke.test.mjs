@@ -506,7 +506,7 @@ async function erfassenSeite({ aktiv = true, zugang = true, viewport = { width: 
     const res = await r.fetch(), c = await res.json();
     if (aktiv) Object.assign(c.wohnen_eigentum, { privat_namen_aktiv: true, mietangaben_aktiv: true });
     if (aktiv) c.wohnen_eigentum.erfassung.schluessel = { key_id: "test-1", alg: "libsodium-sealedbox-x25519", public_key: sodium.to_base64(kp.publicKey, V) };
-    c.wohnen_eigentum.erfassung.einladungen = page.konfig.zugang ? [hash] : [];
+    c.wohnen_eigentum.erfassung.einladungen = !page.konfig.zugang ? [] : page.konfig.bis ? [{ hash, bis: page.konfig.bis }] : [hash];
     await r.fulfill({ response: res, json: c });
   });
   page.schluesseldatei = (dir) => { const p = join(dir, "pg.json"); writeFileSync(p, JSON.stringify({ key_id: "test-1", alg: "libsodium-sealedbox-x25519",
@@ -672,6 +672,12 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
   page.konfig.zugang = false;
   await page.reload({ waitUntil: "networkidle" });
   assert.match(await page.locator("#tafel-inhalt").textContent(), /widerrufen/);
+  // abgelaufener Code (Eintrag mit Ablaufdatum): nicht freischaltbar
+  Object.assign(page.konfig, { zugang: true, bis: "2020-01-01" });
+  await page.reload({ waitUntil: "networkidle" });
+  await page.fill("#code", TESTCODE);
+  await page.locator("#zugang button").click();
+  await page.waitForFunction(() => /abgelaufen \(gültig bis 01\.01\.2020\)/.test(document.querySelector("#code-fehler").textContent));
   await page.context().close();
 });
 
