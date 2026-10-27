@@ -982,6 +982,52 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     await page.fill("#f-grund", "im Test geklärt");
     await page.locator("#knopf-verwerfen").click();
     assert.match(await page.locator("#stand").textContent(), /Verworfen2/);
+    // Rechte: Widerruf per Code und Widerspruch je Gebäude auf dem Bestand aus Python; Python macht dasselbe und erhält denselben Bestand
+    await oeffnen(join(dir, "ref", "bestand.sealed"));
+    await page.fill("#f-widerruf", "ZZZZ-ZZZZ");
+    await page.locator("#form-widerruf button").click();
+    assert.match(await page.locator("#rechte-status").textContent(), /0 Einträge gefunden/);
+    await page.fill("#f-widerruf", `${fx.widerrufscode.slice(0, 4)}-${fx.widerrufscode.slice(4)}`);
+    await page.locator("#form-widerruf button").click();
+    assert.match(await page.locator("#rechte-status").textContent(), /gelöscht \(Widerruf\)/);
+    await page.fill("#f-widerspruch", "DEHE0000UNBEKANNT");
+    await page.locator("#form-widerspruch button").click();
+    assert.match(await page.locator("#rechte-status").textContent(), /unbekannt/);
+    await page.fill("#f-widerspruch", fx.widerspruch);
+    await page.locator("#form-widerspruch button").click();
+    assert.match(await page.locator("#rechte-status").textContent(), /2 Eigentumseinträge gelöscht, 2 Gebäude auf der Sperrliste/);  // dieselbe Privatperson an zwei Gebäuden
+    await page.fill("#f-auskunft", fx.widerspruch);
+    await page.locator("#form-auskunft button").click();
+    // Mietangaben bleiben (Widerspruch betrifft die Eigentumsangaben), Eigentum zu diesem Gebäude ist gelöscht
+    assert.match(await page.locator("#auskunft").textContent(), /2 Einträge, auf der Sperrliste/);
+    assert.doesNotMatch(await page.locator("#auskunft tbody").textContent(), /Eigentum/);
+    const rechte = execFileSync("python3", ["tests/browser/pruef_fixture.py", "rechte", dir, await laden("#speichern-bestand"), fx.widerrufscode, fx.widerspruch],
+      { cwd: root, encoding: "utf8" });
+    assert.equal(rechte.trim(), "gleich");
+    // Fristen: drei Jahre später ist alles fällig und wird gelöscht
+    await page.clock.setSystemTime(new Date(Date.now() + 3 * 365 * 86400000));
+    await oeffnen(join(dir, "ref", "bestand.sealed"));
+    assert.match(await page.locator("#stand").textContent(), /Speicherdauer abgelaufen26 Einträge/);
+    page.once("dialog", (d) => d.accept());
+    await page.locator("#knopf-fristen").click();
+    assert.match(await page.locator("#stand").textContent(), /Einträge0 /);
+    assert.match(await page.locator("#stand").textContent(), /Schlüsselwechselfällig/);
+    // Probe: Wegwerf-Schlüssel und Testdaten, ganzer Ablauf; die Veröffentlichungsdatei ist als Probe markiert
+    await page.goto(SITE + "pruefen.html");
+    await page.waitForFunction(() => !document.querySelector("#knopf-probe").disabled);
+    await page.locator("#knopf-probe").click();
+    assert.match(await page.locator("#oeffnen-status").textContent(), /Probe gestartet.*11 erfundene Einträge/);
+    assert.equal(await page.locator("#probe-band").isVisible(), true);
+    await page.locator("#knopf-pruefen").click();
+    await page.locator("#knopf-alle").click();
+    await page.fill("#f-pruefer2", "P-2");
+    await page.locator("#form-pruefer button").click();
+    await page.locator("#knopf-alle").click();
+    await page.locator("#knopf-veroeffentlichen").click();
+    await page.waitForFunction(() => /Sperre bestanden/.test(document.querySelector("#veroeffentlichen-status").textContent));
+    const probe = await laden("#speichern-veroeffentlichung");
+    assert.match(probe, /probe_veroeffentlichung_/);
+    assert.equal(JSON.parse(readFileSync(probe, "utf8")).probe, true);
     // falsche Passphrase: nicht geöffnet
     await page.goto(SITE + "pruefen.html");
     await page.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);

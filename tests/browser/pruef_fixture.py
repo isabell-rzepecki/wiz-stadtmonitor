@@ -2,6 +2,7 @@
 
   python3 tests/browser/pruef_fixture.py erzeugen ORDNER     Schlüssel, Register, Exportdateien; Referenzlauf mit Python
   python3 tests/browser/pruef_fixture.py veroeffentlichen ORDNER DATEI   Veröffentlichung der Prüfseite gegen Python
+  python3 tests/browser/pruef_fixture.py rechte ORDNER BESTAND CODE GEBAEUDE   Widerruf und Widerspruch gegen Python
   python3 tests/browser/pruef_fixture.py vergleichen ORDNER BESTAND
       Bestand der Prüfseite mit Python öffnen und mit dem Referenzlauf vergleichen (gleiche Einträge, Hinweise,
       Vermieter-Schlüssel, Freigaben und Abfolge im Verlauf); gibt „gleich“ oder die Unterschiede aus
@@ -83,7 +84,8 @@ def erzeugen(o):
     pruefen.pruefen(ar)
     pruefen.freigeben(ar, alle=True)
     pruefen.freigeben(pg.Arbeit(ref, pg.Schluessel(o / "pg.json", PW), "P-2"), alle=True)
-    print(json.dumps({"passphrase": PW, "dateien": [str(p) for p in dateien], "aufgenommen": 26, "abgewiesen": 4}))
+    print(json.dumps({"passphrase": PW, "dateien": [str(p) for p in dateien], "aufgenommen": 26, "abgewiesen": 4,
+                      "widerrufscode": b[2]["angabe_id"].replace("-", "")[:8].upper(), "widerspruch": geb[3]}))
 
 
 def normiert(d):
@@ -107,6 +109,21 @@ def vergleichen(o, bestand):
     print("gleich" if not unterschiede else "\n".join(map(str, unterschiede)))
 
 
+def rechte(o, bestand, code, gebaeude):
+    """Widerruf (Code) und Widerspruch (Gebäude) mit Python auf einer Kopie des Referenzbestands; gleich dem Bestand der Seite?"""
+    o = Path(o)
+    shutil.copytree(o / "ref", o / "ref_rechte")
+    ar = pg.Arbeit(o / "ref_rechte", pg.Schluessel(o / "pg.json", PW), "P-1")
+    pruefen.loeschen(ar, pruefen.code_zu_id(ar, code), "Widerruf der Einwilligung")
+    pruefen.widerspruch(ar, [gebaeude], "Widerspruch nach Art. 21 DSGVO")
+    ref = normiert(ar.d)
+    ziel = o / "browser_rechte"
+    ziel.mkdir(exist_ok=True)
+    shutil.copy(bestand, ziel / "bestand.sealed")
+    neu = normiert(pg.Arbeit(ziel, pg.Schluessel(o / "pg.json", PW), "P-1").d)
+    print("gleich" if ref == neu else "\n".join(f"{k}: {ref[k]} != {neu[k]}" for k in ref if ref[k] != neu[k]))
+
+
 def veroeffentlichen(o, datei):
     """Python veröffentlicht aus einer Kopie des Referenzbestands; die Datei der Prüfseite wird übernommen; beide gleich?"""
     import veroeffentlichen as vo
@@ -123,4 +140,4 @@ def veroeffentlichen(o, datei):
 
 
 if __name__ == "__main__":
-    {"erzeugen": erzeugen, "vergleichen": vergleichen, "veroeffentlichen": veroeffentlichen}[sys.argv[1]](*sys.argv[2:])
+    {"erzeugen": erzeugen, "vergleichen": vergleichen, "veroeffentlichen": veroeffentlichen, "rechte": rechte}[sys.argv[1]](*sys.argv[2:])

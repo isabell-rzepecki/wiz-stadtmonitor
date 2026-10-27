@@ -372,7 +372,7 @@ class UebernehmenAusDerPruefseite(unittest.TestCase):
             aus = vo.uebernehmen(self.datei(tmp), Path(tmp) / "repo")
             self.assertEqual(aus["eigentum_gebaeude.geojson"]["features"][0]["geometry"]["type"], "Polygon")
             self.assertTrue((Path(tmp) / "repo" / "data" / "wohnen" / "mieten_aggregiert.json").exists())
-            falsch = {"format": "anders",
+            falsch = {"format": "anders", "probe": True,
                       "dateien/eigentum_gebaeude.geojson/features/0/properties/kategorie": "privat",
                       "dateien/eigentum_gebaeude.geojson/features/0/geometry": {"type": "Point", "coordinates": [0, 0]},
                       "dateien/eigentum_gebaeude.geojson/features/0/properties/id": "DEHE0000UNBEKANNT",

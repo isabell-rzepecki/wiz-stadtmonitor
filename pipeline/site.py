@@ -93,6 +93,7 @@ def pruefen_ausfuellen(seite):
     k = {"kategorien": [{x: kat[x] for x in ("code", "titel", "name_veroeffentlichen")} for kat in E["kategorien"]],
          "speicherdauer_monate": E["erfassung"]["speicherdauer_monate"], "schluessel_wechsel_monate": E["erfassung"]["schluessel_wechsel_monate"],
          "regeln": E["regeln"], "lizenz": E["lizenz"], "mietangaben_aktiv": E["mietangaben_aktiv"],
+         "einwilligung_version": E["erfassung"]["einwilligung"]["version"],
          "gebaeude_attribution": config.STADT["gebaeude"]["attribution"],
          "ortsteile": {o["slug"]: o["name"] for o in config.STADT["ortsteile"]},
          "schemas": {"eigentum": json.loads((U / "schema_erfassung_eigentum.json").read_text(encoding="utf-8")),

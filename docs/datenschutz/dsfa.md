@@ -17,7 +17,9 @@
 | Export | Datei, die die erfassende Person übergibt | versiegelte Einträge, pseudonyme Erfasser-ID | Kein Upload. Nur die Prüfgruppe kann die Datei öffnen |
 | Einlesen und Prüfen | Rechner der Prüfgruppe, außerhalb von Git | entschlüsselt nur im Arbeitsspeicher; Bestand versiegelt; Miete und Fläche werden zu €/m² | Schema- und Freitextprüfung, Einladungsregister, Sperrliste, Freigabe durch zwei Personen, Zugriffsprotokoll |
 | Veröffentlichen | Repository und Website | Kategorien juristischer Personen je Gebäude; Anzahlen je Ortsbezirk; Median €/m² ab 5 Angaben, Spanne ab 10, gerundet auf 0,10 € | Regeln R1–R9 und eine automatische Sperre vor dem Schreiben |
-| Löschen | Prüfgruppe | alle Rohdaten nach 24 Monaten; bei Widerruf oder Widerspruch sofort | `pruefen.py fristen`, `loeschen`, `widerspruch` |
+| Löschen | Prüfgruppe | alle Rohdaten nach 24 Monaten; bei Widerruf oder Widerspruch sofort | `pruefen.py fristen`, `loeschen`, `widerspruch` oder die Prüfseite |
+
+**Werkzeug (Vermerk 27.10.2026):** Einlesen, Prüfen, Freigeben, Veröffentlichen, Widerruf, Widerspruch und Fristen gehen gleichwertig mit den Python-Werkzeugen oder mit der Prüfseite `pruefen.html` im Browser. Die Prüfseite rechnet nur lokal, kann technisch nichts senden (`connect-src 'none'`), speichert nichts im Browser und nutzt dieselben Dateien, Regeln und die Sperre; Veröffentlichungsdateien prüft `veroeffentlichen.py uebernehmen` vor der Übernahme erneut. Die Maßnahmen und das Ergebnis dieser DSFA ändern sich dadurch nicht.
 
 Namen von Privatpersonen sind derzeit abgeschaltet (`privat_namen_aktiv: false`). Wer sie einschaltet, muss diese DSFA vorher erneut prüfen (Risiko R4).
 

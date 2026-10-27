@@ -227,6 +227,8 @@ def uebernehmen(datei, ziel=pg.ROOT, cfg=E):
     v = json.loads(Path(datei).read_text(encoding="utf-8"))
     if not isinstance(v, dict) or v.get("format") != "wiz-veroeffentlichung-1" or not isinstance(v.get("dateien"), dict):
         raise Verstoss("Keine Veröffentlichungsdatei der Prüfseite (format wiz-veroeffentlichung-1).")
+    if v.get("probe"):
+        raise Verstoss("Veröffentlichungsdatei aus der Probe (erfundene Testdaten); sie wird nicht übernommen.")
     ausgaben = v["dateien"]
     erwartet = DATEIEN if cfg["mietangaben_aktiv"] else DATEIEN - {"mieten_aggregiert.json"}
     if set(ausgaben) != erwartet:

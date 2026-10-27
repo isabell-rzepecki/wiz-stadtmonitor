@@ -234,6 +234,76 @@
       e.vermieter || "", e.status, e.konflikt || "", new Set(e.freigaben).size, freigegeben(e) ? "ja" : "nein", e.name_oeffentlich ?? ""]);
   }
 
+  // --- Rechte und Fristen (wie pruefen.code_zu_id, loeschen, widerspruch, fristen, wechsel_faellig) ----------------
+  function codeZuId(code) {  // Widerrufscode aus der App: die ersten 8 Zeichen der Kennung, als XXXX-XXXX
+    const c = code.replace(/-/g, "").trim().toLowerCase();
+    const t = Object.keys(S.d.eintraege).filter((i) => i.replace(/-/g, "").slice(0, 8) === c);
+    if (t.length !== 1) throw new Error(`Widerrufscode ${code}: ${t.length} Einträge gefunden.`);
+    return t[0];
+  }
+  function loeschen(i, grund) {  // Eintrag ganz entfernen; im Verlauf bleiben nur Kennung, Zeit und Grund
+    delete S.d.eintraege[i];
+    verlauf(`gelöscht (${grund})`, i);
+  }
+  function widerspruch(gebaeude, grund) {
+    const eig = Object.entries(S.d.eintraege).filter(([, e]) => e.typ === "eigentum");
+    const ziele = new Set(gebaeude);
+    const schl = new Set(eig.filter(([, e]) => ziele.has(e.datensatz.objekt.id) && (e.vermieter || "").startsWith("V-")).map(([, e]) => e.vermieter));
+    for (const [, e] of eig) if (schl.has(e.vermieter)) ziele.add(e.datensatz.objekt.id);
+    const weg = eig.filter(([, e]) => ziele.has(e.datensatz.objekt.id)).map(([i]) => i);
+    for (const i of weg) loeschen(i, grund);
+    S.d.sperrliste = [...new Set([...(S.d.sperrliste || []), ...ziele])].sort(nachSchluessel);
+    S.geaendert = true;
+    return { weg, ziele: [...ziele] };
+  }
+  const isoTag = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  function monateVersetzt(tag, monate) {  // wie divmod(jahr * 12 + monat - 1 ± monate, 12), Tag höchstens 28
+    const [j, m, d] = tag.split("-").map(Number);
+    const g = j * 12 + m - 1 + monate;
+    return `${Math.floor(g / 12)}-${String((g % 12) + 1).padStart(2, "0")}-${String(Math.min(d, 28)).padStart(2, "0")}`;
+  }
+  const fristGrenze = () => monateVersetzt(isoTag(new Date()), -K.speicherdauer_monate);
+  const faellig = () => Object.entries(S.d.eintraege).filter(([, e]) => e.eingelesen.slice(0, 10) < fristGrenze()).map(([i]) => i);
+  function wechselFaellig() {
+    const m = /^[^-]+-(\d{4})(\d{2})(\d{2})/.exec(S.schl.key_id);
+    return !m || isoTag(new Date()) >= monateVersetzt(`${m[1]}-${m[2]}-${m[3]}`, K.schluessel_wechsel_monate);
+  }
+  function protokollZeilen() {  // bisheriges und neues Protokoll, ohne Zeilen älter als die Speicherdauer
+    const g = fristGrenze();
+    return [...S.protokollAlt.map((z) => [z.zeit, z.pruefer, z.datensatz, z.zweck]), ...S.protokoll].filter((z) => String(z[0]).slice(0, 10) >= g);
+  }
+
+  // --- Probe: Wegwerf-Schlüssel und erfundene Testdaten (Generalprobe ohne echte Daten) ----------------------------
+  function probeStarten() {
+    const kp = sodium.crypto_box_keypair();
+    const key_id = `probe-${isoTag(new Date()).replace(/-/g, "")}`;
+    const schl = { key_id, paare: new Map([[key_id, { pk: kp.publicKey, sk: kp.privateKey }]]), gesperrt: new Set(),
+      kennt: (id) => id === key_id,
+      oeffnen: (ct) => sodium.crypto_box_seal_open(sodium.from_base64(ct.trim(), V), kp.publicKey, kp.privateKey),
+      versiegeln: (bytes) => sodium.to_base64(sodium.crypto_box_seal(bytes, kp.publicKey), V) };
+    const eid = "E-probe001";
+    const register = new Map([[eid, { erfasser_id: eid, hash: "", ausgegeben: "2000-01-01", gueltig_bis: "2999-12-31", widerrufen: "" }]]);
+    S = { schl, d: { version: 1, eintraege: {}, vermieter_naechste: 1, verlauf: [] }, pruefer: "P-1", register, protokoll: [], protokollAlt: [],
+      einlesen: [], geaendert: true, probe: true };
+    const ids = [...GEB].filter(([, o]) => o === "kernstadt").slice(0, 8).map(([g]) => g);
+    const zeit = (i) => new Date(Date.now() - (60 - i) * 60000).toISOString();
+    const siegel = (r) => sodium.to_base64(sodium.crypto_box_seal(sodium.from_string(JSON.stringify(r)), kp.publicKey), V);
+    let n = 0;
+    const eig = (g, kat, name) => ({ erfassung_id: crypto.randomUUID(), objekt: { typ: "gebaeude", id: g }, kategorie: kat, beleg_art: "ortskenntnis",
+      sicherheit: "wahrscheinlich", vermietet: "ja", erfasst_am: zeit(n++), erfasser: eid, app_version: "probe",
+      ...(name ? { name_juristische_person: name, vermieter_schluessel: `JP:${name}` } : kat === "privat" ? { vermieter_schluessel: "V-neu" } : {}) });
+    const miete = (g, eur, m2) => ({ angabe_id: crypto.randomUUID(), gebaeude_id: g, nettokalt_eur: eur, wohnflaeche_m2: m2, wohnflaeche_klasse: "60-79",
+      baujahr_klasse: "1949-1978", vertragsbeginn_jahr: 2019, einwilligung: { erteilt: true, textversion: K.einwilligung_version, zeitpunkt: zeit(n) },
+      erfasst_am: zeit(n++), erfassungsweg: "selbst" });
+    const a = [eig(ids[0], "geno", "Probe-Wohnbau eG"), eig(ids[1], "geno", "Probe-Wohnbau eG"), eig(ids[2], "kom", "Stadt (Probe)"),
+      eig(ids[3], "privat"), eig(ids[4], "unklar")];
+    const b = Array.from({ length: 6 }, (_, i) => miete(ids[i % 3], 450 + 20 * i, 65 + i));
+    const exp = (typ, recs) => ({ name: `probe_${typ}.json`, inhalt: JSON.stringify({ format: FORMAT, version: 1, typ, alg: ALG, erfasser: eid,
+      erstellt: new Date().toISOString(), anzahl: recs.length,
+      eintraege: recs.map((r) => ({ id: r.erfassung_id || r.angabe_id, erstellt: r.erfasst_am, key_id, ciphertext: siegel(r) })) }) });
+    return [exp("eigentum", a), exp("miete", b)];
+  }
+
   // --- Veröffentlichen (wie tools/veroeffentlichen.py) -------------------------------------------------------------
   const VERBOTEN = new Set(["name_privat_enc", "name_privat", "angabe_id", "erfassung_id", "nettokalt_eur", "wohnflaeche_m2", "eur_je_m2", "einwilligung",
     "erfasser", "vermieter_schluessel", "bemerkung", "lage_hinweis", "beleg_url", "letzte_erhoehung_jahr", "ausstattung"]);
@@ -360,7 +430,7 @@
     pruefeAusgabe(ausgaben, namen);
     for (const d of Object.values(ausgaben)) Object.assign(d, { lizenz: K.lizenz.name, lizenz_url: K.lizenz.url, namensnennung: K.lizenz.namensnennung });
     verlauf(`veröffentlicht (${Object.keys(ausgaben).join(", ")})`);
-    return { format: "wiz-veroeffentlichung-1", stand, dateien: ausgaben };
+    return { format: "wiz-veroeffentlichung-1", stand, ...(S.probe ? { probe: true } : {}), dateien: ausgaben };
   }
   function vorschau(v) {
     const a = v.dateien["eigentum_anteile_ortsbezirk.json"].ortsbezirke, m = v.dateien["mieten_aggregiert.json"];
@@ -383,7 +453,10 @@
       ["Offen ohne Hinweis", zahl((e) => e.status === "offen" && !e.konflikt)], ["Mit Hinweis", zahl((e) => e.status === "offen" && e.konflikt)],
       ["Verworfen", zahl((e) => e.status === "verworfen")], ["Zweimal freigegeben", zahl(freigegeben)],
       ["Register", S.register ? `${S.register.size} Erfasser-IDs` : "nicht geladen: Einladungscodes werden nicht geprüft"],
-      ["Zugriffe auf Namen in dieser Sitzung", S.protokoll.length]]
+      ["Zugriffe auf Namen in dieser Sitzung", S.protokoll.length],
+      ["Sperrliste (Widerspruch)", `${(S.d.sperrliste || []).length} Gebäude`],
+      ["Speicherdauer abgelaufen", `${faellig().length} Einträge`],
+      ["Schlüsselwechsel", wechselFaellig() ? "fällig (jährlich; derzeit mit Python: pruefen.py schluessel-wechsel)" : "nicht fällig"]]
       .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
     document.querySelectorAll(".pruefer-id").forEach((x) => { x.textContent = S.pruefer; });
     const angaben = (e) => {
@@ -400,8 +473,12 @@
         <td>${esc(e.vermieter || "")}</td><td>${esc(e.status)}</td><td>${esc(e.konflikt || "")}</td>
         <td>${esc([...new Set(e.freigaben)].join(", ") || "–")}</td></tr>`;
     }).join("") || `<tr><td colspan="9">Noch keine Einträge.</td></tr>`;
+    const f = faellig().length;
+    $("#fristen-text").textContent = `Einträge werden ${K.speicherdauer_monate} Monate nach dem Eingang gelöscht (Grenze: eingelesen vor ${fristGrenze()}). Fällig: ${f}.`;
+    $("#knopf-fristen").disabled = !f;
+    $("#probe-band").hidden = !S.probe;
     $("#ungespeichert").textContent = S.geaendert ? "Es gibt Änderungen, die noch nicht als Bestandsdatei gespeichert sind." : "";
-    $("#speichern-protokoll").disabled = !S.protokoll.length;
+    $("#speichern-protokoll").disabled = !S.protokoll.length && protokollZeilen().length === S.protokollAlt.length;
   }
   const ausgewaehlt = () => [...document.querySelectorAll("#liste tbody input:checked")].map((x) => x.value);
   async function dateiText(input) { const f = input.files[0]; return f ? { name: f.name, inhalt: await f.text() } : null; }
@@ -438,6 +515,50 @@
     } finally {
       knopf.disabled = false; knopf.textContent = "Öffnen";
     }
+  });
+
+  $("#knopf-probe").addEventListener("click", () => {
+    const dateien = probeStarten();
+    $("#sitzung").hidden = false;
+    const { neu } = einlesen(dateien);
+    anzeigen();
+    melden($("#oeffnen-status"), `Probe gestartet: Wegwerf-Schlüssel ${S.schl.key_id}, ${neu} erfundene Einträge eingelesen. Weiter mit „Prüfen“.`);
+  });
+
+  $("#form-widerruf").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const st = $("#rechte-status"), w = $("#f-widerruf").value.trim();
+    try {
+      const i = w in S.d.eintraege ? w : codeZuId(w);
+      loeschen(i, "Widerruf der Einwilligung");
+      $("#f-widerruf").value = "";
+      anzeigen(); melden(st, `Eintrag ${i.slice(0, 8)} gelöscht (Widerruf). Bestand danach speichern.`);
+    } catch (err) { melden(st, err.message, "fehler"); }
+  });
+  $("#form-widerspruch").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const st = $("#rechte-status");
+    const geb = $("#f-widerspruch").value.split(/[\s,;]+/).filter(Boolean);
+    const unbekannt = geb.filter((g) => !GEB.has(g));
+    if (!geb.length || unbekannt.length) return melden(st, `Bitte gültige Gebäudekennungen angeben${unbekannt.length ? ` (unbekannt: ${unbekannt.join(", ")})` : ""}.`, "fehler");
+    const { weg, ziele } = widerspruch(geb, "Widerspruch nach Art. 21 DSGVO");
+    $("#f-widerspruch").value = "";
+    anzeigen(); melden(st, `${weg.length} Eigentumseinträge gelöscht, ${ziele.length} Gebäude auf der Sperrliste. Bestand danach speichern.`);
+  });
+  $("#form-auskunft").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const g = $("#f-auskunft").value.trim();
+    const treffer = Object.entries(S.d.eintraege).filter(([, e]) => (e.typ === "eigentum" ? e.datensatz.objekt.id : e.datensatz.gebaeude_id) === g);
+    const gesperrt = (S.d.sperrliste || []).includes(g);
+    $("#auskunft").hidden = false;
+    $("#auskunft").innerHTML = `<p>Gebäude <code>${esc(g)}</code>: ${treffer.length} Einträge${gesperrt ? ", auf der Sperrliste (Widerspruch)" : ""}. Gespeichert sind nur die hier gezeigten Angaben; Namen von Privatpersonen stehen nicht im Klartext im Bestand.</p>` +
+      (treffer.length ? `<div class="tabelle-rahmen"><table><caption>Gespeicherte Angaben</caption><thead><tr><th scope="col">Kennung</th><th scope="col">Typ</th><th scope="col">Angaben</th><th scope="col">Eingang</th><th scope="col">Status</th></tr></thead><tbody>${treffer.map(([i, e]) => `<tr><td><code>${esc(i.slice(0, 8))}</code></td><td>${e.typ === "eigentum" ? "Eigentum" : "Miete"}</td><td>${esc(e.typ === "eigentum" ? [e.datensatz.kategorie, e.datensatz.vermietet && `vermietet: ${e.datensatz.vermietet}`, e.datensatz.beleg_art].filter(Boolean).join(" · ") : `${String(e.datensatz.eur_je_m2).replace(".", ",")} €/m², ${e.datensatz.wohnflaeche_klasse}, ${e.datensatz.baujahr_klasse}`)}</td><td>${esc(e.eingelesen.slice(0, 10))}</td><td>${esc(e.status)}</td></tr>`).join("")}</tbody></table></div>` : "");
+  });
+  $("#knopf-fristen").addEventListener("click", () => {
+    const f = faellig();
+    if (!f.length || !confirm(`${f.length} Einträge endgültig löschen (Speicherdauer abgelaufen)?`)) return;
+    for (const i of f) loeschen(i, `Speicherdauer ${K.speicherdauer_monate} Monate`);
+    anzeigen(); melden($("#rechte-status"), `${f.length} Einträge nach Ablauf der Speicherdauer gelöscht. Bestand und Zugriffsprotokoll (gekürzt) speichern.`);
   });
 
   $("#form-pruefer").addEventListener("submit", (ev) => {
@@ -505,14 +626,14 @@
     }
   });
   $("#speichern-veroeffentlichung").addEventListener("click", () =>
-    speichern(`veroeffentlichung_${veroeffentlichung.stand}.json`, JSON.stringify(veroeffentlichung), "application/json"));
+    speichern(`${S.probe ? "probe_" : ""}veroeffentlichung_${veroeffentlichung.stand}.json`, JSON.stringify(veroeffentlichung), "application/json"));
 
   $("#speichern-bestand").addEventListener("click", () => {
-    speichern("bestand.sealed", S.schl.versiegeln(sodium.from_string(JSON.stringify(S.d))));
+    speichern(S.probe ? "probe_bestand.sealed" : "bestand.sealed", S.schl.versiegeln(sodium.from_string(JSON.stringify(S.d))));
     S.geaendert = false; anzeigen();
   });
-  $("#speichern-protokoll").addEventListener("click", () => speichern("namenzugriff.tsv",
-    tsv(["zeit", "pruefer", "datensatz", "zweck"], [...S.protokollAlt.map((z) => [z.zeit, z.pruefer, z.datensatz, z.zweck]), ...S.protokoll]), "text/tab-separated-values"));
+  $("#speichern-protokoll").addEventListener("click", () => speichern(S.probe ? "probe_namenzugriff.tsv" : "namenzugriff.tsv",
+    tsv(["zeit", "pruefer", "datensatz", "zweck"], protokollZeilen()), "text/tab-separated-values"));
   $("#knopf-beenden").addEventListener("click", () => {
     if (S?.geaendert && !confirm("Der Bestand ist noch nicht gespeichert. Trotzdem beenden?")) return;
     S = null; location.reload();
@@ -523,6 +644,7 @@
   window.sodium.ready.then(() => {
     sodium = window.sodium; V = sodium.base64_variants.ORIGINAL;
     $("#knopf-oeffnen").disabled = false;
+    $("#knopf-probe").disabled = false;
     $("#laden").remove();
   });
 })();
