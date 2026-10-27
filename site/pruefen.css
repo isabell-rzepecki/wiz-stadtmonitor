@@ -1,0 +1,18 @@
+/* Prüfseite: wie die Einrichtungsseite (einrichten.css), dazu eine breitere Fläche und Tabellen mit eigenem Bildlauf */
+.page.breit { width: min(1180px, calc(100% - 32px)); }
+.page-head:has(+ .page.breit) { width: min(1180px, calc(100% - 32px)); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.zeile { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; }
+.zeile .feld { margin: 0; flex: 1 1 240px; }
+.knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+.stand { display: grid; grid-template-columns: max-content 1fr; gap: 2px 16px; margin: 0 0 12px; }
+.stand dt { font-weight: 700; }
+.stand dd { margin: 0; overflow-wrap: anywhere; }
+.tabelle-rahmen { overflow-x: auto; margin: 0 0 12px; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; line-height: 1.4; }
+caption { text-align: left; font-weight: 700; padding: 6px 8px; }
+th, td { text-align: left; vertical-align: top; padding: 4px 8px; border-top: 1px solid var(--line); }
+thead th { background: var(--accent-tint); }
+tr.verworfen td { color: var(--muted); }
+tr.frei td:nth-child(9) { color: #1f5a3d; font-weight: 700; }
+td input[type="checkbox"] { width: 20px; height: 20px; margin: 0; accent-color: var(--accent-ink); }

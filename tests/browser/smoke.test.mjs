@@ -899,3 +899,95 @@ print("ok", s.key_id)
     await ctx.close();
   }
 });
+
+test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bestand mit Python austauschbar, nichts gesendet, ohne Verstöße", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "pruefseite-"));
+  const root = new URL("../..", import.meta.url).pathname;
+  const fx = JSON.parse(execFileSync("python3", ["tests/browser/pruef_fixture.py", "erzeugen", dir], { cwd: root, encoding: "utf8" }));
+  const ctx = await browser.newContext({ acceptDownloads: true });
+  const page = await ctx.newPage();
+  const fehler = [], abrufe = [];
+  page.on("pageerror", (e) => fehler.push(String(e)));
+  page.on("console", (m) => { if (m.type() === "error") fehler.push(m.text()); });
+  page.on("request", (r) => abrufe.push(r.url()));
+  const laden = async (knopf) => {
+    const [dl] = await Promise.all([page.waitForEvent("download"), page.locator(knopf).click()]);
+    const ziel = join(dir, `dl_${Date.now()}_${dl.suggestedFilename()}`);
+    await dl.saveAs(ziel);
+    return ziel;
+  };
+  const oeffnen = async (bestand) => {
+    await page.goto(SITE + "pruefen.html");
+    await page.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);
+    await page.setInputFiles("#f-schluessel", join(dir, "pg.json"));
+    await page.fill("#f-pass", fx.passphrase);
+    await page.fill("#f-pruefer", "P-1");
+    await page.setInputFiles("#f-register", join(dir, "einladungen.tsv"));
+    if (bestand) await page.setInputFiles("#f-bestand", bestand);
+    await page.locator("#knopf-oeffnen").click();
+    await page.locator("#sitzung").waitFor();
+  };
+  try {
+    await oeffnen(null);
+    assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'none'/);
+    const nachLaden = abrufe.length;
+    // Prüfer-ID ohne Muster abgewiesen
+    await page.fill("#f-pruefer2", "Erika");
+    await page.locator("#form-pruefer button").click();
+    assert.match(await page.locator("#pruefer-status").textContent(), /Format P-/);
+    // Eingang: dieselben Fälle wie im Python-Referenzlauf
+    await page.setInputFiles("#f-exporte", fx.dateien);
+    await page.locator("#form-eingang button").click();
+    await page.waitForFunction(() => /aufgenommen/.test(document.querySelector("#eingang-status").textContent));
+    assert.match(await page.locator("#eingang-status").textContent(), new RegExp(`^${fx.aufgenommen} aufgenommen, ${fx.abgewiesen} abgewiesen`));
+    assert.match(await page.locator("#eingang-tabelle").textContent(), /Erfasser-ID nicht im Einladungsregister.*/s);
+    // Prüfen, Freigabe durch P-1 und P-2 nacheinander
+    await page.locator("#knopf-pruefen").click();
+    await page.waitForFunction(() => /Geprüft/.test(document.querySelector("#pruefen-status").textContent));
+    await page.locator("#knopf-alle").click();
+    await page.fill("#f-pruefer2", "P-2");
+    await page.locator("#form-pruefer button").click();
+    await page.locator("#knopf-alle").click();
+    assert.match(await page.locator("#stand").textContent(), /Zweimal freigegeben10/);
+    assert.match(await page.locator("#liste").textContent(), /8,12 €\/m²/);  // 650 / 80 = 8,125 → 8,12 wie Python round()
+    assert.match(await page.locator("#ungespeichert").textContent(), /noch nicht/);
+    const bestand = await laden("#speichern-bestand");
+    assert.equal(await page.locator("#ungespeichert").textContent(), "");
+    const protokoll = readFileSync(await laden("#speichern-protokoll"), "utf8").trim().split("\n");
+    assert.equal(protokoll.length, readFileSync(join(dir, "ref", "namenzugriff.tsv"), "utf8").trim().split("\n").length);
+    // Python öffnet den Bestand der Seite: gleich dem Referenzlauf
+    const vergleich = execFileSync("python3", ["tests/browser/pruef_fixture.py", "vergleichen", dir, bestand], { cwd: root, encoding: "utf8" });
+    assert.equal(vergleich.trim(), "gleich");
+    assert.deepEqual(abrufe.slice(nachLaden), []);
+    // umgekehrt: Bestand aus Python öffnen, Eintrag mit Hinweis verwerfen
+    await oeffnen(join(dir, "ref", "bestand.sealed"));
+    assert.match(await page.locator("#stand").textContent(), /Einträge15.*Mit Hinweis4.*Verworfen1.*Zweimal freigegeben10/s);
+    const zeile = page.locator("#liste tbody tr", { hasText: "abweichende Angaben" }).first();
+    await zeile.locator("input").check();
+    await page.locator("#knopf-verwerfen").click();
+    assert.match(await page.locator("#pruefen-status").textContent(), /Grund/);
+    await page.fill("#f-grund", "im Test geklärt");
+    await page.locator("#knopf-verwerfen").click();
+    assert.match(await page.locator("#stand").textContent(), /Verworfen2/);
+    // falsche Passphrase: nicht geöffnet
+    await page.goto(SITE + "pruefen.html");
+    await page.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);
+    await page.setInputFiles("#f-schluessel", join(dir, "pg.json"));
+    await page.fill("#f-pass", "falsch");
+    await page.fill("#f-pruefer", "P-1");
+    await page.locator("#knopf-oeffnen").click();
+    await page.waitForFunction(() => /Passphrase falsch/.test(document.querySelector("#oeffnen-status").textContent));
+    assert.deepEqual(await page.evaluate(() => [localStorage.length, sessionStorage.length]), [0, 0]);
+    assert.deepEqual(fehler, []);
+    // Barrierefreiheit (axe braucht ein eingefügtes Skript, das die Richtlinie der Seite sperrt; daher ohne sie)
+    const pruef = await browser.newPage({ bypassCSP: true });
+    await pruef.goto(SITE + "pruefen.html");
+    await pruef.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);
+    await pruef.evaluate(() => { document.querySelector("#sitzung").hidden = false; });
+    assert.deepEqual(await axe(pruef), []);
+    await pruef.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    await ctx.close();
+  }
+});

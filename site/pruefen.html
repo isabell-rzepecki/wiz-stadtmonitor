@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Prüfung der Erfassungen durch die Prüfgruppe, nicht öffentlich verlinkt. Alles rechnet im Browser; connect-src 'none'
+       schließt jedes Abrufen und Senden aus. Regeln und Dateiformate wie tools/pruefen.py (Bestand bestand.sealed,
+       Register, Zugriffsprotokoll); Schemata und Kategorien setzt der Seitenbau aus config/stadt.json ein. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Prüfung der Erfassungen – Stadtmonitor</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="page.css">
+  <link rel="stylesheet" href="einrichten.css">
+  <link rel="stylesheet" href="pruefen.css">
+  <script type="application/json" id="konfig">{}</script>
+</head>
+<body>
+  <header class="page-head">
+    <span class="page-brand"><img src="favicon.svg" width="32" height="32" alt="">Stadtmonitor</span>
+  </header>
+  <main class="page breit" id="inhalt">
+    <h1>Prüfung der Erfassungen</h1>
+    <p>Für die Prüfgruppe: Exportdateien der Erfassung einlesen, prüfen und zu zweit freigeben. Die Seite rechnet nur in diesem Browser und kann technisch nichts senden. Sie speichert nichts im Browser; am Ende gibt sie den versiegelten Bestand als Datei aus.</p>
+    <p id="netz" class="hinweis" role="status"></p>
+    <p id="laden" class="hinweis" role="status">Verschlüsselung wird geladen …</p>
+
+    <section aria-labelledby="t-oeffnen">
+      <h2 id="t-oeffnen">1. Sitzung öffnen</h2>
+      <form id="form-oeffnen" novalidate>
+        <label class="feld">Schlüsseldatei der Prüfgruppe
+          <input type="file" id="f-schluessel" accept=".json,application/json" required></label>
+        <label class="feld">Passphrase
+          <input type="password" id="f-pass" autocomplete="off" required></label>
+        <label class="feld">Prüfer-ID (pseudonym, etwa P-1; kein Name)
+          <input type="text" id="f-pruefer" autocomplete="off" pattern="P-[A-Za-z0-9_\-]{1,20}" required></label>
+        <label class="feld">Bestandsdatei <span class="klein">(bestand.sealed; leer lassen für einen neuen Bestand)</span>
+          <input type="file" id="f-bestand"></label>
+        <label class="feld">Register der Einladungscodes <span class="klein">(von der Ausgabestelle; ohne Register werden Codes nicht geprüft)</span>
+          <input type="file" id="f-register" accept=".tsv,text/tab-separated-values,text/plain"></label>
+        <label class="feld">Bisheriges Zugriffsprotokoll <span class="klein">(optional, namenzugriff.tsv; wird fortgeschrieben)</span>
+          <input type="file" id="f-protokoll" accept=".tsv,text/tab-separated-values,text/plain"></label>
+        <p><button type="submit" class="knopf" id="knopf-oeffnen" disabled>Öffnen</button></p>
+      </form>
+      <p id="oeffnen-status" role="status" tabindex="-1"></p>
+    </section>
+
+    <div id="sitzung" hidden>
+      <section aria-labelledby="t-stand">
+        <h2 id="t-stand">Stand</h2>
+        <dl class="stand" id="stand"></dl>
+        <form id="form-pruefer" class="zeile" novalidate>
+          <label class="feld">Prüfer-ID wechseln (zweite Person am selben Gerät)
+            <input type="text" id="f-pruefer2" autocomplete="off" pattern="P-[A-Za-z0-9_\-]{1,20}"></label>
+          <button type="submit" class="knopf">Wechseln</button>
+        </form>
+        <p id="pruefer-status" role="status"></p>
+      </section>
+
+      <section aria-labelledby="t-eingang">
+        <h2 id="t-eingang">2. Eingang</h2>
+        <form id="form-eingang" novalidate>
+          <label class="feld">Exportdateien der Erfassenden
+            <input type="file" id="f-exporte" multiple></label>
+          <p><button type="submit" class="knopf">Einlesen</button></p>
+        </form>
+        <p id="eingang-status" role="status" tabindex="-1"></p>
+        <div id="eingang-ergebnis" hidden>
+          <div class="tabelle-rahmen"><table id="eingang-tabelle"><caption>Ergebnis des Einlesens</caption>
+            <thead><tr><th scope="col">Kennung</th><th scope="col">Typ</th><th scope="col">Ergebnis</th><th scope="col">Datei</th></tr></thead><tbody></tbody></table></div>
+          <p><button type="button" class="knopf" id="speichern-einlesebericht">Einlesebericht speichern</button></p>
+          <p class="klein">Eingelesene Exportdateien danach löschen; sie liegen versiegelt im Bestand.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-pruefen">
+        <h2 id="t-pruefen">3. Prüfen und freigeben</h2>
+        <p>„Prüfen“ vergibt Vermieter-Schlüssel und markiert Dubletten und abweichende Angaben. Jeder Eintrag braucht zwei Freigaben verschiedener Prüfer-IDs, entweder nacheinander hier oder an einem zweiten Gerät mit derselben Bestandsdatei.</p>
+        <p class="knoepfe"><button type="button" class="knopf" id="knopf-pruefen">Prüfen</button>
+          <button type="button" class="knopf" id="knopf-alle">Alle freigeben (als <span class="pruefer-id"></span>)</button>
+          <button type="button" class="knopf" id="speichern-pruefliste">Prüfliste speichern</button></p>
+        <p id="pruefen-status" role="status" tabindex="-1"></p>
+        <div class="tabelle-rahmen"><table id="liste"><caption>Einträge im Bestand</caption>
+          <thead><tr><th scope="col"><span class="visually-hidden">Auswahl</span></th><th scope="col">Kennung</th><th scope="col">Typ</th><th scope="col">Gebäude</th><th scope="col">Angaben</th><th scope="col">Vermieter</th><th scope="col">Status</th><th scope="col">Hinweis</th><th scope="col">Freigaben</th></tr></thead>
+          <tbody></tbody></table></div>
+        <form id="form-auswahl" class="zeile" novalidate>
+          <button type="button" class="knopf" id="knopf-auswahl-frei">Ausgewählte freigeben</button>
+          <label class="feld">Grund für das Verwerfen
+            <input type="text" id="f-grund" autocomplete="off" maxlength="200"></label>
+          <button type="button" class="knopf" id="knopf-verwerfen">Ausgewählte verwerfen</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="t-schliessen">
+        <h2 id="t-schliessen">4. Sitzung schließen</h2>
+        <p id="ungespeichert" class="hinweis" role="status"></p>
+        <p class="knoepfe"><button type="button" class="knopf" id="speichern-bestand">Bestand speichern (bestand.sealed)</button>
+          <button type="button" class="knopf" id="speichern-protokoll">Zugriffsprotokoll speichern</button>
+          <button type="button" class="knopf" id="knopf-beenden">Sitzung beenden</button></p>
+        <p class="klein">Die Bestandsdatei ist mit dem Schlüssel der Prüfgruppe versiegelt. Sie gehört nicht in ein Git-Repository, eine E-Mail oder einen Messenger; zur zweiten Freigabe an einem anderen Gerät persönlich weitergeben (USB-Stick). Das Zugriffsprotokoll sieht vierteljährlich eine Person ohne Schlüssel durch.</p>
+      </section>
+    </div>
+  </main>
+  <script src="vendor/libsodium-sumo/libsodium-sumo.js"></script>
+  <script src="vendor/libsodium-sumo/libsodium-wrappers.js"></script>
+  <script src="erfassen-pruefung.js"></script>
+  <script src="pruefen.js"></script>
+</body>
+</html>
