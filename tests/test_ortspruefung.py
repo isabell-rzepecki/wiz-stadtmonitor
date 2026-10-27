@@ -121,6 +121,25 @@ class Ortspruefung(unittest.TestCase):
         for teil in ("Ortsteil", "Hausnummer", "Name einer Person", "Kontaktdaten", "„bestätigt“ ohne bisherige Zuordnung"):
             self.assertIn(teil, alles)
 
+    def test_nachtrag_lage(self):
+        # geprüfte Orte ohne Straße: Tabelle mit vorausgefülltem Ergebnis und Ortsteil, Straße aus dem Verzeichnis
+        geprueft = {"STV/001/2026": [{"vorgang": "STV/001/2026", "treffer": "Freibad", "ergebnis": "korrigiert", "ortsteil": "Kernstadt",
+                                      "strasse": "", "hinweis": "Einladung", "geprueft_am": "2026-10-27"}],
+                    "HFA-1": [{"vorgang": "HFA-1", "treffer": "Baubetriebshof", "ergebnis": "kein Ortsbezug", "ortsteil": "",
+                               "strasse": "", "hinweis": "", "geprueft_am": "2026-10-27"}]}
+        ziel = self.dir / "lage.xlsx"
+        zeilen = ortspruefung.erstellen(ziel, self.vorgaenge, geprueft=geprueft, lage=True, ortsteil="Kernstadt")
+        self.assertEqual([(z["treffer"], z["ergebnis"], z["ortsteil"]) for z in zeilen], [("Freibad", "korrigiert", "Kernstadt")])
+        wb = load_workbook(ziel)
+        self.assertIn("Am Sande", [c.value for c in wb["Listen"]["C"]])
+        tsv = self.dir / "geprueft.tsv"
+        self.ausfuellen(ziel, {"Freibad": {"strasse": "Am Sand"}})
+        _, fehler = ortspruefung.einlesen(ziel, tsv)
+        self.assertIn("nicht im Verzeichnis von Kernstadt", " ".join(fehler))
+        self.ausfuellen(ziel, {"Freibad": {"strasse": "Am Sande"}})
+        neu, fehler = ortspruefung.einlesen(ziel, tsv)
+        self.assertEqual((fehler, [(z["strasse"], z["hinweis"]) for z in neu]), ([], [("Am Sande", "Einladung")]))
+
 
 if __name__ == "__main__":
     unittest.main()
