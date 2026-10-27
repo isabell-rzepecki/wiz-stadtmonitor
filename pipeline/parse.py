@@ -24,11 +24,21 @@ PERSON = re.compile(rf"\b({ROLLE})\s+(?!{_KEIN}){_NAME}(?:\s+(?!{_KEIN}){_NAME})
 # mehrere Personen ohne Anrede in Klammern: „(Vorname Name/Vorname Name)“
 _VOLL = r"[A-ZÄÖÜ][a-zäöüß]+\s[A-ZÄÖÜ][a-zäöüß]+"
 PERSONEN = re.compile(rf"\({_VOLL}(?:\s*/\s*{_VOLL})+\)")
-# Namen ohne Anrede nach „mit“ („Gespräch mit Vorname Name“, auch „… und Vorname Name“); Orte und Einrichtungen, die so
+# Namen ohne Anrede nach „mit“ oder „durch“ („Gespräch mit Vorname Name“, „Vortrag durch Dr. Vorname Name“, auch „… und
+# Vorname Name“); Orte und Einrichtungen, die so
 # beginnen, stehen in config/stadt.json unter namensfilter.kein_name
 _KEIN_NAME = "|".join(map(re.escape, config.STADT.get("namensfilter", {}).get("kein_name", []))) or "(?!)"
-_VN = rf"(?!(?:{_KEIN_NAME})\b)(?!{_KEIN})[A-ZÄÖÜ][a-zäöüß]+\s+[A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜ][a-zäöüß]+)?"
-MIT_PERSON = re.compile(rf"\b(mit)\s+{_VN}(?:\s+und\s+{_VN})?(?![\wäöüß-])")
+_VN = rf"(?!(?:{_KEIN_NAME})\b)(?!{_KEIN})(?:Dr\.\s+)?[A-ZÄÖÜ][a-zäöüß]+\s+[A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜ][a-zäöüß]+)?"
+MIT_PERSON = re.compile(rf"\b(mit|durch)\s+{_VN}(?:\s+und\s+{_VN})?(?![\wäöüß-])")
+# Hauptwörter statt Namen („durch Wassereintritt Feuerwehrhaus“): typische Endungen schließen einen Treffer aus
+_SACHE = re.compile(r"(haus|hof|platz|straße|weg|brücke|halle|schule|amt|werk|ung|heit|keit|schaft|tion|anlage|gebiet|plan|"
+                    r"bericht|konzept|tritt|schaden|bau)$")
+
+
+def _person(m):
+    if any(_SACHE.search(w) for w in re.findall(r"[A-ZÄÖÜ][a-zäöüß]+", m.group(0))):
+        return m.group(0)
+    return f"{m.group(1)} {NAME_ERSATZ}"
 NAME_ERSATZ = "[Name entfernt]"
 # Hinweise auf eine Privatwohnung im Sitzungsort
 PRIVAT = re.compile(r"\b(bei|Familie|Fam\.|Herrn?|Frau|Wohnung|privat\w*)\b", re.I)
@@ -37,7 +47,7 @@ PRIVAT = re.compile(r"\b(bei|Familie|Fam\.|Herrn?|Frau|Wohnung|privat\w*)\b", re
 def ohne_namen(titel):
     """Personennamen im Titel durch einen Platzhalter ersetzen; Anrede oder Funktion bleibt stehen."""
     t = PERSONEN.sub(f"({NAME_ERSATZ})", PERSON.sub(lambda m: f"{m.group(1)} {NAME_ERSATZ}", titel))
-    return MIT_PERSON.sub(lambda m: f"{m.group(1)} {NAME_ERSATZ}", t)
+    return MIT_PERSON.sub(_person, t)
 
 
 class ParseFehler(ValueError):
