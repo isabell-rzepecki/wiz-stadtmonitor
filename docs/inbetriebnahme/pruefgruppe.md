@@ -5,6 +5,10 @@
 
 ## Einmalig
 
+**Ohne Python (empfohlen für Schlüssel und Sicherung):** die Einrichtungsseite `einrichten.html` (nicht verlinkt) im Browser öffnen, das Netz trennen, Schritt 1 gemeinsam ausführen. Die Seite erzeugt die Schlüsseldatei (mit der Passphrase durch Argon2id geschützt, dasselbe Format wie unten), die Papiersicherung zum Drucken und eine „öffentliche Datei“ mit dem öffentlichen Schlüssel. Danach Schritt 3: die Sicherung einmal probeweise einlesen und die Passphrase prüfen. Die öffentliche Datei überträgt `python tools/einrichten.py uebernehmen DATEI` in `config/stadt.json`. Die Schlüsseldatei funktioniert unverändert mit `tools/pruefen.py`.
+
+Mit Python:
+
 1. Pakete: `python -m pip install -r requirements.txt -r tools/requirements.txt`
 2. Generalprobe: `python tools/generalprobe.py`. Weiter erst, wenn sie „bestanden“ meldet.
 3. Schlüssel: `python tools/einrichten.py schluessel PFAD/pg.json --druck PFAD/druck`

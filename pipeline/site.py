@@ -21,6 +21,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
         shutil.copy2(config.ROOT / "docs" / "uebergabe-v0.4.2" / quelle, out / "schemas" / name)
     for seite in ("datenschutz.html", "impressum.html", "aushang.html", "index.html"):
         datenschutz_ausfuellen(out / seite)
+    einrichten_ausfuellen(out / "einrichten.html")
     # Fehlerseite: GitHub Pages liefert sie für jeden Pfad aus, ein relativer Link führte dort ins Leere
     p404 = out / "404.html"
     if p404.exists() and config.SITE_URL:
@@ -65,6 +66,18 @@ def datenschutz_ausfuellen(seite):
             text = text.replace('<div data-feld="qr"></div>', f'<div data-feld="qr">{svg}</div>')
         except ImportError:
             pass
+    seite.write_text(text, encoding="utf-8")
+
+
+def einrichten_ausfuellen(seite):
+    """Einrichtungsseite: Adresse der Seite (für die Codekarten) und Gültigkeit der Codes aus stadt.json; die Seite selbst
+    lädt nichts nach (connect-src 'none')."""
+    if not seite.exists():
+        return
+    F = config.STADT["wohnen_eigentum"]["erfassung"]
+    text = seite.read_text(encoding="utf-8")
+    text = text.replace('<meta name="wiz-site-url" content="">', f'<meta name="wiz-site-url" content="{html.escape(config.SITE_URL or "")}">')
+    text = re.sub(r'<meta name="wiz-einladung-monate" content="\d+">', f'<meta name="wiz-einladung-monate" content="{int(F["einladung_gueltig_monate"])}">', text)
     seite.write_text(text, encoding="utf-8")
 
 

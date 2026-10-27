@@ -105,9 +105,52 @@ class Erfassung(unittest.TestCase):
             self.assertIn(teil, W["text"])
 
     def test_nicht_oeffentlich_verlinkt(self):
-        for name in ("index.html", "app.js", "wohnen.html", "wohnen.js", "wohnen-module.js"):
-            self.assertNotIn("erfassen", (SITE / name).read_text(encoding="utf-8"), name)
-        self.assertIn('content="noindex', (SITE / "erfassen.html").read_text(encoding="utf-8"))
+        for name in ("index.html", "app.js", "wohnen.html", "wohnen.js", "wohnen-module.js", "erfassen.html", "erfassen.js",
+                     "datenschutz.html", "impressum.html"):
+            text = (SITE / name).read_text(encoding="utf-8")
+            self.assertNotIn("einrichten.html", text, name)
+            if name in ("index.html", "app.js", "wohnen.html", "wohnen.js", "wohnen-module.js"):
+                self.assertNotIn("erfassen", text, name)
+        for seite in ("erfassen.html", "einrichten.html"):
+            self.assertIn('content="noindex', (SITE / seite).read_text(encoding="utf-8"))
+        # die Einrichtungsseite kann technisch nichts senden
+        self.assertIn("connect-src 'none'", (SITE / "einrichten.html").read_text(encoding="utf-8"))
+
+    def test_oeffentliche_datei_der_einrichtungsseite(self):
+        from nacl.public import PrivateKey
+        import base64
+        import hashlib
+        pub = bytes(PrivateKey.generate().public_key)
+        schl = {"key_id": f"pg-20261027-{hashlib.sha256(pub).hexdigest()[:8]}", "alg": "libsodium-sealedbox-x25519",
+                "public_key": base64.b64encode(pub).decode()}
+        e = [{"hash": "a" * 64, "bis": "2027-10-27"}]
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            stadt = tmp / "stadt.json"
+            original = (config.ROOT / "config" / "stadt.json").read_text(encoding="utf-8")
+            stadt.write_text(original, encoding="utf-8")
+            dateien = []
+            for i, inhalt in enumerate(({"schluessel": schl}, {"einladungen": e}, {"einladungen": e})):
+                dateien.append(tmp / f"o{i}.json")
+                dateien[-1].write_text(json.dumps({"format": "wiz-einrichtung-1", "erstellt": "2026-10-27T10:00:00Z", **inhalt}), encoding="utf-8")
+            F = einrichten.uebernehmen(dateien, stadt)
+            self.assertEqual((F["schluessel"], F["einladungen"][-1:]), (schl, e))  # doppelte Hashes nur einmal
+            self.assertEqual(len(F["einladungen"]), len(json.loads(original)["wohnen_eigentum"]["erfassung"]["einladungen"]) + 1)
+            # alles außer den beiden Feldern bleibt Zeichen für Zeichen gleich
+            alt = json.loads(original)["wohnen_eigentum"]["erfassung"]
+            einrichten.stadt_setzen(stadt, schluessel=alt["schluessel"], einladungen=alt["einladungen"])
+            self.assertEqual(stadt.read_text(encoding="utf-8"), original)
+            falsch = [{"format": "anders", "schluessel": schl},
+                      {"format": "wiz-einrichtung-1", "schluessel": {**schl, "secret_enc": {}}},
+                      {"format": "wiz-einrichtung-1", "schluessel": {**schl, "key_id": "pg-20261027-00000000"}},
+                      {"format": "wiz-einrichtung-1", "einladungen": [{"hash": "a" * 64, "bis": "2027-10-27", "code": "ABCD"}]},
+                      {"format": "wiz-einrichtung-1", "einladungen": e, "register": []},
+                      {"format": "wiz-einrichtung-1"}]
+            for d in falsch:
+                with self.assertRaises(SystemExit, msg=d):
+                    einrichten.oeffentlich_pruefen(d)
+        finally:
+            shutil.rmtree(tmp)
 
     def test_offline_liste_vollstaendig(self):
         sw = (SITE / "erfassen-sw.js").read_text(encoding="utf-8")

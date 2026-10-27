@@ -1,0 +1,25 @@
+/* Einrichtungsseite: Textseite (page.css) mit Formularfeldern und einer Druckansicht, die nur das gewählte Blatt zeigt */
+.feld { display: grid; gap: 4px; font-weight: 700; margin: 0 0 12px; }
+.feld input, .feld textarea { font: inherit; font-weight: 400; min-height: 44px; padding: 8px 10px; border-radius: 10px; border: 1px solid #8a8285; background: #fff; color: var(--text); width: 100%; }
+.feld textarea { font-size: 13px; line-height: 1.4; resize: vertical; }
+[aria-invalid="true"] { border-color: var(--accent-ink) !important; outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.knopf { font: inherit; font-weight: 700; min-height: 44px; padding: 6px 14px; border-radius: 12px; border: 0; background: var(--accent-tint); color: var(--accent-ink); cursor: pointer; }
+.knopf:disabled { opacity: 0.55; cursor: not-allowed; }
+.klein { font-size: 14px; color: var(--muted); }
+.hinweis { padding: 8px 12px; border-radius: 10px; background: #fff4d6; border: 1px solid #8a6d1f; }
+.hinweis:empty { display: none; }
+.erfolg { padding: 8px 10px; border-radius: 10px; background: rgba(44, 118, 82, 0.12); color: #1f5a3d; font-weight: 700; }
+.fehler { padding: 8px 10px; border-radius: 10px; border: 2px solid var(--accent-ink); color: var(--accent-ink); font-weight: 700; }
+.ergebnis ol { padding-left: 22px; }
+.ergebnis li .knopf { margin: 0 8px 6px 0; }
+.druck { display: none; }
+@media print {
+  body.drucken > :not(#druck) { display: none !important; }
+  body.drucken { background: #fff; }
+  body.drucken #druck { display: block !important; font: 11px/1.4 "Space Mono", ui-monospace, monospace; color: #000; }
+  #druck figure { display: inline-block; margin: 0 10px 10px 0; break-inside: avoid; }
+  #druck figure svg { width: 46mm; height: auto; }
+  #druck pre { font-size: 10px; white-space: pre-wrap; word-break: break-all; }
+  #druck .karte { border: 1px dashed #555; padding: 7mm; margin: 0 0 5mm; break-inside: avoid; font-size: 13px; }
+  #druck .karte .code { font: 700 22px/1.2 ui-monospace, monospace; letter-spacing: 2px; margin: 3mm 0; }
+}

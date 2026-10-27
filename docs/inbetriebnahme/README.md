@@ -5,6 +5,7 @@ Reihenfolge (Checkliste: Issue 53). Je Rolle gibt es eine Karte zum Ausdrucken. 
 1. **Verantwortliche Stelle** benennen und mit Funktionsadresse in `config/stadt.json` eintragen (`wohnen_eigentum.erfassung.datenschutz`). Erledigt am 26.10.2026; danach DSFA, Interessenabwägung und Verarbeitungsverzeichnis bestätigen.
 2. **Prüfgruppe:** Generalprobe, Schlüssel, Papiersicherung → [pruefgruppe.md](pruefgruppe.md)
 3. **Ausgabestelle:** Codes ausgeben → [ausgabestelle.md](ausgabestelle.md)
+   Ohne Python geht beides über die Einrichtungsseite `einrichten.html` (nicht verlinkt, rechnet nur im Browser, sendet nichts); deren „öffentliche Dateien“ überträgt `python tools/einrichten.py uebernehmen` in die Konfiguration.
 4. `config/stadt.json` committen und veröffentlichen.
 5. **Aushang** (`aushang.html`) drucken und vor Beginn aushängen: Stadtbibliothek und Bürgerbüro, Dorfgemeinschaftshäuser der Ortsteile, Mieterberatung, Initiativen, Universitätsstandort (`docs/datenschutz/information_vermieter.md`).
 6. **Erfassende:** Zugang, Erfassen, Export → [erfassende.md](erfassende.md)
