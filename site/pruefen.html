@@ -91,8 +91,20 @@
         </form>
       </section>
 
+      <section aria-labelledby="t-veroeffentlichen">
+        <h2 id="t-veroeffentlichen">4. Veröffentlichen</h2>
+        <p>Aus den zweimal freigegebenen Einträgen entstehen nur zusammengefasste Dateien: Eigentum juristischer Personen je Gebäude, Anteile je Ortsbezirk (Privatpersonen nur als Anzahl ab der Mindestzahl) und Mieten je Ortsbezirk und Baujahrklasse (Median ab der Mindestzahl, Spanne erst ab mehr Angaben, gerundet). Eine Sperre bricht ab, wenn etwas Einzelnes oder Persönliches enthalten wäre.</p>
+        <p><button type="button" class="knopf" id="knopf-veroeffentlichen">Vorschau erzeugen</button></p>
+        <p id="veroeffentlichen-status" role="status" tabindex="-1"></p>
+        <div id="vorschau" hidden>
+          <div id="vorschau-inhalt"></div>
+          <p><button type="button" class="knopf" id="speichern-veroeffentlichung">Veröffentlichungsdatei speichern</button></p>
+          <p class="klein">Diese eine Datei enthält die zusammengefassten Ergebnisse (ohne Namen von Privatpersonen, ohne einzelne Angaben). Sie geht an die verantwortliche Stelle bzw. in den Chat; dort wird sie noch einmal geprüft und mit <code>python tools/veroeffentlichen.py uebernehmen DATEI</code> übernommen. Danach den Bestand speichern (der Verlauf vermerkt die Veröffentlichung).</p>
+        </div>
+      </section>
+
       <section aria-labelledby="t-schliessen">
-        <h2 id="t-schliessen">4. Sitzung schließen</h2>
+        <h2 id="t-schliessen">5. Sitzung schließen</h2>
         <p id="ungespeichert" class="hinweis" role="status"></p>
         <p class="knoepfe"><button type="button" class="knopf" id="speichern-bestand">Bestand speichern (bestand.sealed)</button>
           <button type="button" class="knopf" id="speichern-protokoll">Zugriffsprotokoll speichern</button>
@@ -104,6 +116,7 @@
   <script src="vendor/libsodium-sumo/libsodium-sumo.js"></script>
   <script src="vendor/libsodium-sumo/libsodium-wrappers.js"></script>
   <script src="erfassen-pruefung.js"></script>
+  <script src="pruefen-gebaeude.js"></script>
   <script src="pruefen.js"></script>
 </body>
 </html>

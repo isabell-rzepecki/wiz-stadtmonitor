@@ -343,3 +343,43 @@ class Pruefgruppe(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UebernehmenAusDerPruefseite(unittest.TestCase):
+    """Veröffentlichungsdatei der Prüfseite: nur im erwarteten Format, mit Lizenz, bekannten Gebäuden ohne Umriss; Sperre greift."""
+
+    def datei(self, tmp, **aendern):
+        L = pg.STADT["wohnen_eigentum"]["lizenz"]
+        lz = {"lizenz": L["name"], "lizenz_url": L["url"], "namensnennung": L["namensnennung"]}
+        gid = next(iter(vo.gebaeude()))
+        d = {"format": "wiz-veroeffentlichung-1", "stand": "2026-10-27", "dateien": {
+            "eigentum_gebaeude.geojson": {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": None, "properties": {
+                "id": gid, "kategorie": "kom", "kategorie_titel": "Stadt", "sicherheit": "gesichert", "beleg": "ortskenntnis", "name": "Stadt"}}], **lz},
+            "eigentum_anteile_ortsbezirk.json": {"ortsbezirke": {"kernstadt": {"gebaeude": 10, "erfasst": 1, "kategorien": {"kom": 1}, "privat": None}}, **lz},
+            "mieten_aggregiert.json": {"zellen": [], "juristische_personen": [], **lz}}}
+        for pfad, wert in aendern.items():
+            ziel = d
+            *weg, letzt = pfad.split("/")
+            for w in weg:
+                ziel = ziel[int(w)] if isinstance(ziel, list) else ziel[w]
+            ziel[letzt] = wert
+        p = Path(tmp) / "v.json"
+        p.write_text(json.dumps(d), encoding="utf-8")
+        return p
+
+    def test_uebernehmen_und_ablehnen(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            aus = vo.uebernehmen(self.datei(tmp), Path(tmp) / "repo")
+            self.assertEqual(aus["eigentum_gebaeude.geojson"]["features"][0]["geometry"]["type"], "Polygon")
+            self.assertTrue((Path(tmp) / "repo" / "data" / "wohnen" / "mieten_aggregiert.json").exists())
+            falsch = {"format": "anders",
+                      "dateien/eigentum_gebaeude.geojson/features/0/properties/kategorie": "privat",
+                      "dateien/eigentum_gebaeude.geojson/features/0/geometry": {"type": "Point", "coordinates": [0, 0]},
+                      "dateien/eigentum_gebaeude.geojson/features/0/properties/id": "DEHE0000UNBEKANNT",
+                      "dateien/mieten_aggregiert.json/lizenz": None,
+                      "dateien/mieten_aggregiert.json/zellen": [{"n": 3, "median": 7.0}],
+                      "dateien/eigentum_anteile_ortsbezirk.json/ortsbezirke/kernstadt/privat": 2,
+                      "dateien/mieten_aggregiert.json/eur_je_m2": 7.5}
+            for pfad, wert in falsch.items():
+                with self.subTest(pfad), self.assertRaises(SystemExit):
+                    vo.uebernehmen(self.datei(tmp, **{pfad: wert}), Path(tmp) / "repo2")

@@ -948,7 +948,7 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     await page.fill("#f-pruefer2", "P-2");
     await page.locator("#form-pruefer button").click();
     await page.locator("#knopf-alle").click();
-    assert.match(await page.locator("#stand").textContent(), /Zweimal freigegeben10/);
+    assert.match(await page.locator("#stand").textContent(), /Zweimal freigegeben21/);
     assert.match(await page.locator("#liste").textContent(), /8,12 €\/m²/);  // 650 / 80 = 8,125 → 8,12 wie Python round()
     assert.match(await page.locator("#ungespeichert").textContent(), /noch nicht/);
     const bestand = await laden("#speichern-bestand");
@@ -958,10 +958,23 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     // Python öffnet den Bestand der Seite: gleich dem Referenzlauf
     const vergleich = execFileSync("python3", ["tests/browser/pruef_fixture.py", "vergleichen", dir, bestand], { cwd: root, encoding: "utf8" });
     assert.equal(vergleich.trim(), "gleich");
+    // Veröffentlichen: Vorschau, Sperre bestanden, eine Datei; Python übernimmt sie und erhält dasselbe wie mit veroeffentlichen.py
+    await page.locator("#knopf-veroeffentlichen").click();
+    await page.waitForFunction(() => /Sperre bestanden/.test(document.querySelector("#veroeffentlichen-status").textContent));
+    const vorschau = await page.locator("#vorschau").textContent();
+    assert.match(vorschau, /Kernstadt, 1949-1978/);
+    assert.match(vorschau, /Probe-Wohnbau eG/);
+    assert.match(vorschau, /zu wenige/);  // privat unter der Mindestzahl
+    const veroeff = await laden("#speichern-veroeffentlichung");
+    const vtext = readFileSync(veroeff, "utf8");
+    assert.doesNotMatch(vtext, /Erika|V-0\d\d|[0-9a-f]{8}-[0-9a-f]{4}-4|eur_je_m2|nettokalt_eur/i);
+    const pub = execFileSync("python3", ["tests/browser/pruef_fixture.py", "veroeffentlichen", dir, veroeff], { cwd: root, encoding: "utf8" });
+    assert.equal(pub.trim(), "gleich");
+    assert.match(await page.locator("#ungespeichert").textContent(), /noch nicht/);  // Verlauf vermerkt die Veröffentlichung
     assert.deepEqual(abrufe.slice(nachLaden), []);
     // umgekehrt: Bestand aus Python öffnen, Eintrag mit Hinweis verwerfen
     await oeffnen(join(dir, "ref", "bestand.sealed"));
-    assert.match(await page.locator("#stand").textContent(), /Einträge15.*Mit Hinweis4.*Verworfen1.*Zweimal freigegeben10/s);
+    assert.match(await page.locator("#stand").textContent(), /Einträge26.*Mit Hinweis4.*Verworfen1.*Zweimal freigegeben21/s);
     const zeile = page.locator("#liste tbody tr", { hasText: "abweichende Angaben" }).first();
     await zeile.locator("input").check();
     await page.locator("#knopf-verwerfen").click();

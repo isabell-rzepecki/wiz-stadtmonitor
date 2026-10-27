@@ -1,6 +1,7 @@
 """Testdaten für den Vergleich Prüfseite (site/pruefen.js) ↔ tools/pruefen.py; alle Namen und Beträge erfunden.
 
   python3 tests/browser/pruef_fixture.py erzeugen ORDNER     Schlüssel, Register, Exportdateien; Referenzlauf mit Python
+  python3 tests/browser/pruef_fixture.py veroeffentlichen ORDNER DATEI   Veröffentlichung der Prüfseite gegen Python
   python3 tests/browser/pruef_fixture.py vergleichen ORDNER BESTAND
       Bestand der Prüfseite mit Python öffnen und mit dem Referenzlauf vergleichen (gleiche Einträge, Hinweise,
       Vermieter-Schlüssel, Freigaben und Abfolge im Verlauf); gibt „gleich“ oder die Unterschiede aus
@@ -57,6 +58,9 @@ def erzeugen(o):
          eig(geb[9], "kom", "Stadt (Probe)", objekt={"typ": "gebaeude", "id": geb[9], "lage_hinweis": "Hof 3"})]  # Ziffer: abgewiesen
     b = [miete(geb[0], 650), miete(geb[0], 650), miete(geb[1], 512.5, 61.0, vermieter_schluessel="JP:Probe-Wohnbau eG"),
          miete(geb[2], 720, 75.0), miete(geb[3], 400, vermieter_schluessel="V-001")]                     # V-…: abgewiesen
+    # genug Angaben für Median, Spanne und den Vergleich je juristischer Person (Veröffentlichen)
+    b += [miete(geb[i % 4], 400 + 37 * i + 0.5, 70.0 + i, **({"vermieter_schluessel": "JP:Probe-Wohnbau eG"} if i < 6 else {}))
+          for i in range(11)]
     kaputt = miete(geb[10], 500)
     kaputt["vertragsbeginn_jahr"] = "2018"                                                                 # Schema: abgewiesen
     fremd = eig(geb[11], "bund", "Bund (Probe)")
@@ -79,7 +83,7 @@ def erzeugen(o):
     pruefen.pruefen(ar)
     pruefen.freigeben(ar, alle=True)
     pruefen.freigeben(pg.Arbeit(ref, pg.Schluessel(o / "pg.json", PW), "P-2"), alle=True)
-    print(json.dumps({"passphrase": PW, "dateien": [str(p) for p in dateien], "aufgenommen": 15, "abgewiesen": 4}))
+    print(json.dumps({"passphrase": PW, "dateien": [str(p) for p in dateien], "aufgenommen": 26, "abgewiesen": 4}))
 
 
 def normiert(d):
@@ -103,5 +107,20 @@ def vergleichen(o, bestand):
     print("gleich" if not unterschiede else "\n".join(map(str, unterschiede)))
 
 
+def veroeffentlichen(o, datei):
+    """Python veröffentlicht aus einer Kopie des Referenzbestands; die Datei der Prüfseite wird übernommen; beide gleich?"""
+    import veroeffentlichen as vo
+    o = Path(o)
+    shutil.copytree(o / "ref", o / "ref_pub")
+    vo.veroeffentlichen(pg.Arbeit(o / "ref_pub", pg.Schluessel(o / "pg.json", PW), "P-1"), o / "py")
+    vo.uebernehmen(datei, o / "seite")
+    unterschiede = []
+    for name in sorted(vo.DATEIEN):
+        a, b = (json.loads((o / z / "data" / "wohnen" / name).read_text(encoding="utf-8")) for z in ("py", "seite"))
+        if a != b:
+            unterschiede.append(f"{name}: {json.dumps(a, ensure_ascii=False)[:600]} != {json.dumps(b, ensure_ascii=False)[:600]}")
+    print("gleich" if not unterschiede else "\n".join(unterschiede))
+
+
 if __name__ == "__main__":
-    {"erzeugen": erzeugen, "vergleichen": vergleichen}[sys.argv[1]](*sys.argv[2:])
+    {"erzeugen": erzeugen, "vergleichen": vergleichen, "veroeffentlichen": veroeffentlichen}[sys.argv[1]](*sys.argv[2:])

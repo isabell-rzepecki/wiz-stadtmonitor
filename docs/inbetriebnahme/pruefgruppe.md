@@ -18,7 +18,7 @@ Mit Python:
 
 ## Laufend
 
-**Ohne Python:** die Prüfseite `pruefen.html` (nicht verlinkt, rechnet nur im Browser, sendet nichts). Öffnen mit Schlüsseldatei, Passphrase, Prüfer-ID, Bestandsdatei (`bestand.sealed`) und Register; dann Exportdateien einlesen, „Prüfen“, freigeben. Die zweite Freigabe gibt die zweite Person mit eigener Prüfer-ID, nacheinander am selben Gerät oder mit der gespeicherten Bestandsdatei an ihrem Gerät. Am Ende den Bestand und, falls Namen geöffnet wurden, das Zugriffsprotokoll speichern. Die Dateien sind dieselben wie bei Python; man kann zwischen beiden wechseln. Veröffentlichen, Widerruf, Widerspruch und Fristen folgen auf der Seite in den nächsten Schritten; bis dahin mit Python.
+**Ohne Python:** die Prüfseite `pruefen.html` (nicht verlinkt, rechnet nur im Browser, sendet nichts). Öffnen mit Schlüsseldatei, Passphrase, Prüfer-ID, Bestandsdatei (`bestand.sealed`) und Register; dann Exportdateien einlesen, „Prüfen“, freigeben. Die zweite Freigabe gibt die zweite Person mit eigener Prüfer-ID, nacheinander am selben Gerät oder mit der gespeicherten Bestandsdatei an ihrem Gerät. Am Ende den Bestand und, falls Namen geöffnet wurden, das Zugriffsprotokoll speichern. Die Dateien sind dieselben wie bei Python; man kann zwischen beiden wechseln. Unter „Veröffentlichen“ erzeugt die Seite nach derselben Sperre wie `veroeffentlichen.py` eine einzige Veröffentlichungsdatei (nur zusammengefasste Werte) mit Vorschau; sie geht an die verantwortliche Stelle bzw. in den Chat und wird mit `python tools/veroeffentlichen.py uebernehmen DATEI` erneut geprüft und nach `data/wohnen/` übernommen. Danach den Bestand speichern. Widerruf, Widerspruch und Fristen folgen auf der Seite im nächsten Schritt; bis dahin mit Python.
 
 Mit Python:
 
