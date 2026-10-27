@@ -67,7 +67,7 @@ def faelle(vorgaenge, audit, geprueft):
             return
         gesehen.add((v["reference"], treffer))
         p = v["process"][0]
-        out.append({"vorgang": v["reference"], "fall": FAELLE[fall], "titel": ohne_namen(v["name"]), "gremium": p["gremium"],
+        out.append({"vorgang": v["reference"], "fall": FAELLE[fall], "titel": parse.ohne_namen(v["name"]), "gremium": p["gremium"],
                     "datum": p["date"], "treffer": treffer, "bisher": bisher, "kandidaten": kandidaten, "quelle": p["pdf"]})
 
     for a in audit:
@@ -95,14 +95,6 @@ def faelle(vorgaenge, audit, geprueft):
     for i, z in enumerate(out, 1):
         z["nr"] = i
     return out
-
-
-# zusätzlich zu parse.ohne_namen: „Gespräch mit Vorname Name“ ohne Anrede
-MIT_NAME = re.compile(r"\b(mit)\s+[A-ZÄÖÜ][a-zäöüß]+\s+[A-ZÄÖÜ][a-zäöüß]+(?=[\s,;.)]|$)")
-
-
-def ohne_namen(titel):
-    return MIT_NAME.sub(lambda m: f"{m.group(1)} {parse.NAME_ERSATZ}", parse.ohne_namen(titel))
 
 
 _VERZ = []

@@ -226,6 +226,9 @@ def build():
     n_karte = bauleitplanung.karte(plaene)
 
     audit.tabelle("parserfehler.tsv", ["datei", "fehler", "url"], fehler)
+    # Ersetzungen des Namensfilters (parse.ohne_namen), zum Prüfen auf Fehltreffer; der Name selbst steht nirgends
+    audit.tabelle("namensfilter.tsv", ["sitzung", "top", "titel"],
+                  [{"sitzung": t["sitzung"], "top": t["top"], "titel": t["titel"]} for t in tops if parse.NAME_ERSATZ in t["titel"]])
     audit.tabelle("einreicher.tsv", ["vorgang", "sitzung", "top", "typ", "einreicher", "datum", "gemeinsam", "fundstelle"], e_audit)
     audit.tabelle("verortung_stufe_b.tsv", ["vorgang", "sitzung", "top", "titel", "methode_detail", "mehrdeutig", "treffer",
                                             "ortsteil", "konfidenz", "fundstelle"], b_audit)
