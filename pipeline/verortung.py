@@ -7,7 +7,8 @@ methode_detail (Audit) und method (Seite):
 - B-ortsteil    Ortsteilname als ganzes Wort (nicht „Ermschwerder …“) → Ortsteil (Fläche, kein Punkt)
 Mehrdeutige Straßennamen (in mehreren Gemarkungen) werden über das beratende Gremium (Ortsbeirat) oder einen im
 Titel genannten Ortsteil bzw. eine Gemarkung eingegrenzt; sonst bleiben sie ohne Ort und stehen im Audit als
-„mehrdeutig“. Hausnummern werden nicht ausgewertet (keine Wohnadressen).
+„mehrdeutig“. Für einzelne Namen legt verortung.vorrang in config/stadt.json einen Ortsteil fest, der nur dann gilt,
+wenn nichts anderes eingrenzt (method strasse+vorrang). Hausnummern werden nicht ausgewertet (keine Wohnadressen).
 """
 import json
 import re
@@ -27,6 +28,7 @@ GEMARKUNG = re.compile(r"Gem(?:arkung|\.)\s+([A-ZÄÖÜ][\wäöüß]+(?:-[A-ZÄ�
 FLST_CACHE = config.GEO / "dl-de-zero" / "flurstuecke.json"
 _DIENST_AUS = False
 AUSSCHLUSS = set(config.STADT.get("verortung", {}).get("ausschluss_namen", []))
+VORRANG = config.STADT.get("verortung", {}).get("vorrang", {})
 
 
 def normalisieren(text):
@@ -169,13 +171,18 @@ def stufe_b(titel, sitzung, verz, quelle_pdf):
             eingegrenzt = {gk: v for gk, v in kand.items() if (_ortsteil(gk=gk) or {}).get("name") in (genannte | {gremium_ot})}
             if len(eingegrenzt) != 1:
                 eingegrenzt = {gk: v for gk, v in kand.items() if gk in eindeutig_gk}
+            if len(eingegrenzt) != 1 and name in VORRANG and not gremium_ot:  # nie gegen einen Ortsbeirat
+                eingegrenzt = {gk: v for gk, v in kand.items() if (_ortsteil(gk=gk) or {}).get("name") == VORRANG[name]}
+                vorrang = len(eingegrenzt) == 1
+            else:
+                vorrang = False
             if len(eingegrenzt) == 1:
                 kand = eingegrenzt
         evidence = norm[span[0]:span[1]]
         if len(kand) == 1:
             gk, v = next(iter(kand.items()))
             o = _ortsteil(gk=gk)
-            add("strasse", name, o["name"] if o else None, "strasse" if not mehr else "strasse+ortsteil",
+            add("strasse", name, o["name"] if o else None, "strasse" if not mehr else "strasse+vorrang" if vorrang else "strasse+ortsteil",
                 "B-strasse", "mittel", evidence, v["lon"], v["lat"], mehrdeutig=mehr)
         else:
             aud.append({"methode_detail": "B-strasse", "mehrdeutig": "ja", "treffer": name,
