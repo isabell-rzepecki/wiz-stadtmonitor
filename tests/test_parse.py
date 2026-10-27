@@ -62,7 +62,9 @@ class Kopf(unittest.TestCase):
         self.assertEqual(f("Bericht über Gespräch mit Erika Muster und weiteres Vorgehen"), "Bericht über Gespräch mit [Name entfernt] und weiteres Vorgehen")
         self.assertEqual(f("Gespräch mit Erika Muster, Fachdienst Soziales"), "Gespräch mit [Name entfernt], Fachdienst Soziales")
         self.assertEqual(f("Ortstermine mit Max Muster und Erika Beispiel-Muster an der Brücke"), "Ortstermine mit [Name entfernt] an der Brücke")
-        for t in ("Wanderweg mit Schloss Rothestein", "Partnerschaft mit Bad Sooden-Allendorf", "Kooperation mit Neu Eichenberg",
+        self.assertEqual(f("Vortrag durch Dr. Erika Muster und Max Beispiel"), "Vortrag durch [Name entfernt]")
+        self.assertEqual(f("Zusammenfassung durch Erika Muster, Ortsbeirat"), "Zusammenfassung durch [Name entfernt], Ortsbeirat")
+        for t in ("Gebäudeschaden durch Wassereintritt Feuerwehrhaus Gertenbach", "Vorstellung durch Hessen Mobil", "Wanderweg mit Schloss Rothestein", "Partnerschaft mit Bad Sooden-Allendorf", "Kooperation mit Neu Eichenberg",
                   "Zusammenarbeit mit dem Deutschen Roten Kreuz", "Gespräch mit Herrn [Name entfernt]"):
             self.assertEqual(f(t), t)
         # Funktionen, Gliederungspunkte und Orte bleiben
