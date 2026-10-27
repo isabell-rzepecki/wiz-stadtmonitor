@@ -2,6 +2,7 @@
 import csv
 import html
 import json
+import os
 import re
 import shutil
 from datetime import date
@@ -89,14 +90,29 @@ def pruefen_ausfuellen(seite):
         return
     E = config.STADT["wohnen_eigentum"]
     U = config.ROOT / "docs" / "uebergabe-v0.4.2"
-    k = {"kategorien": [x["code"] for x in E["kategorien"]], "speicherdauer_monate": E["erfassung"]["speicherdauer_monate"],
-         "schluessel_wechsel_monate": E["erfassung"]["schluessel_wechsel_monate"],
+    k = {"kategorien": [{x: kat[x] for x in ("code", "titel", "name_veroeffentlichen")} for kat in E["kategorien"]],
+         "speicherdauer_monate": E["erfassung"]["speicherdauer_monate"], "schluessel_wechsel_monate": E["erfassung"]["schluessel_wechsel_monate"],
+         "regeln": E["regeln"], "lizenz": E["lizenz"], "mietangaben_aktiv": E["mietangaben_aktiv"],
+         "einwilligung_version": E["erfassung"]["einwilligung"]["version"],
+         "gebaeude_attribution": config.STADT["gebaeude"]["attribution"],
+         "ortsteile": {o["slug"]: o["name"] for o in config.STADT["ortsteile"]},
          "schemas": {"eigentum": json.loads((U / "schema_erfassung_eigentum.json").read_text(encoding="utf-8")),
                      "miete": json.loads((U / "schema_mietangabe.json").read_text(encoding="utf-8"))}}
     daten = json.dumps(k, ensure_ascii=False).replace("</", "<\\/")
     text = seite.read_text(encoding="utf-8").replace('<script type="application/json" id="konfig">{}</script>',
                                                      f'<script type="application/json" id="konfig">{daten}</script>')
     seite.write_text(text, encoding="utf-8")
+    # Gebäude je Ortsbezirk (wie tools/veroeffentlichen.py aus gebaeude.geojson) als Skriptdatei neben der Seite;
+    # Kennungen ohne gemeinsamen Anfang, Gebäude außerhalb der Ortsbezirksflächen unter ""
+    geb = config.ROOT / "data" / "geo" / "hvgg" / "gebaeude.geojson"
+    je, praefix = {}, ""
+    if geb.exists():
+        feats = json.loads(geb.read_text(encoding="utf-8"))["features"]
+        praefix = os.path.commonprefix([f["properties"]["id"] for f in feats])
+        for f in feats:
+            je.setdefault(f["properties"].get("o") or "", []).append(f["properties"]["id"][len(praefix):])
+    daten = json.dumps({"praefix": praefix, "o": {o: ",".join(ids) for o, ids in sorted(je.items())}}, separators=(",", ":"))
+    (seite.parent / "pruefen-gebaeude.js").write_text(f"window.PRUEFEN_GEBAEUDE = {daten};\n", encoding="utf-8")
 
 
 def namensnennungen(ziel):

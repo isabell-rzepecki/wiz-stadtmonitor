@@ -8,7 +8,13 @@
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const K = JSON.parse($("#konfig").textContent || "{}");
   const ALG = "libsodium-sealedbox-x25519", FORMAT = "wiz-stadtmonitor-erfassung";
-  const JP_KATEGORIEN = new Set((K.kategorien || []).filter((k) => k !== "privat" && k !== "unklar"));
+  const KAT = Object.fromEntries((K.kategorien || []).map((k) => [k.code, k]));
+  const JP_KATEGORIEN = new Set(Object.keys(KAT).filter((k) => k !== "privat" && k !== "unklar"));
+  const R = K.regeln || {};
+  // Gebäude je Ortsbezirk (Seitenbau aus gebaeude.geojson): Kennung → Ortsbezirk ("" außerhalb der Flächen)
+  const GEB = new Map();
+  for (const [o, ids] of Object.entries(window.PRUEFEN_GEBAEUDE?.o || {}))
+    for (const s of ids.split(",").filter(Boolean)) GEB.set(window.PRUEFEN_GEBAEUDE.praefix + s, o || null);
   const KOPF_REGISTER = ["erfasser_id", "hash", "ausgegeben", "gueltig_bis", "widerrufen"];
   const PRUEFER = /^P-[\w-]{1,20}$/;
   let sodium = null, V = null;
@@ -26,6 +32,11 @@
       return (unten % 2 === 0 ? unten : unten + 1) / 100;
     }
     return Number(x.toFixed(2));
+  }
+  // round(x) wie Python: genaue Hälften zur geraden Zahl
+  function rundenGanz(x) {
+    const f = Math.floor(x), d = x - f;
+    return d > 0.5 ? f + 1 : d < 0.5 ? f : (f % 2 === 0 ? f : f + 1);
   }
   function speichern(name, text, typ = "application/octet-stream") {
     const url = URL.createObjectURL(new Blob([text], { type: typ }));
@@ -223,6 +234,216 @@
       e.vermieter || "", e.status, e.konflikt || "", new Set(e.freigaben).size, freigegeben(e) ? "ja" : "nein", e.name_oeffentlich ?? ""]);
   }
 
+  // --- Rechte und Fristen (wie pruefen.code_zu_id, loeschen, widerspruch, fristen, wechsel_faellig) ----------------
+  function codeZuId(code) {  // Widerrufscode aus der App: die ersten 8 Zeichen der Kennung, als XXXX-XXXX
+    const c = code.replace(/-/g, "").trim().toLowerCase();
+    const t = Object.keys(S.d.eintraege).filter((i) => i.replace(/-/g, "").slice(0, 8) === c);
+    if (t.length !== 1) throw new Error(`Widerrufscode ${code}: ${t.length} Einträge gefunden.`);
+    return t[0];
+  }
+  function loeschen(i, grund) {  // Eintrag ganz entfernen; im Verlauf bleiben nur Kennung, Zeit und Grund
+    delete S.d.eintraege[i];
+    verlauf(`gelöscht (${grund})`, i);
+  }
+  function widerspruch(gebaeude, grund) {
+    const eig = Object.entries(S.d.eintraege).filter(([, e]) => e.typ === "eigentum");
+    const ziele = new Set(gebaeude);
+    const schl = new Set(eig.filter(([, e]) => ziele.has(e.datensatz.objekt.id) && (e.vermieter || "").startsWith("V-")).map(([, e]) => e.vermieter));
+    for (const [, e] of eig) if (schl.has(e.vermieter)) ziele.add(e.datensatz.objekt.id);
+    const weg = eig.filter(([, e]) => ziele.has(e.datensatz.objekt.id)).map(([i]) => i);
+    for (const i of weg) loeschen(i, grund);
+    S.d.sperrliste = [...new Set([...(S.d.sperrliste || []), ...ziele])].sort(nachSchluessel);
+    S.geaendert = true;
+    return { weg, ziele: [...ziele] };
+  }
+  const isoTag = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  function monateVersetzt(tag, monate) {  // wie divmod(jahr * 12 + monat - 1 ± monate, 12), Tag höchstens 28
+    const [j, m, d] = tag.split("-").map(Number);
+    const g = j * 12 + m - 1 + monate;
+    return `${Math.floor(g / 12)}-${String((g % 12) + 1).padStart(2, "0")}-${String(Math.min(d, 28)).padStart(2, "0")}`;
+  }
+  const fristGrenze = () => monateVersetzt(isoTag(new Date()), -K.speicherdauer_monate);
+  const faellig = () => Object.entries(S.d.eintraege).filter(([, e]) => e.eingelesen.slice(0, 10) < fristGrenze()).map(([i]) => i);
+  function wechselFaellig() {
+    const m = /^[^-]+-(\d{4})(\d{2})(\d{2})/.exec(S.schl.key_id);
+    return !m || isoTag(new Date()) >= monateVersetzt(`${m[1]}-${m[2]}-${m[3]}`, K.schluessel_wechsel_monate);
+  }
+  function protokollZeilen() {  // bisheriges und neues Protokoll, ohne Zeilen älter als die Speicherdauer
+    const g = fristGrenze();
+    return [...S.protokollAlt.map((z) => [z.zeit, z.pruefer, z.datensatz, z.zweck]), ...S.protokoll].filter((z) => String(z[0]).slice(0, 10) >= g);
+  }
+
+  // --- Probe: Wegwerf-Schlüssel und erfundene Testdaten (Generalprobe ohne echte Daten) ----------------------------
+  function probeStarten() {
+    const kp = sodium.crypto_box_keypair();
+    const key_id = `probe-${isoTag(new Date()).replace(/-/g, "")}`;
+    const schl = { key_id, paare: new Map([[key_id, { pk: kp.publicKey, sk: kp.privateKey }]]), gesperrt: new Set(),
+      kennt: (id) => id === key_id,
+      oeffnen: (ct) => sodium.crypto_box_seal_open(sodium.from_base64(ct.trim(), V), kp.publicKey, kp.privateKey),
+      versiegeln: (bytes) => sodium.to_base64(sodium.crypto_box_seal(bytes, kp.publicKey), V) };
+    const eid = "E-probe001";
+    const register = new Map([[eid, { erfasser_id: eid, hash: "", ausgegeben: "2000-01-01", gueltig_bis: "2999-12-31", widerrufen: "" }]]);
+    S = { schl, d: { version: 1, eintraege: {}, vermieter_naechste: 1, verlauf: [] }, pruefer: "P-1", register, protokoll: [], protokollAlt: [],
+      einlesen: [], geaendert: true, probe: true };
+    const ids = [...GEB].filter(([, o]) => o === "kernstadt").slice(0, 8).map(([g]) => g);
+    const zeit = (i) => new Date(Date.now() - (60 - i) * 60000).toISOString();
+    const siegel = (r) => sodium.to_base64(sodium.crypto_box_seal(sodium.from_string(JSON.stringify(r)), kp.publicKey), V);
+    let n = 0;
+    const eig = (g, kat, name) => ({ erfassung_id: crypto.randomUUID(), objekt: { typ: "gebaeude", id: g }, kategorie: kat, beleg_art: "ortskenntnis",
+      sicherheit: "wahrscheinlich", vermietet: "ja", erfasst_am: zeit(n++), erfasser: eid, app_version: "probe",
+      ...(name ? { name_juristische_person: name, vermieter_schluessel: `JP:${name}` } : kat === "privat" ? { vermieter_schluessel: "V-neu" } : {}) });
+    const miete = (g, eur, m2) => ({ angabe_id: crypto.randomUUID(), gebaeude_id: g, nettokalt_eur: eur, wohnflaeche_m2: m2, wohnflaeche_klasse: "60-79",
+      baujahr_klasse: "1949-1978", vertragsbeginn_jahr: 2019, einwilligung: { erteilt: true, textversion: K.einwilligung_version, zeitpunkt: zeit(n) },
+      erfasst_am: zeit(n++), erfassungsweg: "selbst" });
+    const a = [eig(ids[0], "geno", "Probe-Wohnbau eG"), eig(ids[1], "geno", "Probe-Wohnbau eG"), eig(ids[2], "kom", "Stadt (Probe)"),
+      eig(ids[3], "privat"), eig(ids[4], "unklar")];
+    const b = Array.from({ length: 6 }, (_, i) => miete(ids[i % 3], 450 + 20 * i, 65 + i));
+    const exp = (typ, recs) => ({ name: `probe_${typ}.json`, inhalt: JSON.stringify({ format: FORMAT, version: 1, typ, alg: ALG, erfasser: eid,
+      erstellt: new Date().toISOString(), anzahl: recs.length,
+      eintraege: recs.map((r) => ({ id: r.erfassung_id || r.angabe_id, erstellt: r.erfasst_am, key_id, ciphertext: siegel(r) })) }) });
+    return [exp("eigentum", a), exp("miete", b)];
+  }
+
+  // --- Veröffentlichen (wie tools/veroeffentlichen.py) -------------------------------------------------------------
+  const VERBOTEN = new Set(["name_privat_enc", "name_privat", "angabe_id", "erfassung_id", "nettokalt_eur", "wohnflaeche_m2", "eur_je_m2", "einwilligung",
+    "erfasser", "vermieter_schluessel", "bemerkung", "lage_hinweis", "beleg_url", "letzte_erhoehung_jahr", "ausstattung"]);
+  const nachSchluessel = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+  function eigentumJe(frei) {  // je Gebäude der jüngste freigegebene Eintrag
+    const je = new Map();
+    for (const e of [...frei].sort((a, b) => nachSchluessel(a.datensatz.erfasst_am, b.datensatz.erfasst_am)))
+      if (e.typ === "eigentum" && GEB.has(e.datensatz.objekt.id)) je.set(e.datensatz.objekt.id, e);
+    return je;
+  }
+  function karte(je, stand) {
+    const feats = [];
+    for (const gid of [...je.keys()].sort(nachSchluessel)) {
+      const e = je.get(gid), r = e.datensatz, k = KAT[r.kategorie];
+      if (r.kategorie === "privat" || r.kategorie === "unklar") continue;  // R2: privat nie je Gebäude
+      let name = k.name_veroeffentlichen ? r.name_juristische_person : null;
+      if (r.kategorie === "jp_sonst" && !e.name_oeffentlich) name = null;
+      const props = { id: gid, kategorie: r.kategorie, kategorie_titel: k.titel, sicherheit: r.sicherheit, beleg: r.beleg_art };
+      if (name) props.name = name.split(/\s+/).filter(Boolean).join(" ");
+      feats.push({ type: "Feature", geometry: null, properties: props });  // Umriss setzt die Übernahme aus gebaeude.geojson
+    }
+    return { type: "FeatureCollection", stand, hinweis: "Nur geprüfte Erfassungen mit zwei Freigaben; unvollständig.",
+      attribution: `${K.gebaeude_attribution}; Eigentum: eigene Erfassung, geprüft`, features: feats };
+  }
+  function anteile(je, stand) {
+    const gesamt = {}, erfasst = {};
+    for (const o of GEB.values()) if (o) gesamt[o] = (gesamt[o] || 0) + 1;
+    for (const [gid, e] of je) {
+      const k = e.datensatz.kategorie, o = GEB.get(gid);
+      if (k !== "unklar" && o) { erfasst[o] ||= {}; erfasst[o][k] = (erfasst[o][k] || 0) + 1; }
+    }
+    const ob = {};
+    for (const slug of Object.keys(gesamt).sort(nachSchluessel)) {
+      const kat = { ...(erfasst[slug] || {}) };
+      const privat = kat.privat || 0;
+      delete kat.privat;
+      const zeigen = privat >= R.privat_anteil_min;
+      // unter der Mindestzahl zählt „privat“ auch nicht zu „erfasst“, sonst ließe es sich als Differenz zurückrechnen
+      ob[slug] = { gebaeude: gesamt[slug], erfasst: Object.values(kat).reduce((s, x) => s + x, 0) + (zeigen ? privat : 0),
+        kategorien: Object.fromEntries(Object.entries(kat).sort((a, b) => nachSchluessel(a[0], b[0]))), privat: zeigen ? privat : null };
+      if (privat > 0 && !zeigen) ob[slug].privat_hinweis = "zu wenige Angaben; nicht in „erfasst“ enthalten";
+    }
+    return { stand, mindestzahl_privat: R.privat_anteil_min, ortsbezirke: ob };
+  }
+  const runden = (x) => { const s = R.mieten_rundung_eur; return runden2(rundenGanz(x / s) * s); };
+  function kennzahlen(werte) {  // statistics.median und statistics.quantiles(n=4, method="inclusive")
+    const d = [...werte].sort((a, b) => a - b), n = d.length, m = n - 1;
+    const q = [1, 2, 3].map((i) => { const j = Math.floor((i * m) / 4), delta = (i * m) % 4; return (d[j] * (4 - delta) + d[j + 1] * delta) / 4; });
+    const median = n % 2 === 1 ? d[(n - 1) / 2] : (d[n / 2 - 1] + d[n / 2]) / 2;
+    const k = { median: runden(median) };
+    if (n >= R.mieten_spanne_min) Object.assign(k, { p25: runden(q[0]), p75: runden(q[2]) });  // bei wenigen Angaben wären es Einzelwerte
+    return k;
+  }
+  function mieten(frei, stand) {
+    const zellen = new Map(), jp = new Map();
+    let ohne = 0;
+    for (const e of frei) {
+      if (e.typ !== "miete") continue;
+      const r = e.datensatz;
+      const qm = r.eur_je_m2 || (r.wohnflaeche_m2 ? r.nettokalt_eur / r.wohnflaeche_m2 : null);
+      if (!qm || !GEB.has(r.gebaeude_id)) { ohne++; continue; }
+      const key = JSON.stringify([GEB.get(r.gebaeude_id), r.baujahr_klasse ?? "unbekannt"]);
+      if (!zellen.has(key)) zellen.set(key, []);
+      zellen.get(key).push(qm);
+      const v = e.vermieter || "";
+      if (v.startsWith("JP:")) { if (!jp.has(v)) jp.set(v, []); jp.get(v).push([r.gebaeude_id, qm]); }
+    }
+    const liste = [...zellen].map(([k, w]) => [JSON.parse(k), w]).sort((a, b) => nachSchluessel(a[0][0] ?? "", b[0][0] ?? "") || nachSchluessel(a[0][1], b[0][1]))
+      .map(([[slug, bj], werte]) => ({ ortsbezirk: slug, ortsbezirk_name: K.ortsteile[slug] ?? slug, baujahr_klasse: bj,
+        ...(werte.length >= R.mieten_zelle_min ? { n: werte.length, ...kennzahlen(werte) } : { n: null, hinweis: "zu wenige Angaben" }) }));
+    const vermieter = [];
+    for (const v of [...jp.keys()].sort(nachSchluessel)) {
+      const x = jp.get(v), werte = x.map(([, q]) => q), gebs = new Set(x.map(([g]) => g));
+      if (werte.length >= R.juristische_person_min_angaben && gebs.size >= R.juristische_person_min_gebaeude)
+        vermieter.push({ name: v.slice(3), n: werte.length, gebaeude: gebs.size, ...kennzahlen(werte) });
+    }
+    return { stand, einheit: "€ je m² Wohnfläche, nettokalt",
+      methode: "Median ab der Mindestzahl, Spanne P25–P75 (Quantile, inklusive Methode) erst ab mieten_spanne_min Angaben; gerundet auf 0,10 €",
+      regeln: Object.fromEntries(["mieten_zelle_min", "mieten_spanne_min", "mieten_rundung_eur", "juristische_person_min_angaben", "juristische_person_min_gebaeude"].map((k) => [k, R[k]])),
+      angaben_ohne_flaeche: ohne, zellen: liste, juristische_personen: vermieter };
+  }
+  function schluesselRekursiv(x, out = new Set()) {
+    if (Array.isArray(x)) x.forEach((v) => schluesselRekursiv(v, out));
+    else if (x && typeof x === "object") for (const [k, v] of Object.entries(x)) { out.add(k); schluesselRekursiv(v, out); }
+    return out;
+  }
+  function pruefeAusgabe(ausgaben, privateNamen) {  // Sperre vor dem Speichern (wie veroeffentlichen.pruefe_ausgabe)
+    const ganz = (x, s) => Math.abs(x / s - rundenGanz(x / s)) <= 1e-6;
+    for (const [name, d] of Object.entries(ausgaben)) {
+      const text = JSON.stringify(d);
+      const felder = [...schluesselRekursiv(d)].filter((k) => VERBOTEN.has(k));
+      if (felder.length) throw new Error(`${name}: verbotene Felder ${felder.join(", ")}`);
+      if (/\bV-(\d{3,5}|neu)\b/.test(text)) throw new Error(`${name}: Vermieter-Schlüssel einer Privatperson`);
+      if (/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/.test(text)) throw new Error(`${name}: Kennung einer einzelnen Angabe`);
+      const low = text.toLowerCase();
+      for (const n of privateNamen) if (n && low.includes(n.trim().toLowerCase())) throw new Error(`${name}: Name einer Privatperson`);
+      for (const f of d.features || [])
+        if (["privat", "unklar"].includes(f.properties.kategorie) || ("name" in f.properties && !KAT[f.properties.kategorie].name_veroeffentlichen))
+          throw new Error(`${name}: Gebäude mit Kategorie ${f.properties.kategorie} oder Name, der nicht veröffentlicht werden darf`);
+      for (const z of [...(d.zellen || []), ...(d.juristische_personen || [])]) {
+        if ("p25" in z && (z.n || 0) < R.mieten_spanne_min) throw new Error(`${name}: Spanne unter der Mindestzahl ${R.mieten_spanne_min}`);
+        for (const k of ["median", "p25", "p75"]) if (z[k] != null && !ganz(z[k], R.mieten_rundung_eur)) throw new Error(`${name}: ${k} nicht auf ${R.mieten_rundung_eur} € gerundet`);
+      }
+      for (const z of d.zellen || []) {
+        if (z.median != null && (z.n || 0) < R.mieten_zelle_min) throw new Error(`${name}: Zelle unter der Mindestzahl`);
+        if (z.n == null && z.hinweis !== "zu wenige Angaben") throw new Error(`${name}: Zelle ohne Hinweis „zu wenige Angaben“`);
+      }
+      for (const j of d.juristische_personen || [])
+        if (j.n < R.juristische_person_min_angaben || j.gebaeude < R.juristische_person_min_gebaeude) throw new Error(`${name}: Vergleich je juristischer Person unter der Mindestzahl`);
+      for (const o of Object.values(d.ortsbezirke || {})) {
+        if (o.privat != null && o.privat < R.privat_anteil_min) throw new Error(`${name}: Anteil privat unter der Mindestzahl`);
+        if (o.privat == null && o.erfasst !== Object.values(o.kategorien || {}).reduce((s, x) => s + x, 0)) throw new Error(`${name}: Anteil privat als Differenz rückrechenbar`);
+      }
+    }
+  }
+  function veroeffentlichen() {
+    const stand = heute();
+    const frei = Object.values(S.d.eintraege).filter(freigegeben);
+    const je = eigentumJe(frei);
+    const ausgaben = { "eigentum_gebaeude.geojson": karte(je, stand), "eigentum_anteile_ortsbezirk.json": anteile(je, stand) };
+    if (K.mietangaben_aktiv) ausgaben["mieten_aggregiert.json"] = mieten(frei, stand);
+    const namen = Object.entries(S.d.eintraege).filter(([, e]) => e.typ === "eigentum" && e.datensatz.name_privat_enc)
+      .map(([i]) => nameOeffnen(i, "Veröffentlichungsprüfung"));
+    pruefeAusgabe(ausgaben, namen);
+    for (const d of Object.values(ausgaben)) Object.assign(d, { lizenz: K.lizenz.name, lizenz_url: K.lizenz.url, namensnennung: K.lizenz.namensnennung });
+    verlauf(`veröffentlicht (${Object.keys(ausgaben).join(", ")})`);
+    return { format: "wiz-veroeffentlichung-1", stand, ...(S.probe ? { probe: true } : {}), dateien: ausgaben };
+  }
+  function vorschau(v) {
+    const a = v.dateien["eigentum_anteile_ortsbezirk.json"].ortsbezirke, m = v.dateien["mieten_aggregiert.json"];
+    const zahl = (x) => (x == null ? "–" : x.toFixed(2).replace(".", ","));
+    const anteileZeilen = Object.entries(a).filter(([, o]) => o.erfasst || o.privat_hinweis)
+      .map(([s, o]) => `<tr><td>${esc(K.ortsteile[s] ?? s)}</td><td>${o.gebaeude}</td><td>${o.erfasst}</td><td>${esc(Object.entries(o.kategorien).map(([k, n]) => `${k} ${n}`).join(", "))}</td><td>${o.privat ?? esc(o.privat_hinweis ? "zu wenige" : "–")}</td></tr>`).join("");
+    const mietZeilen = m ? [...m.zellen.map((z) => [`${K.ortsteile[z.ortsbezirk] ?? z.ortsbezirk}, ${z.baujahr_klasse}`, z]), ...m.juristische_personen.map((j) => [j.name, j])]
+      .map(([t, z]) => `<tr><td>${esc(t)}</td><td>${z.n ?? esc(z.hinweis)}</td><td>${zahl(z.median)}</td><td>${z.p25 != null ? `${zahl(z.p25)} – ${zahl(z.p75)}` : "–"}</td></tr>`).join("") : "";
+    return `<p>Eigentum je Gebäude: ${v.dateien["eigentum_gebaeude.geojson"].features.length} Gebäude juristischer Personen.</p>
+      <div class="tabelle-rahmen"><table><caption>Anteile je Ortsbezirk (nur Ortsbezirke mit Erfassungen)</caption><thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Gebäude</th><th scope="col">erfasst</th><th scope="col">Kategorien</th><th scope="col">privat</th></tr></thead><tbody>${anteileZeilen || '<tr><td colspan="5">keine</td></tr>'}</tbody></table></div>
+      ${m ? `<div class="tabelle-rahmen"><table><caption>Mieten in € je m² (Ortsbezirk und Baujahrklasse, juristische Personen)</caption><thead><tr><th scope="col">Zelle</th><th scope="col">Angaben</th><th scope="col">Median</th><th scope="col">Spanne</th></tr></thead><tbody>${mietZeilen || '<tr><td colspan="4">keine</td></tr>'}</tbody></table></div>` : ""}`;
+  }
+
   // --- Oberfläche --------------------------------------------------------------------------------------------------
   function anzeigen() {
     const E = Object.values(S.d.eintraege);
@@ -232,7 +453,10 @@
       ["Offen ohne Hinweis", zahl((e) => e.status === "offen" && !e.konflikt)], ["Mit Hinweis", zahl((e) => e.status === "offen" && e.konflikt)],
       ["Verworfen", zahl((e) => e.status === "verworfen")], ["Zweimal freigegeben", zahl(freigegeben)],
       ["Register", S.register ? `${S.register.size} Erfasser-IDs` : "nicht geladen: Einladungscodes werden nicht geprüft"],
-      ["Zugriffe auf Namen in dieser Sitzung", S.protokoll.length]]
+      ["Zugriffe auf Namen in dieser Sitzung", S.protokoll.length],
+      ["Sperrliste (Widerspruch)", `${(S.d.sperrliste || []).length} Gebäude`],
+      ["Speicherdauer abgelaufen", `${faellig().length} Einträge`],
+      ["Schlüsselwechsel", wechselFaellig() ? "fällig (jährlich; derzeit mit Python: pruefen.py schluessel-wechsel)" : "nicht fällig"]]
       .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
     document.querySelectorAll(".pruefer-id").forEach((x) => { x.textContent = S.pruefer; });
     const angaben = (e) => {
@@ -249,8 +473,12 @@
         <td>${esc(e.vermieter || "")}</td><td>${esc(e.status)}</td><td>${esc(e.konflikt || "")}</td>
         <td>${esc([...new Set(e.freigaben)].join(", ") || "–")}</td></tr>`;
     }).join("") || `<tr><td colspan="9">Noch keine Einträge.</td></tr>`;
+    const f = faellig().length;
+    $("#fristen-text").textContent = `Einträge werden ${K.speicherdauer_monate} Monate nach dem Eingang gelöscht (Grenze: eingelesen vor ${fristGrenze()}). Fällig: ${f}.`;
+    $("#knopf-fristen").disabled = !f;
+    $("#probe-band").hidden = !S.probe;
     $("#ungespeichert").textContent = S.geaendert ? "Es gibt Änderungen, die noch nicht als Bestandsdatei gespeichert sind." : "";
-    $("#speichern-protokoll").disabled = !S.protokoll.length;
+    $("#speichern-protokoll").disabled = !S.protokoll.length && protokollZeilen().length === S.protokollAlt.length;
   }
   const ausgewaehlt = () => [...document.querySelectorAll("#liste tbody input:checked")].map((x) => x.value);
   async function dateiText(input) { const f = input.files[0]; return f ? { name: f.name, inhalt: await f.text() } : null; }
@@ -287,6 +515,50 @@
     } finally {
       knopf.disabled = false; knopf.textContent = "Öffnen";
     }
+  });
+
+  $("#knopf-probe").addEventListener("click", () => {
+    const dateien = probeStarten();
+    $("#sitzung").hidden = false;
+    const { neu } = einlesen(dateien);
+    anzeigen();
+    melden($("#oeffnen-status"), `Probe gestartet: Wegwerf-Schlüssel ${S.schl.key_id}, ${neu} erfundene Einträge eingelesen. Weiter mit „Prüfen“.`);
+  });
+
+  $("#form-widerruf").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const st = $("#rechte-status"), w = $("#f-widerruf").value.trim();
+    try {
+      const i = w in S.d.eintraege ? w : codeZuId(w);
+      loeschen(i, "Widerruf der Einwilligung");
+      $("#f-widerruf").value = "";
+      anzeigen(); melden(st, `Eintrag ${i.slice(0, 8)} gelöscht (Widerruf). Bestand danach speichern.`);
+    } catch (err) { melden(st, err.message, "fehler"); }
+  });
+  $("#form-widerspruch").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const st = $("#rechte-status");
+    const geb = $("#f-widerspruch").value.split(/[\s,;]+/).filter(Boolean);
+    const unbekannt = geb.filter((g) => !GEB.has(g));
+    if (!geb.length || unbekannt.length) return melden(st, `Bitte gültige Gebäudekennungen angeben${unbekannt.length ? ` (unbekannt: ${unbekannt.join(", ")})` : ""}.`, "fehler");
+    const { weg, ziele } = widerspruch(geb, "Widerspruch nach Art. 21 DSGVO");
+    $("#f-widerspruch").value = "";
+    anzeigen(); melden(st, `${weg.length} Eigentumseinträge gelöscht, ${ziele.length} Gebäude auf der Sperrliste. Bestand danach speichern.`);
+  });
+  $("#form-auskunft").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const g = $("#f-auskunft").value.trim();
+    const treffer = Object.entries(S.d.eintraege).filter(([, e]) => (e.typ === "eigentum" ? e.datensatz.objekt.id : e.datensatz.gebaeude_id) === g);
+    const gesperrt = (S.d.sperrliste || []).includes(g);
+    $("#auskunft").hidden = false;
+    $("#auskunft").innerHTML = `<p>Gebäude <code>${esc(g)}</code>: ${treffer.length} Einträge${gesperrt ? ", auf der Sperrliste (Widerspruch)" : ""}. Gespeichert sind nur die hier gezeigten Angaben; Namen von Privatpersonen stehen nicht im Klartext im Bestand.</p>` +
+      (treffer.length ? `<div class="tabelle-rahmen"><table><caption>Gespeicherte Angaben</caption><thead><tr><th scope="col">Kennung</th><th scope="col">Typ</th><th scope="col">Angaben</th><th scope="col">Eingang</th><th scope="col">Status</th></tr></thead><tbody>${treffer.map(([i, e]) => `<tr><td><code>${esc(i.slice(0, 8))}</code></td><td>${e.typ === "eigentum" ? "Eigentum" : "Miete"}</td><td>${esc(e.typ === "eigentum" ? [e.datensatz.kategorie, e.datensatz.vermietet && `vermietet: ${e.datensatz.vermietet}`, e.datensatz.beleg_art].filter(Boolean).join(" · ") : `${String(e.datensatz.eur_je_m2).replace(".", ",")} €/m², ${e.datensatz.wohnflaeche_klasse}, ${e.datensatz.baujahr_klasse}`)}</td><td>${esc(e.eingelesen.slice(0, 10))}</td><td>${esc(e.status)}</td></tr>`).join("")}</tbody></table></div>` : "");
+  });
+  $("#knopf-fristen").addEventListener("click", () => {
+    const f = faellig();
+    if (!f.length || !confirm(`${f.length} Einträge endgültig löschen (Speicherdauer abgelaufen)?`)) return;
+    for (const i of f) loeschen(i, `Speicherdauer ${K.speicherdauer_monate} Monate`);
+    anzeigen(); melden($("#rechte-status"), `${f.length} Einträge nach Ablauf der Speicherdauer gelöscht. Bestand und Zugriffsprotokoll (gekürzt) speichern.`);
   });
 
   $("#form-pruefer").addEventListener("submit", (ev) => {
@@ -339,12 +611,29 @@
   $("#speichern-pruefliste").addEventListener("click", () => speichern(`pruefung_${heute()}.tsv`,
     tsv(["id", "typ", "gebaeude", "kategorie", "vermieter", "status", "konflikt", "freigaben", "freigegeben", "name_oeffentlich"], pruefliste()), "text/tab-separated-values"));
 
+  let veroeffentlichung = null;
+  $("#knopf-veroeffentlichen").addEventListener("click", () => {
+    const st = $("#veroeffentlichen-status");
+    try {
+      veroeffentlichung = veroeffentlichen();
+      $("#vorschau-inhalt").innerHTML = vorschau(veroeffentlichung);
+      $("#vorschau").hidden = false;
+      anzeigen();
+      melden(st, `Sperre bestanden. Grundlage: ${Object.values(S.d.eintraege).filter(freigegeben).length} zweimal freigegebene Einträge. Bitte die Vorschau ansehen, dann die Datei speichern.`);
+    } catch (err) {
+      veroeffentlichung = null; $("#vorschau").hidden = true;
+      melden(st, `Gesperrt, nichts erzeugt: ${err.message}`, "fehler");
+    }
+  });
+  $("#speichern-veroeffentlichung").addEventListener("click", () =>
+    speichern(`${S.probe ? "probe_" : ""}veroeffentlichung_${veroeffentlichung.stand}.json`, JSON.stringify(veroeffentlichung), "application/json"));
+
   $("#speichern-bestand").addEventListener("click", () => {
-    speichern("bestand.sealed", S.schl.versiegeln(sodium.from_string(JSON.stringify(S.d))));
+    speichern(S.probe ? "probe_bestand.sealed" : "bestand.sealed", S.schl.versiegeln(sodium.from_string(JSON.stringify(S.d))));
     S.geaendert = false; anzeigen();
   });
-  $("#speichern-protokoll").addEventListener("click", () => speichern("namenzugriff.tsv",
-    tsv(["zeit", "pruefer", "datensatz", "zweck"], [...S.protokollAlt.map((z) => [z.zeit, z.pruefer, z.datensatz, z.zweck]), ...S.protokoll]), "text/tab-separated-values"));
+  $("#speichern-protokoll").addEventListener("click", () => speichern(S.probe ? "probe_namenzugriff.tsv" : "namenzugriff.tsv",
+    tsv(["zeit", "pruefer", "datensatz", "zweck"], protokollZeilen()), "text/tab-separated-values"));
   $("#knopf-beenden").addEventListener("click", () => {
     if (S?.geaendert && !confirm("Der Bestand ist noch nicht gespeichert. Trotzdem beenden?")) return;
     S = null; location.reload();
@@ -355,6 +644,7 @@
   window.sodium.ready.then(() => {
     sodium = window.sodium; V = sodium.base64_variants.ORIGINAL;
     $("#knopf-oeffnen").disabled = false;
+    $("#knopf-probe").disabled = false;
     $("#laden").remove();
   });
 })();

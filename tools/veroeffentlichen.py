@@ -13,11 +13,15 @@ Bricht ab, ohne etwas zu schreiben, wenn eine Ausgabe sensible Felder, Namen von
 Einzelbeträge, Vermieter-Schlüssel von Privatpersonen oder Zellen unter der Mindestzahl enthält.
 
 Aufruf: python tools/veroeffentlichen.py -a ARBEIT -s SCHLUESSEL -p P-1 [--ziel REPOSITORY]
+        python tools/veroeffentlichen.py uebernehmen DATEI [--ziel REPOSITORY]
+          Veröffentlichungsdatei der Prüfseite (site/pruefen.html, format wiz-veroeffentlichung-1) erneut prüfen, die
+          Gebäudeumrisse aus gebaeude.geojson ergänzen und wie oben nach data/wohnen/ schreiben
 """
 import argparse
 import json
 import re
 import statistics
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -198,11 +202,7 @@ def veroeffentlichen(arbeit, ziel=pg.ROOT, cfg=E):
     L = pg.STADT["wohnen_eigentum"]["lizenz"]  # Issue 31: jede Datei trägt Lizenz und Namensnennung
     for d in ausgaben.values():
         d.update(lizenz=L["name"], lizenz_url=L["url"], namensnennung=L["namensnennung"])
-    ordner = Path(ziel) / "data" / "wohnen"
-    ordner.mkdir(parents=True, exist_ok=True)
-    for name, d in ausgaben.items():
-        (ordner / name).write_text(json.dumps(d, ensure_ascii=False, indent=1 if name.endswith(".json") else None,
-                                              separators=None if name.endswith(".json") else (",", ":")), encoding="utf-8")
+    schreiben(ausgaben, ziel)
     arbeit.verlauf(f"veröffentlicht ({', '.join(ausgaben)})")
     arbeit.speichern()
     arbeit.audit(f"veroeffentlichung_{stand}.tsv", ["datei", "eintraege"],
@@ -210,7 +210,53 @@ def veroeffentlichen(arbeit, ziel=pg.ROOT, cfg=E):
     return ausgaben
 
 
+def schreiben(ausgaben, ziel):
+    ordner = Path(ziel) / "data" / "wohnen"
+    ordner.mkdir(parents=True, exist_ok=True)
+    for name, d in ausgaben.items():
+        (ordner / name).write_text(json.dumps(d, ensure_ascii=False, indent=1 if name.endswith(".json") else None,
+                                              separators=None if name.endswith(".json") else (",", ":")), encoding="utf-8")
+
+
+DATEIEN = {"eigentum_gebaeude.geojson", "eigentum_anteile_ortsbezirk.json", "mieten_aggregiert.json"}
+
+
+def uebernehmen(datei, ziel=pg.ROOT, cfg=E):
+    """Veröffentlichungsdatei der Prüfseite: dieselbe Sperre wie oben (Namen von Privatpersonen hat die Seite geprüft; hier
+    liegt kein Bestand vor), Lizenzfelder, Umrisse der Gebäude nach Kennung; dann schreiben wie veroeffentlichen."""
+    v = json.loads(Path(datei).read_text(encoding="utf-8"))
+    if not isinstance(v, dict) or v.get("format") != "wiz-veroeffentlichung-1" or not isinstance(v.get("dateien"), dict):
+        raise Verstoss("Keine Veröffentlichungsdatei der Prüfseite (format wiz-veroeffentlichung-1).")
+    if v.get("probe"):
+        raise Verstoss("Veröffentlichungsdatei aus der Probe (erfundene Testdaten); sie wird nicht übernommen.")
+    ausgaben = v["dateien"]
+    erwartet = DATEIEN if cfg["mietangaben_aktiv"] else DATEIEN - {"mieten_aggregiert.json"}
+    if set(ausgaben) != erwartet:
+        raise Verstoss(f"Dateien {sorted(ausgaben)} statt {sorted(erwartet)}.")
+    L = pg.STADT["wohnen_eigentum"]["lizenz"]
+    for name, d in ausgaben.items():
+        if (d.get("lizenz"), d.get("lizenz_url"), d.get("namensnennung")) != (L["name"], L["url"], L["namensnennung"]):
+            raise Verstoss(f"{name}: Lizenz oder Namensnennung fehlt.")
+    geb = gebaeude()
+    for f in ausgaben["eigentum_gebaeude.geojson"]["features"]:
+        if f.get("geometry") is not None or f["properties"]["id"] not in geb:
+            raise Verstoss(f"{f['properties'].get('id')}: unbekanntes Gebäude oder unerwarteter Umriss.")
+        f["geometry"] = geb[f["properties"]["id"]]["geometry"]
+    pruefe_ausgabe(ausgaben, [])
+    schreiben(ausgaben, ziel)
+    return ausgaben
+
+
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["uebernehmen"]:
+        ap = argparse.ArgumentParser(description="Veröffentlichungsdatei der Prüfseite übernehmen")
+        ap.add_argument("datei")
+        ap.add_argument("--ziel", default=str(pg.ROOT))
+        a = ap.parse_args(argv[1:])
+        aus = uebernehmen(a.datei, a.ziel)
+        print("geschrieben:", ", ".join(aus), "– danach: python -m pipeline wohnen")
+        return
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("-a", "--arbeit", required=True)
     ap.add_argument("-s", "--schluessel", required=True)

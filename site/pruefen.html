@@ -40,9 +40,11 @@
           <input type="file" id="f-register" accept=".tsv,text/tab-separated-values,text/plain"></label>
         <label class="feld">Bisheriges Zugriffsprotokoll <span class="klein">(optional, namenzugriff.tsv; wird fortgeschrieben)</span>
           <input type="file" id="f-protokoll" accept=".tsv,text/tab-separated-values,text/plain"></label>
-        <p><button type="submit" class="knopf" id="knopf-oeffnen" disabled>Öffnen</button></p>
+        <p class="knoepfe"><button type="submit" class="knopf" id="knopf-oeffnen" disabled>Öffnen</button>
+          <button type="button" class="knopf" id="knopf-probe" disabled>Probe ohne echte Daten</button></p>
       </form>
       <p id="oeffnen-status" role="status" tabindex="-1"></p>
+      <p id="probe-band" class="hinweis" role="status" hidden>Probe: Wegwerf-Schlüssel und erfundene Testdaten. Nichts davon ist echt; die Dateien taugen nicht zur Veröffentlichung.</p>
     </section>
 
     <div id="sitzung" hidden>
@@ -91,8 +93,45 @@
         </form>
       </section>
 
+      <section aria-labelledby="t-rechte">
+        <h2 id="t-rechte">4. Rechte und Fristen</h2>
+        <form id="form-widerruf" class="zeile" novalidate>
+          <label class="feld">Widerruf einer Mietangabe: Widerrufscode (XXXX-XXXX) oder Kennung
+            <input type="text" id="f-widerruf" autocomplete="off"></label>
+          <button type="submit" class="knopf">Eintrag löschen</button>
+        </form>
+        <form id="form-widerspruch" class="zeile" novalidate>
+          <label class="feld">Widerspruch von Vermieter:innen (Art. 21 DSGVO): Gebäudekennungen, durch Komma getrennt
+            <input type="text" id="f-widerspruch" autocomplete="off"></label>
+          <button type="submit" class="knopf">Löschen und sperren</button>
+        </form>
+        <p class="klein">Beim Widerspruch werden die Eigentumsangaben zu diesen Gebäuden und zu allen Gebäuden derselben Privatperson gelöscht; die Gebäude kommen auf die Sperrliste und werden nicht erneut aufgenommen.</p>
+        <form id="form-auskunft" class="zeile" novalidate>
+          <label class="feld">Auskunft (Art. 15 DSGVO): Gebäudekennung
+            <input type="text" id="f-auskunft" autocomplete="off"></label>
+          <button type="submit" class="knopf">Anzeigen</button>
+        </form>
+        <p id="rechte-status" role="status" tabindex="-1"></p>
+        <div id="auskunft" hidden></div>
+        <h3>Speicherdauer</h3>
+        <p id="fristen-text"></p>
+        <p class="knoepfe"><button type="button" class="knopf" id="knopf-fristen">Fällige Einträge löschen</button></p>
+      </section>
+
+      <section aria-labelledby="t-veroeffentlichen">
+        <h2 id="t-veroeffentlichen">5. Veröffentlichen</h2>
+        <p>Aus den zweimal freigegebenen Einträgen entstehen nur zusammengefasste Dateien: Eigentum juristischer Personen je Gebäude, Anteile je Ortsbezirk (Privatpersonen nur als Anzahl ab der Mindestzahl) und Mieten je Ortsbezirk und Baujahrklasse (Median ab der Mindestzahl, Spanne erst ab mehr Angaben, gerundet). Eine Sperre bricht ab, wenn etwas Einzelnes oder Persönliches enthalten wäre.</p>
+        <p><button type="button" class="knopf" id="knopf-veroeffentlichen">Vorschau erzeugen</button></p>
+        <p id="veroeffentlichen-status" role="status" tabindex="-1"></p>
+        <div id="vorschau" hidden>
+          <div id="vorschau-inhalt"></div>
+          <p><button type="button" class="knopf" id="speichern-veroeffentlichung">Veröffentlichungsdatei speichern</button></p>
+          <p class="klein">Diese eine Datei enthält die zusammengefassten Ergebnisse (ohne Namen von Privatpersonen, ohne einzelne Angaben). Sie geht an die verantwortliche Stelle bzw. in den Chat; dort wird sie noch einmal geprüft und mit <code>python tools/veroeffentlichen.py uebernehmen DATEI</code> übernommen. Danach den Bestand speichern (der Verlauf vermerkt die Veröffentlichung).</p>
+        </div>
+      </section>
+
       <section aria-labelledby="t-schliessen">
-        <h2 id="t-schliessen">4. Sitzung schließen</h2>
+        <h2 id="t-schliessen">6. Sitzung schließen</h2>
         <p id="ungespeichert" class="hinweis" role="status"></p>
         <p class="knoepfe"><button type="button" class="knopf" id="speichern-bestand">Bestand speichern (bestand.sealed)</button>
           <button type="button" class="knopf" id="speichern-protokoll">Zugriffsprotokoll speichern</button>
@@ -104,6 +143,7 @@
   <script src="vendor/libsodium-sumo/libsodium-sumo.js"></script>
   <script src="vendor/libsodium-sumo/libsodium-wrappers.js"></script>
   <script src="erfassen-pruefung.js"></script>
+  <script src="pruefen-gebaeude.js"></script>
   <script src="pruefen.js"></script>
 </body>
 </html>
