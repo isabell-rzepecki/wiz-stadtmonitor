@@ -785,3 +785,117 @@ test("Tour: Start aus dem Startfenster, alle Schritte mit Pfeiltaste, Beispielvo
   assert.deepEqual(page.errors, []);
   await page.close();
 });
+
+test("Einrichtungsseite: Schlüssel, Papiersicherung und Codes im Browser, kompatibel mit den Python-Werkzeugen, nichts gesendet, ohne Verstöße", async () => {
+  // ohne bypassCSP: Die Seite muss mit ihrer eigenen Richtlinie (connect-src 'none', WebAssembly) funktionieren
+  const ctx = await browser.newContext({ acceptDownloads: true });
+  const page = await ctx.newPage();
+  const fehler = [], abrufe = [];
+  page.on("pageerror", (e) => fehler.push(String(e)));
+  page.on("console", (m) => { if (m.type() === "error") fehler.push(m.text()); });
+  page.on("request", (r) => abrufe.push(r.url()));
+  await page.goto(SITE + "einrichten.html");
+  await page.waitForFunction(() => !document.querySelector("#knopf-schluessel").disabled);
+  assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'none'/);
+  assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex, nofollow");
+  // Barrierefreiheit: axe braucht ein eingefügtes Skript, das die Richtlinie der Seite (zu Recht) sperrt; daher eine zweite Ansicht
+  const pruef = await browser.newPage({ bypassCSP: true });
+  await pruef.goto(SITE + "einrichten.html");
+  await pruef.waitForFunction(() => !document.querySelector("#knopf-codes").disabled);
+  await pruef.locator("#knopf-schluessel").click();
+  await pruef.fill("#anzahl", "2");
+  await pruef.locator("#knopf-codes").click();
+  await pruef.locator("#ergebnis-codes").waitFor();
+  assert.deepEqual(await axe(pruef), []);
+  await pruef.close();
+  const nachLaden = abrufe.length;
+  const dir = mkdtempSync(join(tmpdir(), "einrichtung-"));
+  const laden = async (knopf) => {
+    const [dl] = await Promise.all([page.waitForEvent("download"), page.locator(knopf).click()]);
+    const ziel = join(dir, dl.suggestedFilename());
+    await dl.saveAs(ziel);
+    return ziel;
+  };
+  // Druckansicht: Inhalt abfangen, bevor er nach dem Drucken wieder geleert wird
+  await page.evaluate(() => { window.print = () => { window.gedruckt = document.querySelector("#druck").innerHTML; }; });
+  try {
+    // Schritt 1: zu kurze und ungleiche Passphrasen abgewiesen, dann Schlüssel mit Selbsttest
+    await page.fill("#pass1", "zu kurz");
+    await page.locator("#knopf-schluessel").click();
+    assert.match(await page.locator("#schluessel-status").textContent(), /mindestens 12 Zeichen/);
+    assert.equal(await page.locator("#ergebnis-schluessel").isVisible(), false);
+    const PASS = "Testpassphrase für die Einrichtung";
+    await page.fill("#pass1", PASS);
+    await page.fill("#pass2", PASS + "x");
+    await page.locator("#knopf-schluessel").click();
+    assert.match(await page.locator("#schluessel-status").textContent(), /stimmen nicht überein/);
+    await page.fill("#pass2", PASS);
+    await page.locator("#knopf-schluessel").click();
+    await page.waitForFunction(() => /Selbsttest bestanden/.test(document.querySelector("#schluessel-status").textContent), null, { timeout: 60000 });
+    assert.equal(await page.locator("#pass1").inputValue(), "");
+    const schluesseldatei = await laden("#speichern-schluessel");
+    const oeffSchluessel = await laden("#speichern-oeffentlich-schluessel");
+    await page.locator("#drucken-sicherung").click();
+    await page.waitForFunction(() => window.gedruckt);
+    const blatt = await page.evaluate(() => window.gedruckt);
+    assert.match(blatt, /<svg/);
+    const zeilen = blatt.match(/<pre>([\s\S]*?)<\/pre>/)[1].replaceAll("&amp;", "&");
+    assert.equal(JSON.parse(readFileSync(oeffSchluessel, "utf8")).schluessel.public_key, JSON.parse(readFileSync(schluesseldatei, "utf8")).public_key);
+    // Schritt 2: Codes mit Register und öffentlicher Datei
+    await page.fill("#anzahl", "3");
+    await page.locator("#knopf-codes").click();
+    await page.waitForFunction(() => /3 Codes erzeugt/.test(document.querySelector("#codes-status").textContent));
+    await page.evaluate(() => { window.gedruckt = null; });
+    await page.locator("#drucken-codes").click();
+    await page.waitForFunction(() => window.gedruckt);
+    const karten = await page.evaluate(() => window.gedruckt);
+    const codes = [...karten.matchAll(/class="code">([0-9A-Z-]{19})</g)].map((m) => m[1]);
+    assert.equal(codes.length, 3);
+    assert.match(karten, /erfassen\.html/);
+    const register = await laden("#speichern-register");
+    const oeffCodes = await laden("#speichern-oeffentlich-codes");
+    for (const c of codes) assert.doesNotMatch(readFileSync(register, "utf8") + readFileSync(oeffCodes, "utf8"), new RegExp(c));
+    // Python: Schlüsseldatei mit Passphrase öffnen und versiegelt prüfen, Sicherung wiederherstellen, Codes und Register,
+    // öffentliche Dateien in eine Kopie der stadt.json übernehmen
+    writeFileSync(join(dir, "zeilen.txt"), zeilen);
+    const aus = execFileSync("python3", ["-c", `
+import json, sys, shutil
+sys.path.insert(0, "tools")
+import pruefgruppe as pg, einladung, einrichten
+from nacl.public import SealedBox
+d, pw, zeilen, reg, oe1, oe2, codes = sys.argv[1:8]
+s = pg.Schluessel(d, pw)
+k = s.paare[s.key_id]
+assert SealedBox(k).decrypt(SealedBox(k.public_key).encrypt(b"probe")) == b"probe"
+ziel = d + ".zurueck"
+pg.aus_ausdruck(open(zeilen).read(), ziel)
+assert json.load(open(ziel)) == json.load(open(d))
+codes = codes.split(",")
+r = einladung.register_lesen(reg)
+assert [z["hash"] for z in r] == [einladung.code_hash(c) for c in codes]
+assert [z["erfasser_id"] for z in r] == [einladung.erfasser_id(c) for c in codes]
+stadt = d + ".stadt.json"
+shutil.copy("config/stadt.json", stadt)
+F = einrichten.uebernehmen([oe1, oe2], stadt)
+assert F["schluessel"]["key_id"] == s.key_id and [e["hash"] for e in F["einladungen"]][-3:] == [z["hash"] for z in r]
+print("ok", s.key_id)
+`, schluesseldatei, PASS, join(dir, "zeilen.txt"), register, oeffSchluessel, oeffCodes, codes.join(",")], { encoding: "utf8" });
+    assert.match(aus, /^ok pg-\d{8}-[0-9a-f]{8}/);
+    // Schritt 3: Sicherung im Browser prüfen, Tippfehler erkannt, Passphrase geprüft
+    await page.fill("#zeilen", zeilen.replace(/^(001 )(.)/m, (m, a, b) => a + (b === "A" ? "B" : "A")));
+    await page.locator("#knopf-sicherung").click();
+    assert.match(await page.locator("#sicherung-status").textContent(), /Zeile 001: Prüfziffern/);
+    await page.fill("#zeilen", zeilen);
+    await page.fill("#pass-pruef", PASS);
+    await page.locator("#knopf-sicherung").click();
+    await page.waitForFunction(() => /Passphrase öffnet ihn\./.test(document.querySelector("#sicherung-status").textContent), null, { timeout: 60000 });
+    assert.equal(readFileSync(await laden("#speichern-wiederhergestellt"), "utf8"), readFileSync(schluesseldatei, "utf8"));
+    // nach dem Laden der Seite kein einziger Abruf, im Browser nichts gespeichert
+    assert.deepEqual(abrufe.slice(nachLaden), []);
+    assert.deepEqual(await page.evaluate(() => [localStorage.length, sessionStorage.length]), [0, 0]);
+    assert.deepEqual(fehler, []);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    await ctx.close();
+  }
+});

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Einrichtung der Erfassung (Issue 53), nicht öffentlich verlinkt. Alles rechnet im Browser; connect-src 'none' schließt
+       jeden Abruf und jedes Senden technisch aus. libsodium (Fassung sumo, mit Argon2id) braucht WebAssembly
+       ('wasm-unsafe-eval' erlaubt nur das Übersetzen von WebAssembly, kein eval). Die Dateien entsprechen
+       tools/pruefgruppe.py und tools/einladung.py. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="robots" content="noindex, nofollow">
+  <!-- Adresse der Erfassungsseite und Gültigkeit der Codes füllt der Seitenbau aus config/stadt.json -->
+  <meta name="wiz-site-url" content="">
+  <meta name="wiz-einladung-monate" content="12">
+  <title>Einrichtung der Erfassung – Stadtmonitor</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="page.css">
+  <link rel="stylesheet" href="einrichten.css">
+</head>
+<body>
+  <header class="page-head">
+    <span class="page-brand"><img src="favicon.svg" width="32" height="32" alt="">Stadtmonitor</span>
+  </header>
+  <main class="page" id="inhalt">
+    <h1>Einrichtung der Erfassung</h1>
+    <p>Diese Seite erzeugt den Schlüssel der Prüfgruppe und die Einladungscodes. Sie rechnet nur in diesem Browser und kann technisch nichts senden. Am sichersten: Seite laden, dann das Netz trennen (WLAN aus) und erst danach beginnen.</p>
+    <p id="netz" class="hinweis" role="status"></p>
+    <p id="laden" class="hinweis" role="status">Verschlüsselung wird geladen …</p>
+
+    <section aria-labelledby="t-schluessel">
+      <h2 id="t-schluessel">Schritt 1: Schlüssel der Prüfgruppe</h2>
+      <p><strong>Wer:</strong> die beiden Schlüsselinhaber:innen der Prüfgruppe, gemeinsam an einem eigenen Gerät. Nur einmal nötig (und beim jährlichen Wechsel).</p>
+      <form id="form-schluessel" novalidate>
+        <label class="feld">Passphrase (mindestens 12 Zeichen, am besten vier oder fünf Wörter)
+          <input type="password" id="pass1" autocomplete="new-password" minlength="12" required></label>
+        <label class="feld">Passphrase wiederholen
+          <input type="password" id="pass2" autocomplete="new-password" minlength="12" required></label>
+        <p class="klein">Die Passphrase nirgends speichern. Nur auf Papier in einen versiegelten Umschlag, getrennt von der Papiersicherung aufbewahren.</p>
+        <p><button type="submit" class="knopf" id="knopf-schluessel" disabled>Schlüssel erzeugen</button></p>
+      </form>
+      <p id="schluessel-status" role="status" tabindex="-1"></p>
+      <div id="ergebnis-schluessel" class="ergebnis" hidden>
+        <ol>
+          <li><button type="button" class="knopf" id="speichern-schluessel">Schlüsseldatei speichern</button> Auf einem USB-Stick oder verschlüsselten Laufwerk ablegen, nicht in einer Cloud, nie in einem Git-Repository. Beide Schlüsselinhaber:innen bekommen eine Kopie.</li>
+          <li><button type="button" class="knopf" id="drucken-sicherung">Papiersicherung drucken</button> An einem lokalen Drucker drucken und in den Tresor legen. Ohne Passphrase öffnet der Ausdruck nichts.</li>
+          <li><button type="button" class="knopf" id="speichern-oeffentlich-schluessel">Öffentliche Datei speichern</button> Enthält nur den öffentlichen Schlüssel. Diese Datei an die verantwortliche Stelle bzw. in den Chat geben; sie wird in die Konfiguration übernommen.</li>
+          <li>Danach Schritt 3 einmal probeweise durchführen und dieses Fenster schließen.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-codes">
+      <h2 id="t-codes">Schritt 2: Einladungscodes</h2>
+      <p><strong>Wer:</strong> die Ausgabestelle (eine Person der verantwortlichen Stelle, nicht in der Prüfgruppe), an ihrem eigenen Gerät.</p>
+      <form id="form-codes" novalidate>
+        <label class="feld">Anzahl der Codes
+          <input type="number" id="anzahl" min="1" max="50" value="5" required></label>
+        <label class="feld">Vorhandenes Register (optional, wenn schon Codes ausgegeben wurden)
+          <input type="file" id="register-datei" accept=".tsv,text/tab-separated-values,text/plain"></label>
+        <p><button type="submit" class="knopf" id="knopf-codes" disabled>Codes erzeugen</button></p>
+      </form>
+      <p id="codes-status" role="status" tabindex="-1"></p>
+      <div id="ergebnis-codes" class="ergebnis" hidden>
+        <ol>
+          <li><button type="button" class="knopf" id="drucken-codes">Codekarten drucken</button> Ausschneiden und persönlich übergeben. Wer welche Erfasser-ID erhält, nur in den Unterlagen der Ausgabestelle notieren (ohne Code).</li>
+          <li><button type="button" class="knopf" id="speichern-register">Register speichern</button> Erfasser-ID, Hash, Ausgabe, gültig bis; ohne Codes und ohne Namen. Eine Kopie an die Prüfgruppe.</li>
+          <li><button type="button" class="knopf" id="speichern-oeffentlich-codes">Öffentliche Datei speichern</button> Enthält nur die Prüfwerte (Hashes) und Ablaufdaten. Diese Datei in den Chat geben; sie wird in die Konfiguration übernommen.</li>
+        </ol>
+        <p class="klein">Die Codes selbst stehen nur auf den Karten. Sie werden nirgends gespeichert; nach dem Schließen dieses Fensters sind sie nicht wiederherstellbar.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-sicherung">
+      <h2 id="t-sicherung">Schritt 3: Papiersicherung prüfen oder wiederherstellen</h2>
+      <p>Die Zeilen der Papiersicherung abtippen oder die QR-Codes scannen und hier einfügen. Die Seite prüft jede Zeile und setzt die Schlüsseldatei wieder zusammen.</p>
+      <form id="form-sicherung" novalidate>
+        <label class="feld">Zeilen der Papiersicherung
+          <textarea id="zeilen" rows="8" spellcheck="false" autocomplete="off"></textarea></label>
+        <label class="feld">Passphrase (optional, um sie zu prüfen)
+          <input type="password" id="pass-pruef" autocomplete="off"></label>
+        <p><button type="submit" class="knopf" id="knopf-sicherung" disabled>Prüfen</button></p>
+      </form>
+      <p id="sicherung-status" role="status" tabindex="-1"></p>
+      <div id="ergebnis-sicherung" class="ergebnis" hidden>
+        <p><button type="button" class="knopf" id="speichern-wiederhergestellt">Wiederhergestellte Schlüsseldatei speichern</button></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-hinweise">
+      <h2 id="t-hinweise">Hinweise</h2>
+      <ul>
+        <li>Die Schlüsseldatei ist mit der Passphrase geschützt (Argon2id). Datei, Papiersicherung und Passphrase immer getrennt aufbewahren.</li>
+        <li>Nichts davon gehört in ein Git-Repository, eine E-Mail oder einen Messenger. In den Chat gehören nur die beiden „öffentlichen Dateien“.</li>
+        <li>Ablauf und Rollen: <code>docs/inbetriebnahme/</code> im Repository.</li>
+      </ul>
+    </section>
+  </main>
+  <section id="druck" class="druck" hidden aria-hidden="true"></section>
+  <script src="vendor/libsodium-sumo/libsodium-sumo.js"></script>
+  <script src="vendor/libsodium-sumo/libsodium-wrappers.js"></script>
+  <script src="vendor/qrcode/qrcode.js"></script>
+  <script src="einrichten.js"></script>
+</body>
+</html>
