@@ -24,6 +24,11 @@ PERSON = re.compile(rf"\b({ROLLE})\s+(?!{_KEIN}){_NAME}(?:\s+(?!{_KEIN}){_NAME})
 # mehrere Personen ohne Anrede in Klammern: „(Vorname Name/Vorname Name)“
 _VOLL = r"[A-ZÄÖÜ][a-zäöüß]+\s[A-ZÄÖÜ][a-zäöüß]+"
 PERSONEN = re.compile(rf"\({_VOLL}(?:\s*/\s*{_VOLL})+\)")
+# Namen ohne Anrede nach „mit“ („Gespräch mit Vorname Name“, auch „… und Vorname Name“); Orte und Einrichtungen, die so
+# beginnen, stehen in config/stadt.json unter namensfilter.kein_name
+_KEIN_NAME = "|".join(map(re.escape, config.STADT.get("namensfilter", {}).get("kein_name", []))) or "(?!)"
+_VN = rf"(?!(?:{_KEIN_NAME})\b)(?!{_KEIN})[A-ZÄÖÜ][a-zäöüß]+\s+[A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜ][a-zäöüß]+)?"
+MIT_PERSON = re.compile(rf"\b(mit)\s+{_VN}(?:\s+und\s+{_VN})?(?![\wäöüß-])")
 NAME_ERSATZ = "[Name entfernt]"
 # Hinweise auf eine Privatwohnung im Sitzungsort
 PRIVAT = re.compile(r"\b(bei|Familie|Fam\.|Herrn?|Frau|Wohnung|privat\w*)\b", re.I)
@@ -31,7 +36,8 @@ PRIVAT = re.compile(r"\b(bei|Familie|Fam\.|Herrn?|Frau|Wohnung|privat\w*)\b", re
 
 def ohne_namen(titel):
     """Personennamen im Titel durch einen Platzhalter ersetzen; Anrede oder Funktion bleibt stehen."""
-    return PERSONEN.sub(f"({NAME_ERSATZ})", PERSON.sub(lambda m: f"{m.group(1)} {NAME_ERSATZ}", titel))
+    t = PERSONEN.sub(f"({NAME_ERSATZ})", PERSON.sub(lambda m: f"{m.group(1)} {NAME_ERSATZ}", titel))
+    return MIT_PERSON.sub(lambda m: f"{m.group(1)} {NAME_ERSATZ}", t)
 
 
 class ParseFehler(ValueError):

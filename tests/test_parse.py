@@ -58,6 +58,13 @@ class Kopf(unittest.TestCase):
         self.assertEqual(f("Beschilderung L 3302 (eingeladen: M. Muster)"), "Beschilderung L 3302 (eingeladen: [Name entfernt])")
         self.assertEqual(f("Vortrag (Referent Dr. Max Muster, Stiftung)"), "Vortrag (Referent [Name entfernt], Stiftung)")
         self.assertEqual(f("Jugendraum (Erika Muster/Max Beispiel)"), "Jugendraum ([Name entfernt])")
+        # ohne Anrede nach „mit“, auch zwei Personen; Orte nach „mit“ bleiben
+        self.assertEqual(f("Bericht über Gespräch mit Erika Muster und weiteres Vorgehen"), "Bericht über Gespräch mit [Name entfernt] und weiteres Vorgehen")
+        self.assertEqual(f("Gespräch mit Erika Muster, Fachdienst Soziales"), "Gespräch mit [Name entfernt], Fachdienst Soziales")
+        self.assertEqual(f("Ortstermine mit Max Muster und Erika Beispiel-Muster an der Brücke"), "Ortstermine mit [Name entfernt] an der Brücke")
+        for t in ("Wanderweg mit Schloss Rothestein", "Partnerschaft mit Bad Sooden-Allendorf", "Kooperation mit Neu Eichenberg",
+                  "Zusammenarbeit mit dem Deutschen Roten Kreuz", "Gespräch mit Herrn [Name entfernt]"):
+            self.assertEqual(f(t), t)
         # Funktionen, Gliederungspunkte und Orte bleiben
         for t in ("Bericht des Herrn Bürgermeister", "Frau [Name entfernt] (Polizei Witzenhausen) stellt sich vor", "Wanderweg Frau Holle", "Frau-Holle-Pfad", "Bericht des Bürgermeisters",
                   "Antrag der Stadtverordnetenfraktion SPD vom 01.02.2025", "Bürgerinnen und Bürger haben das Wort"):

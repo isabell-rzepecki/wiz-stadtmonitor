@@ -472,6 +472,10 @@
       }
     }
   },
+  "namensfilter": {
+    "kein_name": ["Bad", "Neu", "Schloss", "Burg", "Kloster", "Gut", "Haus", "Hof", "Sankt", "St"],
+    "_hinweis": "Wörter, mit denen nach „mit“ kein Personenname beginnt (Orte und Einrichtungen wie „mit Schloss Rothestein“). Personennamen ohne Anrede nach „mit“ ersetzt pipeline/parse.py durch einen Platzhalter; jede Ersetzung steht im Audit namensfilter.tsv (ohne den Namen), dort Fehltreffer prüfen und hier ergänzen."
+  },
   "verortung": {
     "ausschluss_namen": [
       "In der Stadt",
