@@ -808,7 +808,7 @@
   }
   function methodText(l) {
     const m = METHOD[l.method] || l.method;
-    return `${esc(m)}${l.stage === "C" ? ' <span class="derived">Sprachmodell</span>' : ""}${l.evidence ? ` · Fundstelle: „${esc(l.evidence)}“` : ""}`;
+    return `${esc(m)}${l.stage === "C" ? ' <span class="derived">Sprachmodell</span>' : ""}${l.evidence ? ` · Fundstelle: „${esc(l.evidence)}“` : ""}${l.geprueft ? ` · von Ortskundigen geprüft am ${fmtDate(l.geprueft)}` : ""}`;
   }
   function select(p, fromMap) {
     const ausListe = $("#panel-list").contains(document.activeElement);
