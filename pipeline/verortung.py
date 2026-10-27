@@ -10,6 +10,7 @@ Titel genannten Ortsteil bzw. eine Gemarkung eingegrenzt; sonst bleiben sie ohne
 „mehrdeutig“. Für einzelne Namen legt verortung.vorrang in config/stadt.json einen Ortsteil fest, der nur dann gilt,
 wenn nichts anderes eingrenzt (method strasse+vorrang). Hausnummern werden nicht ausgewertet (keine Wohnadressen).
 """
+import csv
 import json
 import re
 import time
@@ -29,6 +30,10 @@ FLST_CACHE = config.GEO / "dl-de-zero" / "flurstuecke.json"
 _DIENST_AUS = False
 AUSSCHLUSS = set(config.STADT.get("verortung", {}).get("ausschluss_namen", []))
 VORRANG = config.STADT.get("verortung", {}).get("vorrang", {})
+# Ergebnisse der Ortsprüfung durch Ortskundige (tools/ortspruefung.py einlesen); Schlüssel vorgang und treffer
+GEPRUEFT = config.ROOT / "config" / "verortung_geprueft.tsv"
+GEPRUEFT_FELDER = ["vorgang", "treffer", "ergebnis", "ortsteil", "strasse", "hinweis", "geprueft_am"]
+ERGEBNISSE = ("bestätigt", "korrigiert", "kein Ortsbezug", "unklar")
 
 
 def normalisieren(text):
@@ -189,3 +194,40 @@ def stufe_b(titel, sitzung, verz, quelle_pdf):
                         "ortsteil": ", ".join(sorted(filter(None, ((_ortsteil(gk=gk) or {}).get("name") for gk in kand)))),
                         "konfidenz": "", "fundstelle": evidence})
     return locs, aud
+
+
+def geprueft_laden(path=GEPRUEFT):
+    """{vorgang: [zeile]} aus config/verortung_geprueft.tsv"""
+    out = {}
+    if path.exists():
+        with path.open(encoding="utf-8", newline="") as f:
+            for z in csv.DictReader(f, delimiter="\t"):
+                out.setdefault(z["vorgang"], []).append(z)
+    return out
+
+
+def geprueft_anwenden(locations, zeilen, verz, quelle_pdf):
+    """Ergebnisse der Ortsprüfung auf die Orte eines Vorgangs anwenden. Betroffen sind nur Orte der Stufe B aus dem Titel
+    (gleicher Treffer); Gremium (Stufe A) und Bauleitplanung bleiben. bestätigt → Konfidenz hoch; korrigiert → Ort aus
+    Ortsteil und Straße (Punkt, wenn die Straße im Verzeichnis der Gemarkung steht, sonst der Ortsteil); kein Ortsbezug →
+    Ort entfernt; unklar → keine Änderung."""
+    for z in zeilen:
+        alt = [l for l in locations if l["stage"] == "B" and l["level"] != "bebauungsplan" and z["treffer"] in (l["name"], l.get("evidence"))]
+        if z["ergebnis"] == "bestätigt":
+            for l in alt:
+                l.update(confidence="hoch", geprueft=z["geprueft_am"])
+        elif z["ergebnis"] in ("korrigiert", "kein Ortsbezug"):
+            locations[:] = [l for l in locations if l not in alt]
+            o = _ortsteil(name=z["ortsteil"]) if z["ergebnis"] == "korrigiert" else None
+            if not o:
+                continue
+            p = verz.namen.get(z["strasse"], {}).get(o["gemarkung_nr"]) if z["strasse"] else None
+            loc = {"level": "strasse" if p else "ortsteil", "name": z["strasse"] if p else o["name"], "ortsteil": o["name"],
+                   "stage": "B", "method": "geprueft", "confidence": "hoch", "evidence": z["treffer"], "source_pdf": quelle_pdf,
+                   "geprueft": z["geprueft_am"]}
+            if p:
+                loc.update(lon=p["lon"], lat=p["lat"])
+            # neben dem Gremiumsort (Stufe A) bleibt der geprüfte Ort stehen: er belegt den Ortsbezug des Gegenstands
+            if not any(l["level"] == loc["level"] and l["name"] == loc["name"] and l["stage"] == "B" for l in locations):
+                locations.append(loc)
+    return locations

@@ -35,7 +35,7 @@ GLIEDERUNG = re.compile(r"^(Anträge|Anfragen|Grundstücksangelegenheiten|Über-
 BPLAN = re.compile(r"(?:(\d+)\.\s*Änderung\s+(?:und\s+Erweiterung\s+)?des\s+)?Bebauungsplan(?:es|s)?\s+"
                    + bauleitplanung.PLAN_NR + r"(?:\s*,?\s*Gemarkung\s+([A-ZÄÖÜ][\wäöüß-]+))?")
 DETAIL = {"gremium_ortsbeirat": "A-gremium", "gremium_stadtteilbeirat": "A-gremium", "strasse": "B-strasse",
-          "strasse+ortsteil": "B-strasse", "strasse+vorrang": "B-strasse", "gemarkung": "B-gemarkung", "flurstueck": "B-flurstueck", "ortsteil_name": "B-ortsteil",
+          "strasse+ortsteil": "B-strasse", "strasse+vorrang": "B-strasse", "geprueft": "B-geprueft", "gemarkung": "B-gemarkung", "flurstueck": "B-flurstueck", "ortsteil_name": "B-ortsteil",
           "bebauungsplan": "B-bplan", "flaechennutzungsplan": "B-fplan"}
 FPLAN = re.compile(r"(\d+)\.\s*Änderung\s+des\s+Flächennutzungsplan(?:es|s)?")
 
@@ -96,6 +96,7 @@ def build():
     plaene = bauleitplanung.plaene()
     flaechen = geo.Ortsteile() if config.ORTSBEZIRKE.exists() else None
     verz = verortung.Verzeichnis()
+    geprueft = verortung.geprueft_laden()
     umweltflaechen = umwelt.flaechen() if config.ORTSBEZIRKE.exists() else []
     # Beteiligungsverfahren der Bauleitplanung (pipeline/beteiligung.py), je Planverfahren
     bet_datei = config.EXPORT / "beteiligung.json"
@@ -174,6 +175,8 @@ def build():
                 if not any(x["level"] == l["level"] and x["name"] == l["name"] for x in locations):
                     locations.append(l)
             b_audit += [{"vorgang": key, "sitzung": t["sitzung"], "top": t["top"], "titel": t["titel"], **a} for a in aud]
+        if key in geprueft:
+            verortung.geprueft_anwenden(locations, geprueft[key], verz, sitzungen[ts[0]["sitzung"]]["pdf"])
         # räumliche Überschneidung mit Umweltebenen: Flurstückspunkte und Geltungsbereiche, nicht Straßen oder Ortsteile
         overlaps = []
         for l in locations:
@@ -242,7 +245,7 @@ def build():
                            "methode": "; ".join(l["method"] for l in ls), "fundstelle": "; ".join(l["evidence"] for l in ls),
                            "methode_detail": "; ".join(DETAIL.get(l["method"], l["method"]) for l in ls),
                            "mehrdeutig": "ja" if (v["reference"], s["sitzung"], s["top"]) in mehrdeutig else "nein",
-                           "quelle_pdf": s["pdf"], "pruefstatus": "ungeprüft"})
+                           "quelle_pdf": s["pdf"], "pruefstatus": "geprüft" if v["reference"] in geprueft else "ungeprüft"})
     audit.tabelle("tops.tsv", ["bekanntmachung", "gremium", "datum", "top", "titel", "vorlage", "vorgang", "verfahrenspunkt",
                                "stufe", "treffer", "konfidenz", "methode", "methode_detail", "mehrdeutig", "fundstelle",
                                "quelle_pdf", "pruefstatus"], zeilen)
