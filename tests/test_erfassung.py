@@ -109,12 +109,14 @@ class Erfassung(unittest.TestCase):
                      "datenschutz.html", "impressum.html"):
             text = (SITE / name).read_text(encoding="utf-8")
             self.assertNotIn("einrichten.html", text, name)
+            self.assertNotIn("pruefen.html", text, name)
             if name in ("index.html", "app.js", "wohnen.html", "wohnen.js", "wohnen-module.js"):
                 self.assertNotIn("erfassen", text, name)
-        for seite in ("erfassen.html", "einrichten.html"):
+        for seite in ("erfassen.html", "einrichten.html", "pruefen.html"):
             self.assertIn('content="noindex', (SITE / seite).read_text(encoding="utf-8"))
-        # die Einrichtungsseite kann technisch nichts senden
-        self.assertIn("connect-src 'none'", (SITE / "einrichten.html").read_text(encoding="utf-8"))
+        # Einrichtungs- und Prüfseite können technisch nichts senden
+        for seite in ("einrichten.html", "pruefen.html"):
+            self.assertIn("connect-src 'none'", (SITE / seite).read_text(encoding="utf-8"))
 
     def test_oeffentliche_datei_der_einrichtungsseite(self):
         from nacl.public import PrivateKey

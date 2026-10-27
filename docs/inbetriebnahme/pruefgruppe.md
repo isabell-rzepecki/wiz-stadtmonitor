@@ -18,6 +18,10 @@ Mit Python:
 
 ## Laufend
 
+**Ohne Python:** die Prüfseite `pruefen.html` (nicht verlinkt, rechnet nur im Browser, sendet nichts). Öffnen mit Schlüsseldatei, Passphrase, Prüfer-ID, Bestandsdatei (`bestand.sealed`) und Register; dann Exportdateien einlesen, „Prüfen“, freigeben. Die zweite Freigabe gibt die zweite Person mit eigener Prüfer-ID, nacheinander am selben Gerät oder mit der gespeicherten Bestandsdatei an ihrem Gerät. Am Ende den Bestand und, falls Namen geöffnet wurden, das Zugriffsprotokoll speichern. Die Dateien sind dieselben wie bei Python; man kann zwischen beiden wechseln. Veröffentlichen, Widerruf, Widerspruch und Fristen folgen auf der Seite in den nächsten Schritten; bis dahin mit Python.
+
+Mit Python:
+
 - **Eingang:** `python tools/pruefen.py einlesen -a ARBEIT -s PFAD/pg.json -p P-1 DATEI…`, danach die Exportdatei löschen.
 - **Prüfen und Freigeben:** `python tools/pruefen.py pruefen -a ARBEIT -s PFAD/pg.json -p P-1`, dann `python tools/pruefen.py freigeben -a ARBEIT -s PFAD/pg.json -p P-1 --alle` durch P-1 **und** P-2.
 - **Veröffentlichen:** `python tools/veroeffentlichen.py -a ARBEIT -s PFAD/pg.json -p P-1`; nur die Dateien unter `data/wohnen/` committen.
