@@ -477,6 +477,10 @@
       "In der Stadt",
       "Radweg"
     ],
+    "vorrang": {
+      "Ermschwerder Straße": "Kernstadt"
+    },
+    "_hinweis_vorrang": "Mehrdeutige Straßennamen, die ohne eingrenzendes Gremium, Ortsteil oder Gemarkung im Titel einem Ortsteil zugeordnet werden, weil Titel sie dort überwiegend meinen (geprüft im Audit verortung_stufe_b.tsv: DRK-Kleiderladen und Ausbauplanung liegen in der Kernstadt). Konfidenz mittel, im Audit weiter als mehrdeutig markiert.",
     "_hinweis": "Lagebezeichnungen, die als allgemeine Wendung in Titeln vorkommen und deshalb nicht als Ort gelten (aus der Prüfung des Audits verortung_stufe_b.tsv)"
   },
   "umwelt": {
@@ -964,8 +968,9 @@
   },
   "einreicher": {
     "_hinweis": "Einreicher von Anträgen und Anfragen aus den TOP-Titeln. Nur Fraktionen bzw. Wählergruppen; Einzelpersonen ohne Namen. Auf der Seite als Angabe und Filter, ohne Zählung je Fraktion (eine fehlende Nennung im Titel sagt nichts über Aktivität).",
-    "muster_typ": "(Änderungsantrag|Ergänzungsantrag|Dringlichkeitsantrag|Prüfauftrag|Resolutionsantrag|Resolution|Antrag|Anfrage)",
-    "muster": "(?P<typ>{typ})\\s+(?:der|des|von)\\s+(?P<einr>.+?)\\s+vom\\s+(?P<datum>\\d{{1,2}}\\.\\d{{1,2}}\\.\\d{{4}})",
+    "muster_typ": "(Änderungsantrag|Ergänzungsantrag|Dringlichkeitsantrag|Prüfauftrag|Resolutionsantrag|Resolution|Anträge|Antrag|Anfragen|Anfrage)",
+    "muster": "(?P<typ>{typ})\\s+(?:(?:der|des|von)\\s+)?(?P<einr>.+?)\\s+vom\\s+(?P<datum>\\d{{1,2}}\\.\\d{{1,2}}\\.\\d{{4}})",
+    "muster_ohne_datum": "(?P<typ>{typ})\\s+(?:der|des|von)\\s+(?P<einr>[^,;:]+?)(?=\\s+(?:zur|zum|zu|über|betreffend|bezüglich)\\b)",
     "fraktionen": [
       {
         "id": "SPD",

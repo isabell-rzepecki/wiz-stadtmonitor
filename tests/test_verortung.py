@@ -42,10 +42,22 @@ class StufeB(unittest.TestCase):
         self.assertFalse(any(l[2] == "Ermschwerd" for l in locs))
 
     def test_mehrdeutig_ohne_kontext_bleibt_offen(self):
-        locs, aud = self.b("Entwurfsplanung Ermschwerder Straße")
+        locs, aud = self.b("Sanierung Bahnhofstraße")
         self.assertEqual(locs, set())
         self.assertEqual(aud[0]["mehrdeutig"], "ja")
         self.assertEqual(aud[0]["konfidenz"], "")
+
+    def test_vorrang_nur_ohne_eingrenzenden_hinweis(self):
+        # verortung.vorrang: „Ermschwerder Straße“ meint ohne Hinweis die Kernstadt
+        with mock.patch.dict(verortung.VORRANG, {"Ermschwerder Straße": "Kernstadt"}, clear=True):
+            locs, aud = verortung.stufe_b("Entwurfsplanung Ermschwerder Straße", {"ortsteil": None}, self.v, "x.pdf")
+            self.assertEqual([(l["name"], l["ortsteil"], l["method"]) for l in locs], [("Ermschwerder Straße", "Kernstadt", "strasse+vorrang")])
+            self.assertEqual(aud[0]["mehrdeutig"], "ja")
+            locs, _ = self.b("Entwurfsplanung Ermschwerder Straße", ortsteil="Blickershausen")
+            self.assertEqual(locs, {("strasse", "Ermschwerder Straße", "Blickershausen")})
+            # Ortsbeirat eines anderen Ortsteils: kein Vorrang, bleibt offen
+            locs, _ = self.b("Entwurfsplanung Ermschwerder Straße", ortsteil="Roßbach")
+            self.assertEqual(locs, set())
 
     def test_mehrdeutig_eingegrenzt_ueber_gremium(self):
         locs, _ = self.b("Bank Bahnhofstr.", ortsteil="Gertenbach")

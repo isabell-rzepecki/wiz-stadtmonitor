@@ -21,6 +21,19 @@ class Einreicher(unittest.TestCase):
         self.assertEqual(einreicher.erkennen("Antrag von Die Partei vom 14.10.2025 über eine Luftmessstation")["einreicher"], ["PARTEI"])
         self.assertEqual(einreicher.erkennen("Anfrage der FDP Fraktion vom 25.10.2024 zu X")["einreicher"], ["FDP"])
 
+    def test_schreibweisen_ohne_bindewort_oder_datum(self):
+        r = einreicher.erkennen("Anfrage Die PARTEI vom 07.10.2024 zur Entwicklung des Ferienwohnungsmarktes")
+        self.assertEqual((r["einreicher"], r["datum"]), (["PARTEI"], "2024-10-07"))
+        r = einreicher.erkennen("Berichterstattung zum Antrag Fraktion „Bündnis 90 Die Grünen“ vom 10.06.2025 - Mehr Blühflächen")
+        self.assertEqual((r["einreicher"], r["datum"]), (["GRUENE"], "2025-06-10"))
+        r = einreicher.erkennen("Beantwortung der Anträge der FWG-Fraktion zur Aktualisierung der Messergebnisse")
+        self.assertEqual((r["typ"], r["einreicher"], r["datum"]), ("Anträge", ["FWG"], None))
+        # ohne Datum nur mit erkannter Fraktion; Verfahrenspunkte und Anträge Dritter bleiben ohne Einreicher
+        for t in ("Anfragen an den Magistrat", "Anträge und Anfragen an den Magistrat", "Antrag der Jugendgruppe auf Genehmigung zum Anbringen eines Schildes",
+                  "Beratung und Beschlussfassung über den Antrag auf Bildung einer IKZ zur gemeinsamen Einführung", "Antrag Freiwillige Feuerwehr"):
+            r = einreicher.erkennen(t)
+            self.assertTrue(r is None or not r["einreicher"], t)
+
     def test_einzelperson_ohne_namen(self):
         r = einreicher.erkennen("Antrag der Stadtverordneten Erika Muster vom 01.02.2025 zu X")
         self.assertEqual(r["einreicher"], ["EINZEL"])
