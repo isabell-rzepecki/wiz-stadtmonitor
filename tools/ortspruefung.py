@@ -7,6 +7,8 @@ config/verortung_geprueft.tsv versioniert. Der Seitenbau wendet sie an (verortun
 
 Aufruf aus dem Wurzelverzeichnis des Repositorys, nach `python -m pipeline build`:
   python tools/ortspruefung.py erstellen ZIEL.xlsx     Tabelle mit den offenen Fällen (bereits geprüfte fehlen)
+  python tools/ortspruefung.py lage ZIEL.xlsx [--ortsteil Kernstadt]
+                                                        Nachtrag: geprüfte Orte ohne Straße, mit Auswahlliste der Straßen
   python tools/ortspruefung.py einlesen DATEI.xlsx      ausgefüllte Tabelle prüfen und in config/verortung_geprueft.tsv übernehmen
 Die Excel-Datei selbst gehört nicht ins Repository; versioniert wird nur die geprüfte TSV-Datei (ohne Namen).
 """
@@ -28,6 +30,7 @@ FAELLE = {
     "vorrang": "Straßenname in mehreren Ortsteilen, über die Vorrangregel zugeordnet",
     "eingegrenzt": "Straßenname in mehreren Ortsteilen, über Gremium oder Titel eingegrenzt",
     "ortsname": "Name einer Einrichtung oder Lage, nicht im Straßenverzeichnis",
+    "lage": "Ortsteil geprüft, Straße fehlt",
 }
 # Namen von Einrichtungen und Lagen, die das Straßenverzeichnis nicht kennt; nur als Kandidaten für die Prüfung
 ORTSNAME = re.compile(r"\b(?:[A-ZÄÖÜ][\wäöüß-]*(?:bad|schule|hof|halle|haus|platz|brücke|gewächshaus|park|friedhof|garten)|"
@@ -54,6 +57,42 @@ ANLEITUNG = [
     "Die grauen Spalten bitte nicht ändern; Vorgang und Fundstelle verbinden die Zeile mit dem Stadtmonitor.",
     "Quelle der Titel: Amtliche Bekanntmachungen der Stadt (Einladungen). Die ausgefüllte Datei an die verantwortliche Stelle zurückgeben.",
 ]
+ANLEITUNG_LAGE = [
+    "Ortsprüfung, Nachtrag: An welcher Straße liegt die Einrichtung?",
+    "",
+    "Diese Orte sind bereits geprüft, aber nur einem Ortsteil zugeordnet. Mit der Straße erscheinen sie als Punkt auf der Karte.",
+    "• Straße oder Lage: aus der Auswahlliste wählen (amtliche Schreibweise), ohne Hausnummer. Leer lassen, wenn unbekannt.",
+    "• Ergebnis und Ortsteil sind vorausgefüllt; nur ändern, wenn sie nicht stimmen. „kein Ortsbezug“, wenn der Punkt keinen Ort meint.",
+    "• Hinweis: kurze Quelle, ohne Namen von Personen. Geprüft am: Datum der Prüfung.",
+    "",
+    "Die grauen Spalten bitte nicht ändern; Vorgang und Fundstelle verbinden die Zeile mit dem Stadtmonitor.",
+    "Die ausgefüllte Datei an die verantwortliche Stelle zurückgeben.",
+]
+
+
+def lage_faelle(vorgaenge, geprueft, ortsteil=None):
+    """Nachtrag: als „korrigiert“ geprüfte Orte ohne Straße, Ergebnis und Ortsteil vorausgefüllt."""
+    v_nach = {v["reference"]: v for v in vorgaenge}
+    out = []
+    for zs in geprueft.values():
+        for g in zs:
+            v = v_nach.get(g["vorgang"])
+            if not v or g["ergebnis"] != "korrigiert" or g["strasse"] or (ortsteil and g["ortsteil"] != ortsteil):
+                continue
+            p = v["process"][0]
+            out.append({"vorgang": v["reference"], "fall": FAELLE["lage"], "titel": parse.ohne_namen(v["name"]), "gremium": p["gremium"],
+                        "datum": p["date"], "treffer": g["treffer"], "bisher": f"{g['ortsteil']} (geprüft am {g['geprueft_am']})",
+                        "kandidaten": "", "quelle": p["pdf"], "ergebnis": "korrigiert", "ortsteil": g["ortsteil"], "hinweis": g["hinweis"]})
+    out.sort(key=lambda z: (z["treffer"], z["datum"]))
+    for i, z in enumerate(out, 1):
+        z["nr"] = i
+    return out
+
+
+def strassen(ortsteile):
+    """Straßen- und Lagenamen des Verzeichnisses in den Gemarkungen dieser Ortsteile (nur solche, die die Verortung kennt)."""
+    gks = {(verortung._ortsteil(name=o) or {}).get("gemarkung_nr") for o in ortsteile}
+    return sorted(n for n, je in verz().namen.items() if gks & set(je))
 
 
 def faelle(vorgaenge, audit, geprueft):
@@ -106,17 +145,18 @@ def verz():
     return _VERZ[0]
 
 
-def erstellen(ziel, vorgaenge=None, audit=None, geprueft=None):
+def erstellen(ziel, vorgaenge=None, audit=None, geprueft=None, lage=False, ortsteil=None):
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.worksheet.datavalidation import DataValidation
 
     if vorgaenge is None:
         vorgaenge = json.loads(config.VORGAENGE.read_text(encoding="utf-8"))["vorgaenge"]
-    if audit is None:
+    if audit is None and not lage:
         with AUDIT.open(encoding="utf-8", newline="") as f:
             audit = list(csv.DictReader(f, delimiter="\t"))
-    zeilen = faelle(vorgaenge, audit, verortung.geprueft_laden() if geprueft is None else geprueft)
+    geprueft = verortung.geprueft_laden() if geprueft is None else geprueft
+    zeilen = lage_faelle(vorgaenge, geprueft, ortsteil) if lage else faelle(vorgaenge, audit, geprueft)
     wb = Workbook()
     ws = wb.active
     ws.title = "Prüfung"
@@ -149,8 +189,17 @@ def erstellen(ziel, vorgaenge=None, audit=None, geprueft=None):
         dv = DataValidation(type="list", formula1=formel, allow_blank=True, showErrorMessage=True)
         ws.add_data_validation(dv)
         dv.add(f"{spalte[feld]}2:{spalte[feld]}{letzte}")
+    if lage:  # Auswahlliste der Straßen; andere Eingaben nur mit Warnung, einlesen prüft gegen das Verzeichnis
+        namen = strassen({z["ortsteil"] for z in zeilen})
+        for i, n in enumerate(namen, 1):
+            listen.cell(row=i, column=3, value=n)
+        dv = DataValidation(type="list", formula1=f"=Listen!$C$1:$C${max(len(namen), 1)}", allow_blank=True,
+                            showErrorMessage=True, errorStyle="warning",
+                            error="Bitte die amtliche Schreibweise aus der Liste wählen.", errorTitle="Straße nicht in der Liste")
+        ws.add_data_validation(dv)
+        dv.add(f"{spalte['strasse']}2:{spalte['strasse']}{letzte}")
     hilfe = wb.create_sheet("Anleitung", 0)
-    for i, text in enumerate(ANLEITUNG, 1):
+    for i, text in enumerate(ANLEITUNG_LAGE if lage else ANLEITUNG, 1):
         hilfe.cell(row=i, column=1, value=text)
     hilfe.column_dimensions["A"].width = 130
     hilfe["A1"].font = Font(bold=True, size=13)
@@ -212,6 +261,8 @@ def einlesen(datei, ziel=verortung.GEPRUEFT, heute=None):
                     probleme.append(f"{feld}: {was} entfernen")
         if HAUSNUMMER.search(zeile["strasse"]):
             probleme.append("strasse: ohne Hausnummer")
+        elif zeile["strasse"] and zeile["ortsteil"] in ortsteile and zeile["strasse"] not in strassen({zeile["ortsteil"]}):
+            probleme.append(f"Straße „{zeile['strasse']}“ steht nicht im Verzeichnis von {zeile['ortsteil']}; Schreibweise aus der Auswahlliste")
         if probleme:
             fehler.append(f"Zeile {n} ({zeile['vorgang']}, {zeile['treffer']}): " + "; ".join(probleme))
         else:
@@ -233,9 +284,12 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="befehl", required=True)
     sub.add_parser("erstellen").add_argument("ziel")
     sub.add_parser("einlesen").add_argument("datei")
+    lp = sub.add_parser("lage")
+    lp.add_argument("ziel")
+    lp.add_argument("--ortsteil")
     a = ap.parse_args(argv)
-    if a.befehl == "erstellen":
-        zeilen = erstellen(a.ziel)
+    if a.befehl in ("erstellen", "lage"):
+        zeilen = erstellen(a.ziel, lage=a.befehl == "lage", ortsteil=getattr(a, "ortsteil", None))
         print(f"{len(zeilen)} Fälle in {a.ziel}")
         return 0
     neu, fehler = einlesen(a.datei)
