@@ -12,7 +12,7 @@ Verantwortliche Stelle: Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen;
 - **Daten:** Gebäudekennung (ALKIS), Kategorie, vermietet ja/nein, Belegart und -adresse, Sicherheit, Name (nur verschlüsselt), Vermieter-Schlüssel, pseudonyme Erfasser-ID.
 - **Herkunft:** öffentliche Belege und Ortskenntnis des Teams (Art. 14 DSGVO).
 - **Empfänger:** Prüfgruppe der verantwortlichen Stelle. Öffentlich nur Kategorien juristischer Personen je Gebäude und Anzahlen je Ortsbezirk.
-- **Drittland:** keines. Die Website liegt bei GitHub Pages (USA, EU-US Data Privacy Framework); dort liegen keine Erfassungsdaten.
+- **Drittland:** keines. Die Website liegt auf einem Plesk-Server in Deutschland (EU); dort liegen keine Erfassungsdaten.
 - **Löschung:** 24 Monate nach Eingang bei der Prüfgruppe; bei Widerspruch sofort (`loeschverfahren.md`).
 - **Technische und organisatorische Maßnahmen:** Verschlüsselung im Gerät (libsodium sealed box), kein Server und kein Upload, Schlüssel nur bei Schlüsselinhaber:innen, Vier-Augen-Freigabe, Zugriffsprotokoll für Namen, Sperre gegen Rohdaten in Git, Veröffentlichung nur nach Mindestzahlen.
 
@@ -31,5 +31,5 @@ Verantwortliche Stelle: Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen;
 
 - **Zweck:** Auslieferung der Seite.
 - **Rechtsgrundlage:** Art. 6 Abs. 1 lit. f DSGVO.
-- **Daten:** Server-Protokolle bei GitHub Pages; Kartenkacheln von basemap.de (BKG).
+- **Daten:** Server-Protokolle beim Hosting-Anbieter der Subdomain (Auftragsverarbeitung, Art. 28 DSGVO; Anbieter in `config/stadt.json`, `projekt.hosting`); Weiterleitung von der früheren Adresse bei GitHub Pages (USA, EU-US Data Privacy Framework); Kartenkacheln von basemap.de (BKG).
 - **Weitere Angaben:** siehe `site/datenschutz.html`.

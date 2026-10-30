@@ -15,7 +15,13 @@
   },
   "projekt": {
     "repo": "https://github.com/isabell-rzepecki/wiz-stadtmonitor",
-    "site_url": "https://isabell-rzepecki.github.io/wiz-stadtmonitor/",
+    "site_url": "https://stadtmonitor.wiz-o-mat.de/",
+    "fruehere_url": "https://isabell-rzepecki.github.io/wiz-stadtmonitor/",
+    "hosting": {
+      "anbieter": "",
+      "ort": "Deutschland (EU)",
+      "_hinweis": "Anbieter des Plesk-Servers der Subdomain (Name und Sitz) für Datenschutzseite und Verarbeitungsverzeichnis; leer = Leerstelle auf der Datenschutzseite. Mit dem Anbieter ist ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO) nötig."
+    },
     "kontakt": "",
     "impressum": "",
     "user_agent": "wiz-stadtmonitor/0.1 (+https://github.com/isabell-rzepecki/wiz-stadtmonitor)",

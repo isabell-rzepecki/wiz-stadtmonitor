@@ -91,7 +91,7 @@ Der Workflow `.github/workflows/pages.yml` läuft täglich um 04:17 UTC und bei 
 4. Datenpaket;
 5. Seite.
 
-Nur vom Hauptzweig veröffentlicht er die Seite auf GitHub Pages; auf anderen Zweigen ist der Lauf eine Probe. Die Rohdaten liegen nur im Zwischenspeicher des Workflows. Voraussetzung: In den Repository-Einstellungen unter „Pages“ ist als Quelle „GitHub Actions“ gewählt.
+Nur vom Hauptzweig veröffentlicht er die Seite: mit den Secrets `PLESK_*` per SFTP auf https://stadtmonitor.wiz-o-mat.de/ (GitHub Pages zeigt dann nur eine Weiterleitung; `docs/betrieb/plesk.md`), sonst auf GitHub Pages. Auf anderen Zweigen ist der Lauf eine Probe. Die Rohdaten liegen nur im Zwischenspeicher des Workflows. Voraussetzung: In den Repository-Einstellungen unter „Pages“ ist als Quelle „GitHub Actions“ gewählt.
 
 Pull Requests und den Hauptzweig prüft `.github/workflows/tests.yml` mit Python-Tests, Kontrastprüfung und Browser-Tests mit axe-core.
 
