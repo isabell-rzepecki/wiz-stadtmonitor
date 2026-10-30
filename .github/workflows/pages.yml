@@ -51,6 +51,32 @@ jobs:
             data/raw
             data/geo/restricted
           key: rohdaten-${{ github.run_id }}
+      # Subdomain (Plesk): fertige Seite per SFTP hochladen, nur auf dem Hauptzweig und nur mit Zugangsdaten (Secrets
+      # PLESK_*, docs/betrieb/plesk.md). Danach zeigt GitHub Pages nur noch eine Weiterleitung auf die Subdomain.
+      - name: Hochladen auf die Subdomain
+        id: plesk
+        if: ${{ github.ref_name == github.event.repository.default_branch }}
+        env:
+          PLESK_HOST: ${{ secrets.PLESK_HOST }}
+          PLESK_USER: ${{ secrets.PLESK_USER }}
+          PLESK_PASSWORT: ${{ secrets.PLESK_PASSWORT }}
+          PLESK_PFAD: ${{ secrets.PLESK_PFAD }}
+          PLESK_PORT: ${{ secrets.PLESK_PORT }}
+          PLESK_KNOWN_HOSTS: ${{ secrets.PLESK_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$PLESK_HOST" ]; then
+            echo "Keine Zugangsdaten (Secrets PLESK_*): die Seite bleibt nur auf GitHub Pages."
+            echo "hochgeladen=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          sudo apt-get install -y -qq lftp
+          bash tools/plesk_hochladen.sh _site
+          echo "hochgeladen=true" >> "$GITHUB_OUTPUT"
+      - name: Weiterleitung für GitHub Pages
+        if: ${{ steps.plesk.outputs.hochgeladen == 'true' }}
+        run: |
+          python -c "from pathlib import Path; from pipeline import site; site.weiterleitung(Path('_weiterleitung'))"
+          rm -rf _site && mv _weiterleitung _site
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

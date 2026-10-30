@@ -70,3 +70,45 @@ class Seite(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Subdomain(unittest.TestCase):
+    def test_htaccess_und_adresse(self):
+        # Plesk (Apache): Fehlerseite, Medientypen, keine Verzeichnislisten; Adresse der Subdomain in Seiten und Codekarten
+        with tempfile.TemporaryDirectory() as d:
+            out = site.build(Path(d) / "_site", mit_daten=False)
+            h = (out / ".htaccess").read_text(encoding="utf-8")
+            for teil in ("ErrorDocument 404 /404.html", "Options -Indexes", ".pmtiles", ".webmanifest"):
+                self.assertIn(teil, h)
+            self.assertIn('href="https://stadtmonitor.wiz-o-mat.de/"', (out / "404.html").read_text(encoding="utf-8"))
+            self.assertIn('content="https://stadtmonitor.wiz-o-mat.de/"', (out / "einrichten.html").read_text(encoding="utf-8"))
+            self.assertIn("https://stadtmonitor.wiz-o-mat.de/datenschutz.html", (out / "aushang.html").read_text(encoding="utf-8"))
+            self.assertNotIn("über GitHub Pages bereitgestellt", (out / "datenschutz.html").read_text(encoding="utf-8"))
+
+    def test_hosting_auf_der_datenschutzseite(self):
+        with tempfile.TemporaryDirectory() as d:
+            seite = Path(d) / "datenschutz.html"
+            seite.write_text((site.config.SITE_SRC / "datenschutz.html").read_text(encoding="utf-8"), encoding="utf-8")
+            H = site.config.STADT["projekt"]["hosting"]
+            alt = dict(H)
+            try:
+                H["anbieter"] = ""
+                site.datenschutz_ausfuellen(seite)
+                self.assertIn("Name und Sitz des Hosting-Anbieters folgen", seite.read_text(encoding="utf-8"))
+                H["anbieter"] = "Beispiel Hosting GmbH, Musterstadt <x>"
+                site.datenschutz_ausfuellen(seite)
+                text = seite.read_text(encoding="utf-8")
+                self.assertIn('<span data-feld="hosting">Beispiel Hosting GmbH, Musterstadt &lt;x&gt;</span>', text)
+                self.assertIn('<span data-feld="hosting_ort">Deutschland (EU)</span>', text)
+            finally:
+                H.clear()
+                H.update(alt)
+
+    def test_weiterleitung_fuer_github_pages(self):
+        with tempfile.TemporaryDirectory() as d:
+            ziel = site.weiterleitung(Path(d) / "w", "https://stadtmonitor.example/")
+            for name in ("index.html", "404.html"):
+                text = (ziel / name).read_text(encoding="utf-8")
+                self.assertIn('content="0; url=https://stadtmonitor.example/"', text)
+                self.assertIn('var basis = "/wiz-stadtmonitor/"', text)
+                self.assertIn('location.replace("https://stadtmonitor.example/" + pfad', text)
