@@ -1,0 +1,20 @@
+# Bekannte Lücken in den amtlichen Bekanntmachungen (pipeline/quellwache.py): erwähnte Sitzungen, zu denen die Stadt
+# keine Einladung veröffentlicht hat. Sie bleiben auf der Seite sichtbar, öffnen aber kein neues Issue.
+# datum: JJJJ-MM-TT; gremium: wie in audit/quellwache.tsv; vermerk: frei, ohne Namen
+datum	gremium	vermerk
+2024-07-22	Stadtteilbeirat Albshausen	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 160/2024 erwähnt)
+2024-08-19	Ortsbeirat Blickershausen	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 162/2024 erwähnt)
+2024-08-22	Ortsbeirat Hubenrode	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 025/2025 erwähnt)
+2024-09-12	Ortsbeirat Wendershausen	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 159/2024 erwähnt)
+2024-09-18	Ortsbeirat Gertenbach	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 152/2024 erwähnt)
+2024-09-24	Stadtverordnetenversammlung	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 145/2024 erwähnt)
+2024-10-08	Ortsbeirat Roßbach	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 161/2024 erwähnt)
+2024-10-17	Ortsbeirat Berlepsch-Ellerode	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 157/2025 erwähnt)
+2024-11-07	Ortsbeirat Kleinalmerode	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 043/2025 erwähnt)
+2024-11-07	Ortsbeirat Neuseesen	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 106/2025 erwähnt)
+2024-11-07	Ortsbeirat Unterrieden	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 052/2025 erwähnt)
+2024-11-07	Ortsbeirat Ziegenhagen	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 010/2025 erwähnt)
+2024-11-08	Ortsbeirat Dohrenbach	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 118/2025 erwähnt)
+2026-01-29	Ortsbeirat Ziegenhagen	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 024/2026 erwähnt)
+2026-02-10	Stadtverordnetenversammlung	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 051/2026 erwähnt)
+2026-02-26	Ortsbeirat Wendershausen	Stand 2026-11-02: keine Einladung in den Bekanntmachungen (Niederschrift in Nr. 058/2026 erwähnt)

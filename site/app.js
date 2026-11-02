@@ -1394,6 +1394,11 @@
     dataStand = (data.meta.generated_at || new Date().toISOString()).slice(0, 10);
     applyConfig();
     $("#stand").textContent = data.meta.generated_at ? `Datenstand: ${fmtDate(data.meta.generated_at)}` : "Datenstand: noch keine Daten";
+    // Quellwache: erwähnte Sitzungen ohne veröffentlichte Einladung (pipeline/quellwache.py)
+    const lk = (data.meta.quellwache && data.meta.quellwache.luecken) || [];
+    $("#luecken").innerHTML = lk.length ? `<details class="acc"><summary>Bekannte Lücken in den Quellen (${lk.length})</summary>
+      <p class="hint">Zu diesen Sitzungen ist keine Einladung in den amtlichen Bekanntmachungen veröffentlicht. Erwähnt werden sie in späteren Tagesordnungen (Genehmigung der Niederschrift) oder als Beschlussdatum einer Satzung.</p>
+      <ul>${lk.map((x) => `<li>${fmtDate(x.datum)} · ${esc(x.gremium)} · erwähnt in ${link(x.pdf, `Bekanntmachung Nr. ${esc(x.fundstelle)}`) || `Nr. ${esc(x.fundstelle)}`}</li>`).join("")}</ul></details>` : "";
     initMap();
     initNav();
     fillAreaSelect();

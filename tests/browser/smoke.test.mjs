@@ -349,6 +349,19 @@ test("Wahlen und Gremien: amtliche Ergebnisse mit Stufe (Schnellmeldung), 2016, 
   await page.close();
 });
 
+test("Quellwache: bekannte Lücken unter Quellen und Datenstand, mit Fundstelle, ohne Verstöße", async () => {
+  const page = await open(SITE);
+  await page.locator('[data-mega="mega-daten"]').click();
+  await page.locator("#sources > summary").click();
+  await page.locator("#luecken summary").click();
+  const t = await page.locator("#luecken").textContent();
+  assert.match(t, /Bekannte Lücken in den Quellen \(1\).*10\.02\.2026 · Stadtverordnetenversammlung · erwähnt in Bekanntmachung Nr\. 051\/2026/s);
+  assert.equal(await page.locator('#luecken a[href$="051-2026-Einladung-STVV-Konstituierung-21-04-2026.pdf"]').count(), 1);
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 test("Desktop: Kartenoptionen und Quellen eingeklappt, Bauleitplanung unter den Ebenen", async () => {
   const page = await open(SITE);
   assert.equal(await page.locator(".map-whole").isVisible(), false);
