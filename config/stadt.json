@@ -1121,6 +1121,16 @@
     "bund_hinweis": "Summe der Wahlbezirke der Stadt einschließlich der Briefwahlbezirke (Wahlbezirksstatistik). Parteien unter 2 % in allen Wahlen sind unter „Sonstige“ zusammengefasst.",
     "gremien_hinweis": "Sitzverteilung laut Wahlergebnis. Änderungen während der Wahlperiode (Fraktionswechsel, Austritte, Nachrücken) sind nicht abgebildet; Koalitionen und Fraktionsvorsitze sind nicht amtlich veröffentlicht und werden nicht angezeigt."
   },
+  "rechtsakte": {
+    "_hinweis": "Bekanntgemachte Satzungen, Gebührenordnungen, Haushaltssatzungen und Jahresabschlüsse als Ergebnis von Vorgängen (pipeline/rechtsakte.py). Die Stadt veröffentlicht keine Niederschriften; eine bekanntgemachte Satzung belegt den Beschluss. Pläne liest beteiligung.",
+    "titel_muster": "Satzung|Haushalt|Gebührenordnung|Jahresabschluss|Geschäftsordnung",
+    "datei_muster": "(?i)^\\d{2,3}[-_]\\d{4}[-_].*(?:satzung|gebuehr|ordnung|haushalt|hhsatzung|jahresabschluss|steuer)",
+    "ausschliessen": "(?i)Einladung|Bauleit|BPl|Bebauungsplan|FNP|Fl(?:ä|ae)chennutzungsplan|Wahl",
+    "tage_vorher": 400,
+    "mindestpunkte": 2,
+    "eigene_gremien": ["Ausländerbeirat", "Seniorenrat", "Jugendrat"],
+    "stoppwoerter": ["Satzung", "Satzungen", "Stadt", "Witzenhausen", "Beratung", "Beschlussfassung", "über", "Änderung", "Änderungssatzung", "Aufhebung", "Aufhebungssatzung", "Neufassung", "Bekanntmachung", "folgende", "Gebiet", "gemäß", "sowie", "Fassung", "Ortsrecht", "Benutzung", "Erste", "Ersten", "Zweite", "Zweiten", "Dritte", "Vierte", "Nachtrag", "Haushaltsjahr", "Entwurf", "Beschluss", "Vorlage"]
+  },
   "beteiligung": {
     "_hinweis": "Beteiligungsverfahren der Bauleitplanung aus den amtlichen Bekanntmachungen (Stufe, Frist, Plan). Personenbezogene Angaben aus den Bekanntmachungen (Ansprechpersonen, E-Mail) werden nicht übernommen.",
     "bekanntmachungen": "https://www.witzenhausen.eu/wp-json/wp/v2/bekanntmachungen?per_page=100&page={page}&_fields=id,date,title,meta",

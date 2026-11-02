@@ -241,6 +241,15 @@
           el("title", {}, m).textContent = `${de(ms)} · ${s.gremium}${s.top ? " · TOP " + s.top : ""}`;
           m.addEventListener("click", () => o.onDate(s.date));
         }
+        // Bekanntmachung des Ergebnisses (Satzung, Haushalt, Plan) als Raute
+        for (const e of selected.ergebnisse || []) {
+          const ms = t(e.veroeffentlicht);
+          if (ms < view[0] || ms > view[1]) continue;
+          const y = (LAYOUT.sel[0] + LAYOUT.sel[1]) / 2, cx = x(ms);
+          const m = el("path", { d: `M${cx} ${y - 5.5}L${cx + 5.5} ${y}L${cx} ${y + 5.5}L${cx - 5.5} ${y}Z`, class: `tl-step tl-ergebnis${preview ? " preview" : ""}` }, svg);
+          el("title", {}, m).textContent = `${de(ms)} · Bekanntmachung Nr. ${e.nr}${e.sicherheit === "möglicherweise" ? " (möglicherweise)" : ""}`;
+          m.addEventListener("click", () => o.onDate(e.veroeffentlicht));
+        }
       }
 
       // Brush, heute, Datenstand

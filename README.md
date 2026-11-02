@@ -7,7 +7,8 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 ## Quellen und Grenzen
 
 - **Grundlage** sind die Einladungen (PDF) in den [amtlichen Bekanntmachungen](https://www.witzenhausen.eu/amtliche-bekanntmachungen/), veröffentlicht ab Juli 2024.
-- **Was fehlt:** Beschlussergebnisse, Niederschriften und Vorlagentexte sind dort nicht veröffentlicht. Die Prozesslinie kennzeichnet sie als Lücke und leitet nichts ab.
+- **Was fehlt:** Beschlussergebnisse, Niederschriften und Vorlagentexte sind dort nicht veröffentlicht. Die Prozesslinie kennzeichnet sie als Lücke.
+- **Ergebnis über Bekanntmachungen:** Satzungen, Gebührenordnungen, Haushalt, Jahresabschlüsse und Bebauungspläne muss die Stadt nach dem Beschluss bekannt machen (`pipeline/rechtsakte.py`). Die meisten Bekanntmachungen nennen das Datum des Beschlusses der Stadtverordnetenversammlung; über dieses Datum und den Gegenstand werden sie dem Tagesordnungspunkt zugeordnet („sicher“). Ohne Beschlussdatum gilt ein eindeutiger Treffer nur als „möglicherweise“. Haushalt und Jahresabschluss werden über Art und Jahr zugeordnet. Die Prüfliste steht im Audit `rechtsakte.tsv` (Zuordnung, Grund, Kandidaten); von Hand bestätigte Zuordnungen stehen in `config/rechtsakte_geprueft.tsv`.
 - **SessionNet** wird nicht automatisiert abgerufen, nur verlinkt.
 - **Ortsbezüge** sind abgeleitet. Jeder trägt Stufe (A Gremium, B Regel), Methode, Konfidenz und Fundstelle. Stufe C (Sprachmodell, `pipeline/sprachmodell.py`) ist vorbereitet, aber nicht im Ablauf.
 - **Kartenhintergrund:** basemap.de (BKG, CC BY 4.0).
@@ -16,7 +17,7 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 ## Grenzen der Daten
 
 - **Zeitraum:** Einladungen sind ab Juli 2024 veröffentlicht; ältere Sitzungen fehlen.
-- **Ergebnisse:** Beschlüsse, Niederschriften und Vorlagentexte stehen nicht in den Bekanntmachungen. Die Prozesslinie zeigt je Station „Ergebnis nicht veröffentlicht“.
+- **Ergebnisse:** Beschlüsse, Niederschriften und Vorlagentexte stehen nicht in den Bekanntmachungen. Die Prozesslinie zeigt je Station „Ergebnis nicht veröffentlicht“. Nur bei Satzungen, Haushalt und Plänen belegt die Bekanntmachung des Rechtsakts den Beschluss; Anträge, Anfragen und Berichte bleiben ohne Ergebnis.
 - **Nichtöffentliche Sitzungen** erscheinen ohne Tagesordnung.
 - **Namen in Titeln:** Personennamen werden durch „[Name entfernt]“ ersetzt: nach Anrede oder Funktion („Frau …“, „Stadtverordnete …“), in Klammern und nach „mit“ oder „durch“ ohne Anrede („Gespräch mit Vorname Name“, „Vortrag durch Dr. Vorname Name“); typische Endungen von Hauptwörtern („durch Wassereintritt Feuerwehrhaus“) schließen einen Treffer aus. Wörter, mit denen dort ein Ort beginnt („Schloss“, „Bad“), stehen unter `namensfilter.kein_name` in `config/stadt.json`. Jede Ersetzung steht ohne den Namen im Audit `namensfilter.tsv`; ein Muster erkennt nicht jeden Namen.
 - **Ortsbezirke:** Die Flächen sind aus den 17 Gemarkungen abgeleitet (HVBG, dl-de/zero-2.0, `data/geo/dl-de-zero/ortsbezirke.geojson`). § 6 der Hauptsatzung (2014, selbst eingesehen) bestimmt für jeden der 16 Ortsbezirke „das Gebiet der ehemaligen Gemeinde“; die Kernstadt ist kein Ortsbezirk. Bischhausen gehört zur Kernstadt (Gemarkung Witzenhausen, 1928 eingemeindet), Hübenthal zu Berlepsch-Ellerode (Gemarkung Berlepsch-Ellerode); Beleg: Historisches Ortslexikon Hessen (LAGIS). Dass die Gemarkungsgrenzen überall den Grenzen der ehemaligen Gemeinden entsprechen, ist eine Annahme; die Seite kennzeichnet sie als solche.

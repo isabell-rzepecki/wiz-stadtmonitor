@@ -1,9 +1,9 @@
-"""Aufruf: python -m pipeline {fetch|fetch-plaene|fetch-gemarkungen|gemarkungen|fetch-lage|lage|fetch-eigentum|eigentum|fetch-umwelt|umwelt|fetch-wohnen|wohnen|fetch-wahlen|wahlen|fetch-beteiligung|beteiligung|fetch-wanderung|wanderung|fetch-lod2|fetch-gebaeude|gebaeude|build|check|package|site|all}"""
+"""Aufruf: python -m pipeline {fetch|fetch-plaene|fetch-gemarkungen|gemarkungen|fetch-lage|lage|fetch-eigentum|eigentum|fetch-umwelt|umwelt|fetch-wohnen|wohnen|fetch-wahlen|wahlen|fetch-beteiligung|beteiligung|fetch-rechtsakte|rechtsakte|fetch-wanderung|wanderung|fetch-lod2|fetch-gebaeude|gebaeude|build|check|package|site|all}"""
 import os
 import sys
 import traceback
 
-from . import bauleitplanung, beteiligung, build, check, eigentum, fetch, gebaeude, gebaeude3d, gemarkungen, lage, package, site, umwelt, wahlen, wanderung, wohnen
+from . import bauleitplanung, beteiligung, build, check, eigentum, fetch, gebaeude, gebaeude3d, gemarkungen, lage, package, rechtsakte, site, umwelt, wahlen, wanderung, wohnen
 
 STEPS = {
     "fetch": fetch.fetch,  # Einladungen (PDF) laden und in Text umwandeln, mit Zwischenspeicher
@@ -27,12 +27,14 @@ STEPS = {
     "wahlen": wahlen.build,  # Ergebnisse je Wahl ohne Personennamen, Prüfung der Summen
     "fetch-beteiligung": beteiligung.fetch,  # Bekanntmachungen zur Bauleitplanung (PDF), nur neue Dateien
     "beteiligung": beteiligung.build,  # Plan, Stufen und Fristen der Beteiligungsverfahren
+    "fetch-rechtsakte": rechtsakte.fetch,  # Bekanntmachungen von Satzungen, Haushalt, Jahresabschluss (PDF), nur neue Dateien
+    "rechtsakte": rechtsakte.build,  # Gegenstand, Art und Beschlussdatum je Rechtsakt (nach beteiligung)
     "build": build.build,  # Sitzungen, Vorgänge, Ortsbezüge, Kartenebene, Audit
     "check": check.check,  # Rückführbarkeit, Fehlerquote, Datenschutz, Lizenzgrenze
     "package": package.package,  # Datenpaket (Zip) ohne Flächen der Bauleitplanung
     "site": site.build,  # Seite in _site/ zusammenstellen
 }
-ALL = ["fetch", "fetch-plaene", "fetch-gemarkungen", "gemarkungen", "fetch-lage", "lage", "fetch-eigentum", "eigentum", "fetch-umwelt", "umwelt", "fetch-wohnen", "wohnen", "fetch-wahlen", "wahlen", "fetch-beteiligung", "beteiligung", "fetch-wanderung", "wanderung", "fetch-lod2", "fetch-gebaeude", "gebaeude", "build", "check", "package", "site"]
+ALL = ["fetch", "fetch-plaene", "fetch-gemarkungen", "gemarkungen", "fetch-lage", "lage", "fetch-eigentum", "eigentum", "fetch-umwelt", "umwelt", "fetch-wohnen", "wohnen", "fetch-wahlen", "wahlen", "fetch-beteiligung", "beteiligung", "fetch-rechtsakte", "rechtsakte", "fetch-wanderung", "wanderung", "fetch-lod2", "fetch-gebaeude", "gebaeude", "build", "check", "package", "site"]
 
 
 # Ohne diese Schritte keine Seite; alle anderen (Abrufe und abgeleitete Ebenen) scheitern im Gesamtlauf weich:

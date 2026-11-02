@@ -30,7 +30,10 @@
       "process": [
         {"sitzung": "177/2025", "bekanntmachung": "177/2025", "gremium": "Stadtverordnetenversammlung", "date": "2025-12-16", "time": "18:00", "ort": "Rathaussaal, Am Markt 1", "top": "8", "oeffentlich": true, "result": null, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/12/177-2025-Einladung-STVV-16-12-2025.pdf"}
       ],
-      "locations": []
+      "locations": [],
+      "ergebnisse": [
+        {"nr": "186/2025", "art": "satzung", "gegenstand": "Satzung über die Erhebung der Hundesteuer im Gebiet der Stadt Witzenhausen", "veroeffentlicht": "2025-12-19", "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/12/186-2025-Satzung-Hundesteuer-OR-9.1.pdf", "sicherheit": "sicher", "beschluss": "2025-12-16", "inkraft": "2026-01-01", "station": {"sitzung": "177/2025", "top": "8"}}
+      ]
     },
     {
       "reference": "106/2025-TOP5", "vorlage": null,
