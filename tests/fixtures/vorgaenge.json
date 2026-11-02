@@ -3,7 +3,8 @@
   "meta": {
     "generated_at": "2026-10-23T12:00:00Z",
     "data_start": "2024-07-01",
-    "sources": [{"name": "Amtliche Bekanntmachungen der Stadt", "license": "amtliche Werke (Prüfung offen)", "retrieved_at": "2026-10-23"}]
+    "sources": [{"name": "Amtliche Bekanntmachungen der Stadt", "license": "amtliche Werke (Prüfung offen)", "retrieved_at": "2026-10-23"}],
+    "quellwache": {"stand": "2026-10-23", "warnungen": [], "neu": 0, "luecken": [{"datum": "2026-02-10", "gremium": "Stadtverordnetenversammlung", "grund": "Niederschrift dieser Sitzung steht auf einer späteren Tagesordnung", "fundstelle": "051/2026", "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/04/051-2026-Einladung-STVV-Konstituierung-21-04-2026.pdf", "neu": false}]}
   },
   "sitzungen": [
     {"id": "106/2025", "gremium": "Ortsbeirat Neuseesen", "ortsteil": "Neuseesen", "date": "2025-07-25", "time": "20:00", "ort": "Dorfgemeinschaftshaus Neuseesen", "oeffentlich": true, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/07/106-2025-Einladung-OB-Neuseesen-25-07-2025.pdf"},

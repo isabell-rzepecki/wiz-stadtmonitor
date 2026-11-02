@@ -80,6 +80,14 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+      # Quellwache (pipeline/quellwache.py): Ergebnis für den Job quellwache, nur auf dem Hauptzweig
+      - uses: actions/upload-artifact@v4
+        if: ${{ github.ref_name == github.event.repository.default_branch }}
+        with:
+          name: quellwache
+          path: data/export/quellwache.json
+          if-no-files-found: ignore
+          retention-days: 3
 
   deploy:
     needs: build
@@ -95,3 +103,24 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Neue Lücken in den Bekanntmachungen oder Stillstand: Issue öffnen bzw. aktualisieren, sonst schließen. Eigener Job,
+  # damit nur er Issues schreiben darf.
+  quellwache:
+    needs: build
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: quellwache
+          path: _quellwache
+      - name: Issue zur Quellwache
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/quellwache_issue.py _quellwache/quellwache.json

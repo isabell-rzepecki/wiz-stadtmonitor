@@ -17,7 +17,7 @@ import json
 import re
 from datetime import datetime, timezone
 
-from . import abo, audit, bauleitplanung, config, einreicher, fetch, geo, parse, stellungnahmen, umwelt, verortung
+from . import abo, audit, bauleitplanung, config, einreicher, fetch, geo, parse, quellwache, stellungnahmen, umwelt, verortung
 
 VERFAHREN = re.compile(
     r"^(Eröffnung|Begrüßung|Feststellung (der|des)|Genehmigung (der|des) (Tagesordnung|Niederschrift|Protokoll)|"
@@ -234,6 +234,7 @@ def build():
                                   *[{"name": f"{g['titel']} (räumliche Überschneidung)", "license": g["attribution"]}
                                     for g in config.STADT["umwelt"]["gruppen"]]],
                       "ergebnisse": {s: sum(1 for z in ra_audit if z["sicherheit"] == s) for s in ("sicher", "geprüft", "möglicherweise", "keine")},
+                      "quellwache": quellwache.pruefen({"sitzungen": list(sitzungen.values()), "vorgaenge": vorgaenge}, ra_audit, medien["abruf"]),
                       "parserfehler": len(fehler), "hinweise": len(hinweise), "einladungen": len(medien["medien"])},
              "sitzungen": sorted(sitzungen.values(), key=lambda s: s["date"]), "vorgaenge": vorgaenge}
     config.EXPORT.mkdir(parents=True, exist_ok=True)
@@ -245,6 +246,10 @@ def build():
     audit.tabelle("parserfehler.tsv", ["datei", "fehler", "url"], fehler)
     # Prüfliste der Ergebnisse: jede Bekanntmachung mit Zuordnung, Sicherheit und den besten Kandidaten
     audit.tabelle("rechtsakte.tsv", ["nr", "art", "gegenstand", "veroeffentlicht", "beschluss", "vorgang", "sicherheit", "grund", "kandidaten", "pdf"], ra_audit)
+    qw = daten["meta"]["quellwache"]
+    audit.tabelle("quellwache.tsv", ["datum", "gremium", "grund", "fundstelle", "pdf", "neu"],
+                  [{**x, "neu": "ja" if x["neu"] else "nein"} for x in qw["luecken"]] + [{"grund": w} for w in qw["warnungen"]])
+    (config.EXPORT / "quellwache.json").write_text(json.dumps(qw, ensure_ascii=False, indent=1), encoding="utf-8")
     audit.tabelle("stellungnahmen.tsv", ["vorgang", "gremium", "datum", "titel", "schluessel", "ziel", "ziel_titel"], st_audit)
     audit.tabelle("einladungen_hinweise.tsv", ["datei", "hinweis", "url"], hinweise)
     # Ersetzungen des Namensfilters (parse.ohne_namen), zum Prüfen auf Fehltreffer; der Name selbst steht nirgends

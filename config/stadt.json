@@ -32,8 +32,8 @@
     "liste": "https://www.witzenhausen.eu/wp-json/wp/v2/media?mime_type=application/pdf&per_page=100&page={page}&_fields=id,date,source_url,title",
     "datenbeginn": "2024-07-01",
     "pause_s": 1.0,
-    "einladung_ohne_wort": "^\\d{2,3}-\\d{4}-(?:.*-)?(?:OB|STVV|Stavo|Ausschuss|Seniorenrat|Jugendrat|Auslaenderbeirat|Stadtteilbeirat)(?:-|\\.pdf$)",
-    "_hinweis_einladung_ohne_wort": "Nummerierte Bekanntmachungen mit dem Kürzel eines Gremiums im Dateinamen, aber ohne das Wort „Einladung“ (etwa 168-2024-Amtl-Bekanntm-STVV-17-12-2024.pdf). Sie zählen nur, wenn der Text eine Einladung mit Tagesordnung ist.",
+    "einladung_ohne_wort": "^(?:Nr\\.?-)?\\d{2,3}-\\d{4}-(?:.*-)?(?:OB|STVV|Stavo|Ausschuss|Seniorenrat|Jugendrat|Auslaenderbeirat|Stadtteilbeirat)(?:-|\\.pdf$)|^Amtl\\w*-Bekanntm\\w*-(?:(?:.*-)?(?:OB|STVV|Stavo|Ausschuss|Seniorenrat|Jugendrat|Auslaenderbeirat|Stadtteilbeirat)(?:-|\\.pdf$)|Nr\\.?\\d{2,3}_\\d{4}\\.pdf$)|^Amtliche-Bekanntmachung\\.pdf$",
+    "_hinweis_einladung_ohne_wort": "Bekanntmachungen ohne das Wort „Einladung“ im Dateinamen: mit Nummer und Kürzel eines Gremiums (168-2024-Amtl-Bekanntm-STVV-…, Nr.-101-2025-OB-…), „Amtliche-Bekanntmachung-OB-Ort-Datum“ oder nur „Amtliche-Bekanntmachung(-Nr.NNN_JJJJ)“. Sie zählen nur, wenn der Text eine Einladung mit Tagesordnung ist.",
     "ausschliessen": [
       "jagd",
       "jagsgenossensch",
@@ -1120,6 +1120,12 @@
     "bund_attribution": "© Die Bundeswahlleiterin (im Auftrag der Herausgebergemeinschaft); Vervielfältigung und Verbreitung mit Quellenangabe gestattet",
     "bund_hinweis": "Summe der Wahlbezirke der Stadt einschließlich der Briefwahlbezirke (Wahlbezirksstatistik). Parteien unter 2 % in allen Wahlen sind unter „Sonstige“ zusammengefasst.",
     "gremien_hinweis": "Sitzverteilung laut Wahlergebnis. Änderungen während der Wahlperiode (Fraktionswechsel, Austritte, Nachrücken) sind nicht abgebildet; Koalitionen und Fraktionsvorsitze sind nicht amtlich veröffentlicht und werden nicht angezeigt."
+  },
+  "quellwache": {
+    "_hinweis": "Lücken und Stillstand in den Bekanntmachungen (pipeline/quellwache.py): erwähnte Sitzungen ohne Einladung, neueste Einladung zu alt, Liste zu lange nicht abgerufen. Neue Funde öffnen im Workflow ein Issue; bekannte Lücken stehen in config/quellwache_bekannt.tsv.",
+    "tage_ohne_einladung": 35,
+    "tage_ohne_abruf": 3,
+    "issue_titel": "Quellwache: Lücken in den amtlichen Bekanntmachungen"
   },
   "rechtsakte": {
     "_hinweis": "Bekanntgemachte Satzungen, Gebührenordnungen, Haushaltssatzungen und Jahresabschlüsse als Ergebnis von Vorgängen (pipeline/rechtsakte.py). Die Stadt veröffentlicht keine Niederschriften; eine bekanntgemachte Satzung belegt den Beschluss. Pläne liest beteiligung.",
