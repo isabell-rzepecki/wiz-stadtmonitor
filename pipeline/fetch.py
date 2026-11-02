@@ -30,6 +30,20 @@ def ist_einladung(url):
     return not any(x in f for x in config.STADT["quelle"]["ausschliessen"])
 
 
+def vielleicht_einladung(url):
+    """Nummerierte Bekanntmachung mit Gremienkürzel, aber ohne „Einladung“ im Dateinamen; zählt erst nach Prüfung des Texts."""
+    f = dateiname(url)
+    muster = config.STADT["quelle"].get("einladung_ohne_wort")
+    return (not ist_einladung(url) and bool(muster) and bool(re.search(muster, f, re.I))
+            and not any(x in f.lower() for x in config.STADT["quelle"]["ausschliessen"]))
+
+
+def text_ist_einladung(txt):
+    """Kopf mit „Einladung“ und eine Tagesordnung (nicht etwa eine Mandatsniederlegung desselben Gremiums)."""
+    t = txt.read_text(encoding="utf-8", errors="replace")
+    return bool(re.search(r"\bEINLADUNG\b", t[:2000], re.I)) and "Tagesordnung" in t
+
+
 def liste():
     """Alle PDF-Medien der Seite: [{id, date, source_url, title}]."""
     out, page = [], 1
@@ -69,12 +83,12 @@ def fetch():
     except Exception as e:
         print(f"Liste der Bekanntmachungen nicht abrufbar ({e}); medien.json bleibt auf dem letzten Stand")
         return
-    medien = [m for m in alle if ist_einladung(m["source_url"])]
+    medien = [m for m in alle if ist_einladung(m["source_url"]) or vielleicht_einladung(m["source_url"])]
     if not medien:
         audit.abruf("wp_media", config.STADT["quelle"]["liste"], 200, "", "", 0, "keine Einladungen in der Liste")
         print("Keine Einladungen in der Liste; medien.json bleibt auf dem letzten Stand")
         return
-    neu, fehlt = 0, []
+    neu, fehlt, keine = 0, [], []
     for m in medien:
         name = dateiname(m["source_url"])
         pdf = PDF / name
@@ -97,6 +111,9 @@ def fetch():
         txt = TXT / (pdf.stem + ".txt")
         if not txt.exists() and not text(pdf, txt):
             txt.unlink(missing_ok=True)  # keine halbe Textdatei; nächster Lauf versucht es erneut
+        if vielleicht_einladung(m["source_url"]) and not (txt.exists() and text_ist_einladung(txt)):
+            keine.append(m)
+    medien = [m for m in medien if m not in keine]  # dem Dateinamen nach möglich, dem Text nach keine Einladung
     if fehlt:
         print(f"{len(fehlt)} Einladungen nicht abrufbar (siehe Abrufprotokoll); sie fehlen bis zum nächsten Lauf")
         medien = [m for m in medien if m not in fehlt]

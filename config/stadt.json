@@ -32,6 +32,8 @@
     "liste": "https://www.witzenhausen.eu/wp-json/wp/v2/media?mime_type=application/pdf&per_page=100&page={page}&_fields=id,date,source_url,title",
     "datenbeginn": "2024-07-01",
     "pause_s": 1.0,
+    "einladung_ohne_wort": "^\\d{2,3}-\\d{4}-(?:.*-)?(?:OB|STVV|Stavo|Ausschuss|Seniorenrat|Jugendrat|Auslaenderbeirat|Stadtteilbeirat)(?:-|\\.pdf$)",
+    "_hinweis_einladung_ohne_wort": "Nummerierte Bekanntmachungen mit dem Kürzel eines Gremiums im Dateinamen, aber ohne das Wort „Einladung“ (etwa 168-2024-Amtl-Bekanntm-STVV-17-12-2024.pdf). Sie zählen nur, wenn der Text eine Einladung mit Tagesordnung ist.",
     "ausschliessen": [
       "jagd",
       "jagsgenossensch",
