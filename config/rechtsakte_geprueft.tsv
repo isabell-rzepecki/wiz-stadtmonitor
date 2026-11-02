@@ -1,0 +1,4 @@
+# Von Hand geprüfte Zuordnung bekanntgemachter Rechtsakte zu Vorgängen (pipeline/rechtsakte.py).
+# nr: Bekanntmachungsnummer (NNN/JJJJ); vorgang: Vorlagennummer bzw. Kennung des Vorgangs, leer = gehört zu keinem Vorgang;
+# geprueft_am: Datum der Prüfung (JJJJ-MM-TT). Grundlage ist die Prüfliste data/export/audit/rechtsakte.tsv.
+nr	vorgang	geprueft_am

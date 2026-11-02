@@ -125,8 +125,8 @@ def lesen(text):
             f = FRIST.search(flach, m.start(), m.start() + 1500)
             if f:
                 e.update(von=iso(f.group(1)), bis=iso(f.group(2)))
-        if s["id"] == "aufstellung":
-            d = re.search(r"Stadtverordnetenversammlung[^.]{0,120}?am\s+(\d{1,2}\.\d{1,2}\.\d{4})", flach)
+        if s["id"] in ("aufstellung", "satzung", "genehmigung"):
+            d = re.search(r"Stadtverordnetenversammlung[^.]{0,120}?am\s+(\d{1,2}\.\s?\d{1,2}\.\s?\d{4})", flach)
             if d:
                 e["beschluss"] = iso(d.group(1))
         stufen.append(e)

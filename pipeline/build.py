@@ -211,6 +211,12 @@ def build():
                           "process": process, "locations": locations, "plans": verweise,
                           **({"overlaps": overlaps} if overlaps else {}), **({"initiative": initiative} if initiative else {}),
                           **({"beteiligung": sorted(schritte, key=lambda b: b["veroeffentlicht"])} if schritte else {})})
+    # Ergebnis aus bekanntgemachten Rechtsakten (Satzung, Haushalt, Plan); Import hier, weil rechtsakte über
+    # beteiligung dieses Modul lädt
+    from . import rechtsakte
+    ra_datei = rechtsakte.OUT
+    ra_liste = json.loads(ra_datei.read_text(encoding="utf-8"))["rechtsakte"] if ra_datei.exists() else []
+    ra_audit = rechtsakte.zuordnen(vorgaenge, ra_liste)
     vorgaenge.sort(key=lambda v: (v["date"], v["reference"]), reverse=True)
     stand = datetime.now(timezone.utc).isoformat(timespec="seconds")
     daten = {"meta": {"generated_at": stand, "data_start": config.STADT["quelle"]["datenbeginn"],
@@ -219,9 +225,12 @@ def build():
                       "source": config.SOURCES["bekanntmachungen"]["url"], "retrieved": medien["abruf"],
                       "sources": [{"name": "Amtliche Bekanntmachungen (Einladungen)", "license": config.SOURCES["bekanntmachungen"]["license"],
                                    "retrieved_at": medien["abruf"]},
+                                  *([{"name": "Amtliche Bekanntmachungen (Satzungen, Haushalt, Pläne; Ergebnis)",
+                                      "license": config.SOURCES["bekanntmachungen"]["license"]}] if ra_liste else []),
                                   {"name": "Bauleitplanung (Plannummer und Lage im Geltungsbereich)", "license": config.STADT["bauleitplanung"]["nutzung"]},
                                   *[{"name": f"{g['titel']} (räumliche Überschneidung)", "license": g["attribution"]}
                                     for g in config.STADT["umwelt"]["gruppen"]]],
+                      "ergebnisse": {s: sum(1 for z in ra_audit if z["sicherheit"] == s) for s in ("sicher", "geprüft", "möglicherweise", "keine")},
                       "parserfehler": len(fehler), "hinweise": len(hinweise), "einladungen": len(medien["medien"])},
              "sitzungen": sorted(sitzungen.values(), key=lambda s: s["date"]), "vorgaenge": vorgaenge}
     config.EXPORT.mkdir(parents=True, exist_ok=True)
@@ -229,6 +238,8 @@ def build():
     n_karte = bauleitplanung.karte(plaene)
 
     audit.tabelle("parserfehler.tsv", ["datei", "fehler", "url"], fehler)
+    # Prüfliste der Ergebnisse: jede Bekanntmachung mit Zuordnung, Sicherheit und den besten Kandidaten
+    audit.tabelle("rechtsakte.tsv", ["nr", "art", "gegenstand", "veroeffentlicht", "beschluss", "vorgang", "sicherheit", "grund", "kandidaten", "pdf"], ra_audit)
     audit.tabelle("einladungen_hinweise.tsv", ["datei", "hinweis", "url"], hinweise)
     # Ersetzungen des Namensfilters (parse.ohne_namen), zum Prüfen auf Fehltreffer; der Name selbst steht nirgends
     audit.tabelle("namensfilter.tsv", ["sitzung", "top", "titel"],

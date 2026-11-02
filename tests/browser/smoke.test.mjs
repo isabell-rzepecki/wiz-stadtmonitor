@@ -90,6 +90,22 @@ test("Gebiet aus dem Link: Vorgang mit zwei Stationen, Ergebnis als Lücke, ohne
   await page.close();
 });
 
+test("Ergebnis aus einer Bekanntmachung: Satzung als letzte Station, Beschluss an der Sitzung, Raute in der Zeitleiste, ohne Verstöße", async () => {
+  const page = await open(SITE, "#STV%2F488%2F2025");
+  await page.waitForFunction(() => document.querySelector("#detail-heading").textContent === "Vorgang");
+  const d = page.locator("#detail");
+  assert.equal(await d.locator(".steps .step-ergebnis").count(), 1);
+  assert.match(await d.locator(".step-ergebnis").textContent(), /Bekanntgemacht: Satzung.*abgeschlossen.*Hundesteuer.*Bekanntmachung Nr\. 186\/2025.*Beschluss vom 16\.12\.2025/s);
+  assert.equal(await d.locator(".blackbox").count(), 0, "die beschließende Sitzung zeigt das Ergebnis statt der Lücke");
+  assert.match(await d.locator(".steps li").first().textContent(), /beschlossen – belegt durch die Bekanntmachung Nr\. 186\/2025/);
+  assert.equal(await d.locator('.step-ergebnis a[href$="186-2025-Satzung-Hundesteuer-OR-9.1.pdf"]').count(), 1);
+  await d.locator(".step-ergebnis .jump").click();
+  await page.waitForSelector(".tl-ergebnis");
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 test("Karte: Ortsbezirk anklicken lädt das Gebiet, Hinweis zur Zuordnung", async () => {
   const page = await open(SITE);
   const pts = await page.evaluate(() => {

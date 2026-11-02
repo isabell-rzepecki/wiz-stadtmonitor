@@ -19,6 +19,11 @@ def check():
     for v in d["vorgaenge"]:
         if not v["process"] or any(not s.get("pdf") or s["sitzung"] not in ids for s in v["process"]):
             probleme.append(f"{v['reference']}: Station ohne Quelle")
+        for e in v.get("ergebnisse", []):  # Ergebnis nur mit amtlicher Bekanntmachung und Sicherheitsstufe
+            if not (e.get("pdf") and e.get("nr") and e.get("sicherheit") in ("sicher", "geprüft", "möglicherweise")):
+                probleme.append(f"{v['reference']}: Ergebnis ohne Bekanntmachung oder Sicherheit")
+            if parse.ohne_namen(e.get("gegenstand", "")) != e.get("gegenstand", ""):
+                probleme.append(f"{v['reference']}: Personenname im Gegenstand eines Ergebnisses")
         for l in v["locations"]:
             if not (l.get("method") and l.get("confidence") and l.get("evidence") and l.get("source_pdf")):
                 probleme.append(f"{v['reference']}: Ortsbezug ohne Methode, Konfidenz oder Fundstelle")

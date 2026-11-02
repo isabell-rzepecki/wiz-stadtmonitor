@@ -49,6 +49,15 @@
     unklar: "nicht veröffentlicht oder nicht feststellbar",
     soll: "nach Regelwerk vorgesehen, nicht belegt",
   };
+  // Ergebnis aus einer bekanntgemachten Satzung, einem Haushalt oder Plan (pipeline/rechtsakte.py)
+  const ERGEBNIS_ART = { satzung: "Satzung", aenderung: "Änderungssatzung", aufhebung: "Aufhebungssatzung", haushalt: "Haushaltssatzung",
+    nachtragshaushalt: "Nachtragshaushalt", jahresabschluss: "Jahresabschluss", hinweis: "Satzung (Bereitstellung)", bauleitplan: "Bauleitplan" };
+  const SICHERHEIT = {
+    sicher: "zugeordnet über Beschlussdatum und Gegenstand",
+    "geprüft": "Zuordnung von Hand geprüft",
+    "möglicherweise": "möglicherweise: Gegenstand passt, Beschlussdatum nicht genannt",
+  };
+  const ergebnisFest = (e) => e.sicherheit !== "möglicherweise";
   const RESULT_GAP = "Ergebnis nicht veröffentlicht. Die Einladungen nennen nur die Tagesordnung; Beschlüsse und Niederschriften stehen, soweit veröffentlicht, im Bürgerinformationssystem der Stadt. Der Stadtmonitor leitet keine Ergebnisse ab.";
   // Methode, Prüfangaben und Quellen eines Panels: einmal, aufklappbar am Ende; im Lesetext bleiben Wert, Stichtag und Gebiet
   const methode = (teile, titel = "Methode und Quellen") => {
@@ -56,7 +65,7 @@
     return t.length ? `<details class="acc methode"><summary>${titel}</summary>${t.map((x) => (x.startsWith("<") ? x : `<p>${x}</p>`)).join("")}</details>` : "";
   };
   const LIMITS = `<details class="acc"><summary>Was diese Darstellung nicht zeigen kann</summary><ul>
-    <li>Beschlussergebnisse: Sie sind in den Bekanntmachungen nicht veröffentlicht.</li>
+    <li>Beschlussergebnisse: Sie sind nicht veröffentlicht. Nur bei Satzungen, Haushalt und Plänen belegt deren Bekanntmachung den Beschluss; Inhalt und Abstimmung zeigt auch sie nicht.</li>
     <li>Vorlagentexte und Niederschriften.</li>
     <li>Nichtöffentliche Beratungen und Sitzungen vor dem Beginn des Datenbestands.</li>
     <li>Verwaltungsinterne Abläufe und den Vollzug von Beschlüssen.</li></ul>
@@ -761,7 +770,7 @@
     return `<li><button type="button" data-ref="${esc(p.reference)}" aria-current="${selected === p}">
       <span class="title">${esc(p.name)}</span>
       <span class="meta"><span>${esc(p.vorlage || "ohne Vorlagennummer")}</span><span>${fmtDate(p.date)}</span><span>${esc(gremien)}</span>
-      ${p.process.length > 1 ? `<span>${p.process.length} Beratungen</span>` : ""}${conf}</span></button></li>`;
+      ${p.process.length > 1 ? `<span>${p.process.length} Beratungen</span>` : ""}${(p.ergebnisse || []).length ? `<span>${p.ergebnisse.some(ergebnisFest) ? "bekanntgemacht" : "möglicherweise bekanntgemacht"}</span>` : ""}${conf}</span></button></li>`;
   }
   function render() {
     const base = filtered(false);
@@ -785,17 +794,31 @@
   const link = (url, text, cls) => { const u = safeUrl(url); return u ? `<a ${cls ? `class="${cls}" ` : ""}href="${u}" target="_blank" rel="noopener">${text}</a>` : ""; };
   // Station = Sitzung, in deren Tagesordnung der Vorgang steht (belegt); Ergebnis bleibt sichtbar als Lücke
   function stepHtml(s) {
+    const erg = ((selected && selected.ergebnisse) || []).find((e) => e.station && e.station.sitzung === s.sitzung && e.station.top === s.top);
     const status = s.oeffentlich === false ? "nicht_öffentlich" : "belegt";
     const body = [`TOP ${esc(s.top)}${s.ort ? ` · ${esc(s.ort)}` : ""}`, fmtDate(s.date) + (s.time ? `, ${esc(s.time)} Uhr` : "")];
     body.push(`Fundstelle: ${link(s.pdf, `Bekanntmachung Nr. ${esc(s.bekanntmachung)} (PDF)`) || `Bekanntmachung Nr. ${esc(s.bekanntmachung)}`}`);
     if (s.titel && s.titel !== selected?.name) body.push(`Titel in dieser Tagesordnung: <q>${esc(s.titel)}</q>`);
     body.push(`<button type="button" class="jump" data-date="${esc(s.date)}">in der Zeitleiste zeigen</button>`);
     const result = s.result ? `<div>Ergebnis: <q>${esc(s.result)}</q></div>`
+      : erg ? `<div>Ergebnis: ${ergebnisFest(erg) ? "beschlossen" : "möglicherweise beschlossen"} – belegt durch die Bekanntmachung Nr. ${esc(erg.nr)} vom ${fmtDate(erg.veroeffentlicht)} <span class="derived">${ergebnisFest(erg) ? "abgeleitet" : "möglicherweise"}</span></div>`
       : `<div class="blackbox"><span class="mark-inline mark-unklar" aria-hidden="true">?</span> ${esc(RESULT_GAP)} ${link(cfg.stadt.sessionnet, "Bürgerinformationssystem")}</div>`;
     return `<li class="step" data-status="${status}">
       <span class="mark mark-${status}" aria-hidden="true"></span>
       <div class="step-head">Beratung: ${esc(s.gremium)}<span class="step-status">${esc(STATUS[status])}</span></div>
       <div class="step-body">${body.join("<br>")}${result}</div></li>`;
+  }
+  // Station „Bekanntmachung“: die Satzung, der Haushalt oder Plan ist amtlich bekannt gemacht
+  function ergebnisHtml(e) {
+    const status = ergebnisFest(e) ? "belegt" : "abgeleitet";
+    const body = [`<q>${esc(e.gegenstand)}</q>`, `${fmtDate(e.veroeffentlicht)}${e.stufe ? ` · ${esc(e.stufe)}` : ""}${e.inkraft && e.art !== "bauleitplan" ? ` · in Kraft ab ${fmtDate(e.inkraft)}` : ""}`,
+      `Fundstelle: ${link(e.pdf, `Bekanntmachung Nr. ${esc(e.nr)} (PDF)`) || `Bekanntmachung Nr. ${esc(e.nr)}`}`,
+      `<span class="meta">${esc(SICHERHEIT[e.sicherheit] || e.sicherheit)}${e.beschluss ? ` · Beschluss vom ${fmtDate(e.beschluss)} laut Bekanntmachung` : ""}${e.geprueft ? ` · geprüft am ${fmtDate(e.geprueft)}` : ""}</span>`,
+      `<button type="button" class="jump" data-date="${esc(e.veroeffentlicht)}">in der Zeitleiste zeigen</button>`];
+    return `<li class="step step-ergebnis" data-status="${status}">
+      <span class="mark mark-${status}" aria-hidden="true"></span>
+      <div class="step-head">Bekanntgemacht: ${esc(ERGEBNIS_ART[e.art] || e.art)}<span class="step-status">${ergebnisFest(e) ? "abgeschlossen" : "möglicherweise abgeschlossen"}</span></div>
+      <div class="step-body">${body.join("<br>")}</div></li>`;
   }
   function legendInhalt() {
     return `<div class="legend">${["belegt", "abgeleitet", "nicht_öffentlich", "unklar"]
@@ -839,7 +862,7 @@
       <div class="links">${link(p.process[0] && p.process[0].pdf, "Einladung (PDF)", "btn btn-primary")}
         ${link(cfg.stadt.sessionnet, "Bürgerinformationssystem", "btn btn-secondary")}</div>
       <h4>Prozesslinie</h4>
-      <ol class="steps">${p.process.map(stepHtml).join("")}</ol>
+      <ol class="steps">${p.process.map(stepHtml).join("")}${(p.ergebnisse || []).map(ergebnisHtml).join("")}</ol>
       ${(p.beteiligung || []).length ? `<h4>Beteiligung der Öffentlichkeit (Bauleitplanung)</h4>${beteiligungHtml(p.beteiligung)}` : ""}
       <h4>Ortsbezug</h4><ul class="locs">${locs}</ul>
       ${(p.plans || []).length ? `<h4>Bauleitplanung</h4><ul class="locs">${p.plans.map((x) => `<li><button type="button" class="link-btn" data-open-plan="${esc(x.key)}">${esc(x.titel)}</button>
@@ -853,6 +876,7 @@
       ${methode([p.vorlage ? `Stationen der Prozesslinie sind die Sitzungen, in deren Tagesordnung die Vorlage ${esc(p.vorlage)} steht, chronologisch.`
           : "Ohne Vorlagennummer: eine einzelne Station. Tagesordnungspunkte werden nicht über ähnliche Titel verknüpft.",
         legendInhalt(),
+        (p.ergebnisse || []).length ? "Ergebnis: Die Stadt veröffentlicht keine Beschlüsse. Eine bekanntgemachte Satzung, ein Haushalt oder ein Plan belegt aber, dass beschlossen wurde. Zugeordnet über das in der Bekanntmachung genannte Beschlussdatum und den Gegenstand; ohne Beschlussdatum nur als „möglicherweise“." : "",
         (p.beteiligung || []).length ? "Beteiligung: Verfahrensschritte laut amtlichen Bekanntmachungen zu diesem Plan; zugeordnet über Plannummer und Gemarkung." : "",
         (p.plans || []).length ? `${esc(cfg.bauleitplanung.attribution)}.` : "",
         (p.overlaps || []).length && cfg.umwelt ? esc(cfg.umwelt.hinweis) : "",
