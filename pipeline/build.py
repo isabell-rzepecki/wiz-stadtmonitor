@@ -101,7 +101,8 @@ def build():
     # Beteiligungsverfahren der Bauleitplanung (pipeline/beteiligung.py), je Planverfahren
     bet_datei = config.EXPORT / "beteiligung.json"
     beteiligung = json.loads(bet_datei.read_text(encoding="utf-8"))["verfahren"] if bet_datei.exists() else []
-    sitzungen, tops, fehler = {}, [], []
+    # fehler: Einladung nicht (vollständig) lesbar; hinweise: gelesen, aber von der Stadt uneinheitlich veröffentlicht
+    sitzungen, tops, fehler, hinweise = {}, [], [], []
     for m in medien["medien"]:
         name = fetch.dateiname(m["source_url"])
         txt = fetch.TXT / (name.rsplit(".", 1)[0] + ".txt")
@@ -117,11 +118,13 @@ def build():
         if sid in sitzungen:
             alt = sitzungen[sid]
             if (alt["gremium"], alt["date"]) == (e["gremium"], e["date"]):  # dieselbe Einladung erneut hochgeladen
-                fehler.append({"datei": name, "fehler": f"Nr. {sid} doppelt hochgeladen, erste Datei übernommen", "url": m["source_url"]})
+                hinweise.append({"datei": name, "hinweis": f"Nr. {sid} doppelt hochgeladen, erste Datei übernommen", "url": m["source_url"]})
                 continue
             # Nummer von der Stadt doppelt vergeben (z. B. 142/2026): beide Sitzungen, Kennung um das Gremium ergänzt
             sid = f"{sid}-{e['gremium_id'] or 'X'}"
-            fehler.append({"datei": name, "fehler": f"Nr. {e['nr']} doppelt vergeben, übernommen als {sid}", "url": m["source_url"]})
+            datei_nr = re.match(r"(\d+)-(\d{4})-", name)
+            anders = f"; der Dateiname nennt {int(datei_nr[1]):03d}/{datei_nr[2]}" if datei_nr and f"{int(datei_nr[1]):03d}/{datei_nr[2]}" != e["nr"] else ""
+            hinweise.append({"datei": name, "hinweis": f"Nr. {e['nr']} doppelt vergeben{anders}; übernommen als {sid}", "url": m["source_url"]})
         s = {k: e[k] for k in ("gremium", "gremium_id", "gremium_typ", "ortsteil", "date", "time", "termine", "ort", "oeffentlich")}
         s.update(id=sid, bekanntmachung=e["nr"], nr_abgeleitet=e["nr_abgeleitet"], pdf=m["source_url"], veroeffentlicht=m["date"][:10])
         sitzungen[sid] = s
@@ -219,13 +222,14 @@ def build():
                                   {"name": "Bauleitplanung (Plannummer und Lage im Geltungsbereich)", "license": config.STADT["bauleitplanung"]["nutzung"]},
                                   *[{"name": f"{g['titel']} (räumliche Überschneidung)", "license": g["attribution"]}
                                     for g in config.STADT["umwelt"]["gruppen"]]],
-                      "parserfehler": len(fehler), "einladungen": len(medien["medien"])},
+                      "parserfehler": len(fehler), "hinweise": len(hinweise), "einladungen": len(medien["medien"])},
              "sitzungen": sorted(sitzungen.values(), key=lambda s: s["date"]), "vorgaenge": vorgaenge}
     config.EXPORT.mkdir(parents=True, exist_ok=True)
     config.VORGAENGE.write_text(json.dumps(daten, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     n_karte = bauleitplanung.karte(plaene)
 
     audit.tabelle("parserfehler.tsv", ["datei", "fehler", "url"], fehler)
+    audit.tabelle("einladungen_hinweise.tsv", ["datei", "hinweis", "url"], hinweise)
     # Ersetzungen des Namensfilters (parse.ohne_namen), zum Prüfen auf Fehltreffer; der Name selbst steht nirgends
     audit.tabelle("namensfilter.tsv", ["sitzung", "top", "titel"],
                   [{"sitzung": t["sitzung"], "top": t["top"], "titel": t["titel"]} for t in tops if parse.NAME_ERSATZ in t["titel"]])
