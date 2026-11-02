@@ -152,6 +152,21 @@ test("Karte: Ortsbezirk anklicken lädt das Gebiet, Hinweis zur Zuordnung", asyn
   await page.close();
 });
 
+test("Termine im Ortsteil: Abo des Ortsbeirats, Punkte der Stadtgremien mit Ortsbezug, ohne Verstöße", async () => {
+  const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
+  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator("#cta-termine").click();
+  await page.waitForSelector("#termine .abo");
+  const abo = page.locator("#termine .abo");
+  assert.match(await abo.textContent(), /Gertenbach: Ortsbeirat und Punkte der Stadtgremien zu Gertenbach/);
+  const ics = await (await page.request.get(await abo.locator("a", { hasText: "Kalenderadresse" }).first().getAttribute("href"))).text();
+  assert.match(ics, /X-WR-CALNAME:Stadtmonitor: Gertenbach/);
+  assert.match(ics.replace(/\r\n /g, ""), /Tagesordnungspunkte mit Bezug zu Gertenbach:/, "Stadtgremium nur mit den Punkten zu Gertenbach");
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 test("Verfahrenspunkte sind standardmäßig ausgeblendet", async () => {
   const page = await open(SITE, "?gebiet=ortsteil:neuseesen");
   await page.locator('.toggle[data-panel="panel-list"]').click();
@@ -171,6 +186,15 @@ test("Termine: kommende Sitzungen mit Tagesordnung", async () => {
   // Sitzungen ab heute (24.10.2026); die Testdaten enthalten zwei im November 2026
   assert.equal(await page.locator("#termine .meeting").count(), 2);
   assert.match(await page.locator("#termine").textContent(), /Laufende Beteiligung der Öffentlichkeit.*Testplan/s);
+  // Abonnieren: Kalender (webcal und https) und Feed, Dateien gültig und mit der Sitzung vom 10.11.2026
+  const abo = page.locator("#termine .abo");
+  assert.match(await abo.textContent(), /Termine abonnieren.*Stadtverordnetenversammlung, Ausschüsse und Beiräte.*Alle Gremien/s);
+  assert.match(await abo.locator("a", { hasText: "Kalender abonnieren" }).first().getAttribute("href"), /^webcal:\/\/.*\/data\/export\/abo\/stadt\.ics$/);
+  const ics = await (await page.request.get(await abo.locator("a", { hasText: "Kalenderadresse" }).nth(1).getAttribute("href"))).text();
+  assert.match(ics, /^BEGIN:VCALENDAR\r\n.*SUMMARY:Stadtverordnetenversammlung\r\n.*DTSTART;TZID=Europe\/Berlin:20261110T190000.*END:VCALENDAR\r\n$/s);
+  assert.ok(ics.split("\r\n").every((z) => new TextEncoder().encode(z).length <= 75), "Zeilen höchstens 75 Oktette");
+  const atom = await (await page.request.get(await abo.locator("a", { hasText: "Feed" }).nth(1).getAttribute("href"))).text();
+  assert.match(atom, /<feed xmlns="http:\/\/www.w3.org\/2005\/Atom".*<title>Stadtverordnetenversammlung am 10\.11\.2026<\/title>/s);
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.close();
