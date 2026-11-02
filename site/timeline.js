@@ -241,6 +241,14 @@
           el("title", {}, m).textContent = `${de(ms)} · ${s.gremium}${s.top ? " · TOP " + s.top : ""}`;
           m.addEventListener("click", () => o.onDate(s.date));
         }
+        // Stellungnahmen der Ortsbeiräte: kleinere, hohle Kreise
+        for (const st of selected.stellungnahmen || []) {
+          const ms = t(st.date);
+          if (ms < view[0] || ms > view[1]) continue;
+          const m = el("circle", { cx: x(ms), cy: (LAYOUT.sel[0] + LAYOUT.sel[1]) / 2, r: 3, class: `tl-step tl-stellungnahme${preview ? " preview" : ""}` }, svg);
+          el("title", {}, m).textContent = `${de(ms)} · ${st.gremium}${st.top ? " · TOP " + st.top : ""}`;
+          m.addEventListener("click", () => o.onDate(st.date));
+        }
         // Bekanntmachung des Ergebnisses (Satzung, Haushalt, Plan) als Raute
         for (const e of selected.ergebnisse || []) {
           const ms = t(e.veroeffentlicht);

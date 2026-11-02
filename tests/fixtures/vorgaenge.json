@@ -1,5 +1,5 @@
 {
-  "_hinweis": "Testdaten für den Browsertest (tests/browser). Inhalte wörtlich aus vier Einladungen der amtlichen Bekanntmachungen (Nr. 106/2025, 177/2025, 166/2026, 167/2026); Ortsbezüge von Hand nach Stufe A/B gesetzt. Nicht Teil der veröffentlichten Daten.",
+  "_hinweis": "Testdaten für den Browsertest (tests/browser). Inhalte wörtlich aus fünf Einladungen der amtlichen Bekanntmachungen (Nr. 106/2025, 160/2025, 177/2025, 166/2026, 167/2026); Stellungnahmen der Ortsbeiräte als Auszug (eine von acht); Ortsbezüge von Hand nach Stufe A/B gesetzt. Nicht Teil der veröffentlichten Daten.",
   "meta": {
     "generated_at": "2026-10-23T12:00:00Z",
     "data_start": "2024-07-01",
@@ -7,6 +7,7 @@
   },
   "sitzungen": [
     {"id": "106/2025", "gremium": "Ortsbeirat Neuseesen", "ortsteil": "Neuseesen", "date": "2025-07-25", "time": "20:00", "ort": "Dorfgemeinschaftshaus Neuseesen", "oeffentlich": true, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/07/106-2025-Einladung-OB-Neuseesen-25-07-2025.pdf"},
+    {"id": "160/2025", "gremium": "Ortsbeirat Neuseesen", "ortsteil": "Neuseesen", "date": "2025-11-17", "time": "20:00", "ort": "Dorfgemeinschaftshaus Neuseesen", "oeffentlich": true, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/11/160-2025-OB-Neuseesen-17-11-2025.pdf"},
     {"id": "177/2025", "gremium": "Stadtverordnetenversammlung", "date": "2025-12-16", "time": "18:00", "ort": "Rathaussaal, Am Markt 1", "oeffentlich": true, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/12/177-2025-Einladung-STVV-16-12-2025.pdf"},
     {"id": "166/2026", "gremium": "Haupt-, Finanz-, Rechts-, Digitalisierungs- und Wirtschaftsausschuss", "date": "2026-11-04", "time": "19:00", "ort": "Rathaussaal, Am Markt 1", "oeffentlich": true, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/166-2026-Einladung-HFR-04-11-2026.pdf"},
     {"id": "167/2026", "gremium": "Stadtverordnetenversammlung", "date": "2026-11-10", "time": "19:00", "ort": "Rathaussaal, Am Markt 1", "oeffentlich": true, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2026/10/167-2026-Einladung-STVV-10-11-2026.pdf"}
@@ -34,6 +35,29 @@
       "ergebnisse": [
         {"nr": "186/2025", "art": "satzung", "gegenstand": "Satzung über die Erhebung der Hundesteuer im Gebiet der Stadt Witzenhausen", "veroeffentlicht": "2025-12-19", "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/12/186-2025-Satzung-Hundesteuer-OR-9.1.pdf", "sicherheit": "sicher", "beschluss": "2025-12-16", "inkraft": "2026-01-01", "station": {"sitzung": "177/2025", "top": "8"}}
       ]
+    },
+    {
+      "reference": "STV/485/2025", "vorlage": "STV/485/2025",
+      "name": "Beratung und Beschlussfassung über die Haushaltssatzung mit Haushaltsplan für das Haushaltsjahr 2026",
+      "date": "2025-12-16", "verfahrenspunkt": false,
+      "process": [
+        {"sitzung": "177/2025", "bekanntmachung": "177/2025", "gremium": "Stadtverordnetenversammlung", "date": "2025-12-16", "time": "18:00", "ort": "Rathaussaal, Am Markt 1", "top": "12", "titel": "Beratung und Beschlussfassung über die Haushaltssatzung mit Haushaltsplan für das Haushaltsjahr 2026", "oeffentlich": true, "result": null, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/12/177-2025-Einladung-STVV-16-12-2025.pdf"}
+      ],
+      "locations": [],
+      "stellungnahmen": [
+        {"reference": "160/2025-TOP4", "gremium": "Ortsbeirat Neuseesen", "ortsteil": "Neuseesen", "sitzung": "160/2025", "bekanntmachung": "160/2025", "date": "2025-11-17", "top": "4", "titel": "Stellungnahme zur Haushaltssatzung mit Haushaltsplan und Anlagen für das Haushaltsjahr 2026", "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/11/160-2025-OB-Neuseesen-17-11-2025.pdf", "art": "Stellungnahme", "ueber": "Haushalt 2026"}
+      ],
+      "ortsbeiraete": {"anzahl": 1, "von": 16}
+    },
+    {
+      "reference": "160/2025-TOP4", "vorlage": null,
+      "name": "Stellungnahme zur Haushaltssatzung mit Haushaltsplan und Anlagen für das Haushaltsjahr 2026",
+      "date": "2025-11-17", "verfahrenspunkt": false,
+      "process": [
+        {"sitzung": "160/2025", "bekanntmachung": "160/2025", "gremium": "Ortsbeirat Neuseesen", "date": "2025-11-17", "time": "20:00", "ort": "Dorfgemeinschaftshaus Neuseesen", "top": "4", "titel": "Stellungnahme zur Haushaltssatzung mit Haushaltsplan und Anlagen für das Haushaltsjahr 2026", "oeffentlich": true, "result": null, "pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/11/160-2025-OB-Neuseesen-17-11-2025.pdf"}
+      ],
+      "locations": [{"level": "ortsteil", "name": "Neuseesen", "ortsteil": "Neuseesen", "stage": "A", "method": "gremium_ortsbeirat", "confidence": "hoch", "evidence": "Ortsbeirat Neuseesen", "source_pdf": "https://www.witzenhausen.eu/wp-content/uploads/2025/11/160-2025-OB-Neuseesen-17-11-2025.pdf"}],
+      "gehoert_zu": [{"reference": "STV/485/2025", "name": "Beratung und Beschlussfassung über die Haushaltssatzung mit Haushaltsplan für das Haushaltsjahr 2026", "ueber": "Haushalt 2026"}]
     },
     {
       "reference": "106/2025-TOP5", "vorlage": null,

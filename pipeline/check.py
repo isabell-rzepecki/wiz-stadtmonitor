@@ -16,9 +16,15 @@ def check():
     if quote > MAX_FEHLERQUOTE:
         probleme.append(f"Parserfehler {quote:.1%} über {MAX_FEHLERQUOTE:.0%}")
     ids = {s["id"] for s in d["sitzungen"]}
+    refs = {v["reference"] for v in d["vorgaenge"]}
     for v in d["vorgaenge"]:
         if not v["process"] or any(not s.get("pdf") or s["sitzung"] not in ids for s in v["process"]):
             probleme.append(f"{v['reference']}: Station ohne Quelle")
+        for x in v.get("stellungnahmen", []):  # Station eines Ortsbeirats nur mit Einladung und bestehendem Vorgang
+            if not x.get("pdf") or x.get("sitzung") not in ids or x.get("reference") not in refs:
+                probleme.append(f"{v['reference']}: Stellungnahme ohne Quelle oder Vorgang")
+            if parse.ohne_namen(x.get("titel", "")) != x.get("titel", ""):
+                probleme.append(f"{v['reference']}: Personenname im Titel einer Stellungnahme")
         for e in v.get("ergebnisse", []):  # Ergebnis nur mit amtlicher Bekanntmachung und Sicherheitsstufe
             if not (e.get("pdf") and e.get("nr") and e.get("sicherheit") in ("sicher", "geprüft", "möglicherweise")):
                 probleme.append(f"{v['reference']}: Ergebnis ohne Bekanntmachung oder Sicherheit")

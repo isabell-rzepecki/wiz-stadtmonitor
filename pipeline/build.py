@@ -17,7 +17,7 @@ import json
 import re
 from datetime import datetime, timezone
 
-from . import audit, bauleitplanung, config, einreicher, fetch, geo, parse, umwelt, verortung
+from . import audit, bauleitplanung, config, einreicher, fetch, geo, parse, stellungnahmen, umwelt, verortung
 
 VERFAHREN = re.compile(
     r"^(Eröffnung|Begrüßung|Feststellung (der|des)|Genehmigung (der|des) (Tagesordnung|Niederschrift|Protokoll)|"
@@ -136,6 +136,7 @@ def build():
         key = t["vorlage"] or f"{t['sitzung']}-TOP{t['top']}"
         gruppen.setdefault(key, []).append(t)
     vorgaenge, plan_audit, b_audit, u_audit, e_audit = [], [], [], [], []
+    verfahren_je_vorgang = {}  # Planverfahren je Vorgang, für die Stellungnahmen der Ortsbeiräte
     for key, ts in gruppen.items():
         ts.sort(key=lambda t: (sitzungen[t["sitzung"]]["date"], [int(x) for x in t["top"].split(".")]))
         process = []
@@ -203,6 +204,7 @@ def build():
                                 "datum": r["datum"], "gemeinsam": "ja" if r["gemeinsam"] else "nein", "fundstelle": r["fundstelle"]})
                 if r["einreicher"]:
                     initiative = initiative or r
+        verfahren_je_vorgang[key] = verfahren_ids
         schritte = [{"nr": b["nr"], "veroeffentlicht": b["veroeffentlicht"], "pdf": b["pdf"], "stufen": b["stufen"]}
                     for b in beteiligung if b["plan"]["verfahren"] in verfahren_ids]
         vorgaenge.append({"reference": key, "vorlage": first["vorlage"], "name": first["titel"], "date": process[0]["date"],
@@ -217,6 +219,7 @@ def build():
     ra_datei = rechtsakte.OUT
     ra_liste = json.loads(ra_datei.read_text(encoding="utf-8"))["rechtsakte"] if ra_datei.exists() else []
     ra_audit = rechtsakte.zuordnen(vorgaenge, ra_liste)
+    st_audit = stellungnahmen.verknuepfen(vorgaenge, sitzungen, verfahren_je_vorgang)
     vorgaenge.sort(key=lambda v: (v["date"], v["reference"]), reverse=True)
     stand = datetime.now(timezone.utc).isoformat(timespec="seconds")
     daten = {"meta": {"generated_at": stand, "data_start": config.STADT["quelle"]["datenbeginn"],
@@ -240,6 +243,7 @@ def build():
     audit.tabelle("parserfehler.tsv", ["datei", "fehler", "url"], fehler)
     # Prüfliste der Ergebnisse: jede Bekanntmachung mit Zuordnung, Sicherheit und den besten Kandidaten
     audit.tabelle("rechtsakte.tsv", ["nr", "art", "gegenstand", "veroeffentlicht", "beschluss", "vorgang", "sicherheit", "grund", "kandidaten", "pdf"], ra_audit)
+    audit.tabelle("stellungnahmen.tsv", ["vorgang", "gremium", "datum", "titel", "schluessel", "ziel", "ziel_titel"], st_audit)
     audit.tabelle("einladungen_hinweise.tsv", ["datei", "hinweis", "url"], hinweise)
     # Ersetzungen des Namensfilters (parse.ohne_namen), zum Prüfen auf Fehltreffer; der Name selbst steht nirgends
     audit.tabelle("namensfilter.tsv", ["sitzung", "top", "titel"],
