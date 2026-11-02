@@ -17,7 +17,7 @@ import json
 import re
 from datetime import datetime, timezone
 
-from . import audit, bauleitplanung, config, einreicher, fetch, geo, parse, stellungnahmen, umwelt, verortung
+from . import abo, audit, bauleitplanung, config, einreicher, fetch, geo, parse, stellungnahmen, umwelt, verortung
 
 VERFAHREN = re.compile(
     r"^(Eröffnung|Begrüßung|Feststellung (der|des)|Genehmigung (der|des) (Tagesordnung|Niederschrift|Protokoll)|"
@@ -239,6 +239,8 @@ def build():
     config.EXPORT.mkdir(parents=True, exist_ok=True)
     config.VORGAENGE.write_text(json.dumps(daten, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     n_karte = bauleitplanung.karte(plaene)
+    # Kalender und Feeds der Sitzungstermine (data/export/abo/)
+    abo.schreiben(daten, stand.replace("+00:00", "Z"))
 
     audit.tabelle("parserfehler.tsv", ["datei", "fehler", "url"], fehler)
     # Prüfliste der Ergebnisse: jede Bekanntmachung mit Zuordnung, Sicherheit und den besten Kandidaten

@@ -951,6 +951,25 @@
         <br>${link(b.pdf, `Bekanntmachung Nr. ${esc(b.nr)} (PDF)`)}${beteiligung.seite ? ` · ${link(beteiligung.seite, "Planunterlagen der Stadt")}` : ""}</li>`;
     }).join("")}</ul><p class="hint">Stellungnahmen sind innerhalb der Frist bei der Stadt möglich; Einzelheiten in der Bekanntmachung.</p></section>`;
   }
+  // Abonnieren: Kalender (webcal/https, .ics) und Feed (.atom) aus pipeline/abo.py, passend zum Gebiet
+  function aboHtml() {
+    const basis = new URL("data/export/abo/", location.href);
+    const zeile = (slug, name) => {
+      const ics = new URL(`${slug}.ics`, basis), feed = new URL(`${slug}.atom`, basis);
+      const webcal = ics.href.replace(/^https?:/, "webcal:");
+      return `<li><strong>${esc(name)}</strong><br><a href="${esc(webcal)}">Kalender abonnieren</a> ·
+        <a href="${esc(ics.href)}" download>Kalenderadresse (.ics)</a> · <a href="${esc(feed.href)}">Feed (Atom)</a></li>`;
+    };
+    const liste = area.kind === "ortsteil"
+      ? [zeile(area.key, `${area.name}: Ortsbeirat und Punkte der Stadtgremien zu ${area.name}`), zeile("stadt", "Stadtverordnetenversammlung, Ausschüsse und Beiräte")]
+      : [zeile("stadt", "Stadtverordnetenversammlung, Ausschüsse und Beiräte"), zeile("alle", "Alle Gremien einschließlich der Ortsbeiräte")];
+    return `<section class="stat-block abo"><h3>Termine abonnieren</h3><ul class="locs">${liste.join("")}</ul>
+      <details class="acc"><summary>So funktioniert das Abonnieren</summary>
+        <p><strong>Handy und Mac:</strong> „Kalender abonnieren“ antippen und bestätigen. Neue Sitzungen erscheinen dann von selbst im Kalender.</p>
+        <p><strong>Outlook, Google Kalender, Thunderbird:</strong> den Link „Kalenderadresse“ kopieren (rechte Maustaste) und im Kalender unter „Kalender hinzufügen“ → „Aus dem Internet“ bzw. „Per URL“ einfügen.</p>
+        <p><strong>Feedreader:</strong> den Link „Feed“ kopieren und im Feedreader als neues Abonnement einfügen; jede neue Einladung erscheint als Eintrag.</p>
+        <p class="hint">Die Kalender-Apps fragen die Datei selbst ab, meist alle paar Stunden; der Stadtmonitor erfährt dabei nichts über Sie außer dem Abruf selbst. Einträge reichen ein Jahr zurück. Für Ortsteile enthält das Abo die Sitzungen des Ortsbeirats mit ganzer Tagesordnung und von den Stadtgremien nur die Punkte mit Ortsbezug zum Ortsteil (abgeleitet).</p></details></section>`;
+  }
   function showTermine() {
     const box = $("#termine");
     const scope = box.querySelector("#termine-scope") ? box.querySelector("#termine-scope").value : "gebiet";
@@ -976,7 +995,8 @@
         <select id="termine-scope"><option value="gebiet"${scope === "gebiet" ? " selected" : ""}>${area.kind === "ortsteil" ? `stadtweite Gremien und ${esc(area.name)}` : "alle Gremien"}</option>
         <option value="alle"${scope === "alle" ? " selected" : ""}>alle Gremien</option></select></label></div>
       <p class="count">${list.length} kommende Sitzungen</p>
-      ${items || "<p>Keine kommenden Sitzungen im Datenbestand.</p>"}`;
+      ${items || "<p>Keine kommenden Sitzungen im Datenbestand.</p>"}
+      ${aboHtml()}`;
     box.querySelector("#termine-scope").addEventListener("change", () => { showTermine(); $("#termine-scope").focus(); });
   }
   $("#termine").addEventListener("click", (e) => {

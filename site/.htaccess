@@ -7,7 +7,9 @@ ErrorDocument 404 /404.html
   AddType application/manifest+json .webmanifest
   AddType application/octet-stream .pmtiles
   AddType application/geo+json .geojson
-  AddCharset utf-8 .html .js .css .json .geojson .webmanifest .tsv .md
+  AddType text/calendar .ics
+  AddType application/atom+xml .atom
+  AddCharset utf-8 .html .js .css .json .geojson .webmanifest .tsv .md .ics .atom
 </IfModule>
 
 <IfModule mod_headers.c>
@@ -16,7 +18,7 @@ ErrorDocument 404 /404.html
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set Permissions-Policy "camera=(), microphone=(), payment=(), usb=()"
   # Daten ändern sich täglich: kurz zwischenspeichern; Schriften und Bibliotheken länger
-  <FilesMatch "\.(json|geojson|pmtiles|html|js|css|tsv|webmanifest)$">
+  <FilesMatch "\.(json|geojson|pmtiles|html|js|css|tsv|webmanifest|ics|atom)$">
     Header set Cache-Control "public, max-age=600"
   </FilesMatch>
   <FilesMatch "\.(woff2|svg)$">
