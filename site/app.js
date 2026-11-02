@@ -820,6 +820,22 @@
       <div class="step-head">Bekanntgemacht: ${esc(ERGEBNIS_ART[e.art] || e.art)}<span class="step-status">${ergebnisFest(e) ? "abgeschlossen" : "möglicherweise abgeschlossen"}</span></div>
       <div class="step-body">${body.join("<br>")}</div></li>`;
   }
+  // Station „Stellungnahme“: Tagesordnungspunkt eines Ortsbeirats zur selben Angelegenheit (pipeline/stellungnahmen.py)
+  function stellungnahmeHtml(x) {
+    const body = [`TOP ${esc(x.top)} · ${fmtDate(x.date)}`, `Titel: <q>${esc(x.titel)}</q>`,
+      `Fundstelle: ${link(x.pdf, `Bekanntmachung Nr. ${esc(x.bekanntmachung)} (PDF)`) || `Bekanntmachung Nr. ${esc(x.bekanntmachung)}`}`,
+      `<span class="meta">zugeordnet über: ${esc(x.ueber)} <span class="derived">abgeleitet</span></span>`,
+      `<button type="button" class="link-btn" data-open-ref="${esc(x.reference)}">Punkt im Ortsbeirat öffnen</button> · <button type="button" class="jump" data-date="${esc(x.date)}">in der Zeitleiste zeigen</button>`];
+    return `<li class="step step-stellungnahme" data-status="abgeleitet">
+      <span class="mark mark-abgeleitet" aria-hidden="true"></span>
+      <div class="step-head">${esc(x.art)}: ${esc(x.gremium)}<span class="step-status">${STATUS.abgeleitet}</span></div>
+      <div class="step-body">${body.join("<br>")}</div></li>`;
+  }
+  // Beratungen und Stellungnahmen der Ortsbeiräte in zeitlicher Folge
+  function stationenHtml(p) {
+    const st = [...p.process.map((s) => ({ d: s.date || "", h: stepHtml(s) })), ...(p.stellungnahmen || []).map((x) => ({ d: x.date, h: stellungnahmeHtml(x) }))];
+    return st.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0)).map((x) => x.h).join("");
+  }
   function legendInhalt() {
     return `<div class="legend">${["belegt", "abgeleitet", "nicht_öffentlich", "unklar"]
       .map((s) => `<span><span class="mark mark-${s}" aria-hidden="true">${s === "unklar" ? "?" : ""}</span><strong>${STATUS[s]}</strong> – ${STATUS_TEXT[s]}</span>`).join("")}
@@ -857,12 +873,16 @@
         <dt>Erste Beratung</dt><dd>${fmtDate(p.date)}</dd>
         <dt>Gremien</dt><dd>${esc(gremien.join(", "))}</dd>
         ${p.verfahrenspunkt ? '<dt>Art</dt><dd>Verfahrenspunkt <span class="derived">abgeleitet</span></dd>' : ""}
+        ${p.ortsbeiraete ? `<dt>Ortsbeiräte</dt><dd>${p.ortsbeiraete.anzahl} von ${p.ortsbeiraete.von} hatten die Angelegenheit auf der Tagesordnung <span class="derived">abgeleitet</span>
+          <br><span class="hint">gezählt nach Tagesordnung; ob und was sie beschlossen haben, ist nicht veröffentlicht</span></dd>` : ""}
+        ${(p.gehoert_zu || []).map((g) => `<dt>Gehört zu</dt><dd><button type="button" class="link-btn" data-open-ref="${esc(g.reference)}">${esc(g.name)}</button>
+          <br><span class="meta">Beschluss der Stadtverordnetenversammlung · zugeordnet über: ${esc(g.ueber)}</span></dd>`).join("")}
         ${p.initiative && cfg.einreicher ? `<dt>Eingebracht</dt><dd>${initiativeText(p.initiative)} <span class="derived">laut TOP-Titel</span></dd>` : ""}
       </dl>
       <div class="links">${link(p.process[0] && p.process[0].pdf, "Einladung (PDF)", "btn btn-primary")}
         ${link(cfg.stadt.sessionnet, "Bürgerinformationssystem", "btn btn-secondary")}</div>
       <h4>Prozesslinie</h4>
-      <ol class="steps">${p.process.map(stepHtml).join("")}${(p.ergebnisse || []).map(ergebnisHtml).join("")}</ol>
+      <ol class="steps">${stationenHtml(p)}${(p.ergebnisse || []).map(ergebnisHtml).join("")}</ol>
       ${(p.beteiligung || []).length ? `<h4>Beteiligung der Öffentlichkeit (Bauleitplanung)</h4>${beteiligungHtml(p.beteiligung)}` : ""}
       <h4>Ortsbezug</h4><ul class="locs">${locs}</ul>
       ${(p.plans || []).length ? `<h4>Bauleitplanung</h4><ul class="locs">${p.plans.map((x) => `<li><button type="button" class="link-btn" data-open-plan="${esc(x.key)}">${esc(x.titel)}</button>
@@ -876,6 +896,7 @@
       ${methode([p.vorlage ? `Stationen der Prozesslinie sind die Sitzungen, in deren Tagesordnung die Vorlage ${esc(p.vorlage)} steht, chronologisch.`
           : "Ohne Vorlagennummer: eine einzelne Station. Tagesordnungspunkte werden nicht über ähnliche Titel verknüpft.",
         legendInhalt(),
+        (p.stellungnahmen || []).length || (p.gehoert_zu || []).length ? "Ortsbeiräte: Ihre Tagesordnungspunkte tragen keine Vorlagennummer. Zugeordnet werden sie nur über eindeutige Schlüssel: Haushalt und Nachtrag über das Haushaltsjahr, das Investitionsprogramm über das Jahr der Beratung, Bauleitpläne über das Planverfahren. Ziel ist der Beschluss der Stadtverordnetenversammlung nach der Beratung im Ortsbeirat." : "",
         (p.ergebnisse || []).length ? "Ergebnis: Die Stadt veröffentlicht keine Beschlüsse. Eine bekanntgemachte Satzung, ein Haushalt oder ein Plan belegt aber, dass beschlossen wurde. Zugeordnet über das in der Bekanntmachung genannte Beschlussdatum und den Gegenstand; ohne Beschlussdatum nur als „möglicherweise“." : "",
         (p.beteiligung || []).length ? "Beteiligung: Verfahrensschritte laut amtlichen Bekanntmachungen zu diesem Plan; zugeordnet über Plannummer und Gemarkung." : "",
         (p.plans || []).length ? `${esc(cfg.bauleitplanung.attribution)}.` : "",

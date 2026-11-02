@@ -106,6 +106,26 @@ test("Ergebnis aus einer Bekanntmachung: Satzung als letzte Station, Beschluss a
   await page.close();
 });
 
+test("Stellungnahme eines Ortsbeirats: Station im Beschlussvorgang, Zählung mit Grenze, Rückweg über „Gehört zu“, ohne Verstöße", async () => {
+  const page = await open(SITE, "#STV%2F485%2F2025");
+  await page.waitForFunction(() => document.querySelector("#detail-heading").textContent === "Vorgang");
+  const d = page.locator("#detail");
+  const stationen = d.locator(".steps li");
+  assert.equal(await stationen.count(), 2);
+  assert.match(await stationen.first().textContent(), /Stellungnahme: Ortsbeirat Neuseesen.*17\.11\.2025.*zugeordnet über: Haushalt 2026/s, "zeitlich vor der Stadtverordnetenversammlung");
+  assert.match(await d.locator(".facts").textContent(), /1 von 16 hatten die Angelegenheit auf der Tagesordnung.*nicht veröffentlicht/s);
+  await d.locator('.step-stellungnahme [data-open-ref="160/2025-TOP4"]').click();
+  await page.waitForFunction(() => /Stellungnahme zur Haushaltssatzung/.test(document.querySelector("#detail h3")?.textContent || ""));
+  assert.match(await d.locator(".facts").textContent(), /Gehört zu.*Haushaltsjahr 2026.*zugeordnet über: Haushalt 2026/s);
+  await d.locator('.facts [data-open-ref="STV/485/2025"]').click();
+  await page.waitForFunction(() => /^Beratung und Beschlussfassung über die Haushaltssatzung/.test(document.querySelector("#detail h3")?.textContent || ""));
+  await d.locator(".step-stellungnahme .jump").click();
+  await page.waitForSelector(".tl-stellungnahme");
+  assert.deepEqual(await axe(page), []);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
 test("Karte: Ortsbezirk anklicken lädt das Gebiet, Hinweis zur Zuordnung", async () => {
   const page = await open(SITE);
   const pts = await page.evaluate(() => {
@@ -135,10 +155,10 @@ test("Karte: Ortsbezirk anklicken lädt das Gebiet, Hinweis zur Zuordnung", asyn
 test("Verfahrenspunkte sind standardmäßig ausgeblendet", async () => {
   const page = await open(SITE, "?gebiet=ortsteil:neuseesen");
   await page.locator('.toggle[data-panel="panel-list"]').click();
-  assert.equal(await page.locator("#papers button[data-ref]").count(), 1);
+  assert.equal(await page.locator("#papers button[data-ref]").count(), 2, "Stromtrasse und Stellungnahme zum Haushalt");
   await page.locator("#more-filters summary").click();
   await page.locator("#f-verfahren").check();
-  assert.equal(await page.locator("#papers button[data-ref]").count(), 2);
+  assert.equal(await page.locator("#papers button[data-ref]").count(), 3);
   assert.deepEqual(page.errors, []);
   await page.close();
 });
