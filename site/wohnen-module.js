@@ -70,7 +70,20 @@ window.WohnenModule = (function () {
         <tbody>${reihen.map(([k, n]) => `<tr${k === slug ? ' class="own"' : ""}><th scope="row">${esc(n)}</th>${v.stichtage.map((s) => `<td>${sp((v.spannen[k] || {})[s])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
       <p><button type="button" class="knopf" data-ebene="bodenrichtwerte">Zonen auf der Karte zeigen</button></p>
       <p class="meta">Stichtag 01.01.2026: nur als Karte der HVBG, in der Hauptkarte unter „Weitere Ebenen“ (Bilder eines fremden Servers erst nach dem Einschalten).</p>
-      <h4>Angebotsmieten</h4><p><span class="luecke">keine Angabe</span>. Angebotsmieten gibt es frei nur je Kreis: vom BBSR aus Inseraten von Immobilienportalen und Zeitungen aufbereitet (Datenlizenz Deutschland – Namensnennung 2.0). Die Seite übernimmt sie als Kreiswert, sobald die Datenquelle (INKAR) wieder erreichbar ist. Eigene Abrufe aus Immobilienportalen gibt es nicht.</p>`;
+      ${angebot(cfg, w)}`;
+  }
+
+  // Angebotsmieten: nur Kreiswerte des BBSR (Deutschlandatlas), getrennt von der Bestandsmiete des Zensus
+  function angebot(cfg, w) {
+    const a = w && w.angebotsmieten;
+    if (!a || !a.kreise || !a.kreise.length) return '<h4>Angebotsmieten</h4><p><span class="luecke">keine Angabe</span>. Angebotsmieten gibt es frei nur je Kreis (BBSR). Eigene Abrufe aus Immobilienportalen gibt es nicht.</p>';
+    const eu = (x) => x.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `<h4>Angebotsmieten ${esc(a.jahr || "")} (Kreiswert)</h4>
+      <p>Nettokaltmiete in Inseraten für neu zu vermietende Wohnungen, in €/m², je Kreis. Für ${esc((a.kreise.find((k) => k.ags === a.kreis) || {}).name || "den Kreis")} gilt der Wert für den ganzen Kreis, nicht für ${esc(cfg.stadt.name)} allein. Nicht mit der Bestandsmiete des Zensus vergleichbar: andere Erhebung, anderes Jahr, nur neu inserierte Wohnungen.</p>
+      <div class="tabelle"><table><caption class="visually-hidden">Angebotsmieten ${esc(a.jahr || "")} je Kreis in €/m²</caption>
+        <thead><tr><th scope="col">Kreis</th><th scope="col">€/m² nettokalt</th></tr></thead>
+        <tbody>${a.kreise.map((k) => `<tr${k.ags === a.kreis ? ' class="own"' : ""}><th scope="row">${esc(k.name)}</th><td>${eu(k.wert)}</td></tr>`).join("")}</tbody></table></div>
+      <p class="meta">Quelle: ${esc(a.attribution)}${a.stand ? `, Stand ${esc(a.stand)}` : ""}. ${esc(a.nutzung)}. Datenbasis sind Inserate aus Immobilienportalen und Zeitungen, vom BBSR aufbereitet; der Stadtmonitor ruft keine Portale ab. ${/^https:\/\//.test(a.seite || "") ? `<a href="${esc(a.seite)}" target="_blank" rel="noopener">Karte im Deutschlandatlas<span class="visually-hidden"> (neuer Tab)</span></a>` : ""}</p>`;
   }
 
   function eigentum(cfg, w, eig) {

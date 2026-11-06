@@ -475,6 +475,9 @@ test("Wohnen und Eigentum (Seite): Module mit Zweck, Mietniveau, Verlauf, Eigent
   // Module aufklappen und Inhalte prüfen
   for (const id of ["boden", "eigentum", "vergleich", "tagesordnung", "stand", "begriffe", "methode"]) await page.locator(`#modul-${id} > summary`).click();
   assert.match(await page.locator("#modul-boden").textContent(), /01\.01\.2022.*01\.01\.2024.*Angebotsmieten/s);
+  // Angebotsmiete nur als Kreiswert (BBSR, Deutschlandatlas), eigener Kreis hervorgehoben, getrennt von der Bestandsmiete
+  assert.match(await page.locator("#modul-boden").textContent(), /Angebotsmieten 2025 \(Kreiswert\).*nicht für Witzenhausen allein.*Werra-Meißner-Kreis\s*6,97.*BBSR-Wohnungsmarktbeobachtung; IDN ImmoDaten GmbH/s);
+  assert.match(await page.locator("#modul-boden tr.own").last().textContent(), /Werra-Meißner-Kreis/);
   const eig = await page.locator("#modul-eigentum").textContent();
   assert.match(eig, /Noch keine geprüfte Erfassung/);
   assert.match(eig, /Privatpersonen.*nur als Anteil je Ortsbezirk, ohne Namen/s);

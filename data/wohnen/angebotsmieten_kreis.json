@@ -1,0 +1,43 @@
+{
+ "jahr": 2025,
+ "indikator": "Wiedervermietungsmieten inserierter Wohnungen (Angebotsmieten nettokalt) im Jahr 2025 in € je m²",
+ "blatt": "Deutschlandatlas_KRS1224",
+ "stand": "25.09.2026",
+ "kreis": "6636000",
+ "kreise": [
+  {
+   "ags": "6636000",
+   "name": "Werra-Meißner-Kreis",
+   "wert": 6.97
+  },
+  {
+   "ags": "6633000",
+   "name": "Landkreis Kassel",
+   "wert": 8.86
+  },
+  {
+   "ags": "6611000",
+   "name": "Kassel (Stadt)",
+   "wert": 9.05
+  },
+  {
+   "ags": "6632000",
+   "name": "Hersfeld-Rotenburg",
+   "wert": 7.88
+  },
+  {
+   "ags": "3159000",
+   "name": "Landkreis Göttingen",
+   "wert": 9.93
+  },
+  {
+   "ags": "16061000",
+   "name": "Landkreis Eichsfeld",
+   "wert": 7.16
+  }
+ ],
+ "attribution": "BBSR-Wohnungsmarktbeobachtung; IDN ImmoDaten GmbH; Deutschlandatlas (BMWSB), Datentabelle des Statistischen Bundesamts",
+ "nutzung": "Vervielfältigung und Verbreitung, auch auszugsweise, mit Quellenangabe gestattet (Impressum der Datentabelle)",
+ "seite": "https://deutschlandatlas.bund.de/karten/wie-wir-wohnen/angebotsmieten",
+ "retrieved": "2026-11-06"
+}

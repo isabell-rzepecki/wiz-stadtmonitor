@@ -805,6 +805,18 @@
       "naeherung": "Näherung: Gitterzellen (100 m) werden über ihren Mittelpunkt einer Gemarkung zugeordnet. Die Bestandsmiete ist mit der Zahl der vermieteten Wohnungen gewichtet; für die Eigentümerquote steht der Median der Zellwerte, ungewichtet. Zellen mit „–“ (genau null oder durch die Geheimhaltung auf null gesetzt) zählen nicht als null, sondern als „ohne Wert“. Werte aus weniger als 5 Zellen werden nicht ausgewiesen. Die Leerstandsquote wird nur für die Gemeinde angegeben: Im Gitter fasst „–“ echte Nullwerte und geheim gehaltene Werte zusammen, eine Quote je Ortsbezirk wäre deshalb verzerrt.",
       "mindestzellen": 5
     },
+    "angebotsmieten": {
+      "_hinweis": "Angebotsmieten (Wiedervermietung, nettokalt) nur als Kreiswert des BBSR aus der Datentabelle des Deutschlandatlas. Datenbasis sind Inserate aus Immobilienportalen und Zeitungen (IDN ImmoDaten GmbH), vom BBSR aufbereitet; der Stadtmonitor ruft keine Portale ab. Getrennt von Bestands- und Vergleichsmiete. Freigabe als Kreiswert: Entscheidung der Projektverantwortlichen vom 26.10.2026 (Issue 33).",
+      "url": "https://deutschlandatlas.bund.de/fileadmin/Downloaddateien/Open_Data/Deutschlandatlas_Daten.xlsx",
+      "seite": "https://deutschlandatlas.bund.de/karten/wie-wir-wohnen/angebotsmieten",
+      "indikator": "preis_miet",
+      "tage": 30,
+      "kreis": "6636000",
+      "vergleich": ["6636000", "6633000", "6611000", "6632000", "3159000", "16061000"],
+      "namen": {"6633000": "Landkreis Kassel", "6611000": "Kassel (Stadt)", "3159000": "Landkreis Göttingen", "16061000": "Landkreis Eichsfeld"},
+      "attribution": "BBSR-Wohnungsmarktbeobachtung; IDN ImmoDaten GmbH; Deutschlandatlas (BMWSB), Datentabelle des Statistischen Bundesamts",
+      "nutzung": "Vervielfältigung und Verbreitung, auch auszugsweise, mit Quellenangabe gestattet (Impressum der Datentabelle)"
+    },
     "begriffe": [
       {
         "begriff": "Bestandsmiete",
@@ -812,7 +824,7 @@
       },
       {
         "begriff": "Angebotsmiete",
-        "text": "Miete in Inseraten für neu zu vermietende Wohnungen. Sie liegt meist über der Bestandsmiete. Private Portale haben keine offene Lizenz; der Stadtmonitor übernimmt keine Angebotsmieten."
+        "text": "Miete in Inseraten für neu zu vermietende Wohnungen. Sie liegt meist über der Bestandsmiete. Der Stadtmonitor zeigt sie nur als Kreiswert des BBSR (Deutschlandatlas), getrennt von der Bestandsmiete; eigene Abrufe aus Immobilienportalen gibt es nicht."
       },
       {
         "begriff": "Ortsübliche Vergleichsmiete",

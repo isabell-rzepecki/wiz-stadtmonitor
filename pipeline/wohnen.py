@@ -3,6 +3,8 @@
 - Bodenrichtwerte: Zonen der Gemeinde mit Wert, Art und Entwicklungszustand (Stichtag laut config/stadt.json,
   wohnen.boris); Spanne je Gemarkung für baureifes Land (B) mit Art W… oder M…. Abgleich mit der Referenztabelle der
   Übergabe v0.2 im Audit (bodenrichtwerte_abgleich.tsv). Lizenz: Nutzung ohne Einschränkung, daher im Repository.
+- Angebotsmieten: nur als Kreiswert des BBSR aus der Datentabelle des Deutschlandatlas (wohnen.angebotsmieten),
+  der Kreis der Stadt und Nachbarkreise; getrennt von der Bestandsmiete.
 - Zensus 2022, Gemeinde: Regionaltabelle Gebäude und Wohnungen (Primärquelle) für die Stadt und ihre Nachbargemeinden.
 - Zensus 2022, Ortsbezirk: 100-m-Gitterzellen über ihren Mittelpunkt einer Gemarkung zugeordnet. „–“ (genau null
   oder auf null gesetzt) zählt als „ohne Wert“, nicht als null; KLAMMERN (Aussagewert eingeschränkt) wird gezählt.
@@ -32,7 +34,8 @@ RAW = config.RAW / "wohnen"
 BRW_GEO = config.GEO / "dl-de-zero" / "bodenrichtwerte_2024.geojson"
 BRW_GEO_JAHR = lambda jahr: config.GEO / "dl-de-zero" / f"bodenrichtwerte_{jahr}.geojson"  # noqa: E731
 ZENSUS = config.ROOT / "data" / "wohnen" / "zensus2022.json"  # Gemeinde und Nachbargemeinden (Regionaltabelle)
-ZENSUS_OB = config.ROOT / "data" / "wohnen" / "zensus_ortsbezirk.json"  # Ortsbezirke aus dem Gitter (Näherung)
+ZENSUS_OB = config.ROOT / "data" / "wohnen" / "zensus_ortsbezirk.json"
+ANGEBOT = config.ROOT / "data" / "wohnen" / "angebotsmieten_kreis.json"  # Kreiswerte aus dem Deutschlandatlas  # Ortsbezirke aus dem Gitter (Näherung)
 # Ausgaben der lokalen Prüfung (tools/veroeffentlichen.py): nur zusammengefasst und nach den Veröffentlichungsregeln
 EIGENTUM_ANTEILE = config.ROOT / "data" / "wohnen" / "eigentum_anteile_ortsbezirk.json"
 MIETEN = config.ROOT / "data" / "wohnen" / "mieten_aggregiert.json"
@@ -52,8 +55,8 @@ def _gemarkungen():
     return [(f["properties"], shape(f["geometry"])) for f in fl["features"]]
 
 
-def _laden(ziel, url, quelle):
-    if net.gueltig(ziel, ALTER):
+def _laden(ziel, url, quelle, alter=ALTER):
+    if net.gueltig(ziel, alter):
         return True
     try:
         body, _ = net.get(url, tries=2)
@@ -81,6 +84,38 @@ def fetch():
     _laden(RAW / "regionaltabelle.xlsx", W["zensus"]["regionaltabelle"], "zensus_gem")
     for k, g in W["zensus"]["gitter"].items():
         _laden(RAW / f"{k}.zip", g["url"], "zensus_gitter")
+    _laden(RAW / "deutschlandatlas.xlsx", W["angebotsmieten"]["url"], "deutschlandatlas", W["angebotsmieten"]["tage"] * 86400)
+
+
+def angebotsmieten(datei=None):
+    """Kreiswerte der Angebotsmiete aus der Datentabelle des Deutschlandatlas: neuestes Kreisblatt mit dem Indikator.
+    None ohne Rohdaten oder ohne den Indikator."""
+    import openpyxl
+    A = W["angebotsmieten"]
+    datei = datei or RAW / "deutschlandatlas.xlsx"
+    if not datei.exists():
+        return None
+    wb = openpyxl.load_workbook(datei, read_only=True)
+    stand = next((str(r[0]).replace("Stand:", "").strip() for r in wb[wb.sheetnames[0]].iter_rows(values_only=True)
+                  if r and isinstance(r[0], str) and r[0].startswith("Stand:")), None) if wb.sheetnames else None
+    for blatt in sorted((n for n in wb.sheetnames if n.startswith("Deutschlandatlas_KRS")), key=lambda n: (n[-2:], n[-4:-2]), reverse=True):
+        zeilen = list(wb[blatt].iter_rows(values_only=True))
+        kopf = next((i for i, r in enumerate(zeilen) if r and any(isinstance(x, str) and f"Indikatorkürzel: {A['indikator']}" in x for x in r)), None)
+        if kopf is None:
+            continue
+        spalte = next(j for j, x in enumerate(zeilen[kopf]) if isinstance(x, str) and f"Indikatorkürzel: {A['indikator']}" in x)
+        text = zeilen[kopf][spalte]
+        jahr = re.search(r"im Jahr (\d{4})", text)
+        werte = {}
+        for r in zeilen[kopf + 1:]:
+            if r and r[0] is not None and str(r[0]).strip() in A["vergleich"] and isinstance(r[spalte], (int, float)):
+                ags = str(r[0]).strip()
+                werte[ags] = {"ags": ags, "name": A.get("namen", {}).get(ags, r[1]), "wert": round(float(r[spalte]), 2)}
+        if A["kreis"] not in werte:
+            return None
+        return {"jahr": int(jahr.group(1)) if jahr else None, "indikator": text.split("\n")[-1].strip(), "blatt": blatt,
+                "stand": stand, "kreis": A["kreis"], "kreise": [werte[k] for k in A["vergleich"] if k in werte]}
+    return None
 
 
 # --- Bodenrichtwerte ------------------------------------------------------------------------------------------
@@ -355,6 +390,15 @@ def build():
         print("Zensus: keine Rohdaten und kein Stand im Repository")
     if alt:  # für die Ausgabe zusammengeführt (Gemeinde und Ortsbezirke getrennt gekennzeichnet)
         alt = {**alt, "naeherung": W["zensus"]["naeherung"], "ortsbezirke": alt_ob.get("ortsbezirke", {})}
+    A = W["angebotsmieten"]
+    am = angebotsmieten()
+    if am:
+        am.update(attribution=A["attribution"], nutzung=A["nutzung"], seite=A["seite"],
+                  retrieved=net.abrufdatum(RAW / "deutschlandatlas.xlsx"))
+        ANGEBOT.parent.mkdir(parents=True, exist_ok=True)
+        ANGEBOT.write_text(json.dumps(am, ensure_ascii=False, indent=1), encoding="utf-8")
+    elif ANGEBOT.exists():  # ohne neue Rohdaten der letzte Stand aus dem Repository
+        am = json.loads(ANGEBOT.read_text(encoding="utf-8"))
     by_nr = {o["gemarkung_nr"]: o for o in config.STADT["ortsteile"]}
     vl = verlauf()
     daten = {"generated_at": date.today().isoformat(),
@@ -364,7 +408,8 @@ def build():
              "boris_verlauf": {"stichtage": list(vl), "hinweis": W["boris_verlauf"]["_hinweis"],
                                "spannen": {by_nr[k]["slug"] if k in by_nr else k: {st: sp_[k] for st, sp_ in vl.items() if k in sp_}
                                            for k in sorted({k for sp_ in vl.values() for k in sp_})}},
-             "zensus": {k: alt.get(k) for k in ("stichtag", "attribution", "naeherung", "gemeinden")} if alt else None}
+             "zensus": {k: alt.get(k) for k in ("stichtag", "attribution", "naeherung", "gemeinden")} if alt else None,
+             "angebotsmieten": am}
     # Eigentum und Mieten erst, wenn geprüfte Dateien vorliegen; sonst null (die Seite zeigt den Stand der Erfassung)
     for k, p in (("eigentum_anteile", EIGENTUM_ANTEILE), ("mieten", MIETEN)):
         daten[k] = json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
