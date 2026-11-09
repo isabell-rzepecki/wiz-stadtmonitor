@@ -29,6 +29,10 @@ if [ "$SCHEMA" = sftp ]; then
     ssh-keyscan -p "$PORT" "$PLESK_HOST" > "$KH" 2>/dev/null
     echo "Hinweis: Hostschlüssel ungeprüft übernommen (Secret PLESK_KNOWN_HOSTS fehlt). Fingerabdrücke:"
     ssh-keygen -lf "$KH"
+    # öffentliche Schlüssel (nicht geheim) für das Secret PLESK_KNOWN_HOSTS; vorn den Servernamen bzw. die IP ergänzen,
+    # weil GitHub den Wert des Secrets PLESK_HOST im Protokoll unkenntlich macht
+    echo "Für PLESK_KNOWN_HOSTS je Zeile: SERVER gefolgt von"
+    cut -d' ' -f2- "$KH" | grep '^ssh-ed25519' || true
   fi
 fi
 export LFTP_PASSWORD="$PLESK_PASSWORT"
