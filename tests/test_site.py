@@ -72,17 +72,17 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class Subdomain(unittest.TestCase):
+class Domain(unittest.TestCase):
     def test_htaccess_und_adresse(self):
-        # Plesk (Apache): Fehlerseite, Medientypen, keine Verzeichnislisten; Adresse der Subdomain in Seiten und Codekarten
+        # Plesk (Apache): Fehlerseite, Medientypen, keine Verzeichnislisten; Adresse der Domain in Seiten und Codekarten
         with tempfile.TemporaryDirectory() as d:
             out = site.build(Path(d) / "_site", mit_daten=False)
             h = (out / ".htaccess").read_text(encoding="utf-8")
             for teil in ("ErrorDocument 404 /404.html", "Options -Indexes", ".pmtiles", ".webmanifest"):
                 self.assertIn(teil, h)
-            self.assertIn('href="https://stadtmonitor.wiz-o-mat.de/"', (out / "404.html").read_text(encoding="utf-8"))
-            self.assertIn('content="https://stadtmonitor.wiz-o-mat.de/"', (out / "einrichten.html").read_text(encoding="utf-8"))
-            self.assertIn("https://stadtmonitor.wiz-o-mat.de/datenschutz.html", (out / "aushang.html").read_text(encoding="utf-8"))
+            self.assertIn('href="https://stadtmonitor-witzenhausen.de/"', (out / "404.html").read_text(encoding="utf-8"))
+            self.assertIn('content="https://stadtmonitor-witzenhausen.de/"', (out / "einrichten.html").read_text(encoding="utf-8"))
+            self.assertIn("https://stadtmonitor-witzenhausen.de/datenschutz.html", (out / "aushang.html").read_text(encoding="utf-8"))
             self.assertNotIn("über GitHub Pages bereitgestellt", (out / "datenschutz.html").read_text(encoding="utf-8"))
 
     def test_hosting_auf_der_datenschutzseite(self):
