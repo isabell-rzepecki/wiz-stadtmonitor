@@ -31,5 +31,5 @@ Verantwortliche Stelle: Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen;
 
 - **Zweck:** Auslieferung der Seite.
 - **Rechtsgrundlage:** Art. 6 Abs. 1 lit. f DSGVO.
-- **Daten:** Server-Protokolle beim Hosting-Anbieter der Subdomain (Auftragsverarbeitung, Art. 28 DSGVO; Anbieter in `config/stadt.json`, `projekt.hosting`); Weiterleitung von der früheren Adresse bei GitHub Pages (USA, EU-US Data Privacy Framework); Kartenkacheln von basemap.de (BKG).
+- **Daten:** Server-Protokolle beim Hosting-Anbieter der Domain (Auftragsverarbeitung, Art. 28 DSGVO; Anbieter in `config/stadt.json`, `projekt.hosting`); Weiterleitung von der früheren Adresse bei GitHub Pages (USA, EU-US Data Privacy Framework); Kartenkacheln von basemap.de (BKG).
 - **Weitere Angaben:** siehe `site/datenschutz.html`.

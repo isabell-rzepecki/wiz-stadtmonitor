@@ -120,7 +120,7 @@ def pruefen_ausfuellen(seite):
 
 
 def weiterleitung(ziel, nach=None):
-    """Kleine Seite für die frühere Adresse (GitHub Pages): leitet mit Pfad, Abfrage und Anker auf die Subdomain weiter.
+    """Kleine Seite für die frühere Adresse (GitHub Pages): leitet mit Pfad, Abfrage und Anker auf die eigene Domain weiter.
     GitHub Pages liefert 404.html für jeden unbekannten Pfad aus, daher dieselbe Seite als index.html und 404.html."""
     nach = (nach or config.SITE_URL).rstrip("/") + "/"
     alt = config.STADT["projekt"].get("fruehere_url") or ""

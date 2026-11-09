@@ -51,9 +51,9 @@ jobs:
             data/raw
             data/geo/restricted
           key: rohdaten-${{ github.run_id }}
-      # Subdomain (Plesk): fertige Seite per SFTP hochladen, nur auf dem Hauptzweig und nur mit Zugangsdaten (Secrets
-      # PLESK_*, docs/betrieb/plesk.md). Danach zeigt GitHub Pages nur noch eine Weiterleitung auf die Subdomain.
-      - name: Hochladen auf die Subdomain
+      # Eigene Domain (Plesk): fertige Seite per SFTP hochladen, nur auf dem Hauptzweig und nur mit Zugangsdaten (Secrets
+      # PLESK_*, docs/betrieb/plesk.md). Danach zeigt GitHub Pages nur noch eine Weiterleitung auf die Domain.
+      - name: Hochladen auf den Webserver (Plesk)
         id: plesk
         if: ${{ github.ref_name == github.event.repository.default_branch }}
         env:

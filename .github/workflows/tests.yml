@@ -13,7 +13,8 @@ jobs:
   tests:
     # Push nur auf dem Hauptzweig (andere Zweige prüft der Pull Request)
     if: github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-latest
+    # festes Abbild: Playwright 1.56 installiert Chromium-Abhängigkeiten nicht für ubuntu-latest = 26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4

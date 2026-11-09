@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Fertige Seite (_site) per SFTP auf den Webserver der Subdomain laden (Plesk). Aufruf aus GitHub Actions, Zugangsdaten nur
+# Fertige Seite (_site) per SFTP auf den Webserver der Domain laden (Plesk). Aufruf aus GitHub Actions, Zugangsdaten nur
 # als Secrets in der Umgebung, nie im Repository:
 #   PLESK_HOST        Servername (Pflicht; ohne ihn wird nichts hochgeladen)
 #   PLESK_USER        Benutzer mit SFTP-Zugang (Plesk: FTP-/SSH-Zugang des Abonnements)
 #   PLESK_PASSWORT    Passwort dazu
-#   PLESK_PFAD        Dokumentstamm der Subdomain auf dem Server, etwa stadtmonitor.wiz-o-mat.de oder httpdocs (Pflicht)
+#   PLESK_PFAD        Dokumentstamm der Domain auf dem Server, etwa stadtmonitor-witzenhausen.de oder httpdocs (Pflicht)
 #   PLESK_PORT        SSH-Port (Standard 22)
 #   PLESK_KNOWN_HOSTS Zeile(n) für known_hosts; fehlt sie, wird der Hostschlüssel beim Abruf übernommen und ausgegeben
 #   PLESK_URL_SCHEMA  sftp (Standard); nur für Tests anders
