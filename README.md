@@ -133,7 +133,7 @@ Schriften: Lilita One für Überschriften (ohne künstliches Fetten), Space Mono
 
 ## Herkunft und Lizenz
 
-Code unter MIT ([`LICENSE`](LICENSE)). Seite, Zeitleiste und Pipeline-Grundmodule stammen aus der [RIS-Karte Bonn](https://github.com/daimpad/allris-test) von Damian Paderta (MIT). Es handelt sich um eine unabhängige Kopie ohne gemeinsame Codebasis.
+Code unter MIT ([`LICENSE`](LICENSE)). Seite, Zeitleiste und Pipeline-Grundmodule stammen aus der [RIS-Karte Bonn](https://github.com/daimpad/allris-test) von [Damian Paderta](https://paderta.com/) (MIT); Umsetzung: [nozilla – bits and bytes with heart](https://nozilla.de/). Es handelt sich um eine unabhängige Kopie ohne gemeinsame Codebasis.
 
 Weitere Lizenzen:
 
