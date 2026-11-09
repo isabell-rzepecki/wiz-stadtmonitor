@@ -76,6 +76,25 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class NurEigeneDomain(unittest.TestCase):
+    def test_keine_links_zu_github_quellen_und_intern_auf_der_domain(self):
+        import re
+        with tempfile.TemporaryDirectory() as d:
+            out = site.build(Path(d) / "_site", mit_daten=False)
+            for p in list(out.rglob("*.html")) + [out / "app.js", out / "wohnen-module.js"]:
+                text = p.read_text(encoding="utf-8")
+                self.assertFalse(re.search(r'href="[^"]*github', text), p.name)
+            self.assertNotIn("projekt.repo", (out / "app.js").read_text(encoding="utf-8"))
+            q = (out / "quellen.html").read_text(encoding="utf-8")
+            self.assertIn("<h1>Datenquellen</h1>", q)
+            self.assertIn("<table>", q)
+            self.assertNotIn("javascript:", q)
+            for name in ("index.html", "einrichten.html", "pruefen.html", "pruefen-gebaeude.js"):
+                self.assertTrue((out / "intern" / name).exists(), name)
+            self.assertFalse((out / "einrichten.html").exists())
+            self.assertIn('href="mailto:', (out / "impressum.html").read_text(encoding="utf-8"))
+
+
 class Domain(unittest.TestCase):
     def test_htaccess_und_adresse(self):
         # Plesk (Apache): Fehlerseite, Medientypen, keine Verzeichnislisten; Adresse der Domain in Seiten und Codekarten
@@ -85,7 +104,7 @@ class Domain(unittest.TestCase):
             for teil in ("ErrorDocument 404 /404.html", "Options -Indexes", ".pmtiles", ".webmanifest"):
                 self.assertIn(teil, h)
             self.assertIn('href="https://stadtmonitor-witzenhausen.de/"', (out / "404.html").read_text(encoding="utf-8"))
-            self.assertIn('content="https://stadtmonitor-witzenhausen.de/"', (out / "einrichten.html").read_text(encoding="utf-8"))
+            self.assertIn('content="https://stadtmonitor-witzenhausen.de/"', (out / "intern" / "einrichten.html").read_text(encoding="utf-8"))
             self.assertIn("https://stadtmonitor-witzenhausen.de/datenschutz.html", (out / "aushang.html").read_text(encoding="utf-8"))
             self.assertNotIn("über GitHub Pages bereitgestellt", (out / "datenschutz.html").read_text(encoding="utf-8"))
 

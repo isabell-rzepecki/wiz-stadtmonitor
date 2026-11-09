@@ -14,7 +14,7 @@ Einzelbeträge, Vermieter-Schlüssel von Privatpersonen oder Zellen unter der Mi
 
 Aufruf: python tools/veroeffentlichen.py -a ARBEIT -s SCHLUESSEL -p P-1 [--ziel REPOSITORY]
         python tools/veroeffentlichen.py uebernehmen DATEI [--ziel REPOSITORY]
-          Veröffentlichungsdatei der Prüfseite (site/pruefen.html, format wiz-veroeffentlichung-1) erneut prüfen, die
+          Veröffentlichungsdatei der Prüfseite (site/intern/pruefen.html, format wiz-veroeffentlichung-1) erneut prüfen, die
           Gebäudeumrisse aus gebaeude.geojson ergänzen und wie oben nach data/wohnen/ schreiben
 """
 import argparse

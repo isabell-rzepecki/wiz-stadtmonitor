@@ -17,6 +17,8 @@ data/export/
 export_*
 export-*
 intern/
+# … außer dem internen Bereich der Seite (nur Seiten, keine Daten)
+!site/intern/
 namenzugriff.tsv
 # Ortsprüfung: Excel-Tabellen gehen an Ortskundige; versioniert wird nur config/verortung_geprueft.tsv
 ortspruefung*.xlsx

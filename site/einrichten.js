@@ -166,7 +166,7 @@ ${qr}<pre>${esc(zeilen.join("\n"))}</pre>`;
       eintraege: neu.map((x) => ({ hash: x.hash, bis: x.bis })) };
   }
   function kartenBlatt(neu) {
-    const basis = meta("wiz-site-url") || new URL("./", location.href).href;
+    const basis = meta("wiz-site-url") || new URL("../", location.href).href;  // Seite liegt in /intern/
     const adresse = basis.replace(/\/?$/, "/") + "erfassen.html";
     return `<p>Ausschneiden und persönlich übergeben. Wer welche Erfasser-ID erhält, nur in den Unterlagen der Ausgabestelle notieren.</p>` +
       neu.map((x) => `<div class="karte"><p><strong>Einladung zur Erfassung Wohnen und Eigentum</strong></p>

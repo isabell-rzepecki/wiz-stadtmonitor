@@ -22,10 +22,11 @@
       "ort": "Deutschland (EU)",
       "_hinweis": "Anbieter des Plesk-Servers der Domain (Name und Sitz) für Datenschutzseite und Verarbeitungsverzeichnis; leer = Leerstelle auf der Datenschutzseite. Mit dem Anbieter ist ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO) nötig."
     },
-    "kontakt": "",
+    "kontakt": "post@wiz-o-mat.de",
+    "_hinweis_kontakt": "Adresse für Hinweise und Fehlermeldungen von der Seite (mailto); Arbeit und Verweise nur auf der eigenen Domain, keine Links zu GitHub.",
     "impressum": "",
-    "user_agent": "wiz-stadtmonitor/0.1 (+https://github.com/isabell-rzepecki/wiz-stadtmonitor)",
-    "datenquellen": "https://github.com/isabell-rzepecki/wiz-stadtmonitor/blob/HEAD/DATA_SOURCES.md"
+    "user_agent": "wiz-stadtmonitor/0.1 (+https://stadtmonitor-witzenhausen.de/)",
+    "datenquellen": "quellen.html"
   },
   "quelle": {
     "name": "Amtliche Bekanntmachungen der Stadt Witzenhausen",

@@ -97,8 +97,10 @@
   function applyConfig() {
     document.querySelectorAll("[data-cfg]").forEach((el) => { const v = get(cfg, el.dataset.cfg); if (v != null) el.textContent = v; });
     document.querySelectorAll("[data-cfg-href]").forEach((el) => { const v = safeUrl(get(cfg, el.dataset.cfgHref)); if (v) el.setAttribute("href", get(cfg, el.dataset.cfgHref)); });
+    // E-Mail-Adresse aus der Konfiguration (Hinweise und Fehler): Link und sichtbarer Text
+    document.querySelectorAll("[data-cfg-mail]").forEach((el) => { const m = get(cfg, el.dataset.cfgMail); if (m && /^[^\s@<>"]+@[^\s@<>"]+$/.test(m)) { el.setAttribute("href", `mailto:${m}`); el.textContent = m; } });
     document.title = `${cfg.stadt.titel} – Sitzungsinformationen auf Karte und Zeitleiste`;
-    $("#cta-report").href = `${cfg.projekt.repo}/issues/new/choose`;
+    $("#cta-report").href = mailto("Hinweis zum Stadtmonitor", "Was ist falsch oder unklar?\n");
   }
   const ortsteile = () => cfg.ortsteile;
   const gremiumShort = (name) => (cfg.gremien.find((g) => g.name === name) || {}).kurz || name;
@@ -841,9 +843,13 @@
       .map((s) => `<span><span class="mark mark-${s}" aria-hidden="true">${s === "unklar" ? "?" : ""}</span><strong>${STATUS[s]}</strong> – ${STATUS_TEXT[s]}</span>`).join("")}
       <span class="hint">Linie: durchgezogen = belegt, gestrichelt = abgeleitet, gepunktet = nicht öffentlich oder unklar.</span></div>`;
   }
+  // Hinweise per E-Mail an die Kontaktadresse (projekt.kontakt), nicht über eine fremde Plattform
+  function mailto(betreff, text) {
+    const q = new URLSearchParams({ subject: betreff, body: text }).toString().replace(/\+/g, "%20");
+    return cfg.projekt.kontakt ? `mailto:${cfg.projekt.kontakt}?${q}` : "impressum.html";
+  }
   function reportLink(p) {
-    const q = new URLSearchParams({ title: `Verortung prüfen: ${p.reference}`, body: `Vorgang: ${p.reference}\nTitel: ${p.name}\nGebiet: ${area.name}\n\nWas ist falsch?\n` });
-    return `${cfg.projekt.repo}/issues/new?${q}`;
+    return mailto(`Verortung prüfen: ${p.reference}`, `Vorgang: ${p.reference}\nTitel: ${p.name}\nGebiet: ${area.name}\nAdresse: ${location.href}\n\nWas ist falsch?\n`);
   }
   function methodText(l) {
     const m = METHOD[l.method] || l.method;
@@ -892,7 +898,7 @@
         <br><span class="meta">Ort: ${esc(u.ort)}</span></li>`).join("")}</ul>
         <p class="hint">${esc(cfg.umwelt.ueberschneidung_hinweis)}</p>` : ""}
       ${(p.bezuege || []).length ? `<p class="hint">Im Titel genannt: ${p.bezuege.map(esc).join(", ")} <span class="derived">Verweis, nicht verknüpft</span></p>` : ""}
-      <p class="links">${link(reportLink(p), "Verortung falsch? Hinweis geben", "btn btn-secondary")}</p>
+      <p class="links"><a class="btn btn-secondary" href="${esc(reportLink(p))}">Verortung falsch? Hinweis per E-Mail</a></p>
       ${methode([p.vorlage ? `Stationen der Prozesslinie sind die Sitzungen, in deren Tagesordnung die Vorlage ${esc(p.vorlage)} steht, chronologisch.`
           : "Ohne Vorlagennummer: eine einzelne Station. Tagesordnungspunkte werden nicht über ähnliche Titel verknüpft.",
         legendInhalt(),
