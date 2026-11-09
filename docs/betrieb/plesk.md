@@ -17,9 +17,13 @@ liegt dafür im Repository.
    301-Weiterleitung von HTTP zu HTTPS“ einschalten. Geht erst, wenn der DNS-Eintrag weltweit sichtbar ist.
 4. **Zugang für SFTP:** unter „Webhosting-Zugang“ der Systembenutzer mit **SSH-Zugang** („/bin/sh (chrooted)“
    genügt) und einem langen, nur dafür genutzten Passwort. Zusätzliche FTP-Konten können meist kein SFTP.
-5. **Apache** muss aktiv sein (Standard in Plesk), damit `.htaccess` gilt (Fehlerseite, Medientypen, `www`-Umleitung,
+5. **Interner Bereich schützen:** In Plesk unter „Websites & Domains“ → `stadtmonitor-witzenhausen.de` →
+   „Passwortgeschützte Verzeichnisse“ den Ordner `/intern` hinzufügen und Benutzer mit eigenem Passwort anlegen (je
+   Rolle oder Person). Dort liegen Übersicht, Einrichtungs- und Prüfseite. Sie rechnen nur im Browser; das Passwort
+   hält Neugierige fern, der eigentliche Schutz bleibt Schlüssel, Passphrase und Codes.
+6. **Apache** muss aktiv sein (Standard in Plesk), damit `.htaccess` gilt (Fehlerseite, Medientypen, `www`-Umleitung,
    keine Verzeichnislisten).
-6. **Auftragsverarbeitung:** den Vertrag nach Art. 28 DSGVO mit dem Hosting-Anbieter abschließen (meist im
+7. **Auftragsverarbeitung:** den Vertrag nach Art. 28 DSGVO mit dem Hosting-Anbieter abschließen (meist im
    Kundenbereich) und Name und Sitz des Anbieters in `config/stadt.json` unter `projekt.hosting.anbieter` eintragen
    (oder mitteilen); die Datenschutzseite übernimmt sie.
 

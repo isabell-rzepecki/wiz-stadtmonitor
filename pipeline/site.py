@@ -23,8 +23,10 @@ def build(out=config.SITE_OUT, mit_daten=True):
         shutil.copy2(config.ROOT / "docs" / "uebergabe-v0.4.2" / quelle, out / "schemas" / name)
     for seite in ("datenschutz.html", "impressum.html", "aushang.html", "index.html"):
         datenschutz_ausfuellen(out / seite)
-    einrichten_ausfuellen(out / "einrichten.html")
-    pruefen_ausfuellen(out / "pruefen.html")
+    einrichten_ausfuellen(out / "intern" / "einrichten.html")
+    pruefen_ausfuellen(out / "intern" / "pruefen.html")
+    # Datenquellen als Seite der eigenen Domain (aus DATA_SOURCES.md, die tools/datenquellen.py aus dem Register erzeugt)
+    markdown_seite(config.ROOT / "DATA_SOURCES.md", out / "quellen.html", "Datenquellen")
     # Fehlerseite: GitHub Pages liefert sie für jeden Pfad aus, ein relativer Link führte dort ins Leere
     p404 = out / "404.html"
     if p404.exists() and config.SITE_URL:
@@ -61,7 +63,9 @@ def datenschutz_ausfuellen(seite):
         text = re.sub(r'<span class="offen" data-feld="hosting">.*?</span>', f'<span data-feld="hosting">{html.escape(H["anbieter"])}</span>', text, flags=re.S)
     name = (D.get("verantwortlich") or "").splitlines()[0] if D.get("verantwortlich") else None
     spans = {"stadt": html.escape(config.STADT["stadt"]["name"]), "namen": namen, "adresse": html.escape(adresse) if adresse else None,
-             "verantwortlich_name": html.escape(name) if name else None, "hosting_ort": html.escape(H["ort"]) if H.get("ort") else None}
+             "verantwortlich_name": html.escape(name) if name else None, "hosting_ort": html.escape(H["ort"]) if H.get("ort") else None,
+             "kontakt_hinweise": (lambda m: f'<a href="mailto:{html.escape(m)}">{html.escape(m)}</a>')(config.STADT["projekt"]["kontakt"])
+             if config.STADT["projekt"].get("kontakt") else None}
     for feld, wert in spans.items():
         if wert:
             text = re.sub(rf'<span data-feld="{feld}">.*?</span>', f'<span data-feld="{feld}">{wert}</span>', text, flags=re.S)
@@ -159,3 +163,95 @@ def namensnennungen(ziel):
     liste = [{"quellen": r["quellen"].split(","), "lizenz": r["lizenz"], "text": r["text"].replace("(Jahr)", str(date.today().year)),
               "link": r["link"]} for r in rows if r["auf_seite"] == "ja"]
     ziel.write_text(json.dumps(liste, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def _inline(s):
+    """Markdown in einer Zeile: Code, Fett, Links (nur http, https, mailto oder relativ)."""
+    s = html.escape(s, quote=False)
+    s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+    s = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", s)
+
+    def link(m):
+        url = m.group(2).replace('"', "%22")
+        if re.match(r"(https?:|mailto:)", url) or not re.match(r"[a-z]+:", url):
+            return f'<a href="{url}">{m.group(1)}</a>'
+        return m.group(1)
+    return re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", link, s)
+
+
+def markdown_html(text):
+    """Kleiner Umsetzer für die eigenen Markdown-Dateien: Überschriften, Absätze, Listen, Tabellen."""
+    out, absatz, liste, tabelle = [], [], None, []
+
+    def schliessen():
+        nonlocal absatz, liste, tabelle
+        if absatz:
+            out.append(f"<p>{_inline(' '.join(absatz))}</p>")
+        if liste:
+            out.append(f"<{liste[0]}>" + "".join(f"<li>{_inline(x)}</li>" for x in liste[1]) + f"</{liste[0]}>")
+        if tabelle:
+            zeilen = [[_inline(z.strip().replace("\\|", "|")) for z in re.split(r"(?<!\\)\|", r.strip().strip("|"))] for r in tabelle
+                      if not re.fullmatch(r"\|?[\s:|-]+\|?", r.strip())]
+            kopf, rumpf = zeilen[0], zeilen[1:]
+            out.append('<div class="tabelle-rahmen"><table><thead><tr>' + "".join(f'<th scope="col">{z}</th>' for z in kopf) +
+                       "</tr></thead><tbody>" + "".join("<tr>" + "".join(f"<td>{z}</td>" for z in r) + "</tr>" for r in rumpf) +
+                       "</tbody></table></div>")
+        absatz, liste, tabelle = [], None, []
+
+    for zeile in text.splitlines():
+        s = zeile.rstrip()
+        if not s.strip():
+            schliessen()
+        elif m := re.match(r"(#{1,4})\s+(.*)", s):
+            schliessen()
+            n = len(m.group(1))
+            out.append(f"<h{n}>{_inline(m.group(2))}</h{n}>")
+        elif s.lstrip().startswith("|"):
+            if absatz or liste:
+                schliessen()
+            tabelle.append(s)
+        elif m := re.match(r"\s*(?:([-*])|\d+\.)\s+(.*)", s):
+            art = "ul" if m.group(1) else "ol"
+            if absatz or tabelle or (liste and liste[0] != art):
+                schliessen()
+            liste = liste or (art, [])
+            liste[1].append(m.group(2))
+        elif liste and zeile.startswith("   "):
+            liste[1][-1] += " " + s.strip()
+        else:
+            if liste or tabelle:
+                schliessen()
+            absatz.append(s.strip())
+    schliessen()
+    return "\n".join(out)
+
+
+def markdown_seite(quelle, ziel, titel, tiefe=0, robots=None):
+    """Eine Markdown-Datei als einfache Seite im Stil der Unterseiten (page.css)."""
+    if not quelle.exists():
+        return
+    vor = "../" * tiefe
+    ziel.parent.mkdir(parents=True, exist_ok=True)
+    ziel.write_text(f"""<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  {f'<meta name="robots" content="{robots}">' if robots else ""}
+  <title>{html.escape(titel)} – Stadtmonitor</title>
+  <link rel="icon" href="{vor}favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="{vor}page.css">
+</head>
+<body>
+  <header class="page-head">
+    <a class="page-brand" href="{vor}./"><img src="{vor}favicon.svg" width="32" height="32" alt="">Stadtmonitor</a>
+    <a class="page-back" href="{vor}./">Zur Karte</a>
+  </header>
+  <main class="page breit" id="inhalt">
+{markdown_html(quelle.read_text(encoding="utf-8"))}
+  </main>
+  <footer class="page-foot"><a href="{vor}./">Zur Karte</a> · <a href="{vor}impressum.html">Impressum</a> · <a href="{vor}datenschutz.html">Datenschutz</a></footer>
+</body>
+</html>
+""", encoding="utf-8")

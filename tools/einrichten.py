@@ -15,7 +15,7 @@ Git-Repositorys (wird geprüft):
        Codes erzeugen, Register ergänzen, Druckblatt mit den Codes zum Ausschneiden, Hashes in stadt.json
      python tools/einrichten.py widerrufen E-XXXXXXXX --register PFAD/einladungen.tsv
        im Register widerrufen und den Hash aus stadt.json entfernen
-  Ohne Python: dieselben Schritte auf der Einrichtungsseite site/einrichten.html (im Browser, ohne Netz). Sie erzeugt
+  Ohne Python: dieselben Schritte auf der Einrichtungsseite site/intern/einrichten.html (im Browser, ohne Netz). Sie erzeugt
   „öffentliche Dateien“ (nur öffentlicher Schlüssel bzw. Hashes mit Ablaufdatum); übernommen werden sie mit
      python tools/einrichten.py uebernehmen DATEI…
 Danach config/stadt.json committen; die Seite holt die neue Konfiguration beim nächsten Start mit Netz.

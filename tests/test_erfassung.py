@@ -112,11 +112,13 @@ class Erfassung(unittest.TestCase):
             self.assertNotIn("pruefen.html", text, name)
             if name in ("index.html", "app.js", "wohnen.html", "wohnen.js", "wohnen-module.js"):
                 self.assertNotIn("erfassen", text, name)
-        for seite in ("erfassen.html", "einrichten.html", "pruefen.html"):
+        for seite in ("erfassen.html", "intern/index.html", "intern/einrichten.html", "intern/pruefen.html"):
             self.assertIn('content="noindex', (SITE / seite).read_text(encoding="utf-8"))
-        # Einrichtungs- und Prüfseite können technisch nichts senden
-        for seite in ("einrichten.html", "pruefen.html"):
+        # interner Bereich: kann technisch nichts senden; öffentlich nirgends verlinkt
+        for seite in ("intern/index.html", "intern/einrichten.html", "intern/pruefen.html"):
             self.assertIn("connect-src 'none'", (SITE / seite).read_text(encoding="utf-8"))
+        for name in ("index.html", "app.js", "wohnen.html", "erfassen.html", "datenschutz.html", "impressum.html", "aushang.html"):
+            self.assertNotIn("intern/", (SITE / name).read_text(encoding="utf-8"), name)
 
     def test_oeffentliche_datei_der_einrichtungsseite(self):
         from nacl.public import PrivateKey

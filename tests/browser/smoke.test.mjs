@@ -126,6 +126,24 @@ test("Stellungnahme eines Ortsbeirats: Station im Beschlussvorgang, Zählung mit
   await page.close();
 });
 
+test("Nur eigene Domain: Datenquellen als Seite, interner Bereich, Hinweise per E-Mail, ohne Verstöße", async () => {
+  for (const pfad of ["quellen.html", "intern/"]) {
+    const page = await browser.newPage({ bypassCSP: true });
+    const fehler = [];
+    page.on("pageerror", (e) => fehler.push(String(e)));
+    page.on("console", (m) => { if (m.type() === "error") fehler.push(m.text()); });
+    await page.goto(SITE + pfad, { waitUntil: "networkidle" });
+    assert.ok(await page.locator("h1").count(), pfad);
+    assert.deepEqual(await axe(page), [], pfad);
+    assert.deepEqual(fehler, [], pfad);
+    await page.close();
+  }
+  const page = await open(SITE);
+  assert.match(await page.locator("#cta-report").getAttribute("href"), /^mailto:/);
+  assert.equal(await page.locator('a[href*="github"]').count(), 0);
+  await page.close();
+});
+
 test("Karte: Ortsbezirk anklicken lädt das Gebiet, Hinweis zur Zuordnung", async () => {
   const page = await open(SITE);
   const pts = await page.evaluate(() => {
@@ -870,13 +888,13 @@ test("Einrichtungsseite: Schlüssel, Papiersicherung und Codes im Browser, kompa
   page.on("pageerror", (e) => fehler.push(String(e)));
   page.on("console", (m) => { if (m.type() === "error") fehler.push(m.text()); });
   page.on("request", (r) => abrufe.push(r.url()));
-  await page.goto(SITE + "einrichten.html");
+  await page.goto(SITE + "intern/einrichten.html");
   await page.waitForFunction(() => !document.querySelector("#knopf-schluessel").disabled);
   assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'none'/);
   assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex, nofollow");
   // Barrierefreiheit: axe braucht ein eingefügtes Skript, das die Richtlinie der Seite (zu Recht) sperrt; daher eine zweite Ansicht
   const pruef = await browser.newPage({ bypassCSP: true });
-  await pruef.goto(SITE + "einrichten.html");
+  await pruef.goto(SITE + "intern/einrichten.html");
   await pruef.waitForFunction(() => !document.querySelector("#knopf-codes").disabled);
   await pruef.locator("#knopf-schluessel").click();
   await pruef.fill("#anzahl", "2");
@@ -993,7 +1011,7 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     return ziel;
   };
   const oeffnen = async (bestand) => {
-    await page.goto(SITE + "pruefen.html");
+    await page.goto(SITE + "intern/pruefen.html");
     await page.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);
     await page.setInputFiles("#f-schluessel", join(dir, "pg.json"));
     await page.fill("#f-pass", fx.passphrase);
@@ -1089,7 +1107,7 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     assert.match(await page.locator("#stand").textContent(), /Einträge0 /);
     assert.match(await page.locator("#stand").textContent(), /Schlüsselwechselfällig/);
     // Probe: Wegwerf-Schlüssel und Testdaten, ganzer Ablauf; die Veröffentlichungsdatei ist als Probe markiert
-    await page.goto(SITE + "pruefen.html");
+    await page.goto(SITE + "intern/pruefen.html");
     await page.waitForFunction(() => !document.querySelector("#knopf-probe").disabled);
     await page.locator("#knopf-probe").click();
     assert.match(await page.locator("#oeffnen-status").textContent(), /Probe gestartet.*11 erfundene Einträge/);
@@ -1105,7 +1123,7 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     assert.match(probe, /probe_veroeffentlichung_/);
     assert.equal(JSON.parse(readFileSync(probe, "utf8")).probe, true);
     // falsche Passphrase: nicht geöffnet
-    await page.goto(SITE + "pruefen.html");
+    await page.goto(SITE + "intern/pruefen.html");
     await page.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);
     await page.setInputFiles("#f-schluessel", join(dir, "pg.json"));
     await page.fill("#f-pass", "falsch");
@@ -1116,7 +1134,7 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     assert.deepEqual(fehler, []);
     // Barrierefreiheit (axe braucht ein eingefügtes Skript, das die Richtlinie der Seite sperrt; daher ohne sie)
     const pruef = await browser.newPage({ bypassCSP: true });
-    await pruef.goto(SITE + "pruefen.html");
+    await pruef.goto(SITE + "intern/pruefen.html");
     await pruef.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);
     await pruef.evaluate(() => { document.querySelector("#sitzung").hidden = false; });
     assert.deepEqual(await axe(pruef), []);
