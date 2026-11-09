@@ -22,9 +22,11 @@ class Seite(unittest.TestCase):
             vorlage = (site.config.SITE_SRC / "datenschutz.html").read_text(encoding="utf-8")
             seite.write_text(vorlage, encoding="utf-8")
             D = site.config.STADT["wohnen_eigentum"]["erfassung"]["datenschutz"]
-            alt = dict(D)
+            H = site.config.STADT["projekt"]["hosting"]
+            alt, alt_h = dict(D), dict(H)
             try:
                 D.update(verantwortlich=None, kontakt_widerspruch=None)
+                H.update(anbieter="")
                 site.datenschutz_ausfuellen(seite)
                 self.assertEqual(seite.read_text(encoding="utf-8").count("[Leerstelle"), vorlage.count("[Leerstelle"))
                 D.update(verantwortlich="Testverein e. V.\nMusterweg 1, 00000 Teststadt", kontakt_widerspruch="datenschutz@example.org <b>")
@@ -35,6 +37,8 @@ class Seite(unittest.TestCase):
                 self.assertNotIn("verantwortlichen Stelle folgen", text)
             finally:
                 D.clear()
+                H.clear()
+                H.update(alt_h)
                 D.update(alt)
 
     def test_impressum_aus_konfiguration(self):
