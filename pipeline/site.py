@@ -28,6 +28,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
     # Datenquellen als Seite der eigenen Domain (aus DATA_SOURCES.md, die tools/datenquellen.py aus dem Register erzeugt)
     markdown_seite(config.ROOT / "DATA_SOURCES.md", out / "quellen.html", "Datenquellen")
     stadtname_ausfuellen(out)
+    vorschau_ausfuellen(out)
     # Fehlerseite: GitHub Pages liefert sie für jeden Pfad aus, ein relativer Link führte dort ins Leere
     p404 = out / "404.html"
     if p404.exists() and config.SITE_URL:
@@ -56,6 +57,43 @@ def stadtname_ausfuellen(out):
         neu = re.sub(r'<span data-cfg="stadt\.name">[^<]*</span>', f'<span data-cfg="stadt.name">{name}</span>', text)
         if neu != text:
             seite.write_text(neu, encoding="utf-8")
+
+
+VORSCHAU_SEITEN = ("index.html", "wohnen.html", "erfassen.html", "quellen.html", "datenschutz.html", "impressum.html", "aushang.html")
+
+
+def vorschau_ausfuellen(out):
+    """Vorschau für geteilte Links (Open Graph, Twitter-Karte) in die öffentlichen Seiten: Titel und Beschreibung der
+    Seite, Bild og-bild.png (tools/vorschaubild.py). Bild und Adresse müssen absolut sein, daher nur mit projekt.site_url.
+    Der interne Bereich bekommt keine Vorschau."""
+    if not config.SITE_URL:
+        return
+    basis = config.SITE_URL.rstrip("/") + "/"
+    name = f"Stadtmonitor {config.STADT['stadt']['name']}"
+    for datei in VORSCHAU_SEITEN:
+        seite = out / datei
+        if not seite.exists():
+            continue
+        text = seite.read_text(encoding="utf-8")
+        if 'property="og:' in text:
+            continue
+        titel = re.search(r"<title>(.*?)</title>", text, re.S)
+        titel = html.unescape(titel.group(1).strip()) if titel else name
+        if datei == "index.html":
+            titel = name
+        beschr = re.search(r'<meta name="description" content="([^"]*)"', text)
+        beschr = html.unescape(beschr.group(1)) if beschr else ""
+        url = basis if datei == "index.html" else basis + datei
+        e = lambda s: html.escape(s, quote=True)
+        tags = [("property", "og:type", "website"), ("property", "og:site_name", name), ("property", "og:locale", "de_DE"),
+                ("property", "og:title", titel), ("property", "og:description", beschr), ("property", "og:url", url),
+                ("property", "og:image", basis + "og-bild.png"), ("property", "og:image:width", "1200"),
+                ("property", "og:image:height", "630"),
+                ("property", "og:image:alt", f"{name}: Bildmarke mit zwei Kirschen und die Umrisse der Ortsbezirke"),
+                ("name", "twitter:card", "summary_large_image")]
+        block = "".join(f'\n  <meta {k}="{v}" content="{e(c)}">' for k, v, c in tags if c)
+        text = re.sub(r"(</title>)", lambda m: m.group(1) + block, text, count=1)
+        seite.write_text(text, encoding="utf-8")
 
 
 def datenschutz_ausfuellen(seite):

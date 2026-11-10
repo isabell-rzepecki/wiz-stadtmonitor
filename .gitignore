@@ -22,3 +22,4 @@ intern/
 namenzugriff.tsv
 # Ortsprüfung: Excel-Tabellen gehen an Ortskundige; versioniert wird nur config/verortung_geprueft.tsv
 ortspruefung*.xlsx
+docs/teilen/.roh/
