@@ -34,6 +34,28 @@ class Seite(unittest.TestCase):
             self.assertEqual(kopf[:8], b"\x89PNG\r\n\x1a\n")
             self.assertEqual((int.from_bytes(kopf[16:20], "big"), int.from_bytes(kopf[20:24], "big")), (1200, 630))
 
+    def test_seite_teilen(self):
+        # /teilen/: alle Bilder und Downloads liegen auf der eigenen Domain, Vorschau gesetzt, von anderen Seiten verlinkt
+        import re
+        with tempfile.TemporaryDirectory() as d:
+            out = site.build(Path(d) / "_site", mit_daten=False)
+            seite = out / "teilen" / "index.html"
+            text = seite.read_text(encoding="utf-8")
+            ziele = re.findall(r'(?:src|href)="([^"#:]+)"', text)
+            self.assertGreater(len(ziele), 20)
+            for z in ziele:
+                pfad = (seite.parent / z)
+                if z.endswith("/"):
+                    pfad = pfad / "index.html"
+                self.assertTrue(pfad.resolve().exists(), z)
+            for n in ("teilen-quer", "teilen-quadrat", "teilen-story", "teilen-banner"):
+                for endung in (".png", ".jpg", "@2x.jpg"):
+                    self.assertIn(f'href="{n}{endung}" download', text)
+            self.assertIn('property="og:url" content="https://stadtmonitor-witzenhausen.de/teilen/"', text)
+            self.assertNotIn("<script", text)
+            for andere in ("index.html", "impressum.html", "datenschutz.html"):
+                self.assertIn('href="teilen/"', (out / andere).read_text(encoding="utf-8"), andere)
+
     def test_verantwortliche_stelle_aus_konfiguration(self):
         # eine Quelle (stadt.json) für Datenschutzseite und App; ohne Angabe bleibt die Leerstelle sichtbar
         with tempfile.TemporaryDirectory() as d:
