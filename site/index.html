@@ -100,8 +100,14 @@
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg></span>
           <span class="card-title">Wohnen und Boden</span>
-          <span class="card-text">Bodenrichtwerte, Bestandsmiete und Eigentümerquote zum Gebiet, mit Stichtag und Quelle; Vergleich mit Nachbargemeinden; städtische Gesellschaften.</span>
+          <span class="card-text">Bodenrichtwerte und Bestandsmiete zum Gebiet, Eigentümerquote der Stadt, mit Stichtag und Quelle; Vergleich mit Nachbargemeinden; städtische Gesellschaften.</span>
           <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-wohnen"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Wohnen und Boden</button></span>
+        </div>
+        <div class="card static">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-people"/></svg></span>
+          <span class="card-title">Strukturdaten</span>
+          <span class="card-text">Einwohner, Altersgruppen, Durchschnittsalter und Wohnungen je Ortsteil aus dem Zensus 2022; Vergleich mit ähnlichen Kommunen aus dem Wegweiser Kommune.</span>
+          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-struktur"><svg class="icon" aria-hidden="true"><use href="#i-people"/></svg>Strukturdaten</button></span>
         </div>
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-move"/></svg></span>
@@ -133,7 +139,7 @@
         <a class="card" href="data/export/stadtmonitor-daten.zip" download>
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></span>
           <span class="card-title">Datenpaket (Zip)</span>
-          <span class="card-text">Vorgänge, Audit-Protokolle (TSV), Quellenregister und Lizenzen.</span></a>
+          <span class="card-text">Vorgänge, Strukturdaten, Audit-Protokolle (TSV), Quellenregister und Lizenzen.</span></a>
         <a class="card" data-cfg-href="stadt.bekanntmachungen" href="#" target="_blank" rel="noopener">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg></span>
           <span class="card-title">Amtliche Bekanntmachungen</span>
@@ -230,6 +236,14 @@
         <button type="button" class="icon-btn" data-close="panel-wohnen" aria-label="Wohnen und Boden schließen"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
       </div>
       <div class="panel-body" id="wohnen"></div>
+    </section>
+
+    <section id="panel-struktur" class="glass overlay" aria-labelledby="struktur-heading" hidden>
+      <div class="panel-head">
+        <h2 id="struktur-heading" tabindex="-1">Strukturdaten</h2>
+        <button type="button" class="icon-btn" data-close="panel-struktur" aria-label="Strukturdaten schließen"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+      </div>
+      <div class="panel-body" id="struktur"></div>
     </section>
 
     <section id="panel-wanderung" class="glass overlay" aria-labelledby="wanderung-heading" hidden>

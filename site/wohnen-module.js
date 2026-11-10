@@ -31,8 +31,7 @@ window.WohnenModule = (function () {
     const ob = o && z.ortsbezirke[slug];
     const zeilen = cfg.ortsteile.filter((x) => z.ortsbezirke[x.slug]).map((x) => {
       const e = z.ortsbezirke[x.slug];
-      return `<tr${x.slug === slug ? ' class="own"' : ""}><th scope="row">${esc(x.name)}</th><td>${e.miete && e.miete.wert != null ? zahl(e.miete.wert, 2) : "–"}</td>
-        <td>${e.eigentuemerquote && e.eigentuemerquote.wert != null ? zahl(e.eigentuemerquote.wert, 1) : "–"}</td></tr>`;
+      return `<tr${x.slug === slug ? ' class="own"' : ""}><th scope="row">${esc(x.name)}</th><td>${e.miete && e.miete.wert != null ? zahl(e.miete.wert, 2) : "–"}</td></tr>`;
     }).join("");
     const eing = (g, k) => (g.eingeschraenkt || []).includes(k);
     const zelle = (g, k, d) => (g[k] == null ? "–" : eing(g, k) ? `(${zahl(g[k], d)})` : zahl(g[k], d));
@@ -41,11 +40,10 @@ window.WohnenModule = (function () {
       <dl class="fakten">${gem ? `<dt>Bestandsmiete ${esc(cfg.stadt.name)}</dt><dd>${zahl(gem.nettokaltmiete_eur_m2, 2)} €/m²</dd>
         <dt>Leerstandsquote ${esc(cfg.stadt.name)}</dt><dd>${zahl(gem.leerstandsquote_pct, 1)} % <span class="meta">(nur für die Gemeinde)</span></dd>
         <dt>Eigentümerquote ${esc(cfg.stadt.name)}</dt><dd>${zahl(gem.eigentuemerquote_pct, 1)} %</dd>` : ""}
-        ${o ? `<dt>Bestandsmiete ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.miete, 2, "€/m²")}</dd>
-          <dt>Eigentümerquote ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.eigentuemerquote, 1, "%")}</dd>` : ""}</dl>
+        ${o ? `<dt>Bestandsmiete ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.miete, 2, "€/m²")}</dd>` : ""}</dl>
       <details class="unter"><summary>Alle Ortsbezirke (Näherung aus dem Gitter)</summary><div class="tabelle"><table>
-        <caption class="visually-hidden">Bestandsmiete und Eigentümerquote je Ortsbezirk, Näherung, Stichtag ${datum(z.stichtag)}</caption>
-        <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Miete €/m²</th><th scope="col">Eigentümer %</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+        <caption class="visually-hidden">Bestandsmiete je Ortsbezirk, Näherung, Stichtag ${datum(z.stichtag)}</caption>
+        <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Miete €/m²</th></tr></thead><tbody>${zeilen}</tbody></table></div>
         <p class="meta">„–“: weniger als ${zahl(W.zensus.mindestzellen)} Gitterzellen mit Wert, kein Ausweis.</p></details>
       <details class="unter"><summary>Vergleich mit Nachbargemeinden</summary><div class="tabelle"><table>
         <caption class="visually-hidden">Bestandsmiete, Leerstands- und Eigentümerquote je Gemeinde</caption>

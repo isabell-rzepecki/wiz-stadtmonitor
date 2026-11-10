@@ -35,6 +35,10 @@ def build(out=config.SITE_OUT, mit_daten=True):
     (data / "export").mkdir(parents=True)
     if mit_daten and config.EXPORT.exists():
         shutil.copytree(config.EXPORT, data / "export", dirs_exist_ok=True)
+    # Strukturdaten im Format des Datenvertrags (data/strukturdaten/, offene Lizenzen); die Seite liest nur diese Dateien
+    struktur = config.ROOT / "data" / "strukturdaten"
+    if mit_daten and struktur.exists():
+        shutil.copytree(struktur, data / "strukturdaten", dirs_exist_ok=True)
     lic = config.ROOT / "data" / "LICENSE-DATA.md"
     if lic.exists():
         shutil.copy2(lic, data / "LICENSE-DATA.md")

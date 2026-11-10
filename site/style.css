@@ -583,3 +583,14 @@ details.methode p, details.methode li { font-size: 14px; color: var(--text-muted
 .tour-nav [data-tour-act="next"] { margin-left: auto; }
 .tour-card .btn[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
 @media (max-width: 900px) { .tour-card { width: calc(100vw - 20px); max-height: 46vh; } }
+/* Strukturdaten: Erläuterung je Merkmal, Verlauf als kleine Linie, sortierbare Spalten, nicht ausgewiesene Flächen */
+table.compare details.erl { font-size: 13px; margin: 2px 0 4px; }
+table.compare details.erl summary { cursor: pointer; color: var(--accent-ink); }
+table.compare details.erl p { margin: 4px 0; text-align: left; font-weight: 400; white-space: normal; }
+table.compare tr.sum th, table.compare tr.sum td { border-top: 2px solid var(--border-alt); }
+table.compare .luecke { font-size: 13px; color: var(--text-muted); }
+table.compare button.sort { font: inherit; font-weight: 600; background: none; border: 0; padding: 4px 0; min-height: 32px; color: inherit; cursor: pointer; text-decoration: underline dotted; }
+th[aria-sort="ascending"] button.sort::after { content: " ▲"; }
+th[aria-sort="descending"] button.sort::after { content: " ▼"; }
+svg.spark { display: block; margin-left: auto; }
+.map-legend .swatch-fehlt { background: #d9d4d6; border: 1.5px dashed var(--text-muted); }

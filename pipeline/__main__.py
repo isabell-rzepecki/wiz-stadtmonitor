@@ -1,9 +1,9 @@
-"""Aufruf: python -m pipeline {fetch|fetch-plaene|fetch-gemarkungen|gemarkungen|fetch-lage|lage|fetch-eigentum|eigentum|fetch-umwelt|umwelt|fetch-wohnen|wohnen|fetch-wahlen|wahlen|fetch-beteiligung|beteiligung|fetch-rechtsakte|rechtsakte|fetch-wanderung|wanderung|fetch-lod2|fetch-gebaeude|gebaeude|build|check|package|site|all}"""
+"""Aufruf: python -m pipeline {fetch|fetch-plaene|fetch-gemarkungen|gemarkungen|fetch-lage|lage|fetch-eigentum|eigentum|fetch-umwelt|umwelt|fetch-wohnen|wohnen|fetch-strukturdaten|strukturdaten|fetch-wahlen|wahlen|fetch-beteiligung|beteiligung|fetch-rechtsakte|rechtsakte|fetch-wanderung|wanderung|fetch-lod2|fetch-gebaeude|gebaeude|build|check|package|site|all}"""
 import os
 import sys
 import traceback
 
-from . import bauleitplanung, beteiligung, build, check, eigentum, fetch, gebaeude, gebaeude3d, gemarkungen, lage, package, rechtsakte, site, umwelt, wahlen, wanderung, wohnen
+from . import bauleitplanung, beteiligung, build, check, eigentum, fetch, gebaeude, gebaeude3d, gemarkungen, lage, package, rechtsakte, site, strukturdaten, umwelt, wahlen, wanderung, wohnen
 
 STEPS = {
     "fetch": fetch.fetch,  # Einladungen (PDF) laden und in Text umwandeln, mit Zwischenspeicher
@@ -23,6 +23,8 @@ STEPS = {
     "fetch-gebaeude": gebaeude.fetch,  # alle Gebäude der Gemeinde aus ALKIS vereinfacht (HVBG), alle 30 Tage neu
     "gebaeude": gebaeude.build,  # Grundrisse mit LoD2-Höhe, Vektorkacheln für 2D und 3D (Seite Wohnen und Eigentum)
     "wohnen": wohnen.build,  # Bodenrichtwerte und Zensuswerte je Ortsbezirk und Gemeinde, Kartenebene Bodenrichtwerte
+    "fetch-strukturdaten": strukturdaten.fetch,  # Zensus-Gitter (Auszug Stadtgebiet, alle 365 Tage), Wegweiser Kommune (alle 30 Tage)
+    "strukturdaten": strukturdaten.build,  # Datenvertrag Strukturdaten v1 in data/strukturdaten/
     "fetch-wahlen": wahlen.fetch,  # amtliche Wahlergebnisse (Bekanntmachungen, votemanager, Bundeswahlleiterin), alle 30 Tage neu
     "wahlen": wahlen.build,  # Ergebnisse je Wahl ohne Personennamen, Prüfung der Summen
     "fetch-beteiligung": beteiligung.fetch,  # Bekanntmachungen zur Bauleitplanung (PDF), nur neue Dateien
@@ -34,7 +36,7 @@ STEPS = {
     "package": package.package,  # Datenpaket (Zip) ohne Flächen der Bauleitplanung
     "site": site.build,  # Seite in _site/ zusammenstellen
 }
-ALL = ["fetch", "fetch-plaene", "fetch-gemarkungen", "gemarkungen", "fetch-lage", "lage", "fetch-eigentum", "eigentum", "fetch-umwelt", "umwelt", "fetch-wohnen", "wohnen", "fetch-wahlen", "wahlen", "fetch-beteiligung", "beteiligung", "fetch-rechtsakte", "rechtsakte", "fetch-wanderung", "wanderung", "fetch-lod2", "fetch-gebaeude", "gebaeude", "build", "check", "package", "site"]
+ALL = ["fetch", "fetch-plaene", "fetch-gemarkungen", "gemarkungen", "fetch-lage", "lage", "fetch-eigentum", "eigentum", "fetch-umwelt", "umwelt", "fetch-wohnen", "wohnen", "fetch-strukturdaten", "strukturdaten", "fetch-wahlen", "wahlen", "fetch-beteiligung", "beteiligung", "fetch-rechtsakte", "rechtsakte", "fetch-wanderung", "wanderung", "fetch-lod2", "fetch-gebaeude", "gebaeude", "build", "check", "package", "site"]
 
 
 # Ohne diese Schritte keine Seite; alle anderen (Abrufe und abgeleitete Ebenen) scheitern im Gesamtlauf weich:

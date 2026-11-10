@@ -1,0 +1,21 @@
+nr	quelle	raum_id	indikator_id	jahr	wert_stadtmonitor	wert_pruefung	abweichung	pruefweg	ergebnis	bemerkung
+1	Zensus 2022, Gitter Bevölkerungszahl	kernstadt	zensus_einwohner	2022	7022	7022	+0.00 %	eigene Neuberechnung aus der Originaldatei (räumlicher Index, Zellmittelpunkt)	übereinstimmend	
+2	Zensus 2022, Gitter Bevölkerungszahl	albshausen	zensus_einwohner	2022	53	53	+0.00 %	eigene Neuberechnung aus der Originaldatei (räumlicher Index, Zellmittelpunkt)	übereinstimmend	
+3	Zensus 2022, Gitter 5 Altersklassen	hundelshausen	zensus_anteil_ab65	2022	28.9	28.9	+0.00 %	eigene Neuberechnung aus der Originaldatei (räumlicher Index, Zellmittelpunkt); Anteil aus Zähler und Summe der Klassen	übereinstimmend	
+4	Zensus 2022, Gitter 5 Altersklassen	wendershausen	zensus_anteil_unter18	2022	20.0	20.0	+0.00 %	eigene Neuberechnung aus der Originaldatei (räumlicher Index, Zellmittelpunkt); Anteil aus Zähler und Summe der Klassen	übereinstimmend	
+5	Zensus 2022, Gitter 5 Altersklassen	ellingerode	zensus_anteil_ab65	2022	 (fehlt)			eigene Neuberechnung aus der Originaldatei (räumlicher Index, Zellmittelpunkt)	übereinstimmend	Schwelle: Teilgruppen weichen um 11.6 % ab, nicht ausgewiesen ist richtig
+6	Zensus 2022, Gitter Durchschnittsalter	berlepsch-ellerode	zensus_durchschnittsalter	2022	51.5	51.5	+0.00 %	eigene Neuberechnung aus der Originaldatei (räumlicher Index, Zellmittelpunkt); gewichtet mit Einwohnern	übereinstimmend	
+7	Zensus 2022, Gitter Wohnungen nach Gebäudetyp	unterrieden	zensus_anteil_wohnungen_efh_zfh	2022	89.0	89.0	+0.00 %	eigene Neuberechnung aus der Originaldatei (räumlicher Index, Zellmittelpunkt)	übereinstimmend	
+8	Zensus 2022, Regionaltabelle Bevölkerung	06636016	zensus_einwohner	2022	15202	15162	+0.26 %	amtliche Regionaltabelle des Zensus 2022 (Gemeinde)	erwartete Abweichung	Summe der Zellen: Geheimhaltung (Cell-Key-Methode) und Zuordnung über den Zellmittelpunkt
+9	Zensus 2022, Regionaltabelle Gebäude und Wohnungen	06636016	zensus_wohnungen	2022	7865	7989	-1.55 %	amtliche Regionaltabelle des Zensus 2022 (Gemeinde), Wohnungen in Gebäuden mit Wohnraum	erwartete Abweichung	wie oben
+10	Zensus 2022, Regionaltabelle Gebäude und Wohnungen	06636016	zensus_anteil_wohnungen_efh_zfh	2022	59.2	62.2	-4.82 %	amtliche Regionaltabelle des Zensus 2022 (Gemeinde), Wohnungen in Gebäuden mit 1 oder 2 Wohnungen	Definition abweichend	Gitter zählt nach Bauart (Einfamilien-, Zweifamilienhaus), Gebäude anderer Bauart im Nenner; die Regionaltabelle nach Zahl der Wohnungen im Gebäude
+11	Wegweiser Kommune	witzenhausen	ww_bevoelkerung	2023	15097.0	15097.0	+0.00 %	Schnittstelle /rest/statistics/data (JSON), nicht der CSV-Export des Adapters	übereinstimmend	
+12	Wegweiser Kommune	werra-meissner-kreis-lk	ww_altenquotient	2023	46.6	46.6	+0.00 %	Schnittstelle /rest/statistics/data (JSON), nicht der CSV-Export des Adapters	übereinstimmend	
+13	Wegweiser Kommune	eschwege	ww_kinderarmut	2023	21.1	21.1	+0.00 %	Schnittstelle /rest/statistics/data (JSON), nicht der CSV-Export des Adapters	übereinstimmend	
+14	Wegweiser Kommune	hannoversch-muenden	ww_auslaenderanteil	2023				Schnittstelle /rest/statistics/data (JSON), nicht der CSV-Export des Adapters	übereinstimmend	keine Angabe in beiden Wegen
+15	Wegweiser Kommune	bad-wildungen	ww_sgb-ii-quote	2021	8.3	8.3	+0.00 %	Schnittstelle /rest/statistics/data (JSON), nicht der CSV-Export des Adapters	übereinstimmend	
+16	Wegweiser Kommune	schwalmstadt	ww_wanderungssaldo	2019	7.6	7.6	+0.00 %	Schnittstelle /rest/statistics/data (JSON), nicht der CSV-Export des Adapters	übereinstimmend	
+17	Wegweiser Kommune	witzenhausen	ww_durchschnittsalter	2010	44.7	44.7	+0.00 %	Schnittstelle /rest/statistics/data (JSON), nicht der CSV-Export des Adapters	übereinstimmend	
+18	Wegweiser Kommune	witzenhausen	ww_jugendquotient	2015	29.0	29.0	+0.00 %	Schnittstelle /rest/statistics/data (JSON), nicht der CSV-Export des Adapters	übereinstimmend	
+19	Wegweiser Kommune	witzenhausen	ww_arbeitslose-an-den-svb	2023	7.8	7.8	+0.00 %	Schnittstelle /rest/statistics/data (JSON), nicht der CSV-Export des Adapters	übereinstimmend	
+20	Wegweiser Kommune	witzenhausen	ww_wohnungen-in-ein-zweifamilienhaeusern	2021	68.4	68.4	+0.00 %	Schnittstelle /rest/statistics/data (JSON), nicht der CSV-Export des Adapters	übereinstimmend	

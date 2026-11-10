@@ -1,0 +1,15 @@
+einheit	ziel	flaechenanteil	methode	konfidenz	pruefstatus
+CRS3035RES100mN3132400E4307300		0.744	zellmittelpunkt		nicht zugeordnet: Mittelpunkt außerhalb des Stadtgebiets
+CRS3035RES100mN3133400E4307800	rossbach	0.885	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3134800E4315000	werleshausen	0.971	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3135000E4314900	werleshausen	0.991	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3136200E4304400	ziegenhagen	0.999	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3136600E4312800	unterrieden	0.978	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3136700E4306400	kleinalmerode	0.615	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3137500E4305600	hubenrode	0.94	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3137800E4307500	ermschwerd	0.755	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3138800E4309200	ermschwerd	0.977	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3138800E4309300	kernstadt	0.907	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3140600E4307100	gertenbach	0.999	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3141100E4305900	blickershausen	0.847	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet
+CRS3035RES100mN3141500E4306700	blickershausen	0.907	zellmittelpunkt	mittel	Grenzzelle, ganz dem Ortsbezirk des Mittelpunkts zugeordnet

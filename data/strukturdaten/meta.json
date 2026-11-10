@@ -1,0 +1,32 @@
+{
+ "vertrag_version": "1",
+ "datenstand": {
+  "zensus": "2022-05-15",
+  "wegweiser": 2023
+ },
+ "wegweiser_datenstand": "2026-10-15T08:45:18.099083Z-ec57fa",
+ "abrufdatum": "2026-11-10",
+ "veroeffentlichen": true,
+ "lizenzstatus": "offen (dl-de/by-2-0, dl-de/zero-2.0, CC0 1.0)",
+ "quellen": [
+  {
+   "name": "Zensus 2022, Gitterdaten",
+   "url": "https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Zensus2022/_publikationen.html",
+   "lizenz": "dl-de/by-2-0",
+   "namensnennung": "© Statistische Ämter des Bundes und der Länder, 2024, dl-de/by-2-0; eigene Aggregation"
+  },
+  {
+   "name": "Wegweiser Kommune",
+   "url": "https://www.wegweiser-kommune.de/open-data",
+   "lizenz": "CC0 1.0",
+   "namensnennung": "Bertelsmann Stiftung, wegweiser-kommune.de",
+   "api_version": "3.12.0"
+  },
+  {
+   "name": "Digitale Verwaltungsgrenzen Hessen (HVBG), Gemarkungen",
+   "url": "https://gds-srv.hessen.de/atomfeed/DigVGr-epsg25832-shp.zip",
+   "lizenz": "dl-de/zero-2.0",
+   "namensnennung": "© HVBG"
+  }
+ ]
+}

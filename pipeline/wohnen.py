@@ -8,8 +8,8 @@
 - Zensus 2022, Gemeinde: Regionaltabelle Gebäude und Wohnungen (Primärquelle) für die Stadt und ihre Nachbargemeinden.
 - Zensus 2022, Ortsbezirk: 100-m-Gitterzellen über ihren Mittelpunkt einer Gemarkung zugeordnet. „–“ (genau null
   oder auf null gesetzt) zählt als „ohne Wert“, nicht als null; KLAMMERN (Aussagewert eingeschränkt) wird gezählt.
-  Miete gewichtet mit der Zahl vermieteter Wohnungen, Eigentümerquote als ungewichteter Median der Zellwerte; unter
-  `mindestzellen` Zellen mit Wert kein Ausweis. Leerstandsquote nur je Gemeinde (siehe zensus.naeherung).
+  Miete gewichtet mit der Zahl vermieteter Wohnungen; unter `mindestzellen` Zellen mit Wert kein Ausweis. Leerstands-
+  und Eigentümerquote nur je Gemeinde: Das Gitter enthält für sie keine Zähler und Nenner (siehe zensus.naeherung).
 
 Abgeleitete Ergebnisse liegen im Repository (data/geo/dl-de-zero/, data/wohnen/); scheitert ein Abruf, bleiben sie
 auf dem letzten Stand. Bestandsmiete, Angebotsmiete und Vergleichsmiete werden nie zusammengeführt.

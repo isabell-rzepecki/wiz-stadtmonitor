@@ -296,6 +296,66 @@ test("Wohnen und Boden (Fenster): Kennzahlen mit Stichtag, Ortsbezirk als Näher
   await page.close();
 });
 
+test("Strukturdaten: Werte des Ortsteils und der Stadt, Vergleich mit Verlauf, sortierbare Tabelle, Kartenebene mit Legende, Hinweis im Vorgang, ohne Verstöße", async () => {
+  const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
+  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator("#cta-struktur").click();
+  await page.waitForSelector("#struktur table");
+  const text = await page.locator("#struktur").textContent();
+  assert.match(text, /Gebiet: Gertenbach/);
+  assert.match(text, /Stichtag 15\.05\.2022/);
+  assert.match(text, /ökologischer Fehlschluss/);
+  assert.match(text, /Einwohner\s*Erläuterung.*922.*15\.202/s);  // Gertenbach und Stadt aus derselben Quelle
+  assert.match(text, /abgeleitet/);
+  assert.match(text, /Eschwege.*Hannoversch Münden.*Bad Wildungen.*Schwalmstadt/s);
+  assert.ok(await page.locator("#struktur svg.spark").count() >= 10, "Verlauf je Kennzahl als kleine Linie");
+  assert.match(text, /Fortschreibung des Zensus 2011/);
+  // Albshausen: unter der Schwelle nicht ausgewiesen, nicht als Zahl
+  const albs = page.locator("#struktur-tabelle tbody tr", { hasText: "Albshausen" });
+  assert.match(await albs.textContent(), /nicht ausgewiesen/);
+  // Sortieren: Spaltenkopf mit aria-sort, Fokus bleibt auf dem Knopf
+  await page.locator('#struktur [data-struktur-sort="wert"]').click();
+  assert.equal(await page.locator('#struktur-tabelle th[aria-sort="ascending"]').count(), 1);
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.strukturSort), "wert");
+  await page.locator('#struktur [data-struktur-sort="wert"]').click();
+  assert.equal(await page.locator('#struktur-tabelle th[aria-sort="descending"]').count(), 1);
+  const erste = await page.locator("#struktur-tabelle tbody tr").first().textContent();
+  assert.doesNotMatch(erste, /nicht ausgewiesen/);  // Lücken stehen beim Sortieren am Ende
+  await page.locator("#struktur details.erl summary").first().click();
+  assert.match(await page.locator("#struktur details.erl[open]").first().textContent(), /dl-de\/by-2-0/);
+  assert.deepEqual(await axe(page), []);
+  // Karte: Ebene mit Legende (Klassen, nicht ausgewiesen, Hinweis), Auswahl des Merkmals, Link
+  await page.locator('#struktur [data-struktur-karte="zensus_anteil_ab65"]').click();
+  await page.waitForFunction(() => /Strukturdaten der Ortsbezirke/.test(document.querySelector(".map-legend")?.textContent || ""));
+  const leg = page.locator(".map-legend");
+  assert.match(await leg.textContent(), /nicht ausgewiesen/);
+  assert.match(await leg.textContent(), /ökologischer Fehlschluss/);
+  assert.match(await leg.textContent(), /Jahr 2022/);
+  assert.equal(await page.locator(".leaflet-struktur-pane path").count(), 17);
+  assert.match(page.url(), /ebenen=strukturdaten/);
+  assert.equal(await leg.locator("[data-struktur-ind]").inputValue(), "zensus_anteil_ab65");
+  await leg.locator("[data-struktur-klassen]").selectOption("fest");
+  await leg.locator("[data-struktur-ind]").selectOption("zensus_durchschnittsalter");
+  await page.waitForFunction(() => /Jahre/.test(document.querySelector(".map-legend")?.textContent || ""));
+  assert.match(await page.locator(".leaflet-control-attribution").textContent(), /Statistische Ämter/);
+  assert.deepEqual(await axe(page), []);
+  await leg.locator("[data-struktur-tabelle]").click();
+  await page.waitForSelector("#panel-struktur:not([hidden]) #struktur-tabelle");
+  assert.match(await page.locator("#struktur-tabelle caption").textContent(), /Durchschnittsalter je Ortsbezirk/);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+  // Vorgang mit Ortsbezug: kurzer Kasten mit Verweis auf das Fenster
+  const v = await open(SITE, "?gebiet=ortsteil:gertenbach");
+  await v.locator('.toggle[data-panel="panel-list"]').click();
+  await v.locator("#papers button[data-ref]").first().click();
+  await v.waitForSelector("#detail [data-open-struktur]");
+  assert.match(await v.locator("#detail").textContent(), /Strukturdaten.*Einwohner.*kein Bezug zum Inhalt des Vorgangs/s);
+  await v.locator("#detail [data-open-struktur]").first().click();
+  await v.waitForSelector("#panel-struktur:not([hidden]) #struktur table");
+  assert.deepEqual(v.errors, []);
+  await v.close();
+});
+
 test("Bodenrichtwerte 2026: eigene Bildebene mit Stichtag, Hinweis zum Heranzoomen, nicht aus dem Link, ohne Verstöße", async () => {
   const page = await open(SITE);
   let wms = 0;
@@ -950,7 +1010,7 @@ print("ok", pg.Schluessel(z / "schluessel.json", sys.argv[2]).key_id)
     assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'none'/);
     await page.evaluate(() => { window.print = () => { window.gedruckt = document.querySelector("#druck").innerHTML; }; });
     await page.setInputFiles("#f-liste", arbeitsdatei);
-    assert.match(await page.locator("#oeffnen-status").textContent(), /keine Kartenliste/);
+    await page.waitForFunction(() => /keine Kartenliste/.test(document.querySelector("#oeffnen-status").textContent));  // Datei wird asynchron gelesen
     await page.setInputFiles("#f-liste", kartenliste);
     await page.waitForFunction(() => /0 Karten/.test(document.querySelector("#oeffnen-status").textContent));
     await page.fill("#anzahl", "2");
