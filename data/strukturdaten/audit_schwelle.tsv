@@ -1,0 +1,8 @@
+raum_id	indikator_id	grund
+albshausen	zensus_anteil_unter18	Nenner 34 unter 50
+albshausen	zensus_anteil_ab65	Nenner 34 unter 50
+albshausen	zensus_anteil_wohnungen_efh_zfh	Nenner 23 unter 50
+ellingerode	zensus_anteil_unter18	Teilgruppen weichen um 11.6 % von der Gesamtzahl ab (Geheimhaltung)
+ellingerode	zensus_anteil_ab65	Teilgruppen weichen um 11.6 % von der Gesamtzahl ab (Geheimhaltung)
+rossbach	zensus_anteil_unter18	Teilgruppen weichen um 10.0 % von der Gesamtzahl ab (Geheimhaltung)
+rossbach	zensus_anteil_ab65	Teilgruppen weichen um 10.0 % von der Gesamtzahl ab (Geheimhaltung)

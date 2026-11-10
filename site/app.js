@@ -1104,8 +1104,7 @@
         <p><button type="button" class="btn btn-soft" data-brw-on>Zonen auf der Karte zeigen</button></p></section>
       <section class="stat-block"><h3>Bestandsmiete und Eigentum (Zensus 2022)</h3>
         <p class="stichtag">Stichtag ${fmtDate(z.stichtag)}</p>
-        ${o ? `<dl class="facts"><dt>Bestandsmiete ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.miete, 2, "€/m²")}</dd>
-          <dt>Eigentümerquote ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.eigentuemerquote, 1, "%")}</dd></dl>` : ""}
+        ${o ? `<dl class="facts"><dt>Bestandsmiete ${esc(o.name)}</dt><dd>${zensusWert(ob && ob.miete, 2, "€/m²")}</dd></dl>` : ""}
         ${gem ? `<dl class="facts"><dt>Bestandsmiete ${esc(cfg.stadt.name)}</dt><dd>${num(gem.nettokaltmiete_eur_m2, 2)} €/m²</dd>
           <dt>Leerstandsquote</dt><dd>${num(gem.leerstandsquote_pct, 1)} %</dd><dt>Eigentümerquote</dt><dd>${num(gem.eigentuemerquote_pct, 1)} %</dd></dl>` : ""}
         <p class="hint">Kein Mietspiegel: Bestandsmieten aus dem Zensus sind keine ortsübliche Vergleichsmiete.</p></section>

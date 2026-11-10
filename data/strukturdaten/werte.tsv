@@ -1,0 +1,181 @@
+raumebene	raum_id	indikator_id	jahr	wert	status	quellobjekt
+gemeinde	06636016	zensus_18bis64	2022	8839	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 812 Zellen
+gemeinde	06636016	zensus_ab65	2022	3690	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 812 Zellen
+gemeinde	06636016	zensus_anteil_ab65	2022	24.8	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 812 Zellen
+gemeinde	06636016	zensus_anteil_unter18	2022	15.7	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 812 Zellen
+gemeinde	06636016	zensus_anteil_wohnungen_efh_zfh	2022	59.2	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 708 Zellen
+gemeinde	06636016	zensus_durchschnittsalter	2022	45.7	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 812 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+gemeinde	06636016	zensus_einwohner	2022	15202	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 812 Zellen
+gemeinde	06636016	zensus_unter18	2022	2336	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 812 Zellen
+gemeinde	06636016	zensus_wohnungen	2022	7865	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 708 Zellen
+gemeinde	06636016	zensus_wohnungen_efh_zfh	2022	4668	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 708 Zellen
+ortsbezirk	albshausen	zensus_18bis64	2022	22	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 8 Zellen
+ortsbezirk	albshausen	zensus_ab65	2022	9	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 8 Zellen
+ortsbezirk	albshausen	zensus_anteil_ab65	2022		fehlt	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 8 Zellen
+ortsbezirk	albshausen	zensus_anteil_unter18	2022		fehlt	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 8 Zellen
+ortsbezirk	albshausen	zensus_anteil_wohnungen_efh_zfh	2022		fehlt	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 4 Zellen
+ortsbezirk	albshausen	zensus_durchschnittsalter	2022	50.7	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 8 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	albshausen	zensus_einwohner	2022	53	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 8 Zellen
+ortsbezirk	albshausen	zensus_unter18	2022	3	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 8 Zellen
+ortsbezirk	albshausen	zensus_wohnungen	2022	18	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 4 Zellen
+ortsbezirk	albshausen	zensus_wohnungen_efh_zfh	2022	20	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 4 Zellen
+ortsbezirk	berlepsch-ellerode	zensus_18bis64	2022	63	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 10 Zellen
+ortsbezirk	berlepsch-ellerode	zensus_ab65	2022	26	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 10 Zellen
+ortsbezirk	berlepsch-ellerode	zensus_anteil_ab65	2022	25.5	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 10 Zellen
+ortsbezirk	berlepsch-ellerode	zensus_anteil_unter18	2022	12.7	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 10 Zellen
+ortsbezirk	berlepsch-ellerode	zensus_anteil_wohnungen_efh_zfh	2022	15.8	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 9 Zellen
+ortsbezirk	berlepsch-ellerode	zensus_durchschnittsalter	2022	51.5	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 10 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	berlepsch-ellerode	zensus_einwohner	2022	112	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 10 Zellen
+ortsbezirk	berlepsch-ellerode	zensus_unter18	2022	13	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 10 Zellen
+ortsbezirk	berlepsch-ellerode	zensus_wohnungen	2022	71	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 9 Zellen
+ortsbezirk	berlepsch-ellerode	zensus_wohnungen_efh_zfh	2022	12	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 9 Zellen
+ortsbezirk	blickershausen	zensus_18bis64	2022	137	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 18 Zellen
+ortsbezirk	blickershausen	zensus_ab65	2022	64	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 18 Zellen
+ortsbezirk	blickershausen	zensus_anteil_ab65	2022	27.2	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 18 Zellen
+ortsbezirk	blickershausen	zensus_anteil_unter18	2022	14.5	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 18 Zellen
+ortsbezirk	blickershausen	zensus_anteil_wohnungen_efh_zfh	2022	79.3	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 15 Zellen
+ortsbezirk	blickershausen	zensus_durchschnittsalter	2022	48.3	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 18 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	blickershausen	zensus_einwohner	2022	226	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 18 Zellen
+ortsbezirk	blickershausen	zensus_unter18	2022	34	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 18 Zellen
+ortsbezirk	blickershausen	zensus_wohnungen	2022	110	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 15 Zellen
+ortsbezirk	blickershausen	zensus_wohnungen_efh_zfh	2022	92	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 15 Zellen
+ortsbezirk	dohrenbach	zensus_18bis64	2022	307	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 37 Zellen
+ortsbezirk	dohrenbach	zensus_ab65	2022	127	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 37 Zellen
+ortsbezirk	dohrenbach	zensus_anteil_ab65	2022	25.4	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 37 Zellen
+ortsbezirk	dohrenbach	zensus_anteil_unter18	2022	13.2	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 37 Zellen
+ortsbezirk	dohrenbach	zensus_anteil_wohnungen_efh_zfh	2022	73.5	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 30 Zellen
+ortsbezirk	dohrenbach	zensus_durchschnittsalter	2022	48.6	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 37 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	dohrenbach	zensus_einwohner	2022	542	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 37 Zellen
+ortsbezirk	dohrenbach	zensus_unter18	2022	66	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 37 Zellen
+ortsbezirk	dohrenbach	zensus_wohnungen	2022	258	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 30 Zellen
+ortsbezirk	dohrenbach	zensus_wohnungen_efh_zfh	2022	180	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 30 Zellen
+ortsbezirk	ellingerode	zensus_18bis64	2022	157	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 19 Zellen
+ortsbezirk	ellingerode	zensus_ab65	2022	70	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 19 Zellen
+ortsbezirk	ellingerode	zensus_anteil_ab65	2022		fehlt	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 19 Zellen
+ortsbezirk	ellingerode	zensus_anteil_unter18	2022		fehlt	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 19 Zellen
+ortsbezirk	ellingerode	zensus_anteil_wohnungen_efh_zfh	2022	61.8	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 16 Zellen
+ortsbezirk	ellingerode	zensus_durchschnittsalter	2022	46.8	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 19 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	ellingerode	zensus_einwohner	2022	294	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 19 Zellen
+ortsbezirk	ellingerode	zensus_unter18	2022	33	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 19 Zellen
+ortsbezirk	ellingerode	zensus_wohnungen	2022	149	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 16 Zellen
+ortsbezirk	ellingerode	zensus_wohnungen_efh_zfh	2022	89	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 16 Zellen
+ortsbezirk	ermschwerd	zensus_18bis64	2022	570	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 55 Zellen
+ortsbezirk	ermschwerd	zensus_ab65	2022	253	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 55 Zellen
+ortsbezirk	ermschwerd	zensus_anteil_ab65	2022	26.5	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 55 Zellen
+ortsbezirk	ermschwerd	zensus_anteil_unter18	2022	13.7	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 55 Zellen
+ortsbezirk	ermschwerd	zensus_anteil_wohnungen_efh_zfh	2022	68.6	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 54 Zellen
+ortsbezirk	ermschwerd	zensus_durchschnittsalter	2022	46.4	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 55 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	ermschwerd	zensus_einwohner	2022	966	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 55 Zellen
+ortsbezirk	ermschwerd	zensus_unter18	2022	131	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 55 Zellen
+ortsbezirk	ermschwerd	zensus_wohnungen	2022	503	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 54 Zellen
+ortsbezirk	ermschwerd	zensus_wohnungen_efh_zfh	2022	348	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 54 Zellen
+ortsbezirk	gertenbach	zensus_18bis64	2022	531	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 60 Zellen
+ortsbezirk	gertenbach	zensus_ab65	2022	215	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 60 Zellen
+ortsbezirk	gertenbach	zensus_anteil_ab65	2022	24.0	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 60 Zellen
+ortsbezirk	gertenbach	zensus_anteil_unter18	2022	16.7	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 60 Zellen
+ortsbezirk	gertenbach	zensus_anteil_wohnungen_efh_zfh	2022	70.4	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 54 Zellen
+ortsbezirk	gertenbach	zensus_durchschnittsalter	2022	44.8	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 60 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	gertenbach	zensus_einwohner	2022	922	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 60 Zellen
+ortsbezirk	gertenbach	zensus_unter18	2022	150	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 60 Zellen
+ortsbezirk	gertenbach	zensus_wohnungen	2022	484	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 54 Zellen
+ortsbezirk	gertenbach	zensus_wohnungen_efh_zfh	2022	337	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 54 Zellen
+ortsbezirk	hubenrode	zensus_18bis64	2022	120	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 16 Zellen
+ortsbezirk	hubenrode	zensus_ab65	2022	45	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 16 Zellen
+ortsbezirk	hubenrode	zensus_anteil_ab65	2022	23.6	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 16 Zellen
+ortsbezirk	hubenrode	zensus_anteil_unter18	2022	13.6	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 16 Zellen
+ortsbezirk	hubenrode	zensus_anteil_wohnungen_efh_zfh	2022	80.2	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 11 Zellen
+ortsbezirk	hubenrode	zensus_durchschnittsalter	2022	47.5	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 16 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	hubenrode	zensus_einwohner	2022	181	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 16 Zellen
+ortsbezirk	hubenrode	zensus_unter18	2022	26	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 16 Zellen
+ortsbezirk	hubenrode	zensus_wohnungen	2022	78	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 11 Zellen
+ortsbezirk	hubenrode	zensus_wohnungen_efh_zfh	2022	65	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 11 Zellen
+ortsbezirk	hundelshausen	zensus_18bis64	2022	599	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 49 Zellen
+ortsbezirk	hundelshausen	zensus_ab65	2022	309	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 49 Zellen
+ortsbezirk	hundelshausen	zensus_anteil_ab65	2022	28.9	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 49 Zellen
+ortsbezirk	hundelshausen	zensus_anteil_unter18	2022	15.1	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 49 Zellen
+ortsbezirk	hundelshausen	zensus_anteil_wohnungen_efh_zfh	2022	78.9	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 45 Zellen
+ortsbezirk	hundelshausen	zensus_durchschnittsalter	2022	47.3	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 49 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	hundelshausen	zensus_einwohner	2022	1036	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 49 Zellen
+ortsbezirk	hundelshausen	zensus_unter18	2022	161	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 49 Zellen
+ortsbezirk	hundelshausen	zensus_wohnungen	2022	550	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 45 Zellen
+ortsbezirk	hundelshausen	zensus_wohnungen_efh_zfh	2022	452	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 45 Zellen
+ortsbezirk	kernstadt	zensus_18bis64	2022	4190	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 276 Zellen
+ortsbezirk	kernstadt	zensus_ab65	2022	1665	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 276 Zellen
+ortsbezirk	kernstadt	zensus_anteil_ab65	2022	23.9	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 276 Zellen
+ortsbezirk	kernstadt	zensus_anteil_unter18	2022	15.9	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 276 Zellen
+ortsbezirk	kernstadt	zensus_anteil_wohnungen_efh_zfh	2022	41.5	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 247 Zellen
+ortsbezirk	kernstadt	zensus_durchschnittsalter	2022	44.6	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 276 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	kernstadt	zensus_einwohner	2022	7022	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 276 Zellen
+ortsbezirk	kernstadt	zensus_unter18	2022	1106	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 276 Zellen
+ortsbezirk	kernstadt	zensus_wohnungen	2022	3836	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 247 Zellen
+ortsbezirk	kernstadt	zensus_wohnungen_efh_zfh	2022	1598	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 247 Zellen
+ortsbezirk	kleinalmerode	zensus_18bis64	2022	425	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 54 Zellen
+ortsbezirk	kleinalmerode	zensus_ab65	2022	209	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 54 Zellen
+ortsbezirk	kleinalmerode	zensus_anteil_ab65	2022	28.7	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 54 Zellen
+ortsbezirk	kleinalmerode	zensus_anteil_unter18	2022	12.8	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 54 Zellen
+ortsbezirk	kleinalmerode	zensus_anteil_wohnungen_efh_zfh	2022	83.7	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 43 Zellen
+ortsbezirk	kleinalmerode	zensus_durchschnittsalter	2022	48.8	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 54 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	kleinalmerode	zensus_einwohner	2022	730	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 54 Zellen
+ortsbezirk	kleinalmerode	zensus_unter18	2022	93	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 54 Zellen
+ortsbezirk	kleinalmerode	zensus_wohnungen	2022	369	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 43 Zellen
+ortsbezirk	kleinalmerode	zensus_wohnungen_efh_zfh	2022	297	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 43 Zellen
+ortsbezirk	neuseesen	zensus_18bis64	2022	40	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 9 Zellen
+ortsbezirk	neuseesen	zensus_ab65	2022	17	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 9 Zellen
+ortsbezirk	neuseesen	zensus_anteil_ab65	2022	24.3	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 9 Zellen
+ortsbezirk	neuseesen	zensus_anteil_unter18	2022	18.6	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 9 Zellen
+ortsbezirk	neuseesen	zensus_anteil_wohnungen_efh_zfh	2022	70.0	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 9 Zellen
+ortsbezirk	neuseesen	zensus_durchschnittsalter	2022	44.6	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 9 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	neuseesen	zensus_einwohner	2022	69	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 9 Zellen
+ortsbezirk	neuseesen	zensus_unter18	2022	13	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 9 Zellen
+ortsbezirk	neuseesen	zensus_wohnungen	2022	46	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 9 Zellen
+ortsbezirk	neuseesen	zensus_wohnungen_efh_zfh	2022	35	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 9 Zellen
+ortsbezirk	rossbach	zensus_18bis64	2022	293	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 40 Zellen
+ortsbezirk	rossbach	zensus_ab65	2022	156	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 40 Zellen
+ortsbezirk	rossbach	zensus_anteil_ab65	2022		fehlt	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 40 Zellen
+ortsbezirk	rossbach	zensus_anteil_unter18	2022		fehlt	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 40 Zellen
+ortsbezirk	rossbach	zensus_anteil_wohnungen_efh_zfh	2022	88.3	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 36 Zellen
+ortsbezirk	rossbach	zensus_durchschnittsalter	2022	47.8	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 40 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	rossbach	zensus_einwohner	2022	599	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 40 Zellen
+ortsbezirk	rossbach	zensus_unter18	2022	90	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 40 Zellen
+ortsbezirk	rossbach	zensus_wohnungen	2022	278	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 36 Zellen
+ortsbezirk	rossbach	zensus_wohnungen_efh_zfh	2022	248	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 36 Zellen
+ortsbezirk	unterrieden	zensus_18bis64	2022	472	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 45 Zellen
+ortsbezirk	unterrieden	zensus_ab65	2022	160	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 45 Zellen
+ortsbezirk	unterrieden	zensus_anteil_ab65	2022	21.1	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 45 Zellen
+ortsbezirk	unterrieden	zensus_anteil_unter18	2022	16.5	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 45 Zellen
+ortsbezirk	unterrieden	zensus_anteil_wohnungen_efh_zfh	2022	89.0	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 38 Zellen
+ortsbezirk	unterrieden	zensus_durchschnittsalter	2022	44.5	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 45 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	unterrieden	zensus_einwohner	2022	807	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 45 Zellen
+ortsbezirk	unterrieden	zensus_unter18	2022	125	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 45 Zellen
+ortsbezirk	unterrieden	zensus_wohnungen	2022	368	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 38 Zellen
+ortsbezirk	unterrieden	zensus_wohnungen_efh_zfh	2022	307	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 38 Zellen
+ortsbezirk	wendershausen	zensus_18bis64	2022	373	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 34 Zellen
+ortsbezirk	wendershausen	zensus_ab65	2022	134	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 34 Zellen
+ortsbezirk	wendershausen	zensus_anteil_ab65	2022	21.1	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 34 Zellen
+ortsbezirk	wendershausen	zensus_anteil_unter18	2022	20.0	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 34 Zellen
+ortsbezirk	wendershausen	zensus_anteil_wohnungen_efh_zfh	2022	83.3	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 30 Zellen
+ortsbezirk	wendershausen	zensus_durchschnittsalter	2022	43.8	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 34 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	wendershausen	zensus_einwohner	2022	671	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 34 Zellen
+ortsbezirk	wendershausen	zensus_unter18	2022	127	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 34 Zellen
+ortsbezirk	wendershausen	zensus_wohnungen	2022	299	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 30 Zellen
+ortsbezirk	wendershausen	zensus_wohnungen_efh_zfh	2022	250	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 30 Zellen
+ortsbezirk	werleshausen	zensus_18bis64	2022	236	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 29 Zellen
+ortsbezirk	werleshausen	zensus_ab65	2022	80	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 29 Zellen
+ortsbezirk	werleshausen	zensus_anteil_ab65	2022	20.8	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 29 Zellen
+ortsbezirk	werleshausen	zensus_anteil_unter18	2022	17.9	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 29 Zellen
+ortsbezirk	werleshausen	zensus_anteil_wohnungen_efh_zfh	2022	81.2	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 22 Zellen
+ortsbezirk	werleshausen	zensus_durchschnittsalter	2022	45.3	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 29 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	werleshausen	zensus_einwohner	2022	388	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 29 Zellen
+ortsbezirk	werleshausen	zensus_unter18	2022	69	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 29 Zellen
+ortsbezirk	werleshausen	zensus_wohnungen	2022	177	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 22 Zellen
+ortsbezirk	werleshausen	zensus_wohnungen_efh_zfh	2022	147	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 22 Zellen
+ortsbezirk	ziegenhagen	zensus_18bis64	2022	304	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 53 Zellen
+ortsbezirk	ziegenhagen	zensus_ab65	2022	151	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 53 Zellen
+ortsbezirk	ziegenhagen	zensus_anteil_ab65	2022	27.4	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 53 Zellen
+ortsbezirk	ziegenhagen	zensus_anteil_unter18	2022	17.4	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 53 Zellen
+ortsbezirk	ziegenhagen	zensus_anteil_wohnungen_efh_zfh	2022	68.0	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 45 Zellen
+ortsbezirk	ziegenhagen	zensus_durchschnittsalter	2022	46.9	abgeleitet	Zensus2022_Durchschnittsalter_100m-Gitter.csv; 53 Zellen; gewichtet mit Einwohnern (Zensus2022_Bevoelkerungszahl_100m-Gitter.csv)
+ortsbezirk	ziegenhagen	zensus_einwohner	2022	584	abgeleitet	Zensus2022_Bevoelkerungszahl_100m-Gitter.csv; 53 Zellen
+ortsbezirk	ziegenhagen	zensus_unter18	2022	96	abgeleitet	Zensus2022_Alter_in_5_Altersklassen_100m-Gitter.csv; 53 Zellen
+ortsbezirk	ziegenhagen	zensus_wohnungen	2022	271	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 45 Zellen
+ortsbezirk	ziegenhagen	zensus_wohnungen_efh_zfh	2022	191	abgeleitet	Zensus2022_Wohnung_Gebaeudetyp_Groesse_100m-Gitter.csv; 45 Zellen

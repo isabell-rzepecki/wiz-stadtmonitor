@@ -4,7 +4,7 @@
  "stichtag": "2022-05-15",
  "retrieved": "2026-10-23",
  "kennzeichnung": "Näherung",
- "naeherung": "Näherung: Gitterzellen (100 m) werden über ihren Mittelpunkt einer Gemarkung zugeordnet. Die Bestandsmiete ist mit der Zahl der vermieteten Wohnungen gewichtet; für die Eigentümerquote steht der Median der Zellwerte, ungewichtet. Zellen mit „–“ (genau null oder durch die Geheimhaltung auf null gesetzt) zählen nicht als null, sondern als „ohne Wert“. Werte aus weniger als 5 Zellen werden nicht ausgewiesen. Die Leerstandsquote wird nur für die Gemeinde angegeben: Im Gitter fasst „–“ echte Nullwerte und geheim gehaltene Werte zusammen, eine Quote je Ortsbezirk wäre deshalb verzerrt.",
+ "naeherung": "Näherung: Gitterzellen (100 m) werden über ihren Mittelpunkt einer Gemarkung zugeordnet. Die Bestandsmiete ist mit der Zahl der vermieteten Wohnungen gewichtet. Zellen mit „–“ (genau null oder durch die Geheimhaltung auf null gesetzt) zählen nicht als null, sondern als „ohne Wert“. Werte aus weniger als 5 Zellen werden nicht ausgewiesen. Die Leerstandsquote wird nur für die Gemeinde angegeben: Im Gitter fasst „–“ echte Nullwerte und geheim gehaltene Werte zusammen, eine Quote je Ortsbezirk wäre deshalb verzerrt. Die Eigentümerquote steht nur für die Gemeinde: Das Gitter enthält dafür keine Zähler und Nenner, ein Median der Zellwerte wäre keine zulässige Aggregation (Entscheidung 10.11.2026).",
  "mindestzellen": 5,
  "gemarkungen": {
   "2113": "Albshausen",
@@ -33,13 +33,6 @@
     "zellen_eingeschraenkt": 1,
     "wert": null,
     "grund": "weniger als 5 Zellen mit Wert"
-   },
-   "eigentuemerquote": {
-    "zellen": 3,
-    "zellen_ohne_wert": 0,
-    "zellen_eingeschraenkt": 3,
-    "wert": null,
-    "grund": "weniger als 5 Zellen mit Wert"
    }
   },
   "2121": {
@@ -50,13 +43,6 @@
     "wert": 6.12,
     "wohnungen": 42,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 4,
-    "zellen_ohne_wert": 3,
-    "zellen_eingeschraenkt": 4,
-    "wert": null,
-    "grund": "weniger als 5 Zellen mit Wert"
    }
   },
   "2125": {
@@ -66,13 +52,6 @@
     "zellen_eingeschraenkt": 2,
     "wert": null,
     "grund": "weniger als 5 Zellen mit Wert"
-   },
-   "eigentuemerquote": {
-    "zellen": 11,
-    "zellen_ohne_wert": 3,
-    "zellen_eingeschraenkt": 11,
-    "wert": 70.0,
-    "methode": "Median der Zellwerte"
    }
   },
   "2132": {
@@ -83,13 +62,6 @@
     "wert": 5.08,
     "wohnungen": 48,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 27,
-    "zellen_ohne_wert": 4,
-    "zellen_eingeschraenkt": 27,
-    "wert": 100.0,
-    "methode": "Median der Zellwerte"
    }
   },
   "2136": {
@@ -100,13 +72,6 @@
     "wert": 4.39,
     "wohnungen": 37,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 14,
-    "zellen_ohne_wert": 0,
-    "zellen_eingeschraenkt": 12,
-    "wert": 89.3,
-    "methode": "Median der Zellwerte"
    }
   },
   "2140": {
@@ -117,13 +82,6 @@
     "wert": 5.12,
     "wohnungen": 155,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 48,
-    "zellen_ohne_wert": 6,
-    "zellen_eingeschraenkt": 43,
-    "wert": 91.7,
-    "methode": "Median der Zellwerte"
    }
   },
   "2151": {
@@ -134,13 +92,6 @@
     "wert": 4.92,
     "wohnungen": 145,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 47,
-    "zellen_ohne_wert": 6,
-    "zellen_eingeschraenkt": 47,
-    "wert": 71.4,
-    "methode": "Median der Zellwerte"
    }
   },
   "2172": {
@@ -151,13 +102,6 @@
     "wert": 4.53,
     "wohnungen": 19,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 10,
-    "zellen_ohne_wert": 1,
-    "zellen_eingeschraenkt": 10,
-    "wert": 100.0,
-    "methode": "Median der Zellwerte"
    }
   },
   "2173": {
@@ -168,13 +112,6 @@
     "wert": 4.21,
     "wohnungen": 110,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 42,
-    "zellen_ohne_wert": 1,
-    "zellen_eingeschraenkt": 35,
-    "wert": 73.9,
-    "methode": "Median der Zellwerte"
    }
   },
   "2177": {
@@ -185,13 +122,6 @@
     "wert": 4.74,
     "wohnungen": 34,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 40,
-    "zellen_ohne_wert": 3,
-    "zellen_eingeschraenkt": 38,
-    "wert": 100.0,
-    "methode": "Median der Zellwerte"
    }
   },
   "2194": {
@@ -201,13 +131,6 @@
     "zellen_eingeschraenkt": 1,
     "wert": null,
     "grund": "weniger als 5 Zellen mit Wert"
-   },
-   "eigentuemerquote": {
-    "zellen": 5,
-    "zellen_ohne_wert": 2,
-    "zellen_eingeschraenkt": 5,
-    "wert": 100.0,
-    "methode": "Median der Zellwerte"
    }
   },
   "2214": {
@@ -218,13 +141,6 @@
     "wert": 4.56,
     "wohnungen": 32,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 31,
-    "zellen_ohne_wert": 5,
-    "zellen_eingeschraenkt": 29,
-    "wert": 100.0,
-    "methode": "Median der Zellwerte"
    }
   },
   "2227": {
@@ -235,13 +151,6 @@
     "wert": 4.7,
     "wohnungen": 78,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 35,
-    "zellen_ohne_wert": 3,
-    "zellen_eingeschraenkt": 32,
-    "wert": 81.2,
-    "methode": "Median der Zellwerte"
    }
   },
   "2241": {
@@ -252,13 +161,6 @@
     "wert": 4.64,
     "wohnungen": 49,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 27,
-    "zellen_ohne_wert": 2,
-    "zellen_eingeschraenkt": 23,
-    "wert": 76.9,
-    "methode": "Median der Zellwerte"
    }
   },
   "2242": {
@@ -268,13 +170,6 @@
     "zellen_eingeschraenkt": 1,
     "wert": null,
     "grund": "weniger als 5 Zellen mit Wert"
-   },
-   "eigentuemerquote": {
-    "zellen": 19,
-    "zellen_ohne_wert": 3,
-    "zellen_eingeschraenkt": 18,
-    "wert": 100.0,
-    "methode": "Median der Zellwerte"
    }
   },
   "2246": {
@@ -285,13 +180,6 @@
     "wert": 5.25,
     "wohnungen": 2039,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 186,
-    "zellen_ohne_wert": 50,
-    "zellen_eingeschraenkt": 169,
-    "wert": 57.1,
-    "methode": "Median der Zellwerte"
    }
   },
   "2251": {
@@ -302,13 +190,6 @@
     "wert": 4.92,
     "wohnungen": 68,
     "methode": "gewichtetes Mittel"
-   },
-   "eigentuemerquote": {
-    "zellen": 38,
-    "zellen_ohne_wert": 6,
-    "zellen_eingeschraenkt": 38,
-    "wert": 100.0,
-    "methode": "Median der Zellwerte"
    }
   }
  }
