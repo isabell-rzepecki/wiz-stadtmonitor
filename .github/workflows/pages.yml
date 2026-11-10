@@ -77,7 +77,7 @@ jobs:
         run: |
           python -c "from pathlib import Path; from pipeline import site; site.weiterleitung(Path('_weiterleitung'))"
           rm -rf _site && mv _weiterleitung _site
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       # Quellwache (pipeline/quellwache.py): Ergebnis für den Job quellwache, nur auf dem Hauptzweig
@@ -102,7 +102,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   # Neue Lücken in den Bekanntmachungen oder Stillstand: Issue öffnen bzw. aktualisieren, sonst schließen. Eigener Job,
   # damit nur er Issues schreiben darf.
