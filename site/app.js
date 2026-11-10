@@ -750,6 +750,8 @@
     sel.innerHTML = '<option value="">alle</option>' + opts.map((f) => `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join("");
     if (opts.some((f) => f.id === cur)) sel.value = cur;
   }
+  // Textseite des Vorgangs (pipeline/vorgangsseiten.py, gleiche Regel für die Adresse)
+  const vorgangSeite = (ref) => `vorgang/${String(ref).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}/`;
   function initiativeText(i) {
     const namen = i.einreicher.map(einreicherName);
     const wer = i.einreicher[0] === cfg.einreicher.einzelperson.id ? namen[0]
@@ -901,6 +903,7 @@
         ${p.initiative && cfg.einreicher ? `<dt>Eingebracht</dt><dd>${initiativeText(p.initiative)} <span class="derived">laut TOP-Titel</span></dd>` : ""}
       </dl>
       <div class="links">${link(p.process[0] && p.process[0].pdf, "Einladung (PDF)", "btn btn-primary")}
+        ${p.verfahrenspunkt ? "" : `<a class="btn btn-secondary" href="${esc(vorgangSeite(p.reference))}">Eigene Seite des Vorgangs</a>`}
         ${link(cfg.stadt.sessionnet, "Bürgerinformationssystem", "btn btn-secondary")}</div>
       <h4>Prozesslinie</h4>
       <ol class="steps">${stationenHtml(p)}${(p.ergebnisse || []).map(ergebnisHtml).join("")}</ol>

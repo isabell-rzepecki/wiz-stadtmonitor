@@ -4,6 +4,7 @@
 - stadt:  Stadtverordnetenversammlung, Ausschüsse und stadtweite Beiräte
 - <slug>: Ortsbeirat bzw. Stadtteilbeirat des Ortsteils mit ganzer Tagesordnung, dazu Sitzungen der Stadtgremien mit
           Tagesordnungspunkten, die diesen Ortsteil betreffen (nur diese Punkte)
+- gremium-<id>: ein Gremium aus stadt.json (Stadtverordnetenversammlung, Ausschüsse, Beiräte) mit ganzer Tagesordnung
 Inhalt nur aus den Einladungen (Gremium, Termin, Ort, Tagesordnung ohne Verfahrenspunkte); Titel sind bereits durch den
 Namensfilter gelaufen, Privatanschriften als Sitzungsort schon ersetzt. Der Kalender reicht ein Jahr zurück, der Feed
 nennt die letzten Einladungen.
@@ -73,6 +74,11 @@ def tagesordnung(sitzung, vorgaenge, ortsteil=None):
     return sorted(out, key=lambda t: [int(x) if x.isdigit() else 0 for x in t[0].split(".")])
 
 
+def gremium_slug(gremium_id):
+    """Dateiname des Abos eines Gremiums (data/export/abo/gremium-<id>.ics), ohne Konflikt mit den Ortsteilen."""
+    return f"gremium-{gremium_id.lower()}"
+
+
 def _ortsgremium(s):
     typ = s.get("gremium_typ") or ("ortsbeirat" if s["gremium"].startswith(("Ortsbeirat", "Stadtteilbeirat")) else "")
     return typ in ORTSGREMIEN
@@ -92,6 +98,8 @@ def auswahl(daten):
         eigene = [(s, None) for s in sitzungen if _ortsgremium(s) and s.get("ortsteil") == o["name"]]
         bezug = [(s, o["name"]) for s in stadt if tagesordnung(s, je_sitzung.get(s["id"], []), o["name"])]
         out[o["slug"]] = (o["name"], sorted(eigene + bezug, key=lambda x: x[0]["date"]))
+    for g in config.STADT["gremien"]:
+        out[gremium_slug(g["id"])] = (g["name"], [(s, None) for s in sitzungen if s.get("gremium_id") == g["id"]])
     return out, je_sitzung
 
 

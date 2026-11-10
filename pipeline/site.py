@@ -8,7 +8,7 @@ import shutil
 import urllib.parse
 from datetime import date
 
-from . import config, ortsteilseiten
+from . import config, ortsteilseiten, vorgangsseiten
 
 
 def build(out=config.SITE_OUT, mit_daten=True):
@@ -31,6 +31,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
     ortsteilseiten.erzeugen(out, mit_daten)
     ortsteilseiten.sitzungen_erzeugen(out, mit_daten)
     ortsteilseiten.gremien_erzeugen(out, mit_daten)
+    vorgangsseiten.erzeugen(out, mit_daten)
     stadtname_ausfuellen(out)
     vorschau_ausfuellen(out)
     suchmaschinen(out)
@@ -74,7 +75,7 @@ VORSCHAU_SEITEN = ("index.html", "wohnen.html", "erfassen.html", "quellen.html",
 
 def oeffentliche_seiten(out):
     """Öffentliche Seiten mit Vorschau, Canonical und Eintrag in der Sitemap: feste Seiten und die Seiten je Ortsteil."""
-    ortsteile = sorted(str(p.relative_to(out)) for p in [*out.glob("ortsteil/*/index.html"), *out.glob("gremium/*/index.html")])
+    ortsteile = sorted(str(p.relative_to(out)) for p in [*out.glob("ortsteil/*/index.html"), *out.glob("gremium/*/index.html"), *out.glob("vorgang/*/index.html")])
     erzeugt = [d for d in ("sitzungen/index.html", "ortsteile/index.html", "gremien/index.html") if (out / d).exists()]
     return list(VORSCHAU_SEITEN) + erzeugt + ortsteile
 

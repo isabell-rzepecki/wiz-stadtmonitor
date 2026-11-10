@@ -1,4 +1,5 @@
 """Seiten je Ortsteil: Inhalt aus dem Export (Testdaten), Verweise, Sitemap, keine Verfahrenspunkte, kein Skript."""
+import html
 import json
 import re
 import shutil
@@ -26,7 +27,7 @@ class Ortsteilseiten(unittest.TestCase):
             daten = json.loads(FIX.read_text(encoding="utf-8"))
             seite = (out / "ortsteil" / "gertenbach" / "index.html").read_text(encoding="utf-8")
             self.assertIn("<h1>Gertenbach</h1>", seite)
-            self.assertIn('href="../../?gebiet=ortsteil:gertenbach#STV/066/2026"', seite)  # Vorgang auf der Karte
+            self.assertIn('href="../../vorgang/stv-066-2026/"', seite)  # Vorgang mit eigener Seite
             for v in daten["vorgaenge"]:
                 if v["verfahrenspunkt"]:
                     self.assertNotIn(v["name"], seite)
@@ -50,7 +51,7 @@ class Ortsteilseiten(unittest.TestCase):
             kommend = [s for s in daten["sitzungen"] if s["date"] >= stand]
             self.assertIn(f"Kommende Sitzungen ({len(kommend)})", seite)
             self.assertEqual(seite.count('<details class="sitzung" open>'), 1 if kommend else 0)
-            self.assertIn('href="../#STV/066/2026"', seite)  # Punkt öffnet den Vorgang auf der Karte
+            self.assertIn('href="../vorgang/stv-066-2026/"', seite)  # Punkt öffnet die Seite des Vorgangs
             for v in daten["vorgaenge"]:
                 if v["verfahrenspunkt"]:
                     self.assertNotIn(f">{v['name']}<", seite)
@@ -78,6 +79,31 @@ class Ortsteilseiten(unittest.TestCase):
             self.assertIn("Frühere Ausschüsse", uebersicht)
             self.assertIn('href="../ortsteil/gertenbach/"', uebersicht)  # Ortsbeiräte über die Ortsteilseiten
             self.assertNotIn('href="../ortsteil/kernstadt/"', uebersicht)  # Kernstadt hat keinen Ortsbeirat
+
+    def test_vorgangsseiten(self):
+        from pipeline import vorgangsseiten
+        self.assertEqual(vorgangsseiten.slug("STV/073/2026"), "stv-073-2026")
+        self.assertEqual(vorgangsseiten.slug("160/2025-TOP4.1"), "160-2025-top4-1")
+        with tempfile.TemporaryDirectory() as d:
+            export = Path(d) / "export"
+            export.mkdir()
+            shutil.copy(FIX, export / "vorgaenge.json")
+            out = Path(d) / "_site"
+            out.mkdir()
+            with mock.patch.object(config, "EXPORT", export):
+                pfade = vorgangsseiten.erzeugen(out)
+                ortsteilseiten.sitzungen_erzeugen(out)
+            daten = json.loads(FIX.read_text(encoding="utf-8"))
+            ohne = [v for v in daten["vorgaenge"] if not v["verfahrenspunkt"]]
+            self.assertEqual(len(pfade), len(ohne))  # Verfahrenspunkte ohne eigene Seite
+            v = next(x for x in ohne if x["reference"] == "STV/066/2026")
+            seite = (out / "vorgang" / "stv-066-2026" / "index.html").read_text(encoding="utf-8")
+            self.assertIn(html.escape(v["name"]), seite)
+            self.assertIn('href="../../#STV/066/2026"', seite)  # zurück zur Karte
+            self.assertIn(f"Beratungen ({len(v['process'])})", seite)
+            self.assertIn("Das Ergebnis ist nicht veröffentlicht", seite)
+            self.assertNotIn("<script", seite)
+            self.assertIn('href="../vorgang/stv-066-2026/"', (out / "sitzungen" / "index.html").read_text(encoding="utf-8"))
 
     def test_im_seitenbau_sitemap_und_verweise(self):
         with tempfile.TemporaryDirectory() as d:

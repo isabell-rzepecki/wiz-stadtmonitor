@@ -22,3 +22,7 @@
 .mehr-link { display: inline-block; font-weight: 700; text-decoration: none; padding: 8px 14px; border-radius: 12px; background: var(--accent-tint); }
 @media (max-width: 520px) { .zahlen { grid-template-columns: 1fr; gap: 0; } .zahlen dd { margin-bottom: 8px; } .anzahl { margin-left: 0; } }
 .spalten { columns: 2 14em; }
+/* Seiten je Vorgang: Titel sind oft lang und enthalten Wortketten mit Schrägstrich */
+.page h1.vorgang-titel { font-size: 26px; hyphens: auto; overflow-wrap: anywhere; }
+.page .vorgaenge li { overflow-wrap: anywhere; }
+@media (max-width: 600px) { .page h1.vorgang-titel { font-size: 22px; } }

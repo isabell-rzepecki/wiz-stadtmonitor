@@ -11,6 +11,8 @@ cd "$ROOT"
 python3 -c "from pathlib import Path; from pipeline import site; site.build(Path('$TMP/leer'), mit_daten=False)"
 python3 -c "from pathlib import Path; from pipeline import site; site.build(Path('$TMP/test'), mit_daten=False)"
 cp tests/fixtures/vorgaenge.json "$TMP/test/data/export/vorgaenge.json"
+# Seiten je Vorgang zu den Testdaten (pipeline/vorgangsseiten.py)
+python3 -c "from pathlib import Path; from unittest import mock; from pipeline import config, vorgangsseiten; mock.patch.object(config, 'EXPORT', Path('$TMP/test/data/export')).start(); vorgangsseiten.erzeugen(Path('$TMP/test'))"
 # Kalender und Feeds zu den Testdaten (pipeline/abo.py), Stand fest wie die Uhr im Browsertest
 python3 -c "import json; from pathlib import Path; from pipeline import abo; abo.schreiben(json.load(open('tests/fixtures/vorgaenge.json', encoding='utf-8')), '2026-10-24T10:00:00Z', Path('$TMP/test/data/export/abo'))"
 # Kartenebene Bauleitplanung: eine erfundene Testfläche (keine Daten der Stadt; deren Umringe liegen nicht im Repository)

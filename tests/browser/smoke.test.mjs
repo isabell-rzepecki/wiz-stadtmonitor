@@ -85,6 +85,7 @@ test("Gebiet aus dem Link: Vorgang mit zwei Stationen, Ergebnis als Lücke, ohne
   assert.match(await page.locator("#detail").textContent(), /Stufe B/);
   assert.match(await page.locator("#detail").textContent(), /Räumliche Überschneidung.*kein inhaltlicher Bezug/s);
   assert.ok(page.url().endsWith("#STV%2F066%2F2026"), page.url());
+  assert.equal(await page.locator('#detail a[href="vorgang/stv-066-2026/"]').count(), 1, "Link zur Seite des Vorgangs");
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
   await page.close();
@@ -127,7 +128,7 @@ test("Stellungnahme eines Ortsbeirats: Station im Beschlussvorgang, Zählung mit
 });
 
 test("Nur eigene Domain: Datenquellen als Seite, interner Bereich, Hinweise per E-Mail, ohne Verstöße", async () => {
-  for (const pfad of ["quellen.html", "intern/", "teilen/", "ortsteile/", "ortsteil/gertenbach/", "sitzungen/", "gremien/", "gremium/stvv/", "barrierefreiheit.html", "einfache-sprache.html"]) {
+  for (const pfad of ["quellen.html", "intern/", "teilen/", "ortsteile/", "ortsteil/gertenbach/", "sitzungen/", "gremien/", "gremium/stvv/", "barrierefreiheit.html", "einfache-sprache.html", "vorgang/stv-066-2026/"]) {
     const page = await browser.newPage({ bypassCSP: true });
     const fehler = [];
     page.on("pageerror", (e) => fehler.push(String(e)));
