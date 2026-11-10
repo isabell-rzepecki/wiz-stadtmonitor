@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Prüfung der Erfassungen durch die Prüfgruppe, nicht öffentlich verlinkt. Alles rechnet im Browser; connect-src 'none'
-       schließt jedes Abrufen und Senden aus. Regeln und Dateiformate wie tools/pruefen.py (Bestand bestand.sealed,
-       Register, Zugriffsprotokoll); Schemata und Kategorien setzt der Seitenbau aus config/stadt.json ein. -->
+  <!-- Prüfung der Erfassungen durch die Prüfgruppe, im passwortgeschützten Bereich /intern/. Alles rechnet im Browser;
+       connect-src 'none' schließt jedes Abrufen und Senden aus. Schlüssel, Bestand, Kartenliste und Zugriffsprotokoll
+       liegen zusammen in einer Arbeitsdatei, die mit dem Passwort der Prüfgruppe verschlüsselt ist (Argon2id und
+       XSalsa20-Poly1305); tools/pruefgruppe.py kann sie in die einzelnen Dateien auspacken. Schemata und Kategorien setzt
+       der Seitenbau aus config/stadt.json ein. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta name="robots" content="noindex, nofollow">
   <title>Prüfung der Erfassungen – Stadtmonitor</title>
@@ -18,72 +20,74 @@
 <body>
   <header class="page-head">
     <span class="page-brand"><img src="../favicon.svg" width="32" height="32" alt="">Stadtmonitor</span>
+    <a href="./">Zurück zur Übersicht</a>
   </header>
   <main class="page breit" id="inhalt">
     <h1>Prüfung der Erfassungen</h1>
-    <p>Für die Prüfgruppe: Exportdateien der Erfassung einlesen, prüfen und zu zweit freigeben. Die Seite rechnet nur in diesem Browser und kann technisch nichts senden. Sie speichert nichts im Browser; am Ende gibt sie den versiegelten Bestand als Datei aus.</p>
-    <p id="netz" class="hinweis" role="status"></p>
+    <p>Hier liest die Prüfgruppe die Dateien der Erfassenden ein, prüft und gibt sie frei. Alles, was die Prüfgruppe braucht, steckt in einer <strong>Arbeitsdatei</strong> mit einem Passwort. Die Seite rechnet nur in diesem Browser und sendet nichts.</p>
     <p id="laden" class="hinweis" role="status">Verschlüsselung wird geladen …</p>
 
-    <section aria-labelledby="t-oeffnen">
-      <h2 id="t-oeffnen">1. Sitzung öffnen</h2>
+    <section class="schritt" aria-labelledby="t-oeffnen">
+      <h2 id="t-oeffnen"><span class="nr" aria-hidden="true">1</span> Arbeitsdatei öffnen</h2>
       <form id="form-oeffnen" novalidate>
-        <label class="feld">Schlüsseldatei der Prüfgruppe
-          <input type="file" id="f-schluessel" accept=".json,application/json" required></label>
-        <label class="feld">Passphrase
-          <input type="password" id="f-pass" autocomplete="off" required></label>
-        <label class="feld">Prüfer-ID (pseudonym, etwa P-1; kein Name)
-          <input type="text" id="f-pruefer" autocomplete="off" pattern="P-[A-Za-z0-9_\-]{1,20}" required></label>
-        <label class="feld">Bestandsdatei <span class="klein">(bestand.sealed; leer lassen für einen neuen Bestand)</span>
-          <input type="file" id="f-bestand"></label>
-        <label class="feld">Register der Einladungscodes <span class="klein">(von der Ausgabestelle; ohne Register werden Codes nicht geprüft)</span>
-          <input type="file" id="f-register" accept=".tsv,text/tab-separated-values,text/plain"></label>
-        <label class="feld">Bisheriges Zugriffsprotokoll <span class="klein">(optional, namenzugriff.tsv; wird fortgeschrieben)</span>
-          <input type="file" id="f-protokoll" accept=".tsv,text/tab-separated-values,text/plain"></label>
-        <p class="knoepfe"><button type="submit" class="knopf" id="knopf-oeffnen" disabled>Öffnen</button>
-          <button type="button" class="knopf" id="knopf-probe" disabled>Probe ohne echte Daten</button></p>
+        <label class="feld">Arbeitsdatei (arbeitsdatei.json)
+          <input type="file" id="f-arbeitsdatei" accept=".json,application/json" required></label>
+        <label class="feld">Passwort der Prüfgruppe
+          <input type="password" id="f-pass" autocomplete="current-password" required></label>
+        <p class="knoepfe"><button type="submit" class="knopf gross" id="knopf-oeffnen" disabled>Öffnen</button></p>
       </form>
       <p id="oeffnen-status" role="status" tabindex="-1"></p>
-      <p id="probe-band" class="hinweis" role="status" hidden>Probe: Wegwerf-Schlüssel und erfundene Testdaten. Nichts davon ist echt; die Dateien taugen nicht zur Veröffentlichung.</p>
+      <details class="mehr" id="erstmals">
+        <summary>Noch keine Arbeitsdatei? Erstmals einrichten</summary>
+        <p>Das geschieht nur einmal. Wählen Sie ein Passwort, das sich die Prüfgruppe gut merken kann, zum Beispiel vier Wörter mit Leerzeichen dazwischen. Ohne dieses Passwort lässt sich die Arbeitsdatei nicht mehr öffnen.</p>
+        <form id="form-einrichten" novalidate>
+          <label class="feld">Neues Passwort (mindestens 10 Zeichen)
+            <input type="password" id="pass1" autocomplete="new-password" minlength="10" required></label>
+          <label class="feld">Passwort wiederholen
+            <input type="password" id="pass2" autocomplete="new-password" minlength="10" required></label>
+          <p><button type="submit" class="knopf" id="knopf-einrichten" disabled>Einrichten</button></p>
+        </form>
+        <p id="einrichten-status" role="status" tabindex="-1"></p>
+        <div id="einrichten-ergebnis" hidden>
+          <ol>
+            <li><button type="button" class="knopf" id="speichern-arbeitsdatei-neu">Arbeitsdatei speichern</button> Auf einem USB-Stick ablegen und eine Kopie auf einem zweiten Stick als Sicherung.</li>
+            <li><button type="button" class="knopf" id="speichern-kartenliste-neu">Kartenliste für die Ausgabestelle speichern</button> Diese Datei an die Ausgabestelle geben (E-Mail ist möglich, sie enthält nichts Geheimes).</li>
+          </ol>
+        </div>
+      </details>
+      <p><button type="button" class="link-btn" id="knopf-probe" disabled>Ohne echte Daten ausprobieren</button></p>
+      <p id="probe-band" class="hinweis" role="status" hidden>Probe: erfundene Testdaten mit einem Wegwerf-Schlüssel. Nichts davon ist echt; gespeichert wird nichts.</p>
     </section>
 
     <div id="sitzung" hidden>
       <section aria-labelledby="t-stand">
-        <h2 id="t-stand">Stand</h2>
+        <h2 id="t-stand" class="visually-hidden">Stand</h2>
         <dl class="stand" id="stand"></dl>
-        <form id="form-pruefer" class="zeile" novalidate>
-          <label class="feld">Prüfer-ID wechseln (zweite Person am selben Gerät)
-            <input type="text" id="f-pruefer2" autocomplete="off" pattern="P-[A-Za-z0-9_\-]{1,20}"></label>
-          <button type="submit" class="knopf">Wechseln</button>
-        </form>
-        <p id="pruefer-status" role="status"></p>
       </section>
 
-      <section aria-labelledby="t-eingang">
-        <h2 id="t-eingang">2. Eingang</h2>
+      <section class="schritt" aria-labelledby="t-eingang">
+        <h2 id="t-eingang"><span class="nr" aria-hidden="true">2</span> Neue Dateien einlesen</h2>
+        <p>Wählen Sie die Dateien, die Erfassende geschickt haben (Endung .bin). Hat die Ausgabestelle eine neue Kartenliste geschickt, wählen Sie sie einfach mit aus.</p>
         <form id="form-eingang" novalidate>
-          <label class="feld">Exportdateien der Erfassenden
+          <label class="feld">Dateien
             <input type="file" id="f-exporte" multiple></label>
-          <p><button type="submit" class="knopf">Einlesen</button></p>
+          <p><button type="submit" class="knopf gross">Einlesen und prüfen</button></p>
         </form>
         <p id="eingang-status" role="status" tabindex="-1"></p>
         <div id="eingang-ergebnis" hidden>
           <div class="tabelle-rahmen"><table id="eingang-tabelle"><caption>Ergebnis des Einlesens</caption>
             <thead><tr><th scope="col">Kennung</th><th scope="col">Typ</th><th scope="col">Ergebnis</th><th scope="col">Datei</th></tr></thead><tbody></tbody></table></div>
-          <p><button type="button" class="knopf" id="speichern-einlesebericht">Einlesebericht speichern</button></p>
-          <p class="klein">Eingelesene Exportdateien danach löschen; sie liegen versiegelt im Bestand.</p>
+          <p class="klein">Die eingelesenen Dateien können Sie danach löschen; ihr Inhalt steckt jetzt verschlüsselt in der Arbeitsdatei.</p>
         </div>
       </section>
 
-      <section aria-labelledby="t-pruefen">
-        <h2 id="t-pruefen">3. Prüfen und freigeben</h2>
-        <p>„Prüfen“ vergibt Vermieter-Schlüssel und markiert Dubletten und abweichende Angaben. Jeder Eintrag braucht zwei Freigaben verschiedener Prüfer-IDs, entweder nacheinander hier oder an einem zweiten Gerät mit derselben Bestandsdatei.</p>
-        <p class="knoepfe"><button type="button" class="knopf" id="knopf-pruefen">Prüfen</button>
-          <button type="button" class="knopf" id="knopf-alle">Alle freigeben (als <span class="pruefer-id"></span>)</button>
-          <button type="button" class="knopf" id="speichern-pruefliste">Prüfliste speichern</button></p>
+      <section class="schritt" aria-labelledby="t-pruefen">
+        <h2 id="t-pruefen"><span class="nr" aria-hidden="true">3</span> Ansehen und freigeben</h2>
+        <p>Die Seite hat schon geprüft: Sie vergibt Schlüssel für Vermieter und markiert doppelte oder widersprüchliche Angaben unter „Hinweis“. Einträge ohne Hinweis können Sie gesammelt freigeben. Einträge mit Hinweis sehen Sie sich an und verwerfen sie, wenn sie nicht stimmen.</p>
+        <p class="knoepfe"><button type="button" class="knopf gross" id="knopf-alle">Alle Einträge ohne Hinweis freigeben</button></p>
         <p id="pruefen-status" role="status" tabindex="-1"></p>
-        <div class="tabelle-rahmen"><table id="liste"><caption>Einträge im Bestand</caption>
-          <thead><tr><th scope="col"><span class="visually-hidden">Auswahl</span></th><th scope="col">Kennung</th><th scope="col">Typ</th><th scope="col">Gebäude</th><th scope="col">Angaben</th><th scope="col">Vermieter</th><th scope="col">Status</th><th scope="col">Hinweis</th><th scope="col">Freigaben</th></tr></thead>
+        <div class="tabelle-rahmen"><table id="liste"><caption>Einträge</caption>
+          <thead><tr><th scope="col"><span class="visually-hidden">Auswahl</span></th><th scope="col">Kennung</th><th scope="col">Typ</th><th scope="col">Gebäude</th><th scope="col">Angaben</th><th scope="col">Vermieter</th><th scope="col">Status</th><th scope="col">Hinweis</th><th scope="col">Freigegeben</th></tr></thead>
           <tbody></tbody></table></div>
         <form id="form-auswahl" class="zeile" novalidate>
           <button type="button" class="knopf" id="knopf-auswahl-frei">Ausgewählte freigeben</button>
@@ -93,19 +97,43 @@
         </form>
       </section>
 
-      <section aria-labelledby="t-rechte">
-        <h2 id="t-rechte">4. Rechte und Fristen</h2>
+      <section class="schritt" aria-labelledby="t-veroeffentlichen">
+        <h2 id="t-veroeffentlichen"><span class="nr" aria-hidden="true">4</span> Ergebnisse veröffentlichen (bei Bedarf)</h2>
+        <p>Aus den freigegebenen Einträgen entstehen nur zusammengefasste Zahlen: Eigentum von Unternehmen je Gebäude, Anteile je Ortsbezirk und Mieten je Ortsbezirk und Baujahr, erst ab einer Mindestzahl von Angaben. Eine Sperre bricht ab, wenn etwas Einzelnes oder Persönliches enthalten wäre.</p>
+        <p><button type="button" class="knopf" id="knopf-veroeffentlichen">Vorschau erzeugen</button></p>
+        <p id="veroeffentlichen-status" role="status" tabindex="-1"></p>
+        <div id="vorschau" hidden>
+          <div id="vorschau-inhalt"></div>
+          <p><button type="button" class="knopf" id="speichern-veroeffentlichung">Veröffentlichungsdatei speichern</button></p>
+          <p class="klein">Diese Datei enthält nur zusammengefasste Ergebnisse. Geben Sie sie an die verantwortliche Stelle; sie stellt die Zahlen auf die Seite.</p>
+        </div>
+      </section>
+
+      <section class="schritt" aria-labelledby="t-schliessen">
+        <h2 id="t-schliessen"><span class="nr" aria-hidden="true">5</span> Arbeitsdatei speichern</h2>
+        <p id="ungespeichert" class="hinweis" role="status"></p>
+        <p class="knoepfe"><button type="button" class="knopf gross" id="speichern-arbeitsdatei">Arbeitsdatei speichern</button>
+          <button type="button" class="knopf" id="knopf-beenden">Beenden</button></p>
+        <ol class="klein">
+          <li>Ersetzen Sie die bisherige Arbeitsdatei auf dem USB-Stick durch die gespeicherte.</li>
+          <li>Kopieren Sie sie auch auf den zweiten Stick (Sicherung).</li>
+          <li>Die Arbeitsdatei nicht per E-Mail, Messenger oder Cloud weitergeben.</li>
+        </ol>
+      </section>
+
+      <details class="mehr">
+        <summary>Löschen auf Anfrage und Speicherfristen</summary>
         <form id="form-widerruf" class="zeile" novalidate>
-          <label class="feld">Widerruf einer Mietangabe: Widerrufscode (XXXX-XXXX) oder Kennung
+          <label class="feld">Jemand zieht eine Mietangabe zurück: Widerrufscode (XXXX-XXXX)
             <input type="text" id="f-widerruf" autocomplete="off"></label>
           <button type="submit" class="knopf">Eintrag löschen</button>
         </form>
         <form id="form-widerspruch" class="zeile" novalidate>
-          <label class="feld">Widerspruch von Vermieter:innen (Art. 21 DSGVO): Gebäudekennungen, durch Komma getrennt
+          <label class="feld">Vermieter:in widerspricht (Art. 21 DSGVO): Gebäudekennungen, durch Komma getrennt
             <input type="text" id="f-widerspruch" autocomplete="off"></label>
           <button type="submit" class="knopf">Löschen und sperren</button>
         </form>
-        <p class="klein">Beim Widerspruch werden die Eigentumsangaben zu diesen Gebäuden und zu allen Gebäuden derselben Privatperson gelöscht; die Gebäude kommen auf die Sperrliste und werden nicht erneut aufgenommen.</p>
+        <p class="klein">Beim Widerspruch werden die Eigentumsangaben zu diesen Gebäuden und zu allen Gebäuden derselben Privatperson gelöscht; die Gebäude werden nicht erneut aufgenommen.</p>
         <form id="form-auskunft" class="zeile" novalidate>
           <label class="feld">Auskunft (Art. 15 DSGVO): Gebäudekennung
             <input type="text" id="f-auskunft" autocomplete="off"></label>
@@ -116,28 +144,17 @@
         <h3>Speicherdauer</h3>
         <p id="fristen-text"></p>
         <p class="knoepfe"><button type="button" class="knopf" id="knopf-fristen">Fällige Einträge löschen</button></p>
-      </section>
+      </details>
 
-      <section aria-labelledby="t-veroeffentlichen">
-        <h2 id="t-veroeffentlichen">5. Veröffentlichen</h2>
-        <p>Aus den zweimal freigegebenen Einträgen entstehen nur zusammengefasste Dateien: Eigentum juristischer Personen je Gebäude, Anteile je Ortsbezirk (Privatpersonen nur als Anzahl ab der Mindestzahl) und Mieten je Ortsbezirk und Baujahrklasse (Median ab der Mindestzahl, Spanne erst ab mehr Angaben, gerundet). Eine Sperre bricht ab, wenn etwas Einzelnes oder Persönliches enthalten wäre.</p>
-        <p><button type="button" class="knopf" id="knopf-veroeffentlichen">Vorschau erzeugen</button></p>
-        <p id="veroeffentlichen-status" role="status" tabindex="-1"></p>
-        <div id="vorschau" hidden>
-          <div id="vorschau-inhalt"></div>
-          <p><button type="button" class="knopf" id="speichern-veroeffentlichung">Veröffentlichungsdatei speichern</button></p>
-          <p class="klein">Diese eine Datei enthält die zusammengefassten Ergebnisse (ohne Namen von Privatpersonen, ohne einzelne Angaben). Sie geht an die verantwortliche Stelle bzw. in den Chat; dort wird sie noch einmal geprüft und mit <code>python tools/veroeffentlichen.py uebernehmen DATEI</code> übernommen. Danach den Bestand speichern (der Verlauf vermerkt die Veröffentlichung).</p>
-        </div>
-      </section>
-
-      <section aria-labelledby="t-schliessen">
-        <h2 id="t-schliessen">6. Sitzung schließen</h2>
-        <p id="ungespeichert" class="hinweis" role="status"></p>
-        <p class="knoepfe"><button type="button" class="knopf" id="speichern-bestand">Bestand speichern (bestand.sealed)</button>
+      <details class="mehr">
+        <summary>Weitere Funktionen</summary>
+        <p class="knoepfe"><button type="button" class="knopf" id="knopf-pruefen">Erneut prüfen</button>
+          <button type="button" class="knopf" id="speichern-pruefliste">Prüfliste speichern</button>
+          <button type="button" class="knopf" id="speichern-einlesebericht">Einlesebericht speichern</button>
           <button type="button" class="knopf" id="speichern-protokoll">Zugriffsprotokoll speichern</button>
-          <button type="button" class="knopf" id="knopf-beenden">Sitzung beenden</button></p>
-        <p class="klein">Die Bestandsdatei ist mit dem Schlüssel der Prüfgruppe versiegelt. Sie gehört nicht in ein Git-Repository, eine E-Mail oder einen Messenger; zur zweiten Freigabe an einem anderen Gerät persönlich weitergeben (USB-Stick). Das Zugriffsprotokoll sieht vierteljährlich eine Person ohne Schlüssel durch.</p>
-      </section>
+          <button type="button" class="knopf" id="speichern-kartenliste">Kartenliste für die Ausgabestelle speichern</button></p>
+        <p class="klein">Die Kartenliste brauchen Sie nur, wenn die Ausgabestelle ihre Datei verloren hat. Das Zugriffsprotokoll zeigt, wann Namen von Privatpersonen entschlüsselt wurden (nur zum Abgleich der Vermieter).</p>
+      </details>
     </div>
   </main>
   <script src="../vendor/libsodium-sumo/libsodium-sumo.js"></script>

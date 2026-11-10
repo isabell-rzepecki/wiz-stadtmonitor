@@ -110,7 +110,7 @@ class Probe:
         neu, zeilen = pruefen.einlesen(self.arbeit("P-1"), [*self.exporte, fremd], self.register)
         ab = [z for z in zeilen if z[2].startswith("abgewiesen")]
         assert neu == len(self.a) + len(self.b), zeilen
-        assert len(ab) == 1 and "Einladungsregister" in ab[0][2], ab
+        assert len(ab) == 1 and "Kartenliste" in ab[0][2], ab
         return f"{neu} aufgenommen; Export einer unbekannten Erfasser-ID abgewiesen"
 
     def s6_pruefen_freigeben(self):

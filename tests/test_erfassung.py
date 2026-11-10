@@ -108,14 +108,14 @@ class Erfassung(unittest.TestCase):
         for name in ("index.html", "app.js", "wohnen.html", "wohnen.js", "wohnen-module.js", "erfassen.html", "erfassen.js",
                      "datenschutz.html", "impressum.html"):
             text = (SITE / name).read_text(encoding="utf-8")
-            self.assertNotIn("einrichten.html", text, name)
+            self.assertNotIn("karten.html", text, name)
             self.assertNotIn("pruefen.html", text, name)
             if name in ("index.html", "app.js", "wohnen.html", "wohnen.js", "wohnen-module.js"):
                 self.assertNotIn("erfassen", text, name)
-        for seite in ("erfassen.html", "intern/index.html", "intern/einrichten.html", "intern/pruefen.html"):
+        for seite in ("erfassen.html", "intern/index.html", "intern/karten.html", "intern/pruefen.html"):
             self.assertIn('content="noindex', (SITE / seite).read_text(encoding="utf-8"))
         # interner Bereich: kann technisch nichts senden; öffentlich nirgends verlinkt
-        for seite in ("intern/index.html", "intern/einrichten.html", "intern/pruefen.html"):
+        for seite in ("intern/index.html", "intern/karten.html", "intern/pruefen.html"):
             self.assertIn("connect-src 'none'", (SITE / seite).read_text(encoding="utf-8"))
         for name in ("index.html", "app.js", "wohnen.html", "erfassen.html", "datenschutz.html", "impressum.html", "aushang.html"):
             self.assertNotIn("intern/", (SITE / name).read_text(encoding="utf-8"), name)

@@ -614,6 +614,7 @@ async function erfassenSeite({ aktiv = true, zugang = true, ohneStelle = false, 
   });
   page.schluesseldatei = (dir) => { const p = join(dir, "pg.json"); writeFileSync(p, JSON.stringify({ key_id: "test-1", alg: "libsodium-sealedbox-x25519",
     public_key: sodium.to_base64(kp.publicKey, V), secret_key: sodium.to_base64(kp.privateKey, V) })); return p; };
+  page.kartenlink = (bis = "2099-12-31", code = TESTCODE) => `${SITE}erfassen.html?karte=${Math.random().toString(36).slice(2)}#code=${code}&bis=${bis}&schluessel=test-1~${sodium.to_base64(kp.publicKey, sodium.base64_variants.URLSAFE_NO_PADDING)}`;
   page.oeffnen = (ct) => JSON.parse(sodium.to_string(sodium.crypto_box_seal_open(sodium.from_base64(ct, V), kp.publicKey, kp.privateKey)));
   page.oeffnenText = (ct) => sodium.to_string(sodium.crypto_box_seal_open(sodium.from_base64(ct, V), kp.publicKey, kp.privateKey));
   await page.goto(SITE + "erfassen.html", { waitUntil: "networkidle" });
@@ -622,6 +623,12 @@ async function erfassenSeite({ aktiv = true, zugang = true, ohneStelle = false, 
 async function freischalten(page) {
   await page.fill("#code", "abcd efgh jkmn pqrs");
   await page.locator("#zugang button").click();
+  await page.waitForFunction(() => window.stadtmonitorErfassen && window.stadtmonitorErfassen.map.loaded());
+  await page.selectOption("#ortsteil", "gertenbach");
+  await page.waitForFunction(() => window.stadtmonitorErfassen.map.queryRenderedFeatures({ layers: ["flaeche"] }).length > 0);
+}
+async function karteScannen(page, link) {
+  await page.goto(link, { waitUntil: "networkidle" });
   await page.waitForFunction(() => window.stadtmonitorErfassen && window.stadtmonitorErfassen.map.loaded());
   await page.selectOption("#ortsteil", "gertenbach");
   await page.waitForFunction(() => window.stadtmonitorErfassen.map.queryRenderedFeatures({ layers: ["flaeche"] }).length > 0);
@@ -642,19 +649,26 @@ const exportDatei = async (page, typ) => {
   return { name: dl.suggestedFilename(), inhalt: JSON.parse(readFileSync(await dl.path(), "utf8")) };
 };
 
-test("Erfassung ohne Freigaben: Code nötig, ohne Schlüssel kein Speichern, Mietangaben aus, Datenschutzhinweis, ohne Verstöße", async () => {
+test("Erfassung über die Einladungskarte: QR-Link meldet an, Adresse bereinigt, ohne benannte Stelle kein Speichern, Mietangaben aus, ohne Verstöße", async () => {
   const page = await erfassenSeite({ aktiv: false });
   assert.equal(await page.locator("#tafel-titel").textContent(), "Zugang");
   assert.equal(await page.locator("#ortsteil-wahl").isVisible(), false);
+  assert.match(await page.locator("#tafel-inhalt").textContent(), /QR-Code auf Ihrer Einladungskarte/);
+  assert.equal(await page.locator("#code").count(), 0);  // ohne Codeliste in der Konfiguration kein Abtippen
   assert.deepEqual(await axe(page), []);
-  await page.fill("#code", "1234");
-  await page.locator("#zugang button").click();
-  assert.match(await page.locator("#code-fehler").textContent(), /16 Zeichen/);
-  await page.fill("#code", "ZZZZ-ZZZZ-ZZZZ-ZZZZ");
-  await page.locator("#zugang button").click();
-  await page.waitForFunction(() => /nicht \(mehr\) gültig/.test(document.querySelector("#code-fehler").textContent));
-  await freischalten(page);
-  assert.match(await page.locator("#tafel-inhalt").textContent(), /Speichern noch nicht möglich.*Erfasser-ID E-227c7469/s);
+  await page.goto(`${SITE}erfassen.html?a#code=ABCD`, { waitUntil: "networkidle" });
+  assert.match(await page.locator("#tafel-inhalt").textContent(), /Link der Einladungskarte ist unvollständig/);
+  await page.goto(page.kartenlink("2020-01-01"), { waitUntil: "networkidle" });
+  assert.match(await page.locator("#tafel-inhalt").textContent(), /abgelaufen \(gültig bis 01\.01\.2020\)/);
+  assert.equal(new URL(page.url()).hash, "");
+  await karteScannen(page, page.kartenlink());
+  assert.equal(new URL(page.url()).hash, "");  // Code nicht in Adresse und Verlauf
+  const z = await page.evaluate(async () => {
+    const d = await new Promise((ok) => { const r = indexedDB.open("wiz-erfassung"); r.onsuccess = () => ok(r.result); });
+    return new Promise((ok) => { const g = d.transaction("meta").objectStore("meta").get("zugang"); g.onsuccess = () => ok(g.result); });
+  });
+  assert.deepEqual([z.erfasser, z.bis, z.schluessel.key_id], ["E-227c7469", "2099-12-31", "test-1"]);
+  assert.match(await page.locator("#tafel-inhalt").textContent(), /verantwortliche Stelle ist noch nicht benannt.*Erfasser-ID E-227c7469/s);
   await gebaeudeAntippen(page);
   assert.equal(await page.locator("#zu-b").isDisabled(), true);
   await page.locator("#zu-a").click();
@@ -822,10 +836,10 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
   assert.equal(await page.locator("#anzahl").textContent(), "0");
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);
-  // Widerruf: Hash nicht mehr in der Konfiguration
+  // Sperre eines älteren, abgetippten Codes: Hash nicht mehr in der Konfiguration
   page.konfig.zugang = false;
   await page.reload({ waitUntil: "networkidle" });
-  assert.match(await page.locator("#tafel-inhalt").textContent(), /widerrufen/);
+  assert.match(await page.locator("#tafel-inhalt").textContent(), /gesperrt/);
   // abgelaufener Code (Eintrag mit Ablaufdatum): nicht freischaltbar
   Object.assign(page.konfig, { zugang: true, bis: "2020-01-01" });
   await page.reload({ waitUntil: "networkidle" });
@@ -844,7 +858,7 @@ test("Erfassung offline: Service Worker speichert Programm und Gebäude, Bereich
   await page.waitForFunction(async () => !!(await caches.match(new URL("data/export/karte/gebaeude.pmtiles", location.href).href)));
   await ctx.setOffline(true);
   await page.reload({ waitUntil: "load" });
-  await page.locator("#code").waitFor();
+  await page.locator("#probe").waitFor();
   assert.match(await page.locator("#netz").textContent(), /Offline/);
   const r = await page.evaluate(async () => {
     const x = await fetch("data/export/karte/gebaeude.pmtiles", { headers: { Range: "bytes=0-126" } });
@@ -880,111 +894,134 @@ test("Tour: Start aus dem Startfenster, alle Schritte mit Pfeiltaste, Beispielvo
   await page.close();
 });
 
-test("Einrichtungsseite: Schlüssel, Papiersicherung und Codes im Browser, kompatibel mit den Python-Werkzeugen, nichts gesendet, ohne Verstöße", async () => {
-  // ohne bypassCSP: Die Seite muss mit ihrer eigenen Richtlinie (connect-src 'none', WebAssembly) funktionieren
+test("Einrichten und Einladungskarten: Prüfgruppe richtet ein, Ausgabestelle druckt und sperrt Karten, QR-Link meldet in der App an, Export kommt an, nichts gesendet, ohne Verstöße", async () => {
+  // ohne bypassCSP: Die Seiten müssen mit ihrer eigenen Richtlinie (connect-src 'none', WebAssembly) funktionieren
   const ctx = await browser.newContext({ acceptDownloads: true });
   const page = await ctx.newPage();
   const fehler = [], abrufe = [];
   page.on("pageerror", (e) => fehler.push(String(e)));
   page.on("console", (m) => { if (m.type() === "error") fehler.push(m.text()); });
   page.on("request", (r) => abrufe.push(r.url()));
-  await page.goto(SITE + "intern/einrichten.html");
-  await page.waitForFunction(() => !document.querySelector("#knopf-schluessel").disabled);
-  assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'none'/);
-  assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex, nofollow");
-  // Barrierefreiheit: axe braucht ein eingefügtes Skript, das die Richtlinie der Seite (zu Recht) sperrt; daher eine zweite Ansicht
-  const pruef = await browser.newPage({ bypassCSP: true });
-  await pruef.goto(SITE + "intern/einrichten.html");
-  await pruef.waitForFunction(() => !document.querySelector("#knopf-codes").disabled);
-  await pruef.locator("#knopf-schluessel").click();
-  await pruef.fill("#anzahl", "2");
-  await pruef.locator("#knopf-codes").click();
-  await pruef.locator("#ergebnis-codes").waitFor();
-  assert.deepEqual(await axe(pruef), []);
-  await pruef.close();
-  const nachLaden = abrufe.length;
-  const dir = mkdtempSync(join(tmpdir(), "einrichtung-"));
-  const laden = async (knopf) => {
-    const [dl] = await Promise.all([page.waitForEvent("download"), page.locator(knopf).click()]);
-    const ziel = join(dir, dl.suggestedFilename());
+  const dir = mkdtempSync(join(tmpdir(), "karten-"));
+  const laden = async (knopf, p = page) => {
+    const [dl] = await Promise.all([p.waitForEvent("download"), p.locator(knopf).click()]);
+    const ziel = join(dir, `${Date.now()}_${dl.suggestedFilename()}`);
     await dl.saveAs(ziel);
     return ziel;
   };
-  // Druckansicht: Inhalt abfangen, bevor er nach dem Drucken wieder geleert wird
-  await page.evaluate(() => { window.print = () => { window.gedruckt = document.querySelector("#druck").innerHTML; }; });
   try {
-    // Schritt 1: zu kurze und ungleiche Passphrasen abgewiesen, dann Schlüssel mit Selbsttest
+    // Prüfgruppe: einrichten (zu kurz, ungleich, dann richtig), Arbeitsdatei und Kartenliste speichern
+    await page.goto(SITE + "intern/pruefen.html");
+    await page.waitForFunction(() => !document.querySelector("#knopf-einrichten").disabled);
+    assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'none'/);
+    await page.locator("#erstmals summary").click();
     await page.fill("#pass1", "zu kurz");
-    await page.locator("#knopf-schluessel").click();
-    assert.match(await page.locator("#schluessel-status").textContent(), /mindestens 12 Zeichen/);
-    assert.equal(await page.locator("#ergebnis-schluessel").isVisible(), false);
-    const PASS = "Testpassphrase für die Einrichtung";
+    await page.locator("#knopf-einrichten").click();
+    assert.match(await page.locator("#einrichten-status").textContent(), /mindestens 10 Zeichen/);
+    const PASS = "vier Wörter zum Testen";
     await page.fill("#pass1", PASS);
     await page.fill("#pass2", PASS + "x");
-    await page.locator("#knopf-schluessel").click();
-    assert.match(await page.locator("#schluessel-status").textContent(), /stimmen nicht überein/);
+    await page.locator("#knopf-einrichten").click();
+    assert.match(await page.locator("#einrichten-status").textContent(), /stimmen nicht überein/);
     await page.fill("#pass2", PASS);
-    await page.locator("#knopf-schluessel").click();
-    await page.waitForFunction(() => /Selbsttest bestanden/.test(document.querySelector("#schluessel-status").textContent), null, { timeout: 60000 });
+    await page.locator("#knopf-einrichten").click();
+    await page.waitForFunction(() => /Eingerichtet/.test(document.querySelector("#einrichten-status").textContent), null, { timeout: 60000 });
     assert.equal(await page.locator("#pass1").inputValue(), "");
-    const schluesseldatei = await laden("#speichern-schluessel");
-    const oeffSchluessel = await laden("#speichern-oeffentlich-schluessel");
-    await page.locator("#drucken-sicherung").click();
+    const arbeitsdatei = await laden("#speichern-arbeitsdatei-neu");
+    const kartenliste = await laden("#speichern-kartenliste-neu");
+    const roh = readFileSync(arbeitsdatei, "utf8");
+    assert.deepEqual(Object.keys(JSON.parse(roh)).sort(), ["ciphertext", "format", "gespeichert", "kdf", "key_id"]);
+    const kl = JSON.parse(readFileSync(kartenliste, "utf8"));
+    assert.deepEqual([kl.format, kl.karten.length, kl.key_id], ["wiz-kartenliste-1", 0, JSON.parse(roh).key_id]);
+    assert.doesNotMatch(readFileSync(kartenliste, "utf8"), /secret/);
+    // Python packt die Arbeitsdatei der Seite aus (gleicher öffentlicher Schlüssel, leerer Bestand)
+    const py = execFileSync("python3", ["-c", `
+import sys
+sys.path.insert(0, "tools")
+import pruefgruppe as pg
+i = pg.arbeitsdatei_lesen(sys.argv[1], sys.argv[2])
+assert i["bestand"]["eintraege"] == {} and i["karten"]["karten"] == []
+z = pg.arbeitsdatei_auspacken(sys.argv[1], sys.argv[2], sys.argv[3])
+print("ok", pg.Schluessel(z / "schluessel.json", sys.argv[2]).key_id)
+`, arbeitsdatei, PASS, join(dir, "aus")], { encoding: "utf8" });
+    assert.equal(py.trim(), `ok ${kl.key_id}`);
+    // Ausgabestelle: falsche Datei abgewiesen, Kartenliste öffnen, zwei Karten drucken, eine sperren, speichern
+    await page.goto(SITE + "intern/karten.html");
+    assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'none'/);
+    await page.evaluate(() => { window.print = () => { window.gedruckt = document.querySelector("#druck").innerHTML; }; });
+    await page.setInputFiles("#f-liste", arbeitsdatei);
+    assert.match(await page.locator("#oeffnen-status").textContent(), /keine Kartenliste/);
+    await page.setInputFiles("#f-liste", kartenliste);
+    await page.waitForFunction(() => /0 Karten/.test(document.querySelector("#oeffnen-status").textContent));
+    await page.fill("#anzahl", "2");
+    await page.locator("#form-neu button").click();
     await page.waitForFunction(() => window.gedruckt);
     const blatt = await page.evaluate(() => window.gedruckt);
-    assert.match(blatt, /<svg/);
-    const zeilen = blatt.match(/<pre>([\s\S]*?)<\/pre>/)[1].replaceAll("&amp;", "&");
-    assert.equal(JSON.parse(readFileSync(oeffSchluessel, "utf8")).schluessel.public_key, JSON.parse(readFileSync(schluesseldatei, "utf8")).public_key);
-    // Schritt 2: Codes mit Register und öffentlicher Datei
-    await page.fill("#anzahl", "3");
-    await page.locator("#knopf-codes").click();
-    await page.waitForFunction(() => /3 Codes erzeugt/.test(document.querySelector("#codes-status").textContent));
-    await page.evaluate(() => { window.gedruckt = null; });
-    await page.locator("#drucken-codes").click();
-    await page.waitForFunction(() => window.gedruckt);
-    const karten = await page.evaluate(() => window.gedruckt);
-    const codes = [...karten.matchAll(/class="code">([0-9A-Z-]{19})</g)].map((m) => m[1]);
-    assert.equal(codes.length, 3);
-    assert.match(karten, /erfassen\.html/);
-    const register = await laden("#speichern-register");
-    const oeffCodes = await laden("#speichern-oeffentlich-codes");
-    for (const c of codes) assert.doesNotMatch(readFileSync(register, "utf8") + readFileSync(oeffCodes, "utf8"), new RegExp(c));
-    // Python: Schlüsseldatei mit Passphrase öffnen und versiegelt prüfen, Sicherung wiederherstellen, Codes und Register,
-    // öffentliche Dateien in eine Kopie der stadt.json übernehmen
-    writeFileSync(join(dir, "zeilen.txt"), zeilen);
-    const aus = execFileSync("python3", ["-c", `
-import json, sys, shutil
-sys.path.insert(0, "tools")
-import pruefgruppe as pg, einladung, einrichten
-from nacl.public import SealedBox
-d, pw, zeilen, reg, oe1, oe2, codes = sys.argv[1:8]
-s = pg.Schluessel(d, pw)
-k = s.paare[s.key_id]
-assert SealedBox(k).decrypt(SealedBox(k.public_key).encrypt(b"probe")) == b"probe"
-ziel = d + ".zurueck"
-pg.aus_ausdruck(open(zeilen).read(), ziel)
-assert json.load(open(ziel)) == json.load(open(d))
-codes = codes.split(",")
-r = einladung.register_lesen(reg)
-assert [z["hash"] for z in r] == [einladung.code_hash(c) for c in codes]
-assert [z["erfasser_id"] for z in r] == [einladung.erfasser_id(c) for c in codes]
-stadt = d + ".stadt.json"
-shutil.copy("config/stadt.json", stadt)
-F = einrichten.uebernehmen([oe1, oe2], stadt)
-assert F["schluessel"]["key_id"] == s.key_id and [e["hash"] for e in F["einladungen"]][-3:] == [z["hash"] for z in r]
-print("ok", s.key_id)
-`, schluesseldatei, PASS, join(dir, "zeilen.txt"), register, oeffSchluessel, oeffCodes, codes.join(",")], { encoding: "utf8" });
-    assert.match(aus, /^ok pg-\d{8}-[0-9a-f]{8}/);
-    // Schritt 3: Sicherung im Browser prüfen, Tippfehler erkannt, Passphrase geprüft
-    await page.fill("#zeilen", zeilen.replace(/^(001 )(.)/m, (m, a, b) => a + (b === "A" ? "B" : "A")));
-    await page.locator("#knopf-sicherung").click();
-    assert.match(await page.locator("#sicherung-status").textContent(), /Zeile 001: Prüfziffern/);
-    await page.fill("#zeilen", zeilen);
-    await page.fill("#pass-pruef", PASS);
-    await page.locator("#knopf-sicherung").click();
-    await page.waitForFunction(() => /Passphrase öffnet ihn\./.test(document.querySelector("#sicherung-status").textContent), null, { timeout: 60000 });
-    assert.equal(readFileSync(await laden("#speichern-wiederhergestellt"), "utf8"), readFileSync(schluesseldatei, "utf8"));
-    // nach dem Laden der Seite kein einziger Abruf, im Browser nichts gespeichert
+    const links = [...blatt.matchAll(/data-link="([^"]+)"/g)].map((m) => m[1].replaceAll("&amp;", "&"));
+    assert.equal(links.length, 2);
+    assert.equal((blatt.match(/<svg/g) || []).length, 2);
+    assert.match(blatt, /Erhalten von \(Name\)/);
+    assert.match(links[0], new RegExp(`^https://stadtmonitor-witzenhausen\\.de/erfassen\\.html#code=[0-9A-Z-]{19}&bis=\\d{4}-\\d\\d-\\d\\d&schluessel=${kl.key_id}~[A-Za-z0-9_-]{43}$`));
+    assert.match(await page.locator("#ungespeichert").textContent(), /speichern/);
+    page.once("dialog", (d) => d.accept());
+    await page.locator("#karten [data-sperren]").first().click();
+    assert.match(await page.locator("#karten tbody").textContent(), /gesperrt seit/);
+    const liste2 = await laden("#speichern");
+    const k2 = JSON.parse(readFileSync(liste2, "utf8"));
+    assert.equal(k2.karten.length, 2);
+    assert.equal(k2.karten.filter((k) => k.widerrufen).length, 1);
+    for (const l of links) assert.doesNotMatch(readFileSync(liste2, "utf8"), new RegExp(new URLSearchParams(l.split("#")[1]).get("code")));
+    // Barrierefreiheit der Kartenseite (axe braucht ein eingefügtes Skript; daher eine zweite Ansicht ohne Richtlinie)
+    const pruef = await browser.newPage({ bypassCSP: true });
+    await pruef.goto(SITE + "intern/karten.html");
+    await pruef.setInputFiles("#f-liste", liste2);
+    await pruef.locator("#arbeit").waitFor();
+    assert.deepEqual(await axe(pruef), []);
+    await pruef.goto(SITE + "intern/index.html");
+    assert.deepEqual(await axe(pruef), []);
+    await pruef.close();
+    // Erfassende: QR-Link der zweiten (gültigen) Karte öffnet die App angemeldet; Eintrag speichern und exportieren
+    const app = await erfassenSeite();
+    await karteScannen(app, SITE + "erfassen.html?karte" + links[1].slice(links[1].indexOf("#")));
+    const eid = k2.karten[1].erfasser_id;
+    assert.match(await app.locator("#tafel-inhalt").textContent(), new RegExp(`Erfasser-ID ${eid}`));
+    await app.reload({ waitUntil: "networkidle" });  // ohne Link weiter angemeldet
+    await app.waitForFunction(() => window.stadtmonitorErfassen && window.stadtmonitorErfassen.map.loaded());
+    await app.selectOption("#ortsteil", "gertenbach");
+    await app.waitForFunction(() => window.stadtmonitorErfassen.map.queryRenderedFeatures({ layers: ["flaeche"] }).length > 0);
+    app.errors.length = 0;  // vom Neuladen abgebrochene Kartenabrufe zählen nicht
+    await gebaeudeAntippen(app);
+    await app.locator("#zu-a").click();
+    await app.locator('input[name="kategorie"][value="kom"]').check();
+    await app.fill('input[name="name_juristische_person"]', "Stadt (Test)");
+    await app.selectOption('select[name="beleg_art"]', "ortskenntnis");
+    await app.locator('#form-a button[type="submit"]').click();
+    await app.locator(".erfolg").waitFor();
+    await app.locator("#zu-eintraege").click();
+    const exp = await exportDatei(app, "eigentum");
+    assert.equal(exp.inhalt.eintraege[0].key_id, kl.key_id);  // mit dem Schlüssel aus dem Link versiegelt
+    const expDatei = join(dir, exp.name);
+    writeFileSync(expDatei, JSON.stringify(exp.inhalt));
+    assert.deepEqual(app.errors, []);
+    await app.context().close();
+    // Prüfgruppe: Arbeitsdatei öffnen, Export und neue Kartenliste in einem Zug einlesen, freigeben, speichern
+    await page.goto(SITE + "intern/pruefen.html");
+    await page.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);
+    const nachLaden = abrufe.length;
+    await page.setInputFiles("#f-arbeitsdatei", arbeitsdatei);
+    await page.fill("#f-pass", PASS);
+    await page.locator("#knopf-oeffnen").click();
+    await page.locator("#sitzung").waitFor({ timeout: 60000 });
+    assert.match(await page.locator("#stand").textContent(), /Einladungskarten0, davon 0 gültig/);
+    await page.setInputFiles("#f-exporte", [expDatei, liste2]);
+    await page.locator("#form-eingang button").click();
+    await page.waitForFunction(() => /aufgenommen/.test(document.querySelector("#eingang-status").textContent));
+    assert.match(await page.locator("#eingang-status").textContent(), /Kartenliste übernommen \(2 Karten\)\. 1 aufgenommen, 0 abgewiesen/);
+    assert.match(await page.locator("#stand").textContent(), /Einladungskarten2, davon 1 gültig/);
+    await page.locator("#knopf-alle").click();
+    assert.match(await page.locator("#stand").textContent(), /Freigegeben1/);
+    const neu = await laden("#speichern-arbeitsdatei");
+    assert.notEqual(readFileSync(neu, "utf8"), roh);
     assert.deepEqual(abrufe.slice(nachLaden), []);
     assert.deepEqual(await page.evaluate(() => [localStorage.length, sessionStorage.length]), [0, 0]);
     assert.deepEqual(fehler, []);
@@ -994,7 +1031,7 @@ print("ok", s.key_id)
   }
 });
 
-test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bestand mit Python austauschbar, nichts gesendet, ohne Verstöße", async () => {
+test("Prüfseite: Arbeitsdatei mit Passwort, Einlesen und Prüfen wie tools/pruefen.py, mit Python austauschbar, Rechte und Fristen, Probe, nichts gesendet, ohne Verstöße", async () => {
   const dir = mkdtempSync(join(tmpdir(), "pruefseite-"));
   const root = new URL("../..", import.meta.url).pathname;
   const fx = JSON.parse(execFileSync("python3", ["tests/browser/pruef_fixture.py", "erzeugen", dir], { cwd: root, encoding: "utf8" }));
@@ -1010,47 +1047,42 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     await dl.saveAs(ziel);
     return ziel;
   };
-  const oeffnen = async (bestand) => {
+  const oeffnen = async (datei, pass = fx.passphrase) => {
     await page.goto(SITE + "intern/pruefen.html");
     await page.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);
-    await page.setInputFiles("#f-schluessel", join(dir, "pg.json"));
-    await page.fill("#f-pass", fx.passphrase);
-    await page.fill("#f-pruefer", "P-1");
-    await page.setInputFiles("#f-register", join(dir, "einladungen.tsv"));
-    if (bestand) await page.setInputFiles("#f-bestand", bestand);
+    await page.setInputFiles("#f-arbeitsdatei", datei);
+    await page.fill("#f-pass", pass);
     await page.locator("#knopf-oeffnen").click();
-    await page.locator("#sitzung").waitFor();
   };
+  const offen = async (datei) => { await oeffnen(datei); await page.locator("#sitzung").waitFor(); };
+  const mehr = async (text) => { const d = page.locator("details.mehr", { hasText: text }); if (!(await d.getAttribute("open") !== null)) await d.locator("summary").click(); };
   try {
-    await oeffnen(null);
+    // falsches Passwort: nicht geöffnet
+    await oeffnen(fx.start, "falsches Passwort");
+    await page.waitForFunction(() => /Passwort ist falsch/.test(document.querySelector("#oeffnen-status").textContent));
+    assert.equal(await page.locator("#sitzung").isVisible(), false);
+    await offen(fx.start);
     assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'none'/);
     const nachLaden = abrufe.length;
-    // Prüfer-ID ohne Muster abgewiesen
-    await page.fill("#f-pruefer2", "Erika");
-    await page.locator("#form-pruefer button").click();
-    assert.match(await page.locator("#pruefer-status").textContent(), /Format P-/);
-    // Eingang: dieselben Fälle wie im Python-Referenzlauf
+    assert.match(await page.locator("#stand").textContent(), /Einladungskarten1, davon 1 gültig/);
+    // Eingang: dieselben Fälle wie im Python-Referenzlauf; geprüft wird gleich mit
     await page.setInputFiles("#f-exporte", fx.dateien);
     await page.locator("#form-eingang button").click();
     await page.waitForFunction(() => /aufgenommen/.test(document.querySelector("#eingang-status").textContent));
     assert.match(await page.locator("#eingang-status").textContent(), new RegExp(`^${fx.aufgenommen} aufgenommen, ${fx.abgewiesen} abgewiesen`));
-    assert.match(await page.locator("#eingang-tabelle").textContent(), /Erfasser-ID nicht im Einladungsregister.*/s);
-    // Prüfen, Freigabe durch P-1 und P-2 nacheinander
-    await page.locator("#knopf-pruefen").click();
-    await page.waitForFunction(() => /Geprüft/.test(document.querySelector("#pruefen-status").textContent));
+    assert.match(await page.locator("#eingang-tabelle").textContent(), /Karte nicht in der Kartenliste/);
+    assert.match(await page.locator("#stand").textContent(), /Mit Hinweis, bitte ansehen4/);
     await page.locator("#knopf-alle").click();
-    await page.fill("#f-pruefer2", "P-2");
-    await page.locator("#form-pruefer button").click();
-    await page.locator("#knopf-alle").click();
-    assert.match(await page.locator("#stand").textContent(), /Zweimal freigegeben21/);
+    assert.match(await page.locator("#stand").textContent(), /Freigegeben21/);
     assert.match(await page.locator("#liste").textContent(), /8,12 €\/m²/);  // 650 / 80 = 8,125 → 8,12 wie Python round()
-    assert.match(await page.locator("#ungespeichert").textContent(), /noch nicht/);
-    const bestand = await laden("#speichern-bestand");
+    assert.match(await page.locator("#ungespeichert").textContent(), /Arbeitsdatei speichern/);
+    const arbeitsdatei = await laden("#speichern-arbeitsdatei");
     assert.equal(await page.locator("#ungespeichert").textContent(), "");
+    await mehr("Weitere Funktionen");
     const protokoll = readFileSync(await laden("#speichern-protokoll"), "utf8").trim().split("\n");
     assert.equal(protokoll.length, readFileSync(join(dir, "ref", "namenzugriff.tsv"), "utf8").trim().split("\n").length);
-    // Python öffnet den Bestand der Seite: gleich dem Referenzlauf
-    const vergleich = execFileSync("python3", ["tests/browser/pruef_fixture.py", "vergleichen", dir, bestand], { cwd: root, encoding: "utf8" });
+    // Python packt die Arbeitsdatei der Seite aus: Bestand gleich dem Referenzlauf
+    const vergleich = execFileSync("python3", ["tests/browser/pruef_fixture.py", "vergleichen", dir, arbeitsdatei], { cwd: root, encoding: "utf8" });
     assert.equal(vergleich.trim(), "gleich");
     // Veröffentlichen: Vorschau, Sperre bestanden, eine Datei; Python übernimmt sie und erhält dasselbe wie mit veroeffentlichen.py
     await page.locator("#knopf-veroeffentlichen").click();
@@ -1064,11 +1096,11 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     assert.doesNotMatch(vtext, /Erika|V-0\d\d|[0-9a-f]{8}-[0-9a-f]{4}-4|eur_je_m2|nettokalt_eur/i);
     const pub = execFileSync("python3", ["tests/browser/pruef_fixture.py", "veroeffentlichen", dir, veroeff], { cwd: root, encoding: "utf8" });
     assert.equal(pub.trim(), "gleich");
-    assert.match(await page.locator("#ungespeichert").textContent(), /noch nicht/);  // Verlauf vermerkt die Veröffentlichung
+    assert.match(await page.locator("#ungespeichert").textContent(), /Arbeitsdatei speichern/);  // Verlauf vermerkt die Veröffentlichung
     assert.deepEqual(abrufe.slice(nachLaden), []);
-    // umgekehrt: Bestand aus Python öffnen, Eintrag mit Hinweis verwerfen
-    await oeffnen(join(dir, "ref", "bestand.sealed"));
-    assert.match(await page.locator("#stand").textContent(), /Einträge26.*Mit Hinweis4.*Verworfen1.*Zweimal freigegeben21/s);
+    // umgekehrt: Arbeitsdatei aus Python öffnen, Eintrag mit Hinweis verwerfen
+    await offen(fx.ref);
+    assert.match(await page.locator("#stand").textContent(), /Einträge26.*Freigegeben21.*Mit Hinweis, bitte ansehen4.*Verworfen1/s);
     const zeile = page.locator("#liste tbody tr", { hasText: "abweichende Angaben" }).first();
     await zeile.locator("input").check();
     await page.locator("#knopf-verwerfen").click();
@@ -1076,8 +1108,9 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     await page.fill("#f-grund", "im Test geklärt");
     await page.locator("#knopf-verwerfen").click();
     assert.match(await page.locator("#stand").textContent(), /Verworfen2/);
-    // Rechte: Widerruf per Code und Widerspruch je Gebäude auf dem Bestand aus Python; Python macht dasselbe und erhält denselben Bestand
-    await oeffnen(join(dir, "ref", "bestand.sealed"));
+    // Rechte: Widerruf per Code und Widerspruch je Gebäude; Python macht dasselbe und erhält denselben Bestand
+    await offen(fx.ref);
+    await mehr("Löschen auf Anfrage");
     await page.fill("#f-widerruf", "ZZZZ-ZZZZ");
     await page.locator("#form-widerruf button").click();
     assert.match(await page.locator("#rechte-status").textContent(), /0 Einträge gefunden/);
@@ -1095,48 +1128,37 @@ test("Prüfseite: Einlesen, Prüfen, Freigabe zu zweit wie tools/pruefen.py, Bes
     // Mietangaben bleiben (Widerspruch betrifft die Eigentumsangaben), Eigentum zu diesem Gebäude ist gelöscht
     assert.match(await page.locator("#auskunft").textContent(), /2 Einträge, auf der Sperrliste/);
     assert.doesNotMatch(await page.locator("#auskunft tbody").textContent(), /Eigentum/);
-    const rechte = execFileSync("python3", ["tests/browser/pruef_fixture.py", "rechte", dir, await laden("#speichern-bestand"), fx.widerrufscode, fx.widerspruch],
+    const rechte = execFileSync("python3", ["tests/browser/pruef_fixture.py", "rechte", dir, await laden("#speichern-arbeitsdatei"), fx.widerrufscode, fx.widerspruch],
       { cwd: root, encoding: "utf8" });
     assert.equal(rechte.trim(), "gleich");
     // Fristen: drei Jahre später ist alles fällig und wird gelöscht
     await page.clock.setSystemTime(new Date(Date.now() + 3 * 365 * 86400000));
-    await oeffnen(join(dir, "ref", "bestand.sealed"));
+    await offen(fx.ref);
     assert.match(await page.locator("#stand").textContent(), /Speicherdauer abgelaufen26 Einträge/);
+    await mehr("Löschen auf Anfrage");
     page.once("dialog", (d) => d.accept());
     await page.locator("#knopf-fristen").click();
     assert.match(await page.locator("#stand").textContent(), /Einträge0 /);
-    assert.match(await page.locator("#stand").textContent(), /Schlüsselwechselfällig/);
-    // Probe: Wegwerf-Schlüssel und Testdaten, ganzer Ablauf; die Veröffentlichungsdatei ist als Probe markiert
+    // Probe: Wegwerf-Schlüssel und Testdaten, ganzer Ablauf; nichts speicherbar, Veröffentlichung als Probe markiert
     await page.goto(SITE + "intern/pruefen.html");
     await page.waitForFunction(() => !document.querySelector("#knopf-probe").disabled);
     await page.locator("#knopf-probe").click();
     assert.match(await page.locator("#oeffnen-status").textContent(), /Probe gestartet.*11 erfundene Einträge/);
     assert.equal(await page.locator("#probe-band").isVisible(), true);
-    await page.locator("#knopf-pruefen").click();
-    await page.locator("#knopf-alle").click();
-    await page.fill("#f-pruefer2", "P-2");
-    await page.locator("#form-pruefer button").click();
+    assert.equal(await page.locator("#speichern-arbeitsdatei").isDisabled(), true);
     await page.locator("#knopf-alle").click();
     await page.locator("#knopf-veroeffentlichen").click();
     await page.waitForFunction(() => /Sperre bestanden/.test(document.querySelector("#veroeffentlichen-status").textContent));
     const probe = await laden("#speichern-veroeffentlichung");
     assert.match(probe, /probe_veroeffentlichung_/);
     assert.equal(JSON.parse(readFileSync(probe, "utf8")).probe, true);
-    // falsche Passphrase: nicht geöffnet
-    await page.goto(SITE + "intern/pruefen.html");
-    await page.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);
-    await page.setInputFiles("#f-schluessel", join(dir, "pg.json"));
-    await page.fill("#f-pass", "falsch");
-    await page.fill("#f-pruefer", "P-1");
-    await page.locator("#knopf-oeffnen").click();
-    await page.waitForFunction(() => /Passphrase falsch/.test(document.querySelector("#oeffnen-status").textContent));
     assert.deepEqual(await page.evaluate(() => [localStorage.length, sessionStorage.length]), [0, 0]);
     assert.deepEqual(fehler, []);
     // Barrierefreiheit (axe braucht ein eingefügtes Skript, das die Richtlinie der Seite sperrt; daher ohne sie)
     const pruef = await browser.newPage({ bypassCSP: true });
     await pruef.goto(SITE + "intern/pruefen.html");
     await pruef.waitForFunction(() => !document.querySelector("#knopf-oeffnen").disabled);
-    await pruef.evaluate(() => { document.querySelector("#sitzung").hidden = false; });
+    await pruef.evaluate(() => { document.querySelector("#sitzung").hidden = false; document.querySelectorAll("details").forEach((d) => { d.open = true; }); });
     assert.deepEqual(await axe(pruef), []);
     await pruef.close();
   } finally {

@@ -77,7 +77,7 @@
           + sw("#6b625b", "Gebäude")
         : GRUPPEN.map((g) => sw(g.farbe, esc(g.titel))).join("") + sw("", `Höhe geschätzt (${zahl(G.standardhoehe_m)} m, ohne 3D-Modell)`, " sw-geschaetzt");
       $("#hinweis").textContent = ebeneSel.value === "eigentum"
-        ? `Eigentum nach geprüfter Erfassung (zwei Freigaben), Stand ${datum(eigDaten.stand)}; unvollständig. Gebäude von Privatpersonen erscheinen nie einzeln, nur als Anzahl je Ortsbezirk (Erfassungsstand).`
+        ? `Eigentum nach geprüfter und freigegebener Erfassung, Stand ${datum(eigDaten.stand)}; unvollständig. Gebäude von Privatpersonen erscheinen nie einzeln, nur als Anzahl je Ortsbezirk (Erfassungsstand).`
         : st
         ? `Bodenrichtwerte, Stichtag ${datum(st)}: ${cfg.wohnen.boris.filter}. Zonengrenzen können sich zwischen Stichtagen ändern. ${cfg.wohnen.boris.attribution}.`
         : `${cfg.gebaeude3d.hinweis} Grundrisse aus ALKIS, Höhe aus den 3D-Gebäudemodellen LoD2; ohne passendes Modell gilt eine Standardhöhe. Eigentum zeigt eine eigene Ebene, sobald geprüfte Erfassungen vorliegen.`;

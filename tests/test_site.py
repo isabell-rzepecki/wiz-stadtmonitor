@@ -89,7 +89,7 @@ class NurEigeneDomain(unittest.TestCase):
             self.assertIn("<h1>Datenquellen</h1>", q)
             self.assertIn("<table>", q)
             self.assertNotIn("javascript:", q)
-            for name in ("index.html", "einrichten.html", "pruefen.html", "pruefen-gebaeude.js"):
+            for name in ("index.html", "karten.html", "pruefen.html", "pruefen-gebaeude.js"):
                 self.assertTrue((out / "intern" / name).exists(), name)
             self.assertFalse((out / "einrichten.html").exists())
             self.assertIn('href="mailto:', (out / "impressum.html").read_text(encoding="utf-8"))
@@ -104,7 +104,7 @@ class Domain(unittest.TestCase):
             for teil in ("ErrorDocument 404 /404.html", "Options -Indexes", ".pmtiles", ".webmanifest"):
                 self.assertIn(teil, h)
             self.assertIn('href="https://stadtmonitor-witzenhausen.de/"', (out / "404.html").read_text(encoding="utf-8"))
-            self.assertIn('content="https://stadtmonitor-witzenhausen.de/"', (out / "intern" / "einrichten.html").read_text(encoding="utf-8"))
+            self.assertIn('content="https://stadtmonitor-witzenhausen.de/"', (out / "intern" / "karten.html").read_text(encoding="utf-8"))
             self.assertIn("https://stadtmonitor-witzenhausen.de/datenschutz.html", (out / "aushang.html").read_text(encoding="utf-8"))
             self.assertNotIn("über GitHub Pages bereitgestellt", (out / "datenschutz.html").read_text(encoding="utf-8"))
 

@@ -93,32 +93,67 @@
     $("#knopf-datenschutz").addEventListener("click", () => dlg.showModal());
     dlg.querySelector("button").addEventListener("click", (e) => { e.preventDefault(); dlg.close(); });
 
-    // Zugang über Einladungscode: Einträge {hash, bis} (früher nur der Hash). Widerrufene Codes (Eintrag entfernt) und
-    // abgelaufene (bis vor heute) sperren die App beim nächsten Start mit aktueller Konfiguration.
+    // Zugang über die Einladungskarte: Ihr QR-Code öffnet diese Seite mit #code=…&bis=…&schluessel=KENNUNG~SCHLÜSSEL.
+    // Code, Ablaufdatum und öffentlicher Schlüssel der Prüfgruppe werden im Gerät gespeichert, die Adresse danach
+    // bereinigt (der Teil nach # geht nie an den Server). Ob die Karte gültig oder gesperrt ist, prüft die Prüfgruppe
+    // beim Einlesen anhand ihrer Kartenliste. Ältere Zugänge über einen abgetippten Code prüft die App weiter gegen die
+    // Liste {hash, bis} in der Konfiguration.
     const heute = new Date().toISOString().slice(0, 10);
     const einladung = (hash) => F.einladungen.map((x) => (typeof x === "string" ? { hash: x } : x)).find((x) => x.hash === hash);
     const abgelaufen = (e) => Boolean(e && e.bis && e.bis < heute);
+    const datumDe = (iso) => iso.split("-").reverse().join(".");
+    const codeOk = (c) => c.length === 16 && [...c].every((z) => ZEICHEN.includes(z));
+    async function zugangAus(c, extra = {}) {
+      return { key: "zugang", hash: await sha256(`wiz-einladung:${c}`), erfasser: `E-${(await sha256(`wiz-erfasser:${c}`)).slice(0, 8)}`,
+        seit: new Date().toISOString(), ...extra };
+    }
+    function ausLink() {
+      const p = new URLSearchParams(location.hash.slice(1));
+      if (!p.has("code")) return null;
+      history.replaceState(null, "", location.pathname + location.search);
+      const c = normieren(p.get("code") || ""), bis = p.get("bis") || "";
+      const [kid, pub] = (p.get("schluessel") || "").split("~");
+      if (!codeOk(c) || !/^\d{4}-\d\d-\d\d$/.test(bis) || !/^[\w-]{1,40}$/.test(kid || "") || !/^[A-Za-z0-9_-]{43}$/.test(pub || ""))
+        return { fehler: "Der Link der Einladungskarte ist unvollständig. Bitte den QR-Code noch einmal scannen." };
+      if (bis < heute) return { fehler: `Diese Einladungskarte ist abgelaufen (gültig bis ${datumDe(bis)}). Bitte bei der Ausgabestelle eine neue holen.` };
+      return { c, bis, schluessel: { key_id: kid, public_key: pub.replace(/-/g, "+").replace(/_/g, "/") + "=" } };
+    }
+    // Karte gescannt, während die App schon offen ist (nur der Teil nach # ändert sich): neu laden, damit der Link gilt
+    addEventListener("hashchange", () => { if (/[#&]code=/.test(location.hash)) location.reload(); });
     // Probemodus: Formulare und Prüfungen wie echt, ohne Code; nichts wird gespeichert oder exportiert
     let probe = false;
     let zugang = await meta("zugang");
-    const ez = zugang && einladung(zugang.hash);
-    if (zugang && (!ez || abgelaufen(ez))) {
+    const link = ausLink();
+    if (link && !link.fehler) {
+      zugang = await zugangAus(link.c, { bis: link.bis, schluessel: link.schluessel });
+      await ablegen("meta", zugang);
+    }
+    const ez = zugang && !zugang.schluessel && einladung(zugang.hash);
+    const gueltig = zugang && (zugang.schluessel ? !abgelaufen(zugang) : ez && !abgelaufen(ez));
+    if (link && link.fehler && !gueltig) zugangFormular(link.fehler);
+    else if (zugang && !gueltig) {
+      const war = zugang.schluessel ? zugang : ez;
       await loeschen("meta", "zugang");
       zugang = null;
-      zugangFormular(ez ? "Dieser Zugang ist abgelaufen. Bitte einen neuen Einladungscode eingeben." : "Dieser Zugang wurde widerrufen. Bitte einen neuen Einladungscode eingeben.");
+      zugangFormular(war ? `Ihre Einladungskarte ist abgelaufen (gültig bis ${datumDe(war.bis)}). Bitte bei der Ausgabestelle eine neue holen.`
+        : "Dieser Zugang wurde gesperrt. Bitte bei der Ausgabestelle eine neue Einladungskarte holen.");
     } else if (!zugang) zugangFormular();
     else hauptteil();
 
     function zugangFormular(meldung = "") {
       titel("Zugang");
-      inhalt.innerHTML = `<p>Die Erfassung ist nur für das Team und eingeladene Personen. Bitte den Einladungscode eingeben.</p>
+      // Abtippen nur für ältere Codes aus der Konfiguration; neue Karten öffnen die App über ihren QR-Code
+      const tippen = Boolean(F.schluessel) && F.einladungen.length > 0;
+      inhalt.innerHTML = `<p>Die Erfassung ist nur für das Team und eingeladene Personen.</p>
+        <p><strong>So kommen Sie hinein:</strong> Scannen Sie den QR-Code auf Ihrer Einladungskarte mit der Kamera Ihres Handys.
+        Diese Seite öffnet sich dann und Sie sind angemeldet.</p>
         ${meldung ? `<p class="fehler" role="alert">${esc(meldung)}</p>` : ""}
-        <form id="zugang" novalidate><label class="feld">Einladungscode <input id="code" autocomplete="off" autocapitalize="characters" spellcheck="false"
+        ${tippen ? `<form id="zugang" novalidate><label class="feld">Oder Code von einer älteren Karte eingeben <input id="code" autocomplete="off" autocapitalize="characters" spellcheck="false"
           placeholder="XXXX-XXXX-XXXX-XXXX" required aria-describedby="code-hinweis"></label>
           <p id="code-hinweis" class="meta">Aus dem Code entsteht eine pseudonyme Erfasser-ID; ein Name wird nicht gespeichert.</p>
           <p id="code-fehler" class="fehler" role="alert" hidden></p>
-          <button class="knopf" type="submit">Freischalten</button></form>
-        <p><button type="button" class="link-btn" id="probe">Ohne Code ausprobieren</button></p>
+          <button class="knopf" type="submit">Freischalten</button></form>` : ""}
+        <p><button type="button" class="link-btn" id="probe">Ohne Karte ausprobieren</button></p>
         <p class="meta">Probe: Formulare und Prüfungen wie echt; nichts wird gespeichert oder exportiert.</p>`;
       $("#probe").addEventListener("click", () => {
         probe = true;
@@ -127,16 +162,16 @@
         document.body.classList.add("probe");
         hauptteil();
       });
-      $("#zugang").addEventListener("submit", async (e) => {
+      $("#zugang")?.addEventListener("submit", async (e) => {
         e.preventDefault();
         const c = normieren($("#code").value);
         const fehler = (t) => { const p = $("#code-fehler"); p.textContent = t; p.hidden = false; $("#code").setAttribute("aria-invalid", "true"); $("#code").focus(); };
-        if (c.length !== 16 || [...c].some((z) => !ZEICHEN.includes(z))) return fehler("Der Code hat 16 Zeichen (Ziffern und Buchstaben).");
-        const hash = await sha256(`wiz-einladung:${c}`);
-        const e2 = einladung(hash);
+        if (!codeOk(c)) return fehler("Der Code hat 16 Zeichen (Ziffern und Buchstaben).");
+        const z = await zugangAus(c);
+        const e2 = einladung(z.hash);
         if (!e2) return fehler("Dieser Code ist nicht (mehr) gültig.");
-        if (abgelaufen(e2)) return fehler(`Dieser Code ist abgelaufen (gültig bis ${e2.bis.split("-").reverse().join(".")}).`);
-        zugang = { key: "zugang", hash, erfasser: `E-${(await sha256(`wiz-erfasser:${c}`)).slice(0, 8)}`, seit: new Date().toISOString() };
+        if (abgelaufen(e2)) return fehler(`Dieser Code ist abgelaufen (gültig bis ${datumDe(e2.bis)}).`);
+        zugang = z;
         await ablegen("meta", zugang);
         hauptteil();
       });
@@ -188,11 +223,12 @@
       // Gespeichert wird erst mit Schlüssel und benannter verantwortlicher Stelle: Einwilligung (Art. 13) und Information
       // der Eigentümer:innen (Art. 14 DSGVO) müssen sie nennen. Die Probe speichert nie.
       const stelle = Boolean(F.datenschutz.verantwortlich);
+      const SCHL = (zugang && zugang.schluessel) || F.schluessel;
       const mieteAn = probe || E.mietangaben_aktiv;
-      const speichernA = probe || (Boolean(F.schluessel) && stelle);
+      const speichernA = probe || (Boolean(SCHL) && stelle);
       const speichernB = speichernA;
       const ohneSchluessel = () => (probe ? `<p class="hinweis-kasten" role="note"><strong>Probe.</strong> Nichts wird gespeichert oder exportiert.</p>`
-        : !F.schluessel ? `<p class="hinweis-kasten" role="note"><strong>Speichern noch nicht möglich.</strong>
+        : !SCHL ? `<p class="hinweis-kasten" role="note"><strong>Speichern noch nicht möglich.</strong>
         Der öffentliche Schlüssel der Prüfgruppe ist noch nicht hinterlegt; ohne ihn bleibt nichts im Gerät.</p>`
         : !stelle ? `<p class="hinweis-kasten" role="note"><strong>Speichern noch nicht möglich.</strong>
         Die verantwortliche Stelle ist noch nicht benannt; Einwilligung und Datenschutzhinweis müssen sie nennen.</p>` : "");
@@ -250,7 +286,7 @@
 
       async function speichern(typ, rec, gebaeudeId) {
         if (probe) return;
-        const schl = F.schluessel;
+        const schl = SCHL;
         const eintrag = { id: rec.erfassung_id || rec.angabe_id, typ, erstellt: rec.erfasst_am, exportiert: null, alg: ALG, key_id: schl.key_id,
           ciphertext: await versiegeln(JSON.stringify(rec), schl) };
         if (typ === "eigentum") eintrag.gebaeude_id = gebaeudeId;
@@ -323,7 +359,7 @@
           }
           if (fehlerZeigen(form, fehler)) return;
           if (k === "privat" && E.privat_namen_aktiv && w("name_privat") && !probe) {
-            rec.name_privat_enc = { alg: ALG, key_id: F.schluessel.key_id, ciphertext: await versiegeln(w("name_privat"), F.schluessel) };
+            rec.name_privat_enc = { alg: ALG, key_id: SCHL.key_id, ciphertext: await versiegeln(w("name_privat"), SCHL) };
             form.elements.name_privat.value = "";
           }
           await speichern("eigentum", rec, p.id);

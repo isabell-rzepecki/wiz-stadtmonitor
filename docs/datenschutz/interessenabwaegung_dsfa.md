@@ -23,7 +23,7 @@ Verantwortliche Stelle: Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen;
 - Kein Mietvergleich je privater Vermieter:in, auch nicht pseudonym (R6).
 - Keine Fotos, keine Klingelschilder, keine Namen aus Grundbuchauszügen Dritter.
 - Kein Server, kein Upload; Rohdaten nie in einem Git-Repository (Sperre in Hook und CI).
-- Freigabe nach dem Vier-Augen-Prinzip; Speicherdauer 24 Monate (Löschverfahren).
+- Freigabe jedes Eintrags durch die Prüfgruppe; Speicherdauer 24 Monate (Löschverfahren).
 - Widerspruch jederzeit (Art. 21), siehe Löschverfahren.
 
 **Ergebnis.** Mit diesen Maßnahmen überwiegt das Interesse an einer Vergleichsgrundlage, sofern die Informationspflicht (Art. 14) erfüllt und der Widerspruch einfach möglich ist. Die verantwortliche Stelle hat das am 26.10.2026 bestätigt.
