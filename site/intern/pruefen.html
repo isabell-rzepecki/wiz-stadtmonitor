@@ -3,12 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Prüfung der Erfassungen durch die Prüfgruppe, im passwortgeschützten Bereich /intern/. Alles rechnet im Browser;
-       connect-src 'none' schließt jedes Abrufen und Senden aus. Schlüssel, Bestand, Kartenliste und Zugriffsprotokoll
+  <!-- Prüfung der Erfassungen durch die Prüfgruppe, im passwortgeschützten Bereich /intern/. Alles rechnet im Browser.
+       connect-src 'self': Gesendet wird nur beim Veröffentlichen, und nur die Veröffentlichungsdatei (zusammengefasste
+       Zahlen) an veroeffentlichen.php auf dem eigenen Server; Bestand, Schlüssel und Exporte verlassen den Browser nie.
+       Schlüssel, Bestand, Kartenliste und Zugriffsprotokoll
        liegen zusammen in einer Arbeitsdatei, die mit dem Passwort der Prüfgruppe verschlüsselt ist (Argon2id und
        XSalsa20-Poly1305); tools/pruefgruppe.py kann sie in die einzelnen Dateien auspacken. Schemata und Kategorien setzt
        der Seitenbau aus config/stadt.json ein. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta name="robots" content="noindex, nofollow">
   <title>Prüfung der Erfassungen – Stadtmonitor</title>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
@@ -24,7 +26,7 @@
   </header>
   <main class="page breit" id="inhalt">
     <h1>Prüfung der Erfassungen</h1>
-    <p>Hier liest die Prüfgruppe die Dateien der Erfassenden ein, prüft und gibt sie frei. Alles, was die Prüfgruppe braucht, steckt in einer <strong>Arbeitsdatei</strong> mit einem Passwort. Die Seite rechnet nur in diesem Browser und sendet nichts.</p>
+    <p>Hier liest die Prüfgruppe die Dateien der Erfassenden ein, prüft und gibt sie frei. Alles, was die Prüfgruppe braucht, steckt in einer <strong>Arbeitsdatei</strong> mit einem Passwort. Die Seite rechnet nur in diesem Browser. Sie sendet nur, wenn Sie Ergebnisse veröffentlichen, und dann nur die zusammengefassten Zahlen.</p>
     <p id="laden" class="hinweis" role="status">Verschlüsselung wird geladen …</p>
 
     <section class="schritt" aria-labelledby="t-oeffnen">
@@ -104,8 +106,10 @@
         <p id="veroeffentlichen-status" role="status" tabindex="-1"></p>
         <div id="vorschau" hidden>
           <div id="vorschau-inhalt"></div>
-          <p><button type="button" class="knopf" id="speichern-veroeffentlichung">Veröffentlichungsdatei speichern</button></p>
-          <p class="klein">Diese Datei enthält nur zusammengefasste Ergebnisse. Geben Sie sie an die verantwortliche Stelle; sie stellt die Zahlen auf die Seite.</p>
+          <p class="knoepfe"><button type="button" class="knopf gross" id="knopf-senden">Auf der Seite veröffentlichen</button>
+            <button type="button" class="knopf" id="speichern-veroeffentlichung">Als Datei speichern</button></p>
+          <p id="senden-status" role="status" tabindex="-1"></p>
+          <p class="klein">Veröffentlicht werden nur die zusammengefassten Zahlen aus der Vorschau. Sie erscheinen nach dem nächsten nächtlichen Lauf auf der Seite „Wohnen und Eigentum“; der Lauf prüft sie dabei noch einmal mit derselben Sperre.</p>
         </div>
       </section>
 
@@ -152,7 +156,9 @@
           <button type="button" class="knopf" id="speichern-pruefliste">Prüfliste speichern</button>
           <button type="button" class="knopf" id="speichern-einlesebericht">Einlesebericht speichern</button>
           <button type="button" class="knopf" id="speichern-protokoll">Zugriffsprotokoll speichern</button>
-          <button type="button" class="knopf" id="speichern-kartenliste">Kartenliste für die Ausgabestelle speichern</button></p>
+          <button type="button" class="knopf" id="speichern-kartenliste">Kartenliste für die Ausgabestelle speichern</button>
+          <button type="button" class="knopf" id="knopf-zurueck">Vorige Veröffentlichung wiederherstellen</button></p>
+        <p id="zurueck-status" role="status" tabindex="-1"></p>
         <p class="klein">Die Kartenliste brauchen Sie nur, wenn die Ausgabestelle ihre Datei verloren hat. Das Zugriffsprotokoll zeigt, wann Namen von Privatpersonen entschlüsselt wurden (nur zum Abgleich der Vermieter).</p>
       </details>
     </div>

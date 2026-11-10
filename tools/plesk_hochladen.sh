@@ -10,7 +10,8 @@
 #   PLESK_URL_SCHEMA  sftp (Standard); nur für Tests anders
 # Sicherung gegen einen falschen Pfad: Dateien, die es in _site nicht mehr gibt, werden erst gelöscht, wenn im Ziel die
 # Markierung .stadtmonitor liegt. Die erste Übertragung legt sie an, ohne etwas zu löschen. Ausgenommen: .well-known
-# (Zertifikate von Let's Encrypt).
+# (Zertifikate von Let's Encrypt) und die veröffentlichten Erfassungsergebnisse veroeffentlicht/*.json (legt
+# intern/veroeffentlichen.php auf dem Server ab; sie stehen nicht in _site).
 set -euo pipefail
 QUELLE="${1:-_site}"
 : "${PLESK_HOST:?}" "${PLESK_USER:?}" "${PLESK_PASSWORT:?}"
@@ -44,5 +45,5 @@ else
   echo "Erste Übertragung nach $PFAD: Markierung .stadtmonitor fehlt, es wird nichts gelöscht."
 fi
 touch "$QUELLE/.stadtmonitor"
-lftp -c "$VERBINDUNG; mirror -R $LOESCHEN --parallel=4 --exclude-glob .well-known/ --verbose=1 $QUELLE/ $PFAD"
+lftp -c "$VERBINDUNG; mirror -R $LOESCHEN --parallel=4 --exclude-glob .well-known/ --exclude-glob 'veroeffentlicht/*.json' --verbose=1 $QUELLE/ $PFAD"
 echo "Hochgeladen nach $SCHEMA://$PLESK_HOST/$PFAD"

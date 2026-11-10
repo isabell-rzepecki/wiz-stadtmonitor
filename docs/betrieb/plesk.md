@@ -19,11 +19,16 @@ liegt dafür im Repository.
    genügt) und einem langen, nur dafür genutzten Passwort. Zusätzliche FTP-Konten können meist kein SFTP.
 5. **Interner Bereich schützen:** In Plesk unter „Websites & Domains“ → `stadtmonitor-witzenhausen.de` →
    „Passwortgeschützte Verzeichnisse“ den Ordner `/intern` hinzufügen und Benutzer mit eigenem Passwort anlegen (je
-   Rolle oder Person). Dort liegen Übersicht, Einrichtungs- und Prüfseite. Sie rechnen nur im Browser; das Passwort
-   hält Neugierige fern, der eigentliche Schutz bleibt Schlüssel, Passphrase und Codes.
+   Rolle oder Person). Dort liegen Übersicht, Kartenseite und Prüfseite. Sie rechnen im Browser; das Passwort
+   hält Neugierige fern, der eigentliche Schutz bleibt die verschlüsselte Arbeitsdatei mit ihrem Passwort.
 6. **Apache** muss aktiv sein (Standard in Plesk), damit `.htaccess` gilt (Fehlerseite, Medientypen, `www`-Umleitung,
    keine Verzeichnislisten).
-7. **Auftragsverarbeitung:** den Vertrag nach Art. 28 DSGVO mit dem Hosting-Anbieter abschließen (meist im
+7. **PHP** muss für die Domain aktiv sein (Plesk: „PHP-Einstellungen“, Version 8.1 oder neuer; Standard). Einziges
+   Skript ist `intern/veroeffentlichen.php`: Es nimmt aus der Prüfseite nur die Veröffentlichungsdatei an
+   (zusammengefasste Zahlen) und legt sie als `veroeffentlicht/aktuell.json` ab, die vorige Fassung als `vorher.json`.
+   Der tägliche Lauf löscht diese beiden Dateien nicht, holt `aktuell.json`, prüft sie mit der Sperre und baut damit die
+   Seite „Wohnen und Eigentum“.
+8. **Auftragsverarbeitung:** den Vertrag nach Art. 28 DSGVO mit dem Hosting-Anbieter abschließen (meist im
    Kundenbereich) und Name und Sitz des Anbieters in `config/stadt.json` unter `projekt.hosting.anbieter` eintragen
    (oder mitteilen); die Datenschutzseite übernimmt sie.
 
@@ -50,6 +55,10 @@ löschen, und legt die Markierung `.stadtmonitor` an; spätere Läufe entfernen 
 - **Ohne Secrets** lädt der Lauf nichts hoch und GitHub Pages zeigt weiter die ganze Seite.
 - **Falscher Pfad, falsches Passwort oder fremder Hostschlüssel:** der Lauf bricht ab, GitHub Pages bleibt beim
   letzten Stand.
+- **Veröffentlichen scheitert** („Der Server ist nicht erreichbar“ oder Status 500): prüfen, ob PHP für die Domain
+  aktiv ist und der Ordner `veroeffentlicht/` existiert und beschreibbar ist (er gehört dem Systembenutzer). Erscheint
+  die Veröffentlichung nach dem nächtlichen Lauf nicht, steht der Grund als Warnung im Lauf (Schritt
+  `fetch-veroeffentlichung`); dann gilt weiter der vorige Stand.
 - **Zertifikat scheitert:** meist ist die Domain noch nicht im DNS sichtbar; eine Stunde warten, erneut versuchen.
 - **Erfassung:** Die App speichert Einträge je Adresse. Codekarten und QR-Codes zeigen auf die Domain; Einträge, die
   noch unter der GitHub-Adresse liegen, vor dem Umzug dort exportieren.

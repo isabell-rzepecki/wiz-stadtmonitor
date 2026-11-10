@@ -955,7 +955,7 @@ test("Tour: Start aus dem Startfenster, alle Schritte mit Pfeiltaste, Beispielvo
 });
 
 test("Einrichten und Einladungskarten: Prüfgruppe richtet ein, Ausgabestelle druckt und sperrt Karten, QR-Link meldet in der App an, Export kommt an, nichts gesendet, ohne Verstöße", async () => {
-  // ohne bypassCSP: Die Seiten müssen mit ihrer eigenen Richtlinie (connect-src 'none', WebAssembly) funktionieren
+  // ohne bypassCSP: Die Seiten müssen mit ihrer eigenen Richtlinie (connect-src 'none' bzw. 'self' auf der Prüfseite, WebAssembly) funktionieren
   const ctx = await browser.newContext({ acceptDownloads: true });
   const page = await ctx.newPage();
   const fehler = [], abrufe = [];
@@ -973,7 +973,7 @@ test("Einrichten und Einladungskarten: Prüfgruppe richtet ein, Ausgabestelle dr
     // Prüfgruppe: einrichten (zu kurz, ungleich, dann richtig), Arbeitsdatei und Kartenliste speichern
     await page.goto(SITE + "intern/pruefen.html");
     await page.waitForFunction(() => !document.querySelector("#knopf-einrichten").disabled);
-    assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'none'/);
+    assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'self'/);
     await page.locator("#erstmals summary").click();
     await page.fill("#pass1", "zu kurz");
     await page.locator("#knopf-einrichten").click();
@@ -1122,7 +1122,7 @@ test("Prüfseite: Arbeitsdatei mit Passwort, Einlesen und Prüfen wie tools/prue
     await page.waitForFunction(() => /Passwort ist falsch/.test(document.querySelector("#oeffnen-status").textContent));
     assert.equal(await page.locator("#sitzung").isVisible(), false);
     await offen(fx.start);
-    assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'none'/);
+    assert.match(await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content"), /connect-src 'self'/);
     const nachLaden = abrufe.length;
     assert.match(await page.locator("#stand").textContent(), /Einladungskarten1, davon 1 gültig/);
     // Eingang: dieselben Fälle wie im Python-Referenzlauf; geprüft wird gleich mit
@@ -1158,6 +1158,25 @@ test("Prüfseite: Arbeitsdatei mit Passwort, Einlesen und Prüfen wie tools/prue
     assert.equal(pub.trim(), "gleich");
     assert.match(await page.locator("#ungespeichert").textContent(), /Arbeitsdatei speichern/);  // Verlauf vermerkt die Veröffentlichung
     assert.deepEqual(abrufe.slice(nachLaden), []);
+    // Auf der Seite veröffentlichen: genau eine Anfrage an veroeffentlichen.php mit der Veröffentlichungsdatei (Server nachgestellt)
+    let gesendet = null;
+    await page.route("**/intern/veroeffentlichen.php", (r) => { gesendet = r.request(); r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, aktion: "veroeffentlicht", stand: "2026-11-10", vorher: null }) }); });
+    page.once("dialog", (d) => d.accept());
+    await page.locator("#knopf-senden").click();
+    await page.waitForFunction(() => /Veröffentlicht \(Stand 2026-11-10\)/.test(document.querySelector("#senden-status").textContent));
+    assert.equal(gesendet.method(), "POST");
+    const body = JSON.parse(gesendet.postData());
+    assert.equal(body.format, "wiz-veroeffentlichung-1");
+    assert.deepEqual(Object.keys(body.dateien).sort(), JSON.parse(vtext).dateien ? Object.keys(JSON.parse(vtext).dateien).sort() : []);
+    assert.doesNotMatch(gesendet.postData(), /Erika|V-0\d\d|[0-9a-f]{8}-[0-9a-f]{4}-4|eur_je_m2|nettokalt_eur|secret|ciphertext/i);
+    assert.deepEqual(abrufe.slice(nachLaden).filter((u) => !u.endsWith("/intern/veroeffentlichen.php")), [], "sonst nichts gesendet");
+    // Server lehnt ab: Meldung, nichts verloren
+    await page.unroute("**/intern/veroeffentlichen.php");
+    await page.route("**/intern/veroeffentlichen.php", (r) => r.fulfill({ status: 422, contentType: "application/json", body: JSON.stringify({ ok: false, fehler: "Verbotene Felder: x" }) }));
+    page.once("dialog", (d) => d.accept());
+    await page.locator("#knopf-senden").click();
+    await page.waitForFunction(() => /Nicht veröffentlicht: Verbotene Felder/.test(document.querySelector("#senden-status").textContent));
+    fehler.splice(fehler.findIndex((f) => /status of 422/.test(f)), 1);  // die abgelehnte Anfrage selbst meldet der Browser
     // umgekehrt: Arbeitsdatei aus Python öffnen, Eintrag mit Hinweis verwerfen
     await offen(fx.ref);
     assert.match(await page.locator("#stand").textContent(), /Einträge26.*Freigegeben21.*Mit Hinweis, bitte ansehen4.*Verworfen1/s);
@@ -1206,6 +1225,7 @@ test("Prüfseite: Arbeitsdatei mit Passwort, Einlesen und Prüfen wie tools/prue
     assert.match(await page.locator("#oeffnen-status").textContent(), /Probe gestartet.*11 erfundene Einträge/);
     assert.equal(await page.locator("#probe-band").isVisible(), true);
     assert.equal(await page.locator("#speichern-arbeitsdatei").isDisabled(), true);
+    assert.equal(await page.locator("#knopf-senden").isDisabled(), true);  // Probe: nichts veröffentlichen
     await page.locator("#knopf-alle").click();
     await page.locator("#knopf-veroeffentlichen").click();
     await page.waitForFunction(() => /Sperre bestanden/.test(document.querySelector("#veroeffentlichen-status").textContent));

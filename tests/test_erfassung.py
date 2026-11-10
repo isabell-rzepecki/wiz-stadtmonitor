@@ -114,9 +114,13 @@ class Erfassung(unittest.TestCase):
                 self.assertNotIn("erfassen", text, name)
         for seite in ("erfassen.html", "intern/index.html", "intern/karten.html", "intern/pruefen.html"):
             self.assertIn('content="noindex', (SITE / seite).read_text(encoding="utf-8"))
-        # interner Bereich: kann technisch nichts senden; öffentlich nirgends verlinkt
-        for seite in ("intern/index.html", "intern/karten.html", "intern/pruefen.html"):
+        # interner Bereich: Startseite und Kartenseite können technisch nichts senden; die Prüfseite nur an den eigenen
+        # Server, und nur beim Veröffentlichen (einziger Abruf im Skript: veroeffentlichen.php); öffentlich nirgends verlinkt
+        for seite in ("intern/index.html", "intern/karten.html"):
             self.assertIn("connect-src 'none'", (SITE / seite).read_text(encoding="utf-8"))
+        self.assertIn("connect-src 'self'", (SITE / "intern/pruefen.html").read_text(encoding="utf-8"))
+        js = (SITE / "pruefen.js").read_text(encoding="utf-8")
+        self.assertEqual(re.findall(r"fetch\(([^,)]+)", js), ['"veroeffentlichen.php"'])
         for name in ("index.html", "app.js", "wohnen.html", "erfassen.html", "datenschutz.html", "impressum.html", "aushang.html"):
             self.assertNotIn("intern/", (SITE / name).read_text(encoding="utf-8"), name)
 

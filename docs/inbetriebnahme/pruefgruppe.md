@@ -1,7 +1,7 @@
 # Ablaufkarte Prüfgruppe
 
 **Wer:** eine oder mehrere Personen, die das Passwort der Prüfgruppe kennen. Eine Freigabe je Eintrag genügt (`freigaben_noetig: 1`).
-**Wo:** Prüfseite im internen Bereich (`/intern/pruefen.html`). Sie rechnet nur im Browser und sendet nichts.
+**Wo:** Prüfseite im internen Bereich (`/intern/pruefen.html`). Sie rechnet nur im Browser und sendet nur beim Veröffentlichen, und dann nur die zusammengefassten Zahlen.
 
 ## Einmal zu Beginn
 
@@ -14,7 +14,7 @@
 1. Arbeitsdatei wählen, Passwort eingeben, „Öffnen“.
 2. Exportdateien der Erfassenden (und eine neue Kartenliste der Ausgabestelle) auswählen, „Einlesen und prüfen“. Die Seite weist ab, was nicht passt (fremder Schlüssel, Schema, Freitext, Karte unbekannt, gesperrt oder abgelaufen), vergibt Vermieter-Schlüssel und markiert Dubletten und abweichende Angaben.
 3. „Alle Einträge ohne Hinweis freigeben“; Einträge mit Hinweis ansehen und gegebenenfalls mit Grund verwerfen.
-4. Bei Bedarf „Vorschau erzeugen“ und die Veröffentlichungsdatei an die verantwortliche Stelle geben. Sie wird mit `python tools/veroeffentlichen.py uebernehmen DATEI` erneut geprüft und nach `data/wohnen/` übernommen.
+4. Bei Bedarf „Vorschau erzeugen“ und „Auf der Seite veröffentlichen“. Die Zahlen erscheinen nach dem nächsten nächtlichen Lauf auf der Seite „Wohnen und Eigentum“; der Lauf prüft sie dort noch einmal mit derselben Sperre. Eine Veröffentlichung lässt sich unter „Weitere Funktionen“ mit „Vorige Veröffentlichung wiederherstellen“ zurücknehmen.
 5. Arbeitsdatei speichern und auf beiden Sticks ersetzen. Nie per E-Mail, Messenger oder Cloud weitergeben.
 
 Unter „Löschen auf Anfrage und Speicherfristen“: Widerruf per Widerrufscode, Widerspruch je Gebäude (mit Sperrliste), Auskunft zu einem Gebäude, Löschen nach der Speicherdauer. „Ohne echte Daten ausprobieren“ spielt den Ablauf mit erfundenen Einträgen durch.

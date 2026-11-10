@@ -531,6 +531,8 @@
     $("#ungespeichert").textContent = S.probe ? "Probe: Es wird nichts gespeichert." : S.geaendert ? "Es gibt Änderungen. Bitte die Arbeitsdatei speichern, bevor Sie die Seite schließen." : "";
     $("#speichern-arbeitsdatei").disabled = Boolean(S.probe);
     $("#speichern-kartenliste").disabled = !S.karten;
+    $("#knopf-senden").disabled = Boolean(S.probe);
+    $("#knopf-zurueck").disabled = Boolean(S.probe);
     $("#speichern-protokoll").disabled = !protokollZeilen().length;
   }
   const ausgewaehlt = () => [...document.querySelectorAll("#liste tbody input:checked")].map((x) => x.value);
@@ -701,6 +703,38 @@
       veroeffentlichung = null; $("#vorschau").hidden = true;
       melden(st, `Gesperrt, nichts erzeugt: ${err.message}`, "fehler");
     }
+  });
+  // Veröffentlichen: nur die Veröffentlichungsdatei an den eigenen Server (intern/veroeffentlichen.php)
+  async function senden(body) {
+    let r;
+    try {
+      r = await fetch("veroeffentlichen.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" });
+    } catch { throw new Error("Der Server ist nicht erreichbar. Bitte später noch einmal versuchen oder die Datei speichern."); }
+    let d = null;
+    try { d = await r.json(); } catch { /* keine JSON-Antwort */ }
+    if (!r.ok || !d || !d.ok) throw new Error((d && d.fehler) || `Der Server hat die Datei nicht angenommen (Status ${r.status}).`);
+    return d;
+  }
+  $("#knopf-senden").addEventListener("click", async () => {
+    const st = $("#senden-status");
+    if (!veroeffentlichung || S.probe) return melden(st, "In der Probe wird nichts veröffentlicht.", "fehler");
+    if (!confirm("Die zusammengefassten Zahlen auf der Seite „Wohnen und Eigentum“ veröffentlichen? Sie erscheinen nach dem nächsten nächtlichen Lauf; die bisherige Veröffentlichung bleibt als vorige Fassung erhalten.")) return;
+    const k = $("#knopf-senden");
+    k.disabled = true;
+    try {
+      const d = await senden(veroeffentlichung);
+      melden(st, `Veröffentlicht (Stand ${d.stand}). Die Zahlen erscheinen nach dem nächsten nächtlichen Lauf. Bitte jetzt die Arbeitsdatei speichern.`);
+    } catch (err) {
+      melden(st, `Nicht veröffentlicht: ${err.message}`, "fehler");
+    } finally { k.disabled = false; }
+  });
+  $("#knopf-zurueck").addEventListener("click", async () => {
+    const st = $("#zurueck-status");
+    if (!confirm("Die vorige Veröffentlichung wiederherstellen? Die aktuelle wird dabei zur vorigen Fassung.")) return;
+    try {
+      const d = await senden({ aktion: "zurueck" });
+      melden(st, `Vorige Fassung (Stand ${d.stand}) ist wieder aktuell; sie erscheint nach dem nächsten nächtlichen Lauf.`);
+    } catch (err) { melden(st, err.message, "fehler"); }
   });
   $("#speichern-veroeffentlichung").addEventListener("click", () =>
     speichern(`${S.probe ? "probe_" : ""}veroeffentlichung_${veroeffentlichung.stand}.json`, JSON.stringify(veroeffentlichung), "application/json"));

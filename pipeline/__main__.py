@@ -1,9 +1,9 @@
-"""Aufruf: python -m pipeline {fetch|fetch-plaene|fetch-gemarkungen|gemarkungen|fetch-lage|lage|fetch-eigentum|eigentum|fetch-umwelt|umwelt|fetch-wohnen|wohnen|fetch-strukturdaten|strukturdaten|fetch-wahlen|wahlen|fetch-beteiligung|beteiligung|fetch-rechtsakte|rechtsakte|fetch-wanderung|wanderung|fetch-lod2|fetch-gebaeude|gebaeude|build|check|package|site|all}"""
+"""Aufruf: python -m pipeline {fetch|fetch-plaene|fetch-gemarkungen|gemarkungen|fetch-lage|lage|fetch-eigentum|eigentum|fetch-umwelt|umwelt|fetch-veroeffentlichung|fetch-wohnen|wohnen|fetch-strukturdaten|strukturdaten|fetch-wahlen|wahlen|fetch-beteiligung|beteiligung|fetch-rechtsakte|rechtsakte|fetch-wanderung|wanderung|fetch-lod2|fetch-gebaeude|gebaeude|build|check|package|site|all}"""
 import os
 import sys
 import traceback
 
-from . import bauleitplanung, beteiligung, build, check, eigentum, fetch, gebaeude, gebaeude3d, gemarkungen, lage, package, rechtsakte, site, strukturdaten, umwelt, wahlen, wanderung, wohnen
+from . import bauleitplanung, beteiligung, build, check, eigentum, fetch, gebaeude, gebaeude3d, gemarkungen, lage, package, rechtsakte, site, strukturdaten, veroeffentlichung, umwelt, wahlen, wanderung, wohnen
 
 STEPS = {
     "fetch": fetch.fetch,  # Einladungen (PDF) laden und in Text umwandeln, mit Zwischenspeicher
@@ -16,6 +16,7 @@ STEPS = {
     "eigentum": eigentum.build,  # städtische Gesellschaften und Eigenbetriebe ohne Personen
     "fetch-umwelt": umwelt.fetch,  # Hochwasser, Wasserschutz, Schutzgebiete (HLNUG, HMLU), alle 7 Tage neu
     "umwelt": umwelt.build,  # Umweltebenen auf das Stadtgebiet zugeschnitten, Kartenebenen
+    "fetch-veroeffentlichung": veroeffentlichung.fetch,  # Erfassungsergebnisse vom Server (Prüfseite), Sperre, nach data/wohnen/
     "fetch-wohnen": wohnen.fetch,  # Bodenrichtwerte (BORIS), Zensus 2022 Regionaltabelle und Gitter, alle 365 Tage neu
     "fetch-wanderung": wanderung.fetch,  # Jahresberichte und Kreismatrix des HSL (einmalig, ändern sich nicht)
     "wanderung": wanderung.build,  # Zu- und Fortzüge je Gemeinde des Kreises, Wanderung über die Kreisgrenze
@@ -36,7 +37,7 @@ STEPS = {
     "package": package.package,  # Datenpaket (Zip) ohne Flächen der Bauleitplanung
     "site": site.build,  # Seite in _site/ zusammenstellen
 }
-ALL = ["fetch", "fetch-plaene", "fetch-gemarkungen", "gemarkungen", "fetch-lage", "lage", "fetch-eigentum", "eigentum", "fetch-umwelt", "umwelt", "fetch-wohnen", "wohnen", "fetch-strukturdaten", "strukturdaten", "fetch-wahlen", "wahlen", "fetch-beteiligung", "beteiligung", "fetch-rechtsakte", "rechtsakte", "fetch-wanderung", "wanderung", "fetch-lod2", "fetch-gebaeude", "gebaeude", "build", "check", "package", "site"]
+ALL = ["fetch", "fetch-plaene", "fetch-gemarkungen", "gemarkungen", "fetch-lage", "lage", "fetch-eigentum", "eigentum", "fetch-umwelt", "umwelt", "fetch-veroeffentlichung", "fetch-wohnen", "wohnen", "fetch-strukturdaten", "strukturdaten", "fetch-wahlen", "wahlen", "fetch-beteiligung", "beteiligung", "fetch-rechtsakte", "rechtsakte", "fetch-wanderung", "wanderung", "fetch-lod2", "fetch-gebaeude", "gebaeude", "build", "check", "package", "site"]
 
 
 # Ohne diese Schritte keine Seite; alle anderen (Abrufe und abgeleitete Ebenen) scheitern im Gesamtlauf weich:
