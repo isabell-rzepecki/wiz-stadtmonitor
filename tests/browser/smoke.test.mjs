@@ -127,7 +127,7 @@ test("Stellungnahme eines Ortsbeirats: Station im Beschlussvorgang, Zählung mit
 });
 
 test("Nur eigene Domain: Datenquellen als Seite, interner Bereich, Hinweise per E-Mail, ohne Verstöße", async () => {
-  for (const pfad of ["quellen.html", "intern/", "teilen/"]) {
+  for (const pfad of ["quellen.html", "intern/", "teilen/", "ortsteile/", "ortsteil/gertenbach/"]) {
     const page = await browser.newPage({ bypassCSP: true });
     const fehler = [];
     page.on("pageerror", (e) => fehler.push(String(e)));

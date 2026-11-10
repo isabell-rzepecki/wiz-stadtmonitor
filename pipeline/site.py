@@ -8,7 +8,7 @@ import shutil
 import urllib.parse
 from datetime import date
 
-from . import config
+from . import config, ortsteilseiten
 
 
 def build(out=config.SITE_OUT, mit_daten=True):
@@ -27,6 +27,8 @@ def build(out=config.SITE_OUT, mit_daten=True):
     pruefen_ausfuellen(out / "intern" / "pruefen.html")
     # Datenquellen als Seite der eigenen Domain (aus DATA_SOURCES.md, die tools/datenquellen.py aus dem Register erzeugt)
     markdown_seite(config.ROOT / "DATA_SOURCES.md", out / "quellen.html", "Datenquellen")
+    # Seiten je Ortsteil (Text ohne JavaScript, für Menschen und Suchmaschinen)
+    ortsteilseiten.erzeugen(out, mit_daten)
     stadtname_ausfuellen(out)
     vorschau_ausfuellen(out)
     suchmaschinen(out)
@@ -68,6 +70,12 @@ VORSCHAU_SEITEN = ("index.html", "wohnen.html", "erfassen.html", "quellen.html",
                    "teilen/index.html")
 
 
+def oeffentliche_seiten(out):
+    """Öffentliche Seiten mit Vorschau, Canonical und Eintrag in der Sitemap: feste Seiten und die Seiten je Ortsteil."""
+    ortsteile = sorted(str(p.relative_to(out)) for p in out.glob("ortsteil/*/index.html"))
+    return list(VORSCHAU_SEITEN) + (["ortsteile/index.html"] if (out / "ortsteile" / "index.html").exists() else []) + ortsteile
+
+
 def vorschau_ausfuellen(out):
     """Vorschau für geteilte Links (Open Graph, Twitter-Karte) in die öffentlichen Seiten: Titel und Beschreibung der
     Seite, Bild og-bild.png (tools/vorschaubild.py). Bild und Adresse müssen absolut sein, daher nur mit projekt.site_url.
@@ -76,7 +84,7 @@ def vorschau_ausfuellen(out):
         return
     basis = config.SITE_URL.rstrip("/") + "/"
     name = f"Stadtmonitor {config.STADT['stadt']['name']}"
-    for datei in VORSCHAU_SEITEN:
+    for datei in oeffentliche_seiten(out):
         seite = out / datei
         if not seite.exists():
             continue
@@ -131,7 +139,7 @@ def suchmaschinen(out):
     basis = config.SITE_URL.rstrip("/") + "/"
     (out / "robots.txt").write_text(f"User-agent: *\nDisallow: /intern/\nAllow: /\n\nSitemap: {basis}sitemap.xml\n", encoding="utf-8")
     heute = date.today().isoformat()
-    seiten = [d for d in VORSCHAU_SEITEN if d not in ("erfassen.html", "aushang.html") and (out / d).exists()]
+    seiten = [d for d in oeffentliche_seiten(out) if d not in ("erfassen.html", "aushang.html") and (out / d).exists()]
     eintraege = "".join(f"  <url><loc>{html.escape(basis + d.removesuffix('index.html'))}</loc><lastmod>{heute}</lastmod></url>\n" for d in seiten)
     (out / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n'
                                      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + eintraege + "</urlset>\n", encoding="utf-8")

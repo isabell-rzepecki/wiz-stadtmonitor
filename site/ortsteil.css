@@ -1,0 +1,11 @@
+/* Seiten je Ortsteil (pipeline/ortsteilseiten.py): Listen mit etwas Luft, Zahlen als zweispaltige Liste */
+.einleitung { font-size: 18px; line-height: 1.55; }
+.sitzungen, .vorgaenge, .ortsteile { padding-left: 20px; }
+.sitzungen > li, .vorgaenge > li, .ortsteile > li { margin: 0 0 12px; }
+.sitzungen ul { margin: 4px 0 0; padding-left: 18px; font-size: 15px; }
+.vorgaenge .nr { font-family: "Space Mono", monospace; font-size: 13px; }
+.klein { font-size: 14px; color: var(--muted); }
+.zahlen { display: grid; grid-template-columns: max-content auto; gap: 4px 20px; margin: 8px 0 12px; }
+.zahlen dt { font-weight: 700; } .zahlen dd { margin: 0; }
+@media (max-width: 520px) { .zahlen { grid-template-columns: 1fr; gap: 0; } .zahlen dd { margin-bottom: 8px; } }
+.mehr-link { display: inline-block; font-weight: 700; text-decoration: none; padding: 8px 14px; border-radius: 12px; background: var(--accent-tint); }
