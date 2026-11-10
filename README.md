@@ -53,6 +53,10 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
   - Amtliche Zahlen des Hessischen Statistischen Landesamts: je Gemeinde nur Zu- und Fortzüge über die Gemeindegrenze (2015–2024); Herkunft und Ziel nur für den Werra-Meißner-Kreis insgesamt und nur über die Kreisgrenze (2024).
   - Zahlen je Ortsteil und Ströme zwischen einzelnen Gemeinden sind nicht veröffentlicht und werden nicht geschätzt. Umzüge innerhalb der Stadt fehlen.
   - Witzenhausen ist Hochschulstandort; Zu- und Fortzüge von Studierenden erhöhen beide Ströme. Raten je 1 000 Einwohner beziehen sich auf den Mittelwert aus Jahresanfang und -ende; bis 2023 Bevölkerung auf Basis Zensus 2011, ab 2024 Zensus 2022.
+- **Strukturdaten** (Datenvertrag „Strukturdaten v1“, gemeinsam mit den Ratsatlas-Instanzen; `data/strukturdaten/`, `pipeline/strukturdaten.py`):
+  - Zensus 2022, aus dem 100-m-Gitter auf die Ortsbezirke übertragen (Zellmittelpunkt, Zuordnung in `zuordnung.tsv`): Einwohner, Altersgruppen, Durchschnittsalter, Wohnungen. Alle Werte tragen „abgeleitet“; Anteile nur ab 50 im Nenner und bei höchstens 10 % Abweichung der Teilgruppen (Geheimhaltung durch die Cell-Key-Methode), sonst „nicht ausgewiesen“. Stichtag 15.05.2022, keine Zeitreihe.
+  - Vergleich mit Kommunen desselben Demografietyps aus dem Wegweiser Kommune (CC0), zwölf Kennzahlen mit Verlauf; Sozial- und Arbeitsmarktdaten nur für die ganze Stadt.
+  - Fenster „Strukturdaten“, Kartenebene der Ortsbezirke (fünf Quantile oder feste Grenzen, Tabelle) und Hinweis im Vorgang; Gleichzeitigkeit am selben Ort begründet keinen Zusammenhang. Berichte und Quellenprüfung in `docs/strukturdaten/`.
 - **Einreicher:** Antrag oder Anfrage einer Fraktion wird aus dem TOP-Titel erkannt und als Angabe und Filter gezeigt, ohne Zählung je Fraktion. Eine fehlende Nennung im Titel sagt nichts über die Aktivität einer Fraktion.
 - **Quellen:**
   - Das Quellenregister mit Prüfstatus steht in [`data/quellen_register.tsv`](data/quellen_register.tsv), lesbar in [`DATA_SOURCES.md`](DATA_SOURCES.md), erzeugt mit `python tools/datenquellen.py`.

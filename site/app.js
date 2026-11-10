@@ -106,8 +106,8 @@
   const gremiumShort = (name) => (cfg.gremien.find((g) => g.name === name) || {}).kurz || name;
 
   // --- Flächen ein- und ausklappen ---------------------------------------------------------------
-  const SHEETS = ["panel-list", "panel-detail", "panel-auswertung", "panel-termine", "panel-wohnen", "panel-wahlen", "panel-wanderung", "timeline-wrap"];
-  const OVERLAYS = ["panel-auswertung", "panel-termine", "panel-wohnen", "panel-wahlen", "panel-wanderung"];
+  const SHEETS = ["panel-list", "panel-detail", "panel-auswertung", "panel-termine", "panel-wohnen", "panel-struktur", "panel-wahlen", "panel-wanderung", "timeline-wrap"];
+  const OVERLAYS = ["panel-auswertung", "panel-termine", "panel-wohnen", "panel-struktur", "panel-wahlen", "panel-wanderung"];
   const toggleFor = (id) => document.querySelector(`.toggle[data-panel="${id}"]`);
   const opener = {};  // Element, das eine Fläche geöffnet hat (für den Fokus beim Schließen)
   function setPanel(id, open) {
@@ -341,6 +341,7 @@
     if (!$("#panel-termine").hidden) showTermine();
     if (!$("#panel-auswertung").hidden) showStats();
     if (!$("#panel-wohnen").hidden) showWohnen(null);
+    if (!$("#panel-struktur").hidden) showStruktur(null);
     if (!$("#panel-wahlen").hidden) showWahlen();
     render();
     syncUrl();
@@ -390,13 +391,14 @@
       for (const g of cfg.umwelt.gruppen) if (wanted.includes(g.id)) umweltOn.add(g.id);
       // Bodenrichtwerte 2026 (Kartendienst der HVBG) nicht aus dem Link: Bilder eines fremden Servers erst nach Einschalten
       // (Datenschutzhinweis); alle anderen Ebenen liegen auf dem Server der Seite
-      for (const id of ["bodenrichtwerte", ...WANDERUNG_EBENEN.map((e) => e.id)]) if (wanted.includes(id)) umweltOn.add(id);
+      for (const id of ["bodenrichtwerte", "strukturdaten", ...WANDERUNG_EBENEN.map((e) => e.id)]) if (wanted.includes(id)) umweltOn.add(id);
       const Layers = L.Control.extend({
         options: { position: "bottomright" },
         onAdd() {
           const d = L.DomUtil.create("details", "map-style map-layers");
           const ebenen = [{ id: "bauleitplanung", titel: "Bauleitplanung" }, ...cfg.umwelt.gruppen, ...(cfg.wohnen ? [{ id: "bodenrichtwerte", titel: `Bodenrichtwerte ${cfg.wohnen.boris.stichtag.slice(0, 4)}` }] : []),
             ...(cfg.wohnen?.boris2026 ? [{ id: "bodenrichtwerte2026", titel: "Bodenrichtwerte 2026 (Karte der HVBG)" }] : []),
+            ...(cfg.strukturdaten ? [{ id: "strukturdaten", titel: "Strukturdaten der Ortsbezirke (Zensus 2022)" }] : []),
             ...(cfg.wanderung ? WANDERUNG_EBENEN : [])];
           d.innerHTML = `<summary>Weitere Ebenen</summary><fieldset aria-label="Weitere Kartenebenen einblenden">${ebenen.map((g) =>
             `<label><input type="checkbox" value="${esc(g.id)}"${(g.id === "bauleitplanung" ? planOn : umweltOn.has(g.id)) ? " checked" : ""}> ${esc(g.titel)}</label>`).join("")}</fieldset>`;
@@ -476,7 +478,19 @@
     });
     legendEl = new Legend().addTo(map).getContainer();
     // Pläne auch ohne Maus erreichbar: Auswahl in der Legende
-    legendEl.addEventListener("change", (e) => { if (e.target.matches("[data-plan-wahl]") && e.target.value) showPlan(e.target.value); });
+    legendEl.addEventListener("change", (e) => {
+      if (e.target.matches("[data-plan-wahl]") && e.target.value) showPlan(e.target.value);
+      // Strukturdaten: Merkmal, Jahr und Klassen; der Fokus bleibt auf der Auswahl, die die Legende neu zeichnet
+      const sel = ["data-struktur-ind", "data-struktur-jahr", "data-struktur-klassen"].find((a) => e.target.hasAttribute(a));
+      if (!sel) return;
+      if (sel === "data-struktur-ind") strukturInd = e.target.value; else if (sel === "data-struktur-jahr") strukturJahr = e.target.value; else strukturKlassen = e.target.value;
+      drawStruktur().then(() => { const s = legendEl.querySelector(`[${sel}]`); if (s) s.focus(); if (!$("#panel-struktur").hidden) showStruktur(); });
+    });
+    legendEl.addEventListener("click", (e) => {
+      if (!e.target.closest("[data-struktur-tabelle]")) return;
+      setPanel("panel-struktur", true);
+      showStruktur().then(() => { const t = $("#struktur-tabelle"); if (t) { t.scrollIntoView({ block: "start" }); t.querySelector("button").focus(); } });
+    });
     cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 40, animate: !REDUCED }).addTo(map);
     map.fitBounds(cityBounds());
   }
@@ -530,7 +544,7 @@
         ${planListe.length ? `<label class="legend-plan">Plan anzeigen <select data-plan-wahl><option value="">auswählen …</option>${planListe
           .map((p) => `<option value="${esc(p.key)}"${p.key === planShown ? " selected" : ""}>${esc(planName(p))}</option>`).join("")}</select></label>` : ""}
         <p class="hint">${esc(cfg.bauleitplanung.attribution)}.</p>` : ""}
-      ${umweltLegend()}${brwLegend()}${brw26Legend()}${wanderungLegend()}
+      ${umweltLegend()}${brwLegend()}${brw26Legend()}${strukturLegend()}${wanderungLegend()}
       ${ebenen ? '<p class="hint">Kartenebenen sind nicht rechtsverbindlich; maßgeblich sind die Quellen.</p>' : ""}
       <p><button type="button" class="link-btn" data-about="about-verortung">Mehr zur Verortung</button></p>`;
   }
@@ -557,7 +571,7 @@
     if (legendEl) drawLegend();
   }
   // Bodenrichtwerte 2026: nur als Kartenbild der HVBG (kein Datendienst); eigene Ebene, nicht mit 2024 vermischt
-  const drawEbene = (id) => (id === "bodenrichtwerte" ? drawBrw() : id === "bodenrichtwerte2026" ? drawBrw26()
+  const drawEbene = (id) => (id === "bodenrichtwerte" ? drawBrw() : id === "bodenrichtwerte2026" ? drawBrw26() : id === "strukturdaten" ? drawStruktur()
     : id.startsWith("wanderung_") ? drawWanderung(id) : drawUmwelt(id));
   // Beschriftung des Kartendienstes (grauer Kasten, schwarze Schrift, Schatten) im Browser umfärben:
   // Kasten in Textfarbe, Schrift weiß, Schatten entfernt. Der Dienst erlaubt den Abruf von anderen Seiten (CORS).
@@ -894,6 +908,7 @@
       ${(p.plans || []).length ? `<h4>Bauleitplanung</h4><ul class="locs">${p.plans.map((x) => `<li><button type="button" class="link-btn" data-open-plan="${esc(x.key)}">${esc(x.titel)}</button>
         <br><span class="meta">${esc(x.treffer)} · Fundstelle: „${esc(x.evidence)}“</span></li>`).join("")}</ul>` : ""}
       ${wohnenKasten(p)}
+      ${strukturKasten(p)}
       ${(p.overlaps || []).length && cfg.umwelt ? `<h4>Räumliche Überschneidung</h4><ul class="locs">${p.overlaps.map((u) => `<li>${esc(u.titel)}${u.name ? `: ${esc(u.name)}` : ""}${u.zone ? `, ${esc(u.zone)}` : ""}
         <br><span class="meta">Ort: ${esc(u.ort)}</span></li>`).join("")}</ul>
         <p class="hint">${esc(cfg.umwelt.ueberschneidung_hinweis)}</p>` : ""}
@@ -926,6 +941,8 @@
   $("#detail").addEventListener("click", (e) => {
     const ow = e.target.closest("[data-open-wohnen]");
     if (ow) { setPanel("panel-wohnen", true); showWohnen(ow.dataset.openWohnen); focusPanel("panel-wohnen"); return; }
+    const os = e.target.closest("[data-open-struktur]");
+    if (os) { setPanel("panel-struktur", true); showStruktur(os.dataset.openStruktur); focusPanel("panel-struktur"); return; }
     const pl = e.target.closest("[data-open-plan]");
     if (pl) { if (!planOn) { planOn = true; const cb = document.querySelector('.map-layers input[value="bauleitplanung"]'); if (cb) cb.checked = true; drawPlans(); } showPlan(pl.dataset.openPlan); return; }
     const r = e.target.closest("[data-open-ref]");
@@ -1275,6 +1292,23 @@
     syncUrl();
     closePanel("panel-wanderung");
   });
+  $("#struktur").addEventListener("click", (e) => {
+    const so = e.target.closest("[data-struktur-sort]");
+    if (so) {
+      const s = so.dataset.strukturSort;
+      strukturSort = { spalte: s, auf: strukturSort.spalte === s ? !strukturSort.auf : true };
+      showStruktur().then(() => { const b = $(`#struktur [data-struktur-sort="${s}"]`); if (b) b.focus(); });
+      return;
+    }
+    const k = e.target.closest("[data-struktur-karte]");
+    if (k) { strukturKarte(k.dataset.strukturKarte || strukturInd); closePanel("panel-struktur"); }
+  });
+  $("#struktur").addEventListener("change", (e) => {
+    if (e.target.id !== "struktur-ind") return;
+    strukturInd = e.target.value;
+    showStruktur().then(() => $("#struktur-ind").focus());
+    if (strukturLayer) drawStruktur();
+  });
   $("#wohnen").addEventListener("click", (e) => {
     const eb = e.target.closest("[data-ebene-on]");
     if (eb) {
@@ -1310,6 +1344,191 @@
     }).join("");
     return `<h4>Wohnen und Boden</h4><ul class="locs">${rows}</ul><p class="hint">Kontext zum Ort, kein Bezug zum Inhalt des Vorgangs.</p>`;
   }
+
+  // --- Strukturdaten (Datenvertrag „Strukturdaten v1“, data/strukturdaten/) -----------------------------------
+  // Werte je Ortsbezirk aus dem Zensus 2022 (aus dem 100-m-Gitter abgeleitet), Wert der Stadt aus derselben Quelle und
+  // Vergleich mit Kommunen gleichen Demografietyps (Wegweiser Kommune). Gelesen werden nur die Dateien des Vertrags.
+  const STRUKTUR = "data/strukturdaten/";
+  const STRUKTUR_FARBEN = ["#edf8fb", "#b3cde3", "#8c96c6", "#8856a7", "#810f7c"];  // ColorBrewer BuPu: sequenziell, für Farbfehlsichtige unterscheidbar
+  const FEHLSCHLUSS = "Liegen Vorgänge und Merkmale am selben Ort, begründet das keinen Zusammenhang zwischen ihnen (ökologischer Fehlschluss).";
+  const RELATIV = ["anteil", "quote", "dichte", "mittelwert"];
+  let strukturPromise = null, strukturDaten = null, strukturLayer = null, strukturInd = null, strukturJahr = null, strukturKlassen = "quantile",
+    strukturGebiet = null, strukturSort = { spalte: "name", auf: true };
+  const tsv = (text) => {
+    const [k, ...z] = text.replace(/\r/g, "").split("\n").filter(Boolean);
+    const kopf = k.split("\t");
+    return z.map((l) => Object.fromEntries(l.split("\t").map((w, i) => [kopf[i], w])));
+  };
+  const ladeStruktur = () => (strukturPromise ||= Promise.all(["indikatoren.tsv", "werte.tsv", "gesamtstadt.tsv"]
+    .map((f) => fetch(STRUKTUR + f).then((r) => (r.ok ? r.text() : null)).catch(() => null)))
+    .then(async ([i, w, g]) => {
+      if (!i || !w) { strukturPromise = null; return null; }
+      const [meta, raum] = await Promise.all([holen(STRUKTUR + "meta.json", () => {}), holen(STRUKTUR + "raum/ortsbezirk.geojson", () => {})]);
+      const werte = new Map();
+      for (const x of tsv(w)) werte.set(`${x.raum_id}|${x.indikator_id}|${x.jahr}`, x);
+      return (strukturDaten = { ind: new Map(tsv(i).map((x) => [x.indikator_id, x])), werte, vergleich: g ? tsv(g) : [], meta, raum });
+    }));
+  const kleinraeumig = (d) => [...d.ind.values()].filter((x) => x.raumebenen.split(";").includes("ortsbezirk"));
+  const relativ = (d) => kleinraeumig(d).filter((x) => RELATIV.includes(x.typ));
+  const sJahre = (d, id) => [...new Set([...d.werte.values()].filter((w) => w.indikator_id === id).map((w) => w.jahr))].sort();
+  const sWert = (d, raum, id, jahr) => d.werte.get(`${raum}|${id}|${jahr || sJahre(d, id).slice(-1)[0]}`);
+  const sEinheit = (x) => (x.einheit === "%" ? " %" : x.typ === "anzahl" ? "" : ` ${x.einheit}`);
+  const sZahl = (v, x) => (x.typ === "anzahl" ? de(Number(v)) : num(Number(v), 1));
+  function sAnzeige(w, x, marke = false) {
+    if (!w) return '<span class="luecke">keine Angabe</span>';
+    if (w.status === "geheim") return '<span class="luecke">nicht veröffentlicht (statistische Geheimhaltung)</span>';
+    if (w.status === "fehlt" || w.wert === "") return '<span class="luecke">nicht ausgewiesen (zu wenige Angaben oder Geheimhaltung)</span>';
+    return `${sZahl(w.wert, x)}${esc(sEinheit(x))}${marke && w.status === "abgeleitet" ? ' <span class="derived">abgeleitet</span>' : ""}`;
+  }
+  const sErlaeuterung = (x, jahr) => `<details class="erl"><summary>Erläuterung<span class="visually-hidden"> zu ${esc(x.name)}</span></summary>
+    <p>${esc(x.metatext)}</p><p class="hint">Quelle: ${esc(x.quelle)}${x.datenhalter ? ` (${esc(x.datenhalter)})` : ""} · ${jahr ? `Jahr ${esc(jahr)} · ` : ""}Lizenz ${link(x.lizenz_url, esc(x.lizenz)) || esc(x.lizenz)}${x.namensnennung ? ` · ${esc(x.namensnennung)}` : ""}</p></details>`;
+  function sparkline(punkte, titel) {
+    const p = punkte.filter(([, v]) => v != null);
+    if (p.length < 2) return "";
+    const W = 96, H = 26, min = Math.min(...p.map(([, v]) => v)), max = Math.max(...p.map(([, v]) => v)), sp = max - min || 1;
+    const x = (i) => 2 + ((W - 4) * i) / (p.length - 1), y = (v) => H - 3 - ((H - 6) * (v - min)) / sp;
+    return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(titel)}"><polyline fill="none" stroke="${color("accent-ink")}" stroke-width="1.5" points="${p.map(([, v], i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ")}"/></svg>`;
+  }
+  function sKlassen(d, id, jahr) {
+    // Quantile (Voreinstellung) oder gleiche Abstände zwischen Minimum und Maximum über alle Jahre (für Zeitvergleiche)
+    const werteJahr = (j) => cfg.ortsteile.map((o) => sWert(d, o.slug, id, j)).filter((w) => w && w.wert !== "" && w.status !== "fehlt" && w.status !== "geheim").map((w) => Number(w.wert));
+    const v = werteJahr(jahr).sort((a, b) => a - b);
+    if (!v.length) return [];
+    if (strukturKlassen === "fest") {
+      const alle = sJahre(d, id).flatMap(werteJahr), lo = Math.min(...alle), hi = Math.max(...alle);
+      return [1, 2, 3, 4].map((i) => lo + ((hi - lo) * i) / 5);
+    }
+    const q = (p) => { const pos = (v.length - 1) * p, a = Math.floor(pos); return v[a] + (v[Math.min(a + 1, v.length - 1)] - v[a]) * (pos - a); };
+    return [...new Set([0.2, 0.4, 0.6, 0.8].map((p) => Math.round(q(p) * 10) / 10))];
+  }
+  const sKlasse = (grenzen, v) => grenzen.filter((g) => v >= g).length;
+  function sKlassenText(grenzen, x) {
+    const f = (v) => `${num(v, 1)}${sEinheit(x)}`;
+    if (!grenzen.length) return [];
+    return [`unter ${f(grenzen[0])}`, ...grenzen.slice(1).map((g, i) => `${f(grenzen[i])} bis unter ${f(g)}`), `${f(grenzen[grenzen.length - 1])} und mehr`];
+  }
+  const sFarbe = (grenzen, i) => STRUKTUR_FARBEN[grenzen.length === 4 ? i : Math.round((i * 4) / Math.max(grenzen.length, 1))];
+  function strukturTabelle(d) {
+    const x = d.ind.get(strukturInd), jahr = strukturJahr || sJahre(d, strukturInd).slice(-1)[0];
+    const zeilen = cfg.ortsteile.map((o) => ({ o, w: sWert(d, o.slug, strukturInd, jahr) }));
+    const val = (z) => (z.w && z.w.wert !== "" && z.w.status !== "fehlt" ? Number(z.w.wert) : null);
+    const { spalte, auf } = strukturSort;
+    zeilen.sort((a, b) => {
+      if (spalte === "name") return (auf ? 1 : -1) * a.o.name.localeCompare(b.o.name, "de");
+      const va = val(a), vb = val(b);
+      if (va == null) return 1; if (vb == null) return -1;
+      return (auf ? 1 : -1) * (va - vb);
+    });
+    const kopf = (id, t) => `<th scope="col" aria-sort="${spalte === id ? (auf ? "ascending" : "descending") : "none"}"><button type="button" class="sort" data-struktur-sort="${id}">${esc(t)}</button></th>`;
+    return `<div class="table-wrap"><table class="compare" id="struktur-tabelle"><caption>${esc(x.name)} je Ortsbezirk, ${esc(jahr)} (sortierbar)</caption>
+      <thead><tr>${kopf("name", "Ortsbezirk")}${kopf("wert", `${x.name}${sEinheit(x) ? ` (${x.einheit})` : ""}`)}</tr></thead>
+      <tbody>${zeilen.map((z) => `<tr${area.kind === "ortsteil" && area.key === z.o.slug ? ' class="own"' : ""}><th scope="row">${esc(z.o.name)}</th><td>${sAnzeige(z.w, x)}</td></tr>`).join("")}
+      <tr class="sum"><th scope="row">${esc(cfg.stadt.name)}</th><td>${sAnzeige(sWert(d, cfg.stadt.gemeindeschluessel, strukturInd, jahr), x)}</td></tr></tbody></table></div>`;
+  }
+  async function showStruktur(slug) {
+    const box = $("#struktur");
+    const S = cfg.strukturdaten, d = S && await ladeStruktur();
+    if (!d) { box.innerHTML = '<p class="hint">Noch keine Strukturdaten.</p>'; return; }
+    if (slug !== undefined) strukturGebiet = slug;
+    const key = strukturGebiet || (area.kind === "ortsteil" ? area.key : null);
+    const o = key && cfg.ortsteile.find((x) => x.slug === key);
+    const G = cfg.stadt.gemeindeschluessel;
+    const klein = kleinraeumig(d);
+    strukturInd ||= (relativ(d)[0] || {}).indikator_id;
+    const jahrZ = sJahre(d, klein[0].indikator_id).slice(-1)[0];
+    const zeilen = klein.map((x) => `<tr><th scope="row">${esc(x.name)}${sErlaeuterung(x, jahrZ)}</th>${o ? `<td>${sAnzeige(sWert(d, o.slug, x.indikator_id), x)}</td>` : ""}
+      <td>${sAnzeige(sWert(d, G, x.indikator_id), x)}</td><td>${RELATIV.includes(x.typ) ? `<button type="button" class="link-btn" data-struktur-karte="${esc(x.indikator_id)}">Karte<span class="visually-hidden">: ${esc(x.name)} je Ortsbezirk</span></button>` : ""}</td></tr>`).join("");
+    // Vergleich (Wegweiser Kommune): jüngstes Jahr je Kennzahl, Verlauf der Stadt als kleine Linie
+    const ww = [...d.ind.values()].filter((x) => !x.raumebenen.split(";").includes("ortsbezirk"));
+    const kommunen = S.wegweiser.kommunen.map((fu) => ({ fu, name: (d.vergleich.find((v) => v.wegweiser_friendly_url === fu) || {}).kommune || fu }));
+    const vgl = ww.map((x) => {
+      const reihe = d.vergleich.filter((v) => v.indikator_id === x.indikator_id);
+      const eigene = reihe.filter((v) => v.wegweiser_friendly_url === S.wegweiser.kommunen[0]).map((v) => [Number(v.jahr), v.wert === "" ? null : Number(v.wert)]).sort((a, b) => a[0] - b[0]);
+      const jahr = Math.max(...eigene.filter(([, v]) => v != null).map(([j]) => j));
+      const zelle = (fu) => { const v = reihe.find((r) => r.wegweiser_friendly_url === fu && Number(r.jahr) === jahr); return v && v.wert !== "" ? sZahl(v.wert, x) : "k. A."; };
+      return `<tr><th scope="row">${esc(x.name)} <span class="hint">(${esc(x.einheit)}, ${jahr})</span>${sErlaeuterung(x)}</th>
+        <td>${sparkline(eigene, `Verlauf ${cfg.stadt.name} ${eigene[0] ? eigene[0][0] : ""} bis ${jahr}`)}</td>${kommunen.map((k) => `<td>${zelle(k.fu)}</td>`).join("")}</tr>`;
+    }).join("");
+    const m = d.meta || {};
+    box.innerHTML = `<p class="hint">Gebiet: <strong>${esc(o ? o.name : cfg.stadt.name)}</strong>. Die Werte beschreiben den Ort, nicht einzelne Vorgänge. ${esc(FEHLSCHLUSS)}</p>
+      <section class="stat-block"><h3>Bevölkerung und Wohnungen (Zensus 2022)</h3>
+        <p class="stichtag">Stichtag ${fmtDate(m.datenstand && m.datenstand.zensus || `${jahrZ}-05-15`)}; keine Zeitreihe</p>
+        <div class="table-wrap"><table class="compare"><caption class="visually-hidden">Strukturdaten ${o ? `${esc(o.name)} und ` : ""}${esc(cfg.stadt.name)}, Zensus 2022</caption>
+          <thead><tr><th scope="col">Merkmal</th>${o ? `<th scope="col">${esc(o.name)} <span class="derived">abgeleitet</span></th>` : ""}<th scope="col">${esc(cfg.stadt.name)} <span class="derived">abgeleitet</span></th><th scope="col"><span class="visually-hidden">Karte</span></th></tr></thead>
+          <tbody>${zeilen}</tbody></table></div>
+        <p class="hint">„abgeleitet“: aus den 100-m-Gitterzellen auf Ortsbezirk und Stadt übertragen; die Geheimhaltung des Zensus macht kleine Werte unscharf. Die amtliche Einwohnerzahl steht in der Erläuterung.</p></section>
+      <section class="stat-block"><h3>Alle Ortsbezirke</h3>
+        <label class="inline">Merkmal <select id="struktur-ind">${relativ(d).map((x) => `<option value="${esc(x.indikator_id)}"${x.indikator_id === strukturInd ? " selected" : ""}>${esc(x.name)}</option>`).join("")}</select></label>
+        ${strukturTabelle(d)}
+        <p><button type="button" class="btn btn-soft" data-struktur-karte="">Auf der Karte zeigen</button></p></section>
+      <section class="stat-block"><h3>Vergleich mit ähnlichen Kommunen</h3>
+        <p class="hint">Kommunen desselben Demografietyps im Wegweiser Kommune. Diese Werte beruhen bis 2023 auf der Fortschreibung des Zensus 2011; Definitionen und Stichtage weichen von den Zensuswerten oben ab, beide werden nicht verrechnet.</p>
+        <div class="table-wrap"><table class="compare"><caption class="visually-hidden">Vergleich mit Kommunen desselben Demografietyps, Wegweiser Kommune</caption>
+          <thead><tr><th scope="col">Kennzahl</th><th scope="col">Verlauf ${esc(cfg.stadt.name)}</th>${kommunen.map((k) => `<th scope="col">${esc(k.name)}</th>`).join("")}</tr></thead>
+          <tbody>${vgl}</tbody></table></div></section>
+      ${methode([`<strong>Zensus 2022:</strong> Gitterzellen (100 m) werden über ihren Mittelpunkt einem Ortsbezirk zugeordnet. Anzahlen sind Summen der Zellen; Anteile werden aus summierten Zählern und Nennern berechnet und nur ausgewiesen, wenn der Nenner mindestens ${de(S.schwelle.nenner_min)} beträgt und die Teilgruppen höchstens ${num(S.schwelle.abweichung_max * 100, 0)} % von der Gesamtzahl abweichen. Das Durchschnittsalter ist mit der Einwohnerzahl der Zellen gewichtet.`,
+        "<strong>Keine Rangfolge:</strong> Die Tabellen bewerten keine Ortsbezirke; Sozialmerkmale gibt es nur für die ganze Stadt.",
+        `<strong>Datenstand:</strong> Zensus ${fmtDate(m.datenstand && m.datenstand.zensus || "")}, Wegweiser Kommune bis ${esc(m.datenstand && m.datenstand.wegweiser || "")}, abgerufen am ${fmtDate(m.abrufdatum || "")}.`,
+        `<ul>${(m.quellen || []).map((q) => `<li>${link(q.url, esc(q.name)) || esc(q.name)}: ${esc(q.lizenz)}${q.namensnennung ? `, ${esc(q.namensnennung)}` : ""}</li>`).join("")}</ul>`])}`;
+  }
+  async function drawStruktur() {
+    if (!umweltOn.has("strukturdaten")) { if (strukturLayer) { strukturLayer.remove(); strukturLayer = null; } if (legendEl) drawLegend(); return; }
+    const d = await ladeStruktur();
+    if (!d || !d.raum || !umweltOn.has("strukturdaten")) { if (legendEl) drawLegend(); return; }
+    strukturInd ||= (relativ(d)[0] || {}).indikator_id;
+    const x = d.ind.get(strukturInd), jahr = strukturJahr || sJahre(d, strukturInd).slice(-1)[0], grenzen = sKlassen(d, strukturInd, jahr);
+    if (strukturLayer) strukturLayer.remove();
+    if (!map.getPane("struktur")) map.createPane("struktur").style.zIndex = 360;  // über den Ortsbezirken, unter den Vorgängen
+    strukturLayer = L.geoJSON(d.raum, {
+      pane: "struktur", attribution: esc(`Strukturdaten: ${x.namensnennung}`),
+      style: (f) => { const w = sWert(d, f.properties.raum_id, strukturInd, jahr), ok = w && w.wert !== "" && w.status !== "fehlt" && w.status !== "geheim";
+        return { color: color("text-muted"), weight: 1, opacity: 0.9, dashArray: ok ? null : "4 3",
+          fillColor: ok ? sFarbe(grenzen, sKlasse(grenzen, Number(w.wert))) : "#d9d4d6", fillOpacity: ok ? 0.8 : 0.45 }; },
+      onEachFeature: (f, layer) => {
+        const p = f.properties, w = sWert(d, p.raum_id, strukturInd, jahr);
+        layer.bindTooltip(`<strong>${esc(p.name)}</strong><br>${esc(x.name)}: ${sAnzeige(w, x)}<br><span class="nav-dim">Zensus ${esc(jahr)}, aus dem Gitter abgeleitet</span>`, { sticky: true });
+        layer.on("click", () => { if (!(area.kind === "ortsteil" && area.key === p.raum_id)) chooseArea(`ortsteil:${p.raum_id}`); });
+      },
+    }).addTo(map);
+    if (legendEl) drawLegend();
+  }
+  function strukturLegend() {
+    const d = strukturDaten;
+    if (!strukturLayer || !d) return "";
+    const x = d.ind.get(strukturInd), jahre = sJahre(d, strukturInd), jahr = strukturJahr || jahre.slice(-1)[0], grenzen = sKlassen(d, strukturInd, jahr);
+    return `<p class="legend-group">Strukturdaten der Ortsbezirke</p>
+      <label class="legend-plan">Merkmal <select data-struktur-ind>${relativ(d).map((y) => `<option value="${esc(y.indikator_id)}"${y.indikator_id === strukturInd ? " selected" : ""}>${esc(y.name)}</option>`).join("")}</select></label>
+      ${jahre.length > 1 ? `<label class="legend-plan">Jahr <select data-struktur-jahr>${jahre.map((j) => `<option${j === jahr ? " selected" : ""}>${esc(j)}</option>`).join("")}</select></label>` : `<p class="hint">Jahr ${esc(jahr)} (Zensus, Stichtag 15.05.), Raumeinheit Ortsbezirk</p>`}
+      <label class="legend-plan">Klassen <select data-struktur-klassen><option value="quantile"${strukturKlassen === "quantile" ? " selected" : ""}>5 Quantile</option><option value="fest"${strukturKlassen === "fest" ? " selected" : ""}>feste Grenzen über alle Jahre</option></select></label>
+      <ul>${sKlassenText(grenzen, x).map((t, i) => `<li><span class="swatch swatch-area" aria-hidden="true" style="border-color:${color("text-muted")};background:${sFarbe(grenzen, i)}"></span>${esc(t)}</li>`).join("")}
+        <li><span class="swatch swatch-area swatch-fehlt" aria-hidden="true"></span>nicht ausgewiesen (zu wenige Angaben oder Geheimhaltung)</li></ul>
+      <p class="hint">${esc(FEHLSCHLUSS)} Quelle: ${esc(x.namensnennung)}.</p>
+      <p><button type="button" class="link-btn" data-struktur-tabelle>Als Tabelle</button></p>`;
+  }
+  // Kasten im Vorgang: Strukturdaten der Ortsbezirke, auf die er sich bezieht
+  function strukturKasten(p) {
+    const d = strukturDaten;
+    if (!cfg.strukturdaten || !d) return "";
+    const slugs = [...new Set(p.locations.map((l) => slugOf(l.ortsteil)).filter(Boolean))];
+    if (!slugs.length) return "";
+    const x1 = d.ind.get("zensus_einwohner"), x2 = d.ind.get("zensus_anteil_ab65");
+    const rows = slugs.map((s) => {
+      const o = cfg.ortsteile.find((y) => y.slug === s);
+      const ew = x1 && sWert(d, s, x1.indikator_id), ab = x2 && sWert(d, s, x2.indikator_id);
+      return `<li><strong>${esc(o.name)}</strong>: ${ew && ew.wert !== "" ? `${de(Number(ew.wert))} Einwohner` : "Einwohner nicht ausgewiesen"}${ab && ab.wert !== "" && ab.status !== "fehlt" ? `, ${num(Number(ab.wert), 1)} % ab 65 Jahren` : ""} (Zensus 2022, abgeleitet)
+        <br><button type="button" class="link-btn" data-open-struktur="${esc(s)}">Strukturdaten von ${esc(o.name)}</button></li>`;
+    }).join("");
+    return `<h4>Strukturdaten</h4><ul class="locs">${rows}</ul><p class="hint">Kontext zum Ort, kein Bezug zum Inhalt des Vorgangs. ${esc(FEHLSCHLUSS)}</p>`;
+  }
+  const strukturKarte = (id) => {
+    if (id) strukturInd = id;
+    umweltOn.add("strukturdaten");
+    const box = document.querySelector('.map-layers input[value="strukturdaten"]');
+    if (box) box.checked = true;
+    drawStruktur();
+    if (legendEl) legendEl.open = true;
+    syncUrl();
+  };
 
   function showStats() {
     const list = papers.filter((p) => !p.verfahrenspunkt);
@@ -1389,6 +1608,7 @@
       json(WOHNEN_URL), json(WAHLEN_URL), json(BETEILIGUNG_URL)]);
     beteiligung = be;
     wohnen = w;
+    if (c && c.strukturdaten) ladeStruktur();  // klein; der Kasten im Vorgang braucht die Werte
     wahlen = wa;
     if (credits && credits.length) $("#credits").innerHTML = credits.map((a) => `<li>${link(a.link, esc(a.text)) || esc(a.text)} <span class="hint">(${esc(a.lizenz)})</span></li>`).join("");
     if (!c) throw new Error("Konfiguration (stadt.json) fehlt");
@@ -1399,6 +1619,10 @@
     dataStand = (data.meta.generated_at || new Date().toISOString()).slice(0, 10);
     applyConfig();
     $("#stand").textContent = data.meta.generated_at ? `Datenstand: ${fmtDate(data.meta.generated_at)}` : "Datenstand: noch keine Daten";
+    if (cfg.strukturdaten) ladeStruktur().then((s) => {
+      const ds = s && s.meta && s.meta.datenstand;
+      if (ds) $("#stand").textContent += ` · Strukturdaten: Zensus ${fmtDate(ds.zensus)}, Wegweiser Kommune bis ${ds.wegweiser}`;
+    });
     // Quellwache: erwähnte Sitzungen ohne veröffentlichte Einladung (pipeline/quellwache.py)
     const lk = (data.meta.quellwache && data.meta.quellwache.luecken) || [];
     $("#luecken").innerHTML = lk.length ? `<details class="acc"><summary>Bekannte Lücken in den Quellen (${lk.length})</summary>
@@ -1456,6 +1680,7 @@
     $("#cta-wahlen").addEventListener("click", () => { setPanel("panel-wahlen", true); showWahlen(); focusPanel("panel-wahlen"); });
     $("#cta-wanderung").addEventListener("click", () => { setPanel("panel-wanderung", true); showWanderung(); focusPanel("panel-wanderung"); });
     $("#cta-wohnen").addEventListener("click", () => { setPanel("panel-wohnen", true); showWohnen(null); focusPanel("panel-wohnen"); });
+    $("#cta-struktur").addEventListener("click", () => { setPanel("panel-struktur", true); showStruktur(null); focusPanel("panel-struktur"); });
     const params = new URLSearchParams(location.search);
     let ref = "";
     try { ref = decodeURIComponent(location.hash.slice(1)); } catch (e) { /* fehlerhafter Anker: ohne Vorgang starten */ }
