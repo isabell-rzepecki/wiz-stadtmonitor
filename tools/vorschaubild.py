@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SATZ = "Was Stadtverordnete, Ausschüsse und Ortsbeiräte beraten – auf Karte, Zeitleiste und Liste."
+SATZ = "Der Stadtmonitor Witzenhausen zeigt Beschlüsse, Anträge und Termine der Stadtverordneten sowie Daten zu Wohnen und Bevölkerung auf einer Karte."
 
 
 def _ringe(g):
@@ -49,12 +49,12 @@ def vorlage():
 @font-face{{font-family:M;font-weight:700;src:url('{schrift}/space-mono-latin-700-normal.woff2')}}
 html,body{{margin:0;width:1200px;height:630px;overflow:hidden}}
 body{{background:#f4726b;font-family:M;color:#1a1a1a;position:relative}}
-svg.k{{position:absolute;right:-30px;top:-20px}} .t{{position:absolute;left:80px;top:80px;width:620px}}
-h1{{font:400 92px/0.98 L;color:#fdf6f4;margin:30px 0 24px;letter-spacing:-1px}} h1 span{{color:#1a1a1a;display:block}}
-p{{font-size:26px;line-height:1.45;margin:0 0 28px}} .u{{font-weight:700;font-size:22px}}
+svg.k{{position:absolute;right:-30px;top:-20px}} .t{{position:absolute;left:80px;top:46px;width:640px}}
+h1{{font:400 90px/0.98 L;color:#fdf6f4;margin:18px 0 22px;letter-spacing:-1px}} h1 span{{color:#1a1a1a;display:block}}
+p{{font-size:24px;line-height:1.42;margin:0 0 22px}} .u{{font-weight:700;font-size:22px}}
 </style>
 <svg class="k" width="600" height="670" viewBox="0 0 600 670"><path d="{umrisse(20, 20, 560, 630)}" fill="#fdf6f4" fill-opacity=".14" stroke="#fdf6f4" stroke-opacity=".8" stroke-width="2" stroke-linejoin="round"/></svg>
-<div class="t"><svg viewBox="0 0 64 64" width="120" height="120" style="display:block">{marke}</svg>
+<div class="t"><svg viewBox="0 0 64 64" width="100" height="100" style="display:block">{marke}</svg>
 <h1>Stadtmonitor<span>{name}</span></h1><p>{SATZ}</p><div class="u">{adresse}</div></div>"""
 
 
