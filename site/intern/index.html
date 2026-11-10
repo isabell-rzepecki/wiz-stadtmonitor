@@ -16,69 +16,32 @@
   </header>
   <main class="page" id="inhalt">
     <!-- Interner Bereich der Erfassung Wohnen und Eigentum. Auf dem Webserver mit Passwort geschützt (Plesk,
-         „Passwortgeschützte Verzeichnisse“, Ordner /intern/); nicht verlinkt. Die Seiten rechnen nur im Browser und
-         senden nichts. -->
-    <h1>Erfassung Wohnen und Eigentum: interner Bereich</h1>
-    <p>Hier arbeiten die Ausgabestelle und die Prüfgruppe. Erfassende brauchen diesen Bereich nicht; sie bekommen eine Einladungskarte.</p>
+         „Passwortgeschützte Verzeichnisse“, Ordner /intern/); nicht verlinkt. Die Seiten rechnen im Browser; nur die
+         Prüfseite sendet beim Veröffentlichen die zusammengefassten Zahlen an den eigenen Server. Jede Aufgabe führt
+         Schritt für Schritt (schritte.js). -->
+    <h1>Interner Bereich</h1>
+    <p class="einleitung">Hallo! Hier passiert die Arbeit hinter der Seite „Wohnen und Eigentum“. Menschen aus Witzenhausen tragen ein, wem Häuser gehören und was Mieten kosten. Du hilfst, dass das fair und sicher bleibt. Persönliches bleibt auf deinem Rechner; veröffentlicht werden nur Zahlen für ganze Ortsteile.</p>
 
-    <h2>Wer sind Sie?</h2>
-    <ul class="rollen">
-      <li><a href="#pruefgruppe"><strong>Prüfgruppe</strong>Ich prüfe die eingegangenen Angaben und gebe sie frei.</a></li>
-      <li><a href="#ausgabestelle"><strong>Ausgabestelle</strong>Ich verteile Einladungskarten an Personen, die mitmachen.</a></li>
-      <li><a href="#erfassende"><strong>Erfassende</strong>Ich habe eine Karte bekommen und möchte Angaben machen.</a></li>
+    <h2>Was möchtest du tun?</h2>
+    <ul class="aufgaben">
+      <li><a href="karten.html"><strong>Einladungskarten drucken</strong>Für Menschen, die mitmachen möchten.</a></li>
+      <li><a href="pruefen.html"><strong>Neue Angaben prüfen</strong>Wenn dir jemand Dateien geschickt hat.</a></li>
+      <li><a href="pruefen.html?aufgabe=einrichten"><strong>Zum ersten Mal hier?</strong>Prüfmappe anlegen. Das macht ihr nur einmal ganz am Anfang.</a></li>
     </ul>
+    <p>Lieber erst einmal üben? <a href="pruefen.html?aufgabe=probe">Hier geht es ohne echte Angaben.</a></p>
 
-    <section class="schritt" id="pruefgruppe" aria-labelledby="t-pg">
-      <h2 id="t-pg">Prüfgruppe</h2>
-      <h3>Einmal zu Beginn</h3>
-      <ol>
-        <li><a href="pruefen.html">Prüfseite</a> öffnen und „Erstmals einrichten“ aufklappen.</li>
-        <li>Ein Passwort wählen und zweimal eingeben. Es ist das einzige Passwort, das die Prüfgruppe braucht.</li>
-        <li>Die <strong>Arbeitsdatei</strong> speichern, auf einen USB-Stick und als Sicherung auf einen zweiten.</li>
-        <li>Die <strong>Kartenliste</strong> speichern und der Ausgabestelle schicken (E-Mail ist in Ordnung).</li>
-      </ol>
-      <h3>Immer wenn neue Dateien da sind</h3>
-      <ol>
-        <li><a href="pruefen.html">Prüfseite</a> öffnen, Arbeitsdatei wählen, Passwort eingeben.</li>
-        <li>Die Dateien der Erfassenden einlesen. Eine neue Kartenliste der Ausgabestelle einfach mit auswählen.</li>
-        <li>Einträge ohne Hinweis freigeben, Einträge mit Hinweis ansehen.</li>
-        <li>Bei Bedarf: „Vorschau erzeugen“, dann „Auf der Seite veröffentlichen“. Die Zahlen erscheinen nach dem nächsten nächtlichen Lauf.</li>
-        <li>Arbeitsdatei speichern und die alte auf beiden Sticks ersetzen.</li>
-      </ol>
-      <p class="klein">Zum Kennenlernen: Auf der Prüfseite „Ohne echte Daten ausprobieren“.</p>
-    </section>
-
-    <section class="schritt" id="ausgabestelle" aria-labelledby="t-as">
-      <h2 id="t-as">Ausgabestelle</h2>
-      <ol>
-        <li><a href="karten.html">Seite Einladungskarten</a> öffnen und die Kartenliste wählen. Beim ersten Mal ist das die Datei von der Prüfgruppe, danach Ihre zuletzt gespeicherte.</li>
-        <li>Anzahl eingeben, „Karten erstellen und drucken“. Mit den Karten druckt die Seite eine Liste, auf der Sie von Hand eintragen, wer welche Karte bekommt.</li>
-        <li>Die Karten persönlich übergeben.</li>
-        <li>Die Kartenliste speichern und der Prüfgruppe eine Kopie schicken.</li>
-      </ol>
-      <p class="klein">Die Liste mit den Namen bleibt bei Ihnen. Die Prüfgruppe sieht nur die Kartennummern.</p>
-    </section>
-
-    <section class="schritt" id="erfassende" aria-labelledby="t-er">
-      <h2 id="t-er">Erfassende</h2>
-      <ol>
-        <li>Den QR-Code auf der Einladungskarte mit der Handykamera scannen. Die Erfassung öffnet sich, Sie sind angemeldet.</li>
-        <li>Im Browsermenü „Zum Startbildschirm hinzufügen“ wählen. Danach geht die Erfassung auch ohne Netz.</li>
-        <li>Gebäude auf der Karte antippen und das Formular ausfüllen.</li>
-        <li>Unter „Einträge“ auf „Exportieren“ tippen und die Datei der Prüfgruppe schicken. Die Datei ist verschlüsselt; nur die Prüfgruppe kann sie lesen.</li>
-        <li>Wenn die Prüfgruppe den Eingang bestätigt hat: „Exportierte löschen“.</li>
-      </ol>
-      <p class="klein">Ohne Karte lässt sich die <a href="../erfassen.html">Erfassung</a> nur ausprobieren; gespeichert wird dann nichts.</p>
-    </section>
-
-    <section class="schritt" aria-labelledby="t-info">
-      <h2 id="t-info">Zum Weitergeben</h2>
+    <h2>Seltener gebraucht</h2>
+    <ul class="aufgaben klein-aufgaben">
+      <li><a href="pruefen.html?aufgabe=sonderfall"><strong>Löschen und Auskunft</strong>Jemand möchte Angaben löschen lassen oder wissen, was gespeichert ist.</a></li>
+    </ul>
+    <details class="mehr">
+      <summary>Aushang und Datenschutz zum Weitergeben</summary>
       <ul>
-        <li><a href="../aushang.html">Aushang zum Drucken</a> (mit QR-Code zur Datenschutzseite)</li>
-        <li><a href="../datenschutz.html">Datenschutzhinweis</a> · <a href="../impressum.html">Impressum</a></li>
-        <li><a href="../wohnen.html">Seite „Wohnen und Eigentum“</a> mit den veröffentlichten Ergebnissen</li>
+        <li><a href="../aushang.html">Aushang zum Ausdrucken</a></li>
+        <li><a href="../datenschutz.html">Datenschutzhinweis</a> und <a href="../impressum.html">Impressum</a></li>
+        <li><a href="../wohnen.html">Seite „Wohnen und Eigentum“</a>, dort stehen die Ergebnisse</li>
       </ul>
-    </section>
+    </details>
   </main>
 </body>
 </html>
