@@ -124,6 +124,15 @@
     return JSON.stringify({ format: AFORMAT, key_id: S.schlDatei.key_id, gespeichert: new Date().toISOString().slice(0, 19) + "Z", kdf: S.kdf,
       ciphertext: sodium.to_base64(ct, V) });
   }
+  function passwortAendern(pass) {  // neues Salz, neuer Schlüssel; Inhalt und Schlüsselpaar bleiben, wirksam beim nächsten Sichern
+    const salz = sodium.randombytes_buf(sodium.crypto_pwhash_SALTBYTES);
+    const k = ableiten(pass, salz, OPS, MEM);
+    if (S.k) sodium.memzero(S.k);
+    S.k = k;
+    S.kdf = { kdf: "argon2id", opslimit: OPS, memlimit: MEM, salt: sodium.to_base64(salz, V) };
+    verlauf("Passwort der Prüfmappe geändert");
+    S.geaendert = true;
+  }
   async function sha256Hex(u8) { return [...new Uint8Array(await crypto.subtle.digest("SHA-256", u8))].map((b) => b.toString(16).padStart(2, "0")).join(""); }
   async function einrichten(pass) {  // neues Schlüsselpaar wie pruefgruppe._neues_paar, Bestand leer
     const paar = sodium.crypto_box_keypair();
@@ -584,6 +593,22 @@
     } finally {
       knopf.disabled = false; knopf.textContent = "Prüfmappe anlegen";
     }
+  });
+  $("#form-passwort").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const p1 = $("#pass-neu1"), p2 = $("#pass-neu2"), st = $("#passwort-status"), knopf = $("#knopf-passwort");
+    p1.removeAttribute("aria-invalid"); p2.removeAttribute("aria-invalid");
+    if (!S || S.probe) return melden(st, "Bitte zuerst die Prüfmappe öffnen.", "fehler");
+    if (p1.value.length < 10) { p1.setAttribute("aria-invalid", "true"); return melden(st, "Das Passwort braucht mindestens 10 Zeichen.", "fehler"); }
+    if (p1.value !== p2.value) { p2.setAttribute("aria-invalid", "true"); return melden(st, "Die beiden Eingaben stimmen nicht überein.", "fehler"); }
+    knopf.disabled = true; knopf.textContent = "Wird geändert …";
+    await new Promise((r) => setTimeout(r, 30));
+    try {
+      passwortAendern(p1.value);
+      p1.value = ""; p2.value = "";
+      anzeigen();
+      melden(st, "Passwort geändert. Bitte jetzt die Prüfmappe sichern und die alte Datei auf beiden Sticks ersetzen.");
+    } finally { knopf.disabled = false; knopf.textContent = "Passwort ändern"; }
   });
   function arbeitsdateiSpeichern() {
     speichern("pruefmappe.json", arbeitsdateiText(), "application/json");

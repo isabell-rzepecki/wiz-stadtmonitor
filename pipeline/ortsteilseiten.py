@@ -119,16 +119,19 @@ def _ortsteil(o, daten, je_sitzung, auswahl, struktur, quelle, heute, mit_abo):
     kommend = [(s, f) for s, f in auswahl if s["date"] >= heute.isoformat()][:SITZUNGEN_MAX]
     teile.append("    <h2>Nächste Sitzungen</h2>")
     if kommend:
-        zeilen = []
-        for s, filt in kommend:
+        # je Sitzung ein Akkordeon (details/summary, ohne JavaScript): Kopfzeile mit Datum, Gremium und Zahl der Punkte,
+        # aufgeklappt Ort, Einladung und die Tagesordnungspunkte; die nächste Sitzung ist geöffnet
+        for i, (s, filt) in enumerate(kommend):
             punkte = abo.tagesordnung(s, je_sitzung.get(s["id"], []), filt)
-            tops = "".join(f"<li>TOP {e(t)}: {e(x)}</li>" for t, x in punkte[:8])
-            mehr = f"<li>… und {len(punkte) - 8} weitere</li>" if len(punkte) > 8 else ""
-            ort = f", {e(s['ort'])}" if s.get("ort") else ""
-            pdf = f' · <a href="{e(s["pdf"])}" rel="noopener">Einladung (PDF)</a>' if s.get("pdf") else ""
-            zeilen.append(f'      <li><strong>{e(datum(s["date"]))}{", " + e(s["time"]) + " Uhr" if s.get("time") else ""}</strong>: '
-                          f'{e(s["gremium"])}{ort}{pdf}{f"<ul>{tops}{mehr}</ul>" if tops else ""}</li>')
-        teile.append('    <ul class="sitzungen">\n' + "\n".join(zeilen) + "\n    </ul>")
+            zeit = f", {e(s['time'])} Uhr" if s.get("time") else ""
+            anzahl = f'<span class="anzahl">{len(punkte)} {"Punkt" if len(punkte) == 1 else "Punkte"}</span>' if punkte else ""
+            ort = e(s["ort"]) if s.get("ort") else ""
+            pdf = f'<a href="{e(s["pdf"])}" rel="noopener">Einladung (PDF)</a>' if s.get("pdf") else ""
+            info = " · ".join(x for x in (ort, pdf) if x)
+            tops = "".join(f'<li><span class="top">TOP {e(t)}</span> {e(x)}</li>' for t, x in punkte)
+            teile.append(f'    <details class="sitzung"{" open" if i == 0 else ""}><summary><strong>{e(datum(s["date"]))}{zeit}</strong> '
+                         f'<span class="gremium">{e(s["gremium"])}</span>{anzahl}</summary>'
+                         f'{f"<p class=klein>{info}</p>" if info else ""}{f"<ol class=tops>{tops}</ol>" if tops else ""}</details>')
     else:
         teile.append("    <p>Zurzeit sind keine Sitzungen mit Bezug zu diesem Ortsteil angekündigt.</p>")
     if mit_abo:
@@ -138,16 +141,23 @@ def _ortsteil(o, daten, je_sitzung, auswahl, struktur, quelle, heute, mit_abo):
     vorgaenge = _vorgaenge(daten, name, heute)
     teile.append(f"    <h2>Vorgänge der letzten zwölf Monate ({len(vorgaenge)})</h2>")
     if vorgaenge:
-        zeilen = []
+        # nach Monaten gruppiert (Akkordeon), der jüngste Monat geöffnet
+        monate = {}
         for d, v, s in vorgaenge:
-            ref = v.get("reference") or ""
-            link = f"{karte}#{quote(ref)}" if ref else karte
-            nr = f'<span class="nr">{e(v["vorlage"])}</span> ' if v.get("vorlage") else ""
-            ergebnis = f" · {e(s['result'])}" if s.get("result") else ""
-            pdf = f' · <a href="{e(s["pdf"])}" rel="noopener">Fundstelle (PDF)</a>' if s.get("pdf") else ""
-            zeilen.append(f'      <li><a href="{e(link)}">{e(v["name"])}</a><br>'
-                          f'<span class="klein">{nr}{e(s.get("gremium", ""))}, {e(datum(d)) if d else ""}{ergebnis}{pdf}</span></li>')
-        teile.append('    <ul class="vorgaenge">\n' + "\n".join(zeilen) + "\n    </ul>")
+            monate.setdefault(d[:7], []).append((d, v, s))
+        for i, (monat, eintraege) in enumerate(monate.items()):
+            zeilen = []
+            for d, v, s in eintraege:
+                ref = v.get("reference") or ""
+                link = f"{karte}#{quote(ref)}" if ref else karte
+                nr = f'<span class="nr">{e(v["vorlage"])}</span> ' if v.get("vorlage") else ""
+                ergebnis = f" · {e(s['result'])}" if s.get("result") else ""
+                pdf = f' · <a href="{e(s["pdf"])}" rel="noopener">Fundstelle (PDF)</a>' if s.get("pdf") else ""
+                zeilen.append(f'<li><a href="{e(link)}">{e(v["name"])}</a><br>'
+                              f'<span class="klein">{nr}{e(s.get("gremium", ""))}, {e(datum(d)) if d else ""}{ergebnis}{pdf}</span></li>')
+            titel = f"{MONATE[int(monat[5:7]) - 1]} {monat[:4]}" if len(monat) == 7 else "ohne Datum"
+            teile.append(f'    <details class="monat"{" open" if i == 0 else ""}><summary><strong>{e(titel)}</strong>'
+                         f'<span class="anzahl">{len(eintraege)}</span></summary><ul class="vorgaenge">{"".join(zeilen)}</ul></details>')
     else:
         teile.append("    <p>In den letzten zwölf Monaten gab es keine Vorgänge mit Bezug zu diesem Ortsteil.</p>")
     teile.append(f'    <p><a class="mehr-link" href="{karte}">Alle Vorgänge zu {e(name)} auf der Karte</a></p>')
