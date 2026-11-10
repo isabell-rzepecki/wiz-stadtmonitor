@@ -9,10 +9,22 @@
 .schritt { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 20px; }
 .schritt h2 { display: flex; align-items: center; gap: 10px; }
 .schritt .nr { flex: none; display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--accent-ink); color: #fff; font-size: 17px; }
-.rollen { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin: 16px 0; padding: 0; list-style: none; }
-.rollen a { display: block; height: 100%; padding: 14px 16px; border: 2px solid var(--accent-ink); border-radius: 14px; color: inherit; text-decoration: none; }
-.rollen a:hover, .rollen a:focus-visible { background: var(--accent-tint); }
-.rollen strong { display: block; font-size: 18px; color: var(--accent-ink); margin-bottom: 4px; }
+.einleitung { font-size: 18px; line-height: 1.55; max-width: 62ch; }
+.aufgaben { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin: 16px 0; padding: 0; list-style: none; }
+.aufgaben a { display: block; height: 100%; padding: 14px 16px; border: 2px solid var(--accent-ink); border-radius: 14px; color: inherit; text-decoration: none; }
+.aufgaben a:hover, .aufgaben a:focus-visible { background: var(--accent-tint); }
+.aufgaben strong { display: block; font-size: 18px; color: var(--accent-ink); margin-bottom: 4px; }
+.klein-aufgaben a { border-width: 1px; }
+.klein-aufgaben strong { font-size: 16px; }
+/* Schritt für Schritt (schritte.js): ein Abschnitt zur Zeit, Anzeige „Schritt 2 von 4“, Zurück und Weiter */
+.assistent { margin-top: 16px; }
+.assistent .schritt { border-top: 0; margin-top: 0; padding-top: 0; }
+.fortschritt { margin: 0 0 4px; font-weight: 700; color: var(--muted); }
+.fortschritt:empty { display: none; }
+.schritt-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--line); }
+.schritt-nav [data-weiter] { margin-left: auto; }
+.schritt-nav [hidden] { display: none; }
+a.knopf { display: inline-flex; align-items: center; text-decoration: none; }
 details.mehr { margin: 16px 0; }
 details.mehr > summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
 .knopf:disabled { opacity: 0.55; cursor: not-allowed; }

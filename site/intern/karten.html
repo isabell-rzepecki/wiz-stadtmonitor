@@ -18,53 +18,51 @@
 <body>
   <header class="page-head">
     <span class="page-brand"><img src="../favicon.svg" width="32" height="32" alt="">Stadtmonitor</span>
-    <a href="./">Zurück zur Übersicht</a>
+    <a href="./">Zur Startseite</a>
   </header>
   <main class="page" id="inhalt">
-    <h1>Einladungskarten</h1>
-    <p>Mit dieser Seite drucken Sie Einladungskarten für Personen, die mitmachen. Jede Karte trägt einen QR-Code; wer ihn mit dem Handy scannt, ist in der Erfassung angemeldet. Die Seite rechnet nur in diesem Browser und sendet nichts.</p>
-
-    <section class="schritt" aria-labelledby="t-oeffnen">
-      <h2 id="t-oeffnen"><span class="nr" aria-hidden="true">1</span> Kartenliste öffnen</h2>
-      <p>Die Kartenliste haben Sie beim ersten Mal von der Prüfgruppe bekommen; danach nehmen Sie immer Ihre zuletzt gespeicherte Fassung.</p>
-      <label class="feld">Kartenliste (kartenliste.json)
-        <input type="file" id="f-liste" accept=".json,application/json"></label>
-      <p id="oeffnen-status" role="status" tabindex="-1"></p>
-    </section>
-
-    <div id="arbeit" hidden>
-      <section class="schritt" aria-labelledby="t-neu">
-        <h2 id="t-neu"><span class="nr" aria-hidden="true">2</span> Neue Karten drucken</h2>
+    <h1>Einladungskarten drucken</h1>
+    <p class="einleitung">Hier druckst du Einladungskarten. Wer eine Karte bekommt, scannt den QR-Code mit dem Handy und kann gleich mitmachen.</p>
+    <div class="assistent" data-assistent data-standard="karten">
+      <section class="schritt" data-schritt="oeffnen" data-wege="karten" data-warten aria-labelledby="t-oeffnen">
+        <h2 id="t-oeffnen">Liste der Karten öffnen</h2>
+        <p>Du brauchst die Liste der Einladungskarten. Sie heißt <strong>kartenliste.json</strong>. Beim ersten Mal bekommst du sie von der Prüfgruppe, danach nimmst du immer die, die du zuletzt gespeichert hast.</p>
+        <label class="feld">Liste auswählen
+          <input type="file" id="f-liste" accept=".json,application/json"></label>
+        <p id="oeffnen-status" role="status" tabindex="-1"></p>
+      </section>
+      <section class="schritt" data-schritt="drucken" data-wege="karten" aria-labelledby="t-neu">
+        <h2 id="t-neu">Karten drucken</h2>
         <form id="form-neu" class="zeile" novalidate>
-          <label class="feld">Wie viele Karten?
+          <label class="feld">Wie viele Karten brauchst du?
             <input type="number" id="anzahl" min="1" max="50" value="5" required></label>
-          <button type="submit" class="knopf gross">Karten erstellen und drucken</button>
+          <button type="submit" class="knopf gross">Karten drucken</button>
         </form>
         <p id="neu-status" role="status" tabindex="-1"></p>
-        <p class="klein">Mit den Karten druckt die Seite eine Liste für Ihre Unterlagen. Tragen Sie dort von Hand ein, wer welche Karte bekommt. Diese Liste bleibt bei Ihnen; die Prüfgruppe erfährt keine Namen. Übergeben Sie die Karten persönlich.</p>
+        <p>Mit den Karten druckt die Seite ein Blatt für dich. Schreib dort auf, wer welche Karte bekommt. Dieses Blatt bleibt bei dir; die Prüfgruppe erfährt keine Namen. Gib die Karten am besten persönlich weiter.</p>
+        <details class="mehr">
+          <summary>Eine Karte ist verloren gegangen?</summary>
+          <p>Dann sperr sie hier. Mit einer gesperrten Karte kann niemand mehr etwas eintragen.</p>
+          <div class="tabelle-rahmen"><table id="karten"><caption>Deine Karten</caption>
+            <thead><tr><th scope="col">Karte</th><th scope="col">Ausgegeben</th><th scope="col">Gültig bis</th><th scope="col">Stand</th><th scope="col"><span class="visually-hidden">Sperren</span></th></tr></thead>
+            <tbody></tbody></table></div>
+          <p id="sperren-status" role="status" tabindex="-1"></p>
+        </details>
       </section>
-
-      <section class="schritt" aria-labelledby="t-sperren">
-        <h2 id="t-sperren"><span class="nr" aria-hidden="true">3</span> Karte sperren (nur bei Bedarf)</h2>
-        <p>Ist eine Karte verloren oder soll jemand nicht mehr mitmachen, sperren Sie sie hier. Angaben, die danach mit dieser Karte gemacht werden, nimmt die Prüfgruppe nicht an.</p>
-        <div class="tabelle-rahmen"><table id="karten"><caption>Ausgegebene Karten</caption>
-          <thead><tr><th scope="col">Karte (Erfasser-ID)</th><th scope="col">Ausgegeben</th><th scope="col">Gültig bis</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Aktion</span></th></tr></thead>
-          <tbody></tbody></table></div>
-        <p id="sperren-status" role="status" tabindex="-1"></p>
-      </section>
-
-      <section class="schritt" aria-labelledby="t-speichern">
-        <h2 id="t-speichern"><span class="nr" aria-hidden="true">4</span> Kartenliste speichern und weitergeben</h2>
+      <section class="schritt" data-schritt="speichern" data-wege="karten" aria-labelledby="t-speichern">
+        <h2 id="t-speichern">Liste sichern und weitergeben</h2>
         <p id="ungespeichert" class="hinweis" role="status"></p>
-        <p><button type="button" class="knopf gross" id="speichern">Kartenliste speichern</button></p>
+        <p><button type="button" class="knopf gross" id="speichern">Liste sichern</button></p>
         <ol>
-          <li>Ersetzen Sie Ihre bisherige Kartenliste durch die gespeicherte Datei.</li>
-          <li>Schicken Sie der Prüfgruppe eine Kopie, zum Beispiel per E-Mail. Die Datei enthält keine Codes und keine Namen.</li>
+          <li>Ersetz damit deine alte Liste.</li>
+          <li>Schick der Prüfgruppe eine Kopie, zum Beispiel per E-Mail. Die Datei enthält keine Namen und keine Codes.</li>
         </ol>
+        <p>Fertig! Du kannst die Seite jetzt schließen.</p>
       </section>
     </div>
   </main>
   <section id="druck" class="druck" hidden aria-hidden="true"></section>
+  <script src="schritte.js"></script>
   <script src="../vendor/qrcode/qrcode.js"></script>
   <script src="../karten.js"></script>
 </body>

@@ -1,0 +1,11 @@
+# Veröffentlichte Erfassungsergebnisse (aktuell.json, vorher.json), abgelegt von intern/veroeffentlichen.php.
+# Nur Daten, kein ausführbarer Code; der tägliche Hochladelauf lässt die JSON-Dateien hier stehen.
+<FilesMatch "\.(php|phtml|phar|pl|py|cgi|sh)$">
+  Require all denied
+</FilesMatch>
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-cache"
+</IfModule>

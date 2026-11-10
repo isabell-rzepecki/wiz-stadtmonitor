@@ -57,7 +57,7 @@
     let d;
     try { d = JSON.parse(text); } catch { d = null; }
     if (!d || d.format !== FORMAT || !/^[\w-]{1,40}$/.test(d.key_id || "") || !/^[A-Za-z0-9+/]{43}=$/.test(d.public_key || "") || !Array.isArray(d.karten))
-      throw new Error("Diese Datei ist keine Kartenliste. Bitte die Datei „kartenliste.json“ wählen.");
+      throw new Error("Das ist nicht die Liste der Einladungskarten. Bitte wähl die Datei „kartenliste.json“.");
     return d;
   }
   const status = (k) => (k.widerrufen ? `gesperrt seit ${datumDe(k.widerrufen)}` : k.gueltig_bis < heute() ? "abgelaufen" : "gültig");
@@ -67,7 +67,7 @@
       <td>${datumDe(k.gueltig_bis)}</td><td>${esc(status(k))}</td>
       <td>${k.widerrufen ? "" : `<button type="button" class="knopf klein-knopf" data-sperren="${i}">Sperren<span class="visually-hidden"> (${esc(k.erfasser_id)})</span></button>`}</td></tr>`).join("")
       || `<tr><td colspan="5">Noch keine Karten.</td></tr>`;
-    $("#ungespeichert").textContent = geaendert ? "Es gibt Änderungen. Bitte die Kartenliste jetzt speichern." : "";
+    $("#ungespeichert").textContent = geaendert ? "Du hast etwas geändert. Bitte sichere die Liste jetzt." : "";
   }
 
   $("#f-liste").addEventListener("change", async () => {
@@ -76,12 +76,12 @@
     try {
       L = lesen(await f.text());
       geaendert = false;
-      $("#arbeit").hidden = false;
       anzeigen();
       const n = L.karten.length, g = L.karten.filter((k) => status(k) === "gültig").length;
-      melden(st, `Kartenliste geöffnet: ${n} Karten, davon ${g} gültig. Weiter mit Schritt 2 oder 3.`);
+      melden(st, `Liste geöffnet: ${n} Karten, davon ${g} gültig.`);
+      Schritte.frei("oeffnen", true);
     } catch (err) {
-      L = null; $("#arbeit").hidden = true;
+      L = null; Schritte.sperren("oeffnen");
       melden(st, err.message, "fehler");
     }
   });
@@ -90,7 +90,7 @@
     ev.preventDefault();
     const a = $("#anzahl"), st = $("#neu-status"), n = Number(a.value);
     a.removeAttribute("aria-invalid");
-    if (!Number.isInteger(n) || n < 1 || n > 50) { a.setAttribute("aria-invalid", "true"); return melden(st, "Bitte eine Zahl zwischen 1 und 50 angeben.", "fehler"); }
+    if (!Number.isInteger(n) || n < 1 || n > 50) { a.setAttribute("aria-invalid", "true"); return melden(st, "Bitte gib eine Zahl zwischen 1 und 50 ein.", "fehler"); }
     const ab = heute(), bis = bisDatum(ab, Number(L.gueltig_monate) || 12);
     const neu = [];
     for (let i = 0; i < n; i++) {
@@ -100,13 +100,13 @@
     L.karten.push(...neu.map((x) => ({ erfasser_id: x.erfasser_id, hash: x.hash, ausgegeben: ab, gueltig_bis: bis, widerrufen: "" })));
     geaendert = true;
     anzeigen();
-    melden(st, `${n} Karten erstellt. Das Druckfenster öffnet sich. Danach bitte in Schritt 4 die Kartenliste speichern.`);
+    melden(st, `${n} Karten erstellt. Das Druckfenster öffnet sich. Wenn alles gedruckt ist: weiter zum Sichern.`);
     drucken(`<div class="blatt">${neu.map((x) => `<div class="karte" data-link="${esc(link(x.code, bis))}"><div class="karte-qr">${qrSvg(link(x.code, bis))}</div>
 <div><p><strong>Einladung: Erfassung Wohnen und Eigentum</strong></p>
 <ol><li>QR-Code mit der Kamera Ihres Handys scannen.</li><li>Die Seite öffnet sich, Sie sind angemeldet.</li>
 <li>Im Browsermenü „Zum Startbildschirm hinzufügen“ wählen.</li></ol>
 <p>Gültig bis ${datumDe(bis)} · Karte ${esc(x.erfasser_id)}</p><p class="klein">Karte nicht weitergeben und nicht fotografieren lassen.</p></div></div>`).join("")}</div>
-<div class="blatt liste"><h1>Ausgegebene Karten vom ${datumDe(ab)} (für Ihre Unterlagen)</h1>
+<div class="blatt liste"><h1>Ausgegebene Karten vom ${datumDe(ab)} (für deine Unterlagen)</h1>
 <p>Diese Liste bleibt bei der Ausgabestelle. Nicht an die Prüfgruppe geben.</p>
 <table><thead><tr><th>Karte</th><th>Gültig bis</th><th>Erhalten von (Name)</th></tr></thead>
 <tbody>${neu.map((x) => `<tr><td>${esc(x.erfasser_id)}</td><td>${datumDe(bis)}</td><td></td></tr>`).join("")}</tbody></table></div>`);
@@ -120,7 +120,7 @@
     k.widerrufen = heute();
     geaendert = true;
     anzeigen();
-    melden($("#sperren-status"), `Karte ${k.erfasser_id} gesperrt. Bitte in Schritt 4 speichern und der Prüfgruppe schicken.`);
+    melden($("#sperren-status"), `Karte ${k.erfasser_id} gesperrt. Bitte danach die Liste sichern und der Prüfgruppe schicken.`);
   });
 
   $("#speichern").addEventListener("click", () => {
