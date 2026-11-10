@@ -15,6 +15,25 @@ class Seite(unittest.TestCase):
                 self.assertTrue((out / f).exists(), f)
             self.assertIn("ortsteile", json.loads((out / "stadt.json").read_text(encoding="utf-8")))
 
+    def test_wortmarke_und_vorschau_beim_teilen(self):
+        # Wortmarke „Stadtmonitor <Stadt>“ mit Link zur Startseite auf allen Seiten; Vorschau nur auf öffentlichen Seiten
+        with tempfile.TemporaryDirectory() as d:
+            out = site.build(Path(d) / "_site", mit_daten=False)
+            name = site.config.STADT["stadt"]["name"]
+            for seite in ("datenschutz.html", "wohnen.html", "quellen.html", "intern/index.html", "intern/pruefen.html"):
+                text = (out / seite).read_text(encoding="utf-8")
+                self.assertRegex(text, rf'class="page-brand" href="(\.\./|\./)"><img [^>]+>Stadtmonitor <span data-cfg="stadt\.name">{name}</span>', seite)
+            index = (out / "index.html").read_text(encoding="utf-8")
+            self.assertIn(f'<meta property="og:image" content="{site.config.SITE_URL.rstrip("/")}/og-bild.png">', index)
+            self.assertIn('<meta name="twitter:card" content="summary_large_image">', index)
+            self.assertIn(f'<meta property="og:title" content="Stadtmonitor {name}">', index)
+            self.assertIn('property="og:url" content="https://', (out / "wohnen.html").read_text(encoding="utf-8"))
+            for seite in ("intern/index.html", "intern/karten.html", "intern/pruefen.html"):
+                self.assertNotIn("og:image", (out / seite).read_text(encoding="utf-8"), seite)
+            kopf = (out / "og-bild.png").read_bytes()[:24]
+            self.assertEqual(kopf[:8], b"\x89PNG\r\n\x1a\n")
+            self.assertEqual((int.from_bytes(kopf[16:20], "big"), int.from_bytes(kopf[20:24], "big")), (1200, 630))
+
     def test_verantwortliche_stelle_aus_konfiguration(self):
         # eine Quelle (stadt.json) für Datenschutzseite und App; ohne Angabe bleibt die Leerstelle sichtbar
         with tempfile.TemporaryDirectory() as d:
