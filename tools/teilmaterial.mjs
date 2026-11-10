@@ -1,5 +1,7 @@
 // Material zum Teilen (Beiträge, Storys, Präsentationen): echte Ansichten der Seite, übereinander gelegt auf dem
-// Korallgrund mit den Umrissen der Ortsbezirke. Ergebnis in docs/teilen/. Aufruf aus dem Wurzelverzeichnis:
+// Korallgrund mit den Umrissen der Ortsbezirke, dazu Wortmarke und Bildmarke als Bilddateien. Ergebnis in site/teilen/
+// (Unterseite /teilen/): je Motiv PNG und JPG in Originalgröße und JPG in doppelter Auflösung. Aufruf aus dem
+// Wurzelverzeichnis:
 //   python tools/vorschaubild.py /tmp/og.html   (liefert auch die Umrisse)
 //   NODE_PATH=tests/browser/node_modules node tools/teilmaterial.mjs [Adresse der Seite]
 // Die Aufnahmen kommen von der veröffentlichten Seite (nur öffentliche Inhalte); die Kartengrundlagen stehen
@@ -12,8 +14,8 @@ import { join, resolve } from "node:path";
 const { chromium } = createRequire(import.meta.url)("playwright");
 const ROOT = resolve(new URL("..", import.meta.url).pathname);
 const SEITE = process.argv[2] || "https://stadtmonitor-witzenhausen.de/";
-const ZIEL = join(ROOT, "docs", "teilen");
-const ROH = join(ZIEL, ".roh");
+const ZIEL = join(ROOT, "site", "teilen");
+const ROH = join(ROOT, "docs", "teilen", ".roh");
 mkdirSync(ROH, { recursive: true });
 const QUELLEN = "Karten: © basemap.de / BKG (CC BY 4.0), © GeoBasis-DE · Gebäude: © HVBG, ALKIS vereinfacht, LoD2 · Ortsbezirke: HVBG (dl-de/zero-2.0)";
 const SATZ = "Was Stadtverordnete, Ausschüsse und Ortsbeiräte beraten – auf Karte, Zeitleiste und Liste.";
@@ -86,12 +88,23 @@ const formate = {
     ${fenster("d_wohnen3d", 520, "left:1010px;top:170px;transform:rotate(4deg)")}
     <div class="quelle" style="left:70px;bottom:24px;width:640px;font-size:12px">${QUELLEN}</div>`],
 };
-for (const [name, [w, h, inhalt]] of Object.entries(formate)) {
-  const p = await browser.newPage({ viewport: { width: w, height: h } });
-  await p.setContent(`<!doctype html><meta charset="utf-8"><style>${css} html,body{width:${w}px;height:${h}px}</style>${inhalt(w, h)}`);
+async function rendern(name, w, h, html, { faktor = 1, typ = "png", transparent = false } = {}) {
+  const p = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: faktor });
+  await p.setContent(`<!doctype html><meta charset="utf-8"><style>${css} html,body{width:${w}px;height:${h}px}${transparent ? "body{background:transparent}" : ""}</style>${html}`);
   await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(300);
-  await p.screenshot({ path: join(ZIEL, name + ".png") });
+  await p.screenshot({ path: join(ZIEL, name), type: typ, ...(typ === "jpeg" ? { quality: 88 } : {}), omitBackground: transparent });
   await p.close();
-  console.log(join("docs", "teilen", name + ".png"));
+  console.log(join("site", "teilen", name));
 }
+for (const [name, [w, h, inhalt]] of Object.entries(formate)) {
+  const html = inhalt(w, h);
+  await rendern(`${name}.png`, w, h, html);
+  await rendern(`${name}.jpg`, w, h, html, { typ: "jpeg" });
+  await rendern(`${name}@2x.jpg`, w, h, html, { typ: "jpeg", faktor: 2 });
+}
+// Wortmarke mit Bildmarke (transparent): dunkle Schrift für helle Flächen, helle Schrift für dunkle Flächen
+const logo = (farbe1, farbe2) => `<div style="position:absolute;left:20px;top:20px"><div class="wm" style="font-size:64px;color:${farbe1}"><svg viewBox="0 0 64 64" style="width:80px;height:80px">${marke}</svg><div>Stadtmonitor<span style="color:${farbe2}">Witzenhausen</span></div></div></div>`;
+await rendern("wortmarke-hell.png", 560, 160, logo("#b8352e", "#1a1a1a"), { faktor: 3, transparent: true });
+await rendern("wortmarke-dunkel.png", 560, 160, logo("#f4726b", "#fdf6f4"), { faktor: 3, transparent: true });
+await rendern("bildmarke-1024.png", 64, 64, `<svg viewBox="0 0 64 64" width="64" height="64" style="display:block">${marke}</svg>`, { faktor: 16, transparent: true });
 await browser.close();

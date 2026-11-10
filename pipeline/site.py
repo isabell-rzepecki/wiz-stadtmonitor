@@ -59,7 +59,8 @@ def stadtname_ausfuellen(out):
             seite.write_text(neu, encoding="utf-8")
 
 
-VORSCHAU_SEITEN = ("index.html", "wohnen.html", "erfassen.html", "quellen.html", "datenschutz.html", "impressum.html", "aushang.html")
+VORSCHAU_SEITEN = ("index.html", "wohnen.html", "erfassen.html", "quellen.html", "datenschutz.html", "impressum.html", "aushang.html",
+                   "teilen/index.html")
 
 
 def vorschau_ausfuellen(out):
@@ -83,7 +84,7 @@ def vorschau_ausfuellen(out):
             titel = name
         beschr = re.search(r'<meta name="description" content="([^"]*)"', text)
         beschr = html.unescape(beschr.group(1)) if beschr else ""
-        url = basis if datei == "index.html" else basis + datei
+        url = basis + datei.removesuffix("index.html")
         e = lambda s: html.escape(s, quote=True)
         tags = [("property", "og:type", "website"), ("property", "og:site_name", name), ("property", "og:locale", "de_DE"),
                 ("property", "og:title", titel), ("property", "og:description", beschr), ("property", "og:url", url),

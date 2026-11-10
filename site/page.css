@@ -23,3 +23,7 @@ a { color: var(--accent-ink); }
 .page .offen { padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--accent-ink); }
 .page-foot { padding: 20px 0 32px; color: var(--muted); font-size: 14px; }
 @media (max-width: 600px) { .page { padding: 8px 18px 20px; } .page h1 { font-size: 28px; } }
+/* Schmale Handys: Wortmarke „Stadtmonitor <Stadt>“ und Rückweg nebeneinander, ohne über den Rand zu ragen */
+@media (max-width: 440px) { .page-head { gap: 8px; } .page-brand { font-size: 17px; gap: 7px; } .page-brand img { width: 26px; height: 26px; } .page-back { padding: 6px 10px; font-size: 14px; white-space: nowrap; } }
+/* Breite Tabellen (z. B. Datenquellen) scrollen für sich, statt die ganze Seite zu verbreitern */
+.tabelle-rahmen { max-width: 100%; overflow-x: auto; }

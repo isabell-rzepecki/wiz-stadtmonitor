@@ -1,0 +1,20 @@
+/* Unterseite Teilen: Motive als Raster mit Vorschau und Downloads, Marken auf hellem und dunklem Grund */
+.page.breit { width: min(1180px, calc(100% - 32px)); }
+.page-head:has(+ .page.breit) { width: min(1180px, calc(100% - 32px)); }
+.einleitung { font-size: 18px; line-height: 1.55; max-width: 70ch; }
+.kasten { padding: 12px 14px; border-radius: 12px; background: var(--accent-tint); max-width: 75ch; }
+.teilen-links, .laden { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; margin: 8px 0; }
+.teilen-links a, .laden a { display: inline-block; padding: 6px 12px; border-radius: 10px; background: var(--accent-tint); font-weight: 700; text-decoration: none; }
+.teilen-links a:hover, .laden a:hover, .teilen-links a:focus-visible, .laden a:focus-visible { text-decoration: underline; }
+.klein { font-size: 14px; color: var(--muted); }
+.motive { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); align-items: start; }
+.motiv { margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.motiv img { display: block; width: 100%; height: auto; max-height: 420px; object-fit: contain; border-radius: 8px; background: #f4726b; }
+.motiv h3 { margin: 12px 0 4px; font-size: 18px; } .motiv h3 span { font: 400 14px "Space Mono", monospace; color: var(--muted); }
+.motiv p { margin: 0; font-size: 15px; }
+.motiv-einzeln { max-width: 640px; }
+.marken { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.marke { margin: 0; padding: 16px; border-radius: 14px; border: 1px solid var(--line); }
+.marke img { display: block; width: 100%; max-width: 280px; height: auto; margin: 0 auto 12px; }
+.marke.hell { background: #fff; } .marke.dunkel { background: #1a1a1a; color: #fdf6f4; } .marke.dunkel a { color: #f4a49f; }
+.marke figcaption { font-size: 14px; }
