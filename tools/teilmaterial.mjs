@@ -18,7 +18,7 @@ const ZIEL = join(ROOT, "site", "teilen");
 const ROH = join(ROOT, "docs", "teilen", ".roh");
 mkdirSync(ROH, { recursive: true });
 const QUELLEN = "Karten: © basemap.de / BKG (CC BY 4.0), © GeoBasis-DE · Gebäude: © HVBG, ALKIS vereinfacht, LoD2 · Ortsbezirke: HVBG (dl-de/zero-2.0)";
-const SATZ = "Was Stadtverordnete, Ausschüsse und Ortsbeiräte beraten – auf Karte, Zeitleiste und Liste.";
+const SATZ = "Der Stadtmonitor Witzenhausen zeigt Beschlüsse, Anträge und Termine der Stadtverordneten sowie Daten zu Wohnen und Bevölkerung auf einer Karte.";
 
 const umrisse = (x, y, w, h) => execFileSync("python3", ["-c",
   `import sys; sys.path.insert(0, "tools"); import vorschaubild as v; print(v.umrisse(${x}, ${y}, ${w}, ${h}))`], { cwd: ROOT, encoding: "utf8" }).trim();

@@ -8,7 +8,7 @@ import shutil
 import urllib.parse
 from datetime import date
 
-from . import config
+from . import config, ortsteilseiten
 
 
 def build(out=config.SITE_OUT, mit_daten=True):
@@ -21,14 +21,19 @@ def build(out=config.SITE_OUT, mit_daten=True):
     (out / "schemas").mkdir()
     for name, quelle in (("erfassung_eigentum.json", "schema_erfassung_eigentum.json"), ("mietangabe.json", "schema_mietangabe.json")):
         shutil.copy2(config.ROOT / "docs" / "uebergabe-v0.4.2" / quelle, out / "schemas" / name)
-    for seite in ("datenschutz.html", "impressum.html", "aushang.html", "index.html"):
+    for seite in ("datenschutz.html", "impressum.html", "aushang.html", "index.html", "barrierefreiheit.html", "einfache-sprache.html"):
         datenschutz_ausfuellen(out / seite)
     karten_ausfuellen(out / "intern" / "karten.html")
     pruefen_ausfuellen(out / "intern" / "pruefen.html")
     # Datenquellen als Seite der eigenen Domain (aus DATA_SOURCES.md, die tools/datenquellen.py aus dem Register erzeugt)
     markdown_seite(config.ROOT / "DATA_SOURCES.md", out / "quellen.html", "Datenquellen")
+    # Seiten je Ortsteil (Text ohne JavaScript, für Menschen und Suchmaschinen)
+    ortsteilseiten.erzeugen(out, mit_daten)
+    ortsteilseiten.sitzungen_erzeugen(out, mit_daten)
+    ortsteilseiten.gremien_erzeugen(out, mit_daten)
     stadtname_ausfuellen(out)
     vorschau_ausfuellen(out)
+    suchmaschinen(out)
     # Fehlerseite: GitHub Pages liefert sie für jeden Pfad aus, ein relativer Link führte dort ins Leere
     p404 = out / "404.html"
     if p404.exists() and config.SITE_URL:
@@ -55,12 +60,23 @@ def stadtname_ausfuellen(out):
     for seite in out.rglob("*.html"):
         text = seite.read_text(encoding="utf-8")
         neu = re.sub(r'<span data-cfg="stadt\.name">[^<]*</span>', f'<span data-cfg="stadt.name">{name}</span>', text)
+        # Seitentitel „… – Stadtmonitor“ und „Stadtmonitor – …“ mit Stadtname (Suchmaschinen, Lesezeichen, Tabs)
+        neu = re.sub(r"<title>(.*?)</title>", lambda m: "<title>" + re.sub(r"\bStadtmonitor\b(?! " + re.escape(name) + ")",
+                     f"Stadtmonitor {name}", m.group(1), count=1) + "</title>", neu, count=1, flags=re.S)
+        neu = neu.replace("%STADT%", name)
         if neu != text:
             seite.write_text(neu, encoding="utf-8")
 
 
 VORSCHAU_SEITEN = ("index.html", "wohnen.html", "erfassen.html", "quellen.html", "datenschutz.html", "impressum.html", "aushang.html",
-                   "teilen/index.html")
+                   "teilen/index.html", "barrierefreiheit.html", "einfache-sprache.html")
+
+
+def oeffentliche_seiten(out):
+    """Öffentliche Seiten mit Vorschau, Canonical und Eintrag in der Sitemap: feste Seiten und die Seiten je Ortsteil."""
+    ortsteile = sorted(str(p.relative_to(out)) for p in [*out.glob("ortsteil/*/index.html"), *out.glob("gremium/*/index.html")])
+    erzeugt = [d for d in ("sitzungen/index.html", "ortsteile/index.html", "gremien/index.html") if (out / d).exists()]
+    return list(VORSCHAU_SEITEN) + erzeugt + ortsteile
 
 
 def vorschau_ausfuellen(out):
@@ -71,7 +87,7 @@ def vorschau_ausfuellen(out):
         return
     basis = config.SITE_URL.rstrip("/") + "/"
     name = f"Stadtmonitor {config.STADT['stadt']['name']}"
-    for datei in VORSCHAU_SEITEN:
+    for datei in oeffentliche_seiten(out):
         seite = out / datei
         if not seite.exists():
             continue
@@ -86,15 +102,50 @@ def vorschau_ausfuellen(out):
         beschr = html.unescape(beschr.group(1)) if beschr else ""
         url = basis + datei.removesuffix("index.html")
         e = lambda s: html.escape(s, quote=True)
+        kopf = f'\n  <link rel="canonical" href="{e(url)}">'
+        if datei == "index.html":
+            kopf += "\n" + strukturierte_daten(basis, name, beschr)
         tags = [("property", "og:type", "website"), ("property", "og:site_name", name), ("property", "og:locale", "de_DE"),
                 ("property", "og:title", titel), ("property", "og:description", beschr), ("property", "og:url", url),
                 ("property", "og:image", basis + "og-bild.png"), ("property", "og:image:width", "1200"),
                 ("property", "og:image:height", "630"),
                 ("property", "og:image:alt", f"{name}: Bildmarke mit zwei Kirschen und die Umrisse der Ortsbezirke"),
                 ("name", "twitter:card", "summary_large_image")]
-        block = "".join(f'\n  <meta {k}="{v}" content="{e(c)}">' for k, v, c in tags if c)
+        block = kopf + "".join(f'\n  <meta {k}="{v}" content="{e(c)}">' for k, v, c in tags if c)
         text = re.sub(r"(</title>)", lambda m: m.group(1) + block, text, count=1)
         seite.write_text(text, encoding="utf-8")
+
+
+def strukturierte_daten(basis, name, beschr):
+    """JSON-LD für die Startseite: Website und das offene Datenpaket (Dataset, auffindbar z. B. in der Datensatzsuche).
+    Keine Personendaten außer der ohnehin genannten verantwortlichen Stelle."""
+    stadt = config.STADT["stadt"]["name"]
+    daten = [
+        {"@context": "https://schema.org", "@type": "WebSite", "name": name, "url": basis, "inLanguage": "de",
+         "description": beschr, "about": {"@type": "City", "name": stadt}},
+        {"@context": "https://schema.org", "@type": "Dataset", "name": f"{name}: Datenpaket",
+         "description": f"Vorgänge der Stadtverordnetenversammlung, der Ausschüsse und Ortsbeiräte in {stadt} mit Quellenangabe, "
+                        "dazu Daten zu Beteiligung, Wahlen, Wanderung, Wohnen und Strukturdaten der Ortsteile.",
+         "url": basis, "inLanguage": "de", "isAccessibleForFree": True, "license": basis + "data/LICENSE-DATA.md",
+         "spatialCoverage": {"@type": "Place", "name": stadt},
+         "distribution": [{"@type": "DataDownload", "encodingFormat": "application/zip", "contentUrl": basis + "data/export/stadtmonitor-daten.zip"},
+                          {"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": basis + "data/export/vorgaenge.json"}]},
+    ]
+    text = json.dumps(daten, ensure_ascii=False).replace("</", "<\\/")
+    return f'  <script type="application/ld+json">{text}</script>'
+
+
+def suchmaschinen(out):
+    """robots.txt (interner Bereich ausgenommen) und sitemap.xml der öffentlichen Seiten; nur mit projekt.site_url."""
+    if not config.SITE_URL:
+        return
+    basis = config.SITE_URL.rstrip("/") + "/"
+    (out / "robots.txt").write_text(f"User-agent: *\nDisallow: /intern/\nAllow: /\n\nSitemap: {basis}sitemap.xml\n", encoding="utf-8")
+    heute = date.today().isoformat()
+    seiten = [d for d in oeffentliche_seiten(out) if d not in ("erfassen.html", "aushang.html") and (out / d).exists()]
+    eintraege = "".join(f"  <url><loc>{html.escape(basis + d.removesuffix('index.html'))}</loc><lastmod>{heute}</lastmod></url>\n" for d in seiten)
+    (out / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n'
+                                     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + eintraege + "</urlset>\n", encoding="utf-8")
 
 
 def datenschutz_ausfuellen(seite):

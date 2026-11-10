@@ -123,6 +123,7 @@ button, select, input { font: inherit; color: inherit; }
   transition: background .2s, color .2s, box-shadow .2s;
 }
 .toggle:hover, .menu-btn:hover { background: rgba(244, 114, 107, 0.08); }
+a.menu-btn { text-decoration: none; }  /* Teilen: ein Link, sieht aus wie die Menüknöpfe */
 .toggle[aria-pressed="true"] { background: var(--solid); color: var(--accent-ink); box-shadow: 0 1px 3px rgba(26, 26, 26, 0.12); }
 .menu-btn[aria-expanded="true"] { background: rgba(244, 114, 107, 0.12); color: var(--accent-ink); }
 .menu-btn .chev { width: 14px; height: 14px; transition: transform .2s; }

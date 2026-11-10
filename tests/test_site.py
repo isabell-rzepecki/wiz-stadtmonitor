@@ -34,6 +34,31 @@ class Seite(unittest.TestCase):
             self.assertEqual(kopf[:8], b"\x89PNG\r\n\x1a\n")
             self.assertEqual((int.from_bytes(kopf[16:20], "big"), int.from_bytes(kopf[20:24], "big")), (1200, 630))
 
+    def test_suchmaschinen(self):
+        # robots.txt ohne internen Bereich, sitemap.xml der öffentlichen Seiten, Titel mit Stadtname, Canonical, JSON-LD
+        import re
+        with tempfile.TemporaryDirectory() as d:
+            out = site.build(Path(d) / "_site", mit_daten=False)
+            name = site.config.STADT["stadt"]["name"]
+            basis = site.config.SITE_URL.rstrip("/") + "/"
+            robots = (out / "robots.txt").read_text(encoding="utf-8")
+            self.assertIn("Disallow: /intern/", robots)
+            self.assertIn(f"Sitemap: {basis}sitemap.xml", robots)
+            karte = (out / "sitemap.xml").read_text(encoding="utf-8")
+            for u in ("", "wohnen.html", "quellen.html", "teilen/"):
+                self.assertIn(f"<loc>{basis}{u}</loc>", karte)
+            self.assertNotIn("intern", karte)
+            self.assertNotIn("erfassen", karte)
+            for seite in ("index.html", "wohnen.html", "quellen.html", "teilen/index.html", "impressum.html"):
+                text = (out / seite).read_text(encoding="utf-8")
+                self.assertIn(f"Stadtmonitor {name}", re.search(r"<title>(.*?)</title>", text).group(1), seite)
+                self.assertIn('<link rel="canonical" href="https://', text, seite)
+            index = (out / "index.html").read_text(encoding="utf-8")
+            self.assertNotIn("%STADT%", index)
+            ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', index, re.S).group(1).replace("<\\/", "</"))
+            self.assertEqual([x["@type"] for x in ld], ["WebSite", "Dataset"])
+            self.assertEqual(ld[0]["url"], basis)
+
     def test_seite_teilen(self):
         # /teilen/: alle Bilder und Downloads liegen auf der eigenen Domain, Vorschau gesetzt, von anderen Seiten verlinkt
         import re

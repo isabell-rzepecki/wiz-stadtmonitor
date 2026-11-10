@@ -1,0 +1,24 @@
+/* Seiten je Ortsteil (pipeline/ortsteilseiten.py): Sitzungen und Monate als Akkordeon (details), Zahlen als Liste */
+.einleitung { font-size: 18px; line-height: 1.55; }
+.ortsteile { padding-left: 20px; } .ortsteile > li { margin: 0 0 12px; }
+.klein { font-size: 14px; color: var(--muted); }
+.sitzung, .monat { border: 1px solid var(--line); border-radius: 12px; margin: 0 0 8px; background: var(--surface); }
+.sitzung > summary, .monat > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 10px 14px; cursor: pointer; list-style: none; }
+.sitzung > summary::-webkit-details-marker, .monat > summary::-webkit-details-marker { display: none; }
+.sitzung > summary::before, .monat > summary::before { content: "▸"; color: var(--accent-ink); transition: transform .15s; }
+.sitzung[open] > summary::before, .monat[open] > summary::before { transform: rotate(90deg); }
+.sitzung[open] > summary, .monat[open] > summary { border-bottom: 1px solid var(--line); }
+.sitzung > summary:focus-visible, .monat > summary:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: 12px; }
+.gremium { font-weight: 700; color: var(--accent-ink); }
+.anzahl { margin-left: auto; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.sitzung > p { margin: 8px 14px 0; }
+.tops { margin: 6px 0 0; padding: 0 14px 12px; list-style: none; font-size: 14px; line-height: 1.45; }
+.tops li { margin: 0 0 5px; } .top { font-weight: 700; white-space: nowrap; }
+.vorgaenge { margin: 0; padding: 10px 14px 6px 34px; font-size: 15px; line-height: 1.45; }
+.vorgaenge > li { margin: 0 0 10px; }
+.vorgaenge .nr { font-family: "Space Mono", monospace; font-size: 13px; }
+.zahlen { display: grid; grid-template-columns: max-content auto; gap: 4px 20px; margin: 8px 0 12px; }
+.zahlen dt { font-weight: 700; } .zahlen dd { margin: 0; }
+.mehr-link { display: inline-block; font-weight: 700; text-decoration: none; padding: 8px 14px; border-radius: 12px; background: var(--accent-tint); }
+@media (max-width: 520px) { .zahlen { grid-template-columns: 1fr; gap: 0; } .zahlen dd { margin-bottom: 8px; } .anzahl { margin-left: 0; } }
+.spalten { columns: 2 14em; }

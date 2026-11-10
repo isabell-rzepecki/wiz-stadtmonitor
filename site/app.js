@@ -145,6 +145,7 @@
       <p class="intro-actions">
         <button type="button" class="btn btn-soft" data-show="panel-list"><svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>Liste öffnen</button>
         <button type="button" class="btn btn-soft" data-show="timeline-wrap"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Zeitleiste öffnen</button></p>
+      ${area.kind === "ortsteil" ? `<p><a href="ortsteil/${encodeURIComponent(area.key)}/">Seite zu ${esc(area.name)}</a>: nächste Sitzungen, Vorgänge der letzten zwölf Monate und Zahlen zum Ortsteil.</p>` : ""}
       ${n ? "" : '<p class="notice">Noch keine Daten: Die Datenpipeline wird gerade aufgebaut. Karte und Bedienung lassen sich schon ansehen.</p>'}
       <p class="hint">${esc(cfg.texte.datenluecke)}</p></div>${LIMITS}`;
   }

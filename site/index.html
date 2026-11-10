@@ -7,8 +7,8 @@
        keine Inline-Skripte; Kartenkacheln von basemap.de (BKG). Inline-Stile bleiben erlaubt (Leaflet, Balken). -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://sgx.geodatenzentrum.de https://www.gds-srv.hessen.de; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <!-- Stadtspezifische Angaben (Name, Adressen, Gremien) setzt app.js aus stadt.json (config/stadt.json) ein -->
-  <title>Stadtmonitor – Sitzungsinformationen auf Karte und Zeitleiste</title>
-  <meta name="description" content="Tagesordnungen der Stadtverordnetenversammlung, der Ausschüsse, Ortsbeiräte und Beiräte auf Karte, Zeitleiste und als Liste – mit Quellenangabe.">
+  <title>Stadtmonitor – Beschlüsse, Anträge und Termine auf Karte und Zeitleiste</title>
+  <meta name="description" content="Beschlüsse, Anträge und Termine der Stadtverordnetenversammlung, der Ausschüsse, Ortsbeiräte und Beiräte in %STADT% auf Karte, Zeitleiste und als Liste – mit Quellenangabe. Dazu Daten zu Wohnen und Bevölkerung.">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#f4726b">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -25,7 +25,7 @@
 </head>
 <body class="list-closed detail-open">
   <noscript><div class="noscript glass"><p><strong>Stadtmonitor</strong> zeigt die Tagesordnungen der städtischen Gremien auf Karte und Zeitleiste. Für die Karte wird JavaScript benötigt.</p>
-    <p>Die Daten gibt es auch ohne Karte: <a href="data/export/vorgaenge.json">Vorgänge (JSON)</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a></p></div></noscript>
+    <p>Die Daten gibt es auch ohne Karte: <a href="data/export/vorgaenge.json">Vorgänge (JSON)</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a> · <a href="teilen/">Teilen</a> · <a href="einfache-sprache.html">Einfache Sprache</a></p></div></noscript>
   <!-- Symbole (eigene Strichzeichnungen, 24er-Raster) -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
@@ -44,6 +44,7 @@
       <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></symbol>
       <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11.5l-2 4 2 4H5"/></symbol>
       <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8"/><path d="M8 11H6.5A1.5 1.5 0 0 0 5 12.5v7A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5H16"/></symbol>
       <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
       <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></symbol>
     </defs>
@@ -76,6 +77,8 @@
           <svg class="icon" aria-hidden="true"><use href="#i-data"/></svg><span>Daten</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg></button>
         <button type="button" class="menu-btn" id="about-open" aria-haspopup="dialog">
           <svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span>Über</span></button>
+        <a class="menu-btn" href="teilen/" title="Bilder, Wortmarke und Link zum Teilen">
+          <svg class="icon" aria-hidden="true"><use href="#i-share"/></svg><span>Teilen</span></a>
       </div>
     </nav>
 
@@ -85,7 +88,8 @@
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg></span>
           <span class="card-title">Kommende Sitzungen</span>
           <span class="card-text">Stadtverordnetenversammlung, Ausschüsse, Ortsbeiräte und Beiräte tagen in der Regel öffentlich.</span>
-          <span class="card-actions"><button type="button" class="btn btn-cta" id="cta-termine"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>Termine anzeigen</button></span>
+          <span class="card-actions"><button type="button" class="btn btn-cta" id="cta-termine"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>Termine anzeigen</button>
+            <a class="btn btn-soft" href="sitzungen/">Alle Sitzungen als Liste</a> <a class="btn btn-soft" href="gremien/">Gremien</a></span>
         </div>
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></span>
@@ -142,6 +146,10 @@
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></span>
           <span class="card-title">Datenpaket (Zip)</span>
           <span class="card-text">Vorgänge, Strukturdaten, Audit-Protokolle (TSV), Quellenregister und Lizenzen.</span></a>
+        <a class="card" href="ortsteile/">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg></span>
+          <span class="card-title">Ortsteile im Überblick</span>
+          <span class="card-text">Je Ortsteil eine Seite: nächste Sitzungen, Vorgänge der letzten zwölf Monate, Zahlen aus dem Zensus.</span></a>
         <a class="card" data-cfg-href="stadt.bekanntmachungen" href="#" target="_blank" rel="noopener">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg></span>
           <span class="card-title">Amtliche Bekanntmachungen</span>
@@ -154,7 +162,7 @@
           <ul class="credits" id="credits"><li>Kartenhintergrund © basemap.de / BKG (CC BY 4.0), Datenquellen © GeoBasis-DE</li></ul>
           <p id="stand"></p>
           <div id="luecken"></div>
-          <p><a href="data/LICENSE-DATA.md">Lizenzen der Daten</a> · <a href="quellen.html">Alle Datenquellen</a> · <a href="teilen/">Teilen</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
+          <p><a href="data/LICENSE-DATA.md">Lizenzen der Daten</a> · <a href="quellen.html">Alle Datenquellen</a> · <a href="teilen/">Teilen</a> · <a href="einfache-sprache.html">Einfache Sprache</a> · <a href="barrierefreiheit.html">Barrierefreiheit</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
         </div>
       </details>
     </section>
@@ -277,6 +285,7 @@
       <p>Der Stadtmonitor zeigt, womit sich die Stadtverordnetenversammlung, die Ausschüsse, die Ortsbeiräte und die Beiräte der Stadt <span data-cfg="stadt.name"></span> beschäftigen: auf einer Karte, auf einer Zeitleiste und als Liste. <span data-cfg="texte.datenluecke"></span></p>
 
       <p><button type="button" class="btn btn-soft" data-tour>Tour durch alle Funktionen starten</button></p>
+      <p>Kurz und leicht erklärt: <a href="einfache-sprache.html">Der Stadtmonitor in Einfacher Sprache</a>.</p>
 
       <h3>Was ist ein Vorgang?</h3>
       <p>Ein Tagesordnungspunkt mit Vorlagennummer (zum Beispiel <code>STV/488/2025</code>) kann in mehreren Sitzungen beraten werden. Diese Beratungen fasst der Stadtmonitor zu einem Vorgang zusammen. Tagesordnungspunkte ohne Vorlagennummer bleiben einzelne Vorgänge; sie werden nicht über ähnliche Titel verknüpft.</p>
@@ -297,7 +306,7 @@
       <p>Verantwortlich: <span data-feld="verantwortlich_name">Isabell Rzepecki</span> (<a href="impressum.html">Impressum</a>).</p>
 
       <h3 id="about-impressum" tabindex="-1">Datenschutz</h3>
-      <p>Schriften und Programmbibliotheken kommen vom Server dieser Seite. Nur die Kartenkacheln lädt Ihr Browser von basemap.de (sgx.geodatenzentrum.de, Bundesamt für Kartographie und Geodäsie), die Ebene „Bodenrichtwerte 2026“ nach dem Einschalten von der HVBG (gds-srv.hessen.de). <a href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a></p>
+      <p>Schriften und Programmbibliotheken kommen vom Server dieser Seite. Nur die Kartenkacheln lädt Ihr Browser von basemap.de (sgx.geodatenzentrum.de, Bundesamt für Kartographie und Geodäsie), die Ebene „Bodenrichtwerte 2026“ nach dem Einschalten von der HVBG (gds-srv.hessen.de). <a href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a> · <a href="barrierefreiheit.html">Barrierefreiheit</a></p>
     </div>
   </dialog>
 

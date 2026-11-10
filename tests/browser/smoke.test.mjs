@@ -127,7 +127,7 @@ test("Stellungnahme eines Ortsbeirats: Station im Beschlussvorgang, Zählung mit
 });
 
 test("Nur eigene Domain: Datenquellen als Seite, interner Bereich, Hinweise per E-Mail, ohne Verstöße", async () => {
-  for (const pfad of ["quellen.html", "intern/", "teilen/"]) {
+  for (const pfad of ["quellen.html", "intern/", "teilen/", "ortsteile/", "ortsteil/gertenbach/", "sitzungen/", "gremien/", "gremium/stvv/", "barrierefreiheit.html", "einfache-sprache.html"]) {
     const page = await browser.newPage({ bypassCSP: true });
     const fehler = [];
     page.on("pageerror", (e) => fehler.push(String(e)));
@@ -1234,6 +1234,34 @@ test("Prüfseite: Arbeitsdatei mit Passwort, Einlesen und Prüfen wie tools/prue
     const rechte = execFileSync("python3", ["tests/browser/pruef_fixture.py", "rechte", dir, await laden("#speichern-arbeitsdatei"), fx.widerrufscode, fx.widerspruch],
       { cwd: root, encoding: "utf8" });
     assert.equal(rechte.trim(), "gleich");
+    // Passwort ändern: die gesicherte Prüfmappe öffnet nur noch mit dem neuen Passwort (Browser und Python)
+    const NEU = "neues Passwort zum Testen";
+    await schritt("sonderfall");
+    await mehr("Passwort der Prüfmappe");
+    await page.fill("#pass-neu1", NEU);
+    await page.fill("#pass-neu2", NEU + "x");
+    await page.locator("#knopf-passwort").click();
+    assert.match(await page.locator("#passwort-status").textContent(), /stimmen nicht überein/);
+    await page.fill("#pass-neu2", NEU);
+    await page.locator("#knopf-passwort").click();
+    await page.waitForFunction(() => /Passwort geändert/.test(document.querySelector("#passwort-status").textContent), null, { timeout: 60000 });
+    await schritt("speichern");
+    const neuGesichert = await laden("#speichern-arbeitsdatei");
+    const pyNeu = execFileSync("python3", ["-c", `
+import sys
+sys.path.insert(0, "tools")
+import pruefgruppe as pg
+pg.arbeitsdatei_lesen(sys.argv[1], sys.argv[2])
+try:
+    pg.arbeitsdatei_lesen(sys.argv[1], sys.argv[3]); print("altes geht noch")
+except (Exception, SystemExit):
+    print("ok")
+`, neuGesichert, NEU, fx.passphrase], { cwd: root, encoding: "utf8" });
+    assert.equal(pyNeu.trim(), "ok");
+    await oeffnen(neuGesichert);  // altes Passwort
+    await page.waitForFunction(() => /Passwort ist falsch/.test(document.querySelector("#oeffnen-status").textContent), null, { timeout: 60000 });
+    await oeffnen(neuGesichert, NEU);
+    await page.waitForFunction(() => window.Schritte.aktuell !== "oeffnen", null, { timeout: 60000 });
     // Fristen: drei Jahre später ist alles fällig und wird gelöscht
     await page.clock.setSystemTime(new Date(Date.now() + 3 * 365 * 86400000));
     await offen(fx.ref, "sonderfall");

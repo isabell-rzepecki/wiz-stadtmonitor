@@ -178,6 +178,18 @@
           <p><button type="button" class="knopf" id="speichern-kartenliste">Liste der Einladungskarten sichern</button></p>
         </details>
         <details class="mehr">
+          <summary>Das Passwort der Prüfmappe ändern</summary>
+          <p>Zum Beispiel, wenn jemand die Prüfgruppe verlässt. Inhalt und Schlüssel bleiben, nur das Passwort wird neu. Danach die Prüfmappe sichern, die alte Datei auf beiden Sticks ersetzen und alte Kopien löschen: Sie lassen sich weiter mit dem alten Passwort öffnen.</p>
+          <form id="form-passwort" novalidate>
+            <label class="feld">Neues Passwort (mindestens 10 Zeichen)
+              <input type="password" id="pass-neu1" autocomplete="new-password" minlength="10" required></label>
+            <label class="feld">Neues Passwort noch einmal
+              <input type="password" id="pass-neu2" autocomplete="new-password" minlength="10" required></label>
+            <p><button type="submit" class="knopf" id="knopf-passwort">Passwort ändern</button></p>
+          </form>
+          <p id="passwort-status" role="status" tabindex="-1"></p>
+        </details>
+        <details class="mehr">
           <summary>Unterlagen für Nachweise</summary>
           <p class="knoepfe"><button type="button" class="knopf" id="speichern-pruefliste">Liste aller Angaben</button>
             <button type="button" class="knopf" id="speichern-einlesebericht">Bericht über das Einlesen</button>

@@ -21,7 +21,7 @@ Auf der Seite heißt die Arbeitsdatei **Prüfmappe** (`pruefmappe.json`; ältere
 
 ## Seltener (Startseite: „Löschen und Auskunft“)
 
-Nach dem Öffnen der Prüfmappe: Widerruf per Code, Widerspruch je Gebäude (mit Sperrliste, Art. 21 DSGVO), Auskunft zu einem Gebäude (Art. 15 DSGVO), alte Angaben nach der Speicherdauer löschen, Liste der Einladungskarten neu sichern, Unterlagen (Prüfliste, Einlesebericht, Zugriffsprotokoll). Danach die Prüfmappe sichern.
+Nach dem Öffnen der Prüfmappe: Widerruf per Code, Widerspruch je Gebäude (mit Sperrliste, Art. 21 DSGVO), Auskunft zu einem Gebäude (Art. 15 DSGVO), alte Angaben nach der Speicherdauer löschen, Liste der Einladungskarten neu sichern, Passwort der Prüfmappe ändern (etwa wenn jemand die Prüfgruppe verlässt; alte Kopien danach löschen), Unterlagen (Prüfliste, Einlesebericht, Zugriffsprotokoll). Danach die Prüfmappe sichern.
 
 **Üben:** Startseite, „Hier geht es ohne echte Angaben“ spielt den Ablauf mit erfundenen Einträgen durch.
 
