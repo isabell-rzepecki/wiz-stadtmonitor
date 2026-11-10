@@ -8,13 +8,14 @@
   <title>Wohnen und Eigentum – Stadtmonitor</title>
   <meta name="description" content="Wohnen und Eigentum: alle Gebäude der Stadt in 2D und 3D, Bestandsmieten aus dem Zensus, Bodenrichtwerte im Verlauf und der Stand der Erfassung von Eigentum und Mieten.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
   <link rel="stylesheet" href="page.css">
   <link rel="stylesheet" href="wohnen.css">
 </head>
 <body class="wohnen">
   <header class="leiste">
-    <a class="page-brand" href="./"><img src="favicon.svg" width="32" height="32" alt="">Stadtmonitor</a>
+    <a class="page-brand" href="./"><img src="favicon.svg" width="32" height="32" alt="">Stadtmonitor <span data-cfg="stadt.name"></span></a>
     <label class="wahl">Ortsteil <select id="ortsteil"></select></label>
     <div class="umschalter" role="group" aria-label="Darstellung">
       <button type="button" id="ansicht-2d" aria-pressed="true">2D</button>

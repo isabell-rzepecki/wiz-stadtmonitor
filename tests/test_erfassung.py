@@ -162,15 +162,16 @@ class Erfassung(unittest.TestCase):
 
     def test_offline_liste_vollstaendig(self):
         sw = (SITE / "erfassen-sw.js").read_text(encoding="utf-8")
-        dateien = re.findall(r'"([\w./-]+\.(?:html|js|css|svg|json|webmanifest))"', sw.split("const KACHELN")[0])
+        dateien = re.findall(r'"([\w./-]+\.(?:html|js|css|svg|png|json|webmanifest))"', sw.split("const KACHELN")[0])
         erzeugt = {"stadt.json", "schemas/erfassung_eigentum.json", "schemas/mietangabe.json", "data/export/karte/gebaeude_index.json"}
         for d in dateien:
             if d not in erzeugt:
                 self.assertTrue((SITE / d).exists(), d)
-        # alles, was erfassen.html lädt, steht in der Liste
+        # alles, was erfassen.html lädt, steht in der Liste (die Wortmarke führt zur Startseite; die braucht offline niemand)
         html = (SITE / "erfassen.html").read_text(encoding="utf-8")
         for d in re.findall(r'(?:src|href)="([\w./-]+)"', html):
-            self.assertIn(d, dateien, d)
+            if d != "./":
+                self.assertIn(d, dateien, d)
 
     def test_schema_mit_vorlaeufigem_vermieterschluessel(self):
         s = json.loads((config.ROOT / "docs" / "uebergabe-v0.4.2" / "schema_erfassung_eigentum.json").read_text(encoding="utf-8"))

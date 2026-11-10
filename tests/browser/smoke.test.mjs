@@ -469,7 +469,7 @@ test("Mobil: Kartenoptionen in einem Menü, ohne Verstöße", async () => {
   assert.ok(await page.locator(".map-whole").isVisible());
   // Kartenoptionen als Kasten über der Leiste: nichts ragt über den Seitentitel
   const kasten = await page.locator(".leaflet-bottom.leaflet-right").boundingBox();
-  const titel = await page.locator(".site-title").boundingBox();
+  const titel = await page.locator(".brand-mobil").boundingBox();
   assert.ok(kasten.y >= titel.y + titel.height, `Kasten ${kasten.y} unter Titel ${titel.y + titel.height}`);
   assert.deepEqual(await axe(page), []);
   assert.deepEqual(page.errors, []);

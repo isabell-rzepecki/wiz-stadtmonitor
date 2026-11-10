@@ -12,6 +12,7 @@
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#f4726b">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="alternate" type="application/atom+xml" title="Stadtmonitor: Einladungen aller Gremien" href="data/export/abo/alle.atom">
   <link rel="preload" href="fonts/space-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/lilita-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -50,8 +51,9 @@
 
   <header>
     <h1 class="site-title">Stadtmonitor <span data-cfg="stadt.name"></span></h1>
+    <a class="brand-mobil" href="./"><img src="favicon.svg" width="26" height="26" alt="">Stadtmonitor <span data-cfg="stadt.name"></span></a>
     <nav class="nav glass" aria-label="Hauptmenü">
-      <div class="brand" aria-hidden="true">Stadtmonitor <span data-cfg="stadt.name"></span></div>
+      <a class="brand" href="./"><img src="favicon.svg" width="32" height="32" alt="">Stadtmonitor <span data-cfg="stadt.name"></span></a>
       <form class="nav-search" id="nav-search" role="search">
         <label class="visually-hidden" for="q">Tagesordnungspunkte suchen</label>
         <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
