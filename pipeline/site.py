@@ -21,7 +21,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
     (out / "schemas").mkdir()
     for name, quelle in (("erfassung_eigentum.json", "schema_erfassung_eigentum.json"), ("mietangabe.json", "schema_mietangabe.json")):
         shutil.copy2(config.ROOT / "docs" / "uebergabe-v0.4.2" / quelle, out / "schemas" / name)
-    for seite in ("datenschutz.html", "impressum.html", "aushang.html", "index.html"):
+    for seite in ("datenschutz.html", "impressum.html", "aushang.html", "index.html", "barrierefreiheit.html", "einfache-sprache.html"):
         datenschutz_ausfuellen(out / seite)
     karten_ausfuellen(out / "intern" / "karten.html")
     pruefen_ausfuellen(out / "intern" / "pruefen.html")
@@ -30,6 +30,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
     # Seiten je Ortsteil (Text ohne JavaScript, für Menschen und Suchmaschinen)
     ortsteilseiten.erzeugen(out, mit_daten)
     ortsteilseiten.sitzungen_erzeugen(out, mit_daten)
+    ortsteilseiten.gremien_erzeugen(out, mit_daten)
     stadtname_ausfuellen(out)
     vorschau_ausfuellen(out)
     suchmaschinen(out)
@@ -68,13 +69,13 @@ def stadtname_ausfuellen(out):
 
 
 VORSCHAU_SEITEN = ("index.html", "wohnen.html", "erfassen.html", "quellen.html", "datenschutz.html", "impressum.html", "aushang.html",
-                   "teilen/index.html")
+                   "teilen/index.html", "barrierefreiheit.html", "einfache-sprache.html")
 
 
 def oeffentliche_seiten(out):
     """Öffentliche Seiten mit Vorschau, Canonical und Eintrag in der Sitemap: feste Seiten und die Seiten je Ortsteil."""
-    ortsteile = sorted(str(p.relative_to(out)) for p in out.glob("ortsteil/*/index.html"))
-    erzeugt = [d for d in ("sitzungen/index.html", "ortsteile/index.html") if (out / d).exists()]
+    ortsteile = sorted(str(p.relative_to(out)) for p in [*out.glob("ortsteil/*/index.html"), *out.glob("gremium/*/index.html")])
+    erzeugt = [d for d in ("sitzungen/index.html", "ortsteile/index.html", "gremien/index.html") if (out / d).exists()]
     return list(VORSCHAU_SEITEN) + erzeugt + ortsteile
 
 

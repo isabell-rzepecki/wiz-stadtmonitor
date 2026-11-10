@@ -21,3 +21,4 @@
 .zahlen dt { font-weight: 700; } .zahlen dd { margin: 0; }
 .mehr-link { display: inline-block; font-weight: 700; text-decoration: none; padding: 8px 14px; border-radius: 12px; background: var(--accent-tint); }
 @media (max-width: 520px) { .zahlen { grid-template-columns: 1fr; gap: 0; } .zahlen dd { margin-bottom: 8px; } .anzahl { margin-left: 0; } }
+.spalten { columns: 2 14em; }

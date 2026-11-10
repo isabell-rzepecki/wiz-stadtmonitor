@@ -102,7 +102,7 @@ def _seite(titel, beschreibung, vor, inhalt):
   <main class="page" id="inhalt">
 {inhalt}
   </main>
-  <footer class="page-foot"><a href="{vor}ortsteile/">Alle Ortsteile</a> · <a href="{vor}quellen.html">Datenquellen</a> · <a href="{vor}impressum.html">Impressum</a> · <a href="{vor}datenschutz.html">Datenschutz</a></footer>
+  <footer class="page-foot"><a href="{vor}ortsteile/">Ortsteile</a> · <a href="{vor}sitzungen/">Sitzungen</a> · <a href="{vor}gremien/">Gremien</a> · <a href="{vor}einfache-sprache.html">Einfache Sprache</a> · <a href="{vor}barrierefreiheit.html">Barrierefreiheit</a> · <a href="{vor}impressum.html">Impressum</a> · <a href="{vor}datenschutz.html">Datenschutz</a></footer>
 </body>
 </html>
 """
@@ -269,3 +269,63 @@ def sitzungen_erzeugen(out, mit_daten=True):
                            "Kommende und vergangene Sitzungen der Stadtverordnetenversammlung, der Ausschüsse, Ortsbeiräte und "
                            "Beiräte mit Tagesordnung, Einladung und Quellenangabe.", vor, "\n".join(teile)), encoding="utf-8")
     return ["sitzungen/index.html"]
+
+
+ARTEN = {"stvv": "Stadtverordnetenversammlung", "ausschuss": "Ausschuss", "beirat": "Beirat"}
+
+
+def gremien_erzeugen(out, mit_daten=True):
+    """out/gremium/<id>/index.html je Gremium aus stadt.json (Stadtverordnetenversammlung, Ausschüsse, Beiräte; auch
+    frühere Ausschüsse) und die Übersicht out/gremien/index.html. Ortsbeiräte stehen auf den Seiten der Ortsteile."""
+    daten = _daten() if mit_daten else {"sitzungen": [], "vorgaenge": [], "meta": {}}
+    heute = _stand(daten) if daten.get("meta") else date.today()
+    grenze = (heute - timedelta(days=TAGE)).isoformat()
+    je_sitzung = {}
+    for v in daten["vorgaenge"]:
+        for s in v["process"]:
+            je_sitzung.setdefault(s["sitzung"], []).append(v)
+    pfade, gruppen = [], {"aktuell": [], "frueher": []}
+    for g in config.STADT["gremien"]:
+        slug, vor = g["id"].lower(), "../../"
+        sitz = sorted((s for s in daten["sitzungen"] if s.get("gremium_id") == g["id"]), key=lambda s: (s["date"], s.get("time") or ""))
+        kommend = [s for s in sitz if s["date"] >= heute.isoformat()]
+        vergangen = [s for s in reversed(sitz) if grenze <= s["date"] < heute.isoformat()]
+        zeit = " ".join(([f"seit {datum(g['seit'])}"] if g.get("seit") else []) + ([f"bis {datum(g['bis'])}"] if g.get("bis") else []))
+        karte = f"{vor}?gremium={quote(g['name'])}"
+        teile = [f"    <h1>{e(g['name'])}</h1>",
+                 f'    <p class="einleitung">{e(ARTEN.get(g.get("typ"), "Gremium"))} der Stadt {e(config.STADT["stadt"]["name"])}'
+                 f'{" (" + e(zeit) + ")" if zeit else ""}. Hier stehen die nächsten Sitzungen und die Sitzungen der letzten zwölf '
+                 f'Monate mit Tagesordnung und Einladung. Ein Klick auf einen Punkt öffnet den Vorgang auf der Karte.</p>']
+        if g.get("hinweis"):
+            teile.append(f'    <p class="klein">{e(g["hinweis"])}</p>')
+        teile.append(f"    <h2>Nächste Sitzungen ({len(kommend)})</h2>")
+        teile += [_sitzung(s, _punkte(s, je_sitzung.get(s["id"], [])), vor, i == 0) for i, s in enumerate(kommend)] or \
+                 ["    <p>Zurzeit ist keine Sitzung angekündigt.</p>"]
+        teile.append(f"    <h2>Sitzungen der letzten zwölf Monate ({len(vergangen)})</h2>")
+        teile += [_sitzung(s, _punkte(s, je_sitzung.get(s["id"], [])), vor, False) for s in vergangen] or \
+                 ["    <p>Keine Sitzung in den letzten zwölf Monaten im Datenbestand.</p>"]
+        teile.append(f'    <p><a class="mehr-link" href="{e(karte)}">Alle Vorgänge dieses Gremiums auf der Karte</a></p>')
+        ziel = out / "gremium" / slug / "index.html"
+        ziel.parent.mkdir(parents=True, exist_ok=True)
+        ziel.write_text(_seite(f"{g['name']}: Sitzungen und Tagesordnungen",
+                               f"{g['name']}: nächste Sitzungen und Sitzungen der letzten zwölf Monate mit Tagesordnung, Einladung "
+                               "und Quellenangabe.", vor, "\n".join(teile)), encoding="utf-8")
+        pfade.append(f"gremium/{slug}/index.html")
+        eintrag = (f'      <li><a href="../gremium/{quote(slug)}/">{e(g["name"])}</a> '
+                   f'<span class="klein">{len(kommend)} angekündigt · {len(vergangen)} in zwölf Monaten</span></li>')
+        gruppen["frueher" if g.get("bis") and g["bis"] < heute.isoformat() else "aktuell"].append(eintrag)
+    ortsbeiraete = "".join(f'<li><a href="../ortsteil/{quote(o["slug"])}/">{e(o["name"])}</a></li>'
+                           for o in sorted(config.STADT["ortsteile"], key=lambda o: o["name"]) if o.get("ortsbezirk"))
+    inhalt = ("    <h1>Gremien</h1>\n"
+              '    <p class="einleitung">Für jedes Gremium eine eigene Seite mit den nächsten Sitzungen und den Sitzungen der letzten '
+              "zwölf Monate, jeweils mit Tagesordnung und Einladung.</p>\n"
+              '    <h2>Stadtverordnetenversammlung, Ausschüsse und Beiräte</h2>\n    <ul class="ortsteile">\n' + "\n".join(gruppen["aktuell"]) + "\n    </ul>\n"
+              + ('    <h2>Frühere Ausschüsse</h2>\n    <ul class="ortsteile">\n' + "\n".join(gruppen["frueher"]) + "\n    </ul>\n" if gruppen["frueher"] else "")
+              + '    <h2>Ortsbeiräte</h2>\n    <p>Die Ortsbeiräte stehen auf den Seiten der Ortsteile:</p>\n'
+              f'    <ul class="ortsteile spalten">{ortsbeiraete}</ul>')
+    ziel = out / "gremien" / "index.html"
+    ziel.parent.mkdir(parents=True, exist_ok=True)
+    ziel.write_text(_seite("Gremien im Überblick", "Seiten zu allen Gremien der Stadt: Stadtverordnetenversammlung, Ausschüsse und "
+                           "Beiräte mit Sitzungen und Tagesordnungen.", "../", inhalt), encoding="utf-8")
+    pfade.append("gremien/index.html")
+    return pfade

@@ -25,7 +25,7 @@
 </head>
 <body class="list-closed detail-open">
   <noscript><div class="noscript glass"><p><strong>Stadtmonitor</strong> zeigt die Tagesordnungen der städtischen Gremien auf Karte und Zeitleiste. Für die Karte wird JavaScript benötigt.</p>
-    <p>Die Daten gibt es auch ohne Karte: <a href="data/export/vorgaenge.json">Vorgänge (JSON)</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a> · <a href="teilen/">Teilen</a></p></div></noscript>
+    <p>Die Daten gibt es auch ohne Karte: <a href="data/export/vorgaenge.json">Vorgänge (JSON)</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a> · <a href="teilen/">Teilen</a> · <a href="einfache-sprache.html">Einfache Sprache</a></p></div></noscript>
   <!-- Symbole (eigene Strichzeichnungen, 24er-Raster) -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
@@ -89,7 +89,7 @@
           <span class="card-title">Kommende Sitzungen</span>
           <span class="card-text">Stadtverordnetenversammlung, Ausschüsse, Ortsbeiräte und Beiräte tagen in der Regel öffentlich.</span>
           <span class="card-actions"><button type="button" class="btn btn-cta" id="cta-termine"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>Termine anzeigen</button>
-            <a class="btn btn-soft" href="sitzungen/">Alle Sitzungen als Liste</a></span>
+            <a class="btn btn-soft" href="sitzungen/">Alle Sitzungen als Liste</a> <a class="btn btn-soft" href="gremien/">Gremien</a></span>
         </div>
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></span>
@@ -162,7 +162,7 @@
           <ul class="credits" id="credits"><li>Kartenhintergrund © basemap.de / BKG (CC BY 4.0), Datenquellen © GeoBasis-DE</li></ul>
           <p id="stand"></p>
           <div id="luecken"></div>
-          <p><a href="data/LICENSE-DATA.md">Lizenzen der Daten</a> · <a href="quellen.html">Alle Datenquellen</a> · <a href="teilen/">Teilen</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
+          <p><a href="data/LICENSE-DATA.md">Lizenzen der Daten</a> · <a href="quellen.html">Alle Datenquellen</a> · <a href="teilen/">Teilen</a> · <a href="einfache-sprache.html">Einfache Sprache</a> · <a href="barrierefreiheit.html">Barrierefreiheit</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
         </div>
       </details>
     </section>
@@ -285,6 +285,7 @@
       <p>Der Stadtmonitor zeigt, womit sich die Stadtverordnetenversammlung, die Ausschüsse, die Ortsbeiräte und die Beiräte der Stadt <span data-cfg="stadt.name"></span> beschäftigen: auf einer Karte, auf einer Zeitleiste und als Liste. <span data-cfg="texte.datenluecke"></span></p>
 
       <p><button type="button" class="btn btn-soft" data-tour>Tour durch alle Funktionen starten</button></p>
+      <p>Kurz und leicht erklärt: <a href="einfache-sprache.html">Der Stadtmonitor in Einfacher Sprache</a>.</p>
 
       <h3>Was ist ein Vorgang?</h3>
       <p>Ein Tagesordnungspunkt mit Vorlagennummer (zum Beispiel <code>STV/488/2025</code>) kann in mehreren Sitzungen beraten werden. Diese Beratungen fasst der Stadtmonitor zu einem Vorgang zusammen. Tagesordnungspunkte ohne Vorlagennummer bleiben einzelne Vorgänge; sie werden nicht über ähnliche Titel verknüpft.</p>
@@ -305,7 +306,7 @@
       <p>Verantwortlich: <span data-feld="verantwortlich_name">Isabell Rzepecki</span> (<a href="impressum.html">Impressum</a>).</p>
 
       <h3 id="about-impressum" tabindex="-1">Datenschutz</h3>
-      <p>Schriften und Programmbibliotheken kommen vom Server dieser Seite. Nur die Kartenkacheln lädt Ihr Browser von basemap.de (sgx.geodatenzentrum.de, Bundesamt für Kartographie und Geodäsie), die Ebene „Bodenrichtwerte 2026“ nach dem Einschalten von der HVBG (gds-srv.hessen.de). <a href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a></p>
+      <p>Schriften und Programmbibliotheken kommen vom Server dieser Seite. Nur die Kartenkacheln lädt Ihr Browser von basemap.de (sgx.geodatenzentrum.de, Bundesamt für Kartographie und Geodäsie), die Ebene „Bodenrichtwerte 2026“ nach dem Einschalten von der HVBG (gds-srv.hessen.de). <a href="datenschutz.html">Datenschutz</a> · <a href="impressum.html">Impressum</a> · <a href="barrierefreiheit.html">Barrierefreiheit</a></p>
     </div>
   </dialog>
 

@@ -56,6 +56,29 @@ class Ortsteilseiten(unittest.TestCase):
                     self.assertNotIn(f">{v['name']}<", seite)
             self.assertNotIn("<script", seite)
 
+    def test_gremienseiten(self):
+        with tempfile.TemporaryDirectory() as d:
+            export = Path(d) / "export"
+            export.mkdir()
+            shutil.copy(FIX, export / "vorgaenge.json")
+            out = Path(d) / "_site"
+            out.mkdir()
+            with mock.patch.object(config, "EXPORT", export):
+                pfade = ortsteilseiten.gremien_erzeugen(out)
+            self.assertEqual(len(pfade), len(config.STADT["gremien"]) + 1)
+            daten = json.loads(FIX.read_text(encoding="utf-8"))
+            stand = daten["meta"]["generated_at"][:10]
+            seite = (out / "gremium" / "stvv" / "index.html").read_text(encoding="utf-8")
+            kommend = [s for s in daten["sitzungen"] if s.get("gremium_id") == "STVV" and s["date"] >= stand]
+            self.assertIn(f"Nächste Sitzungen ({len(kommend)})", seite)
+            self.assertIn('href="../../?gremium=Stadtverordnetenversammlung"', seite)
+            self.assertNotIn("<script", seite)
+            uebersicht = (out / "gremien" / "index.html").read_text(encoding="utf-8")
+            self.assertIn('href="../gremium/stvv/"', uebersicht)
+            self.assertIn("Frühere Ausschüsse", uebersicht)
+            self.assertIn('href="../ortsteil/gertenbach/"', uebersicht)  # Ortsbeiräte über die Ortsteilseiten
+            self.assertNotIn('href="../ortsteil/kernstadt/"', uebersicht)  # Kernstadt hat keinen Ortsbeirat
+
     def test_im_seitenbau_sitemap_und_verweise(self):
         with tempfile.TemporaryDirectory() as d:
             out = site.build(Path(d) / "_site", mit_daten=False)
@@ -63,6 +86,15 @@ class Ortsteilseiten(unittest.TestCase):
             self.assertIn("/ortsteile/</loc>", karte)
             self.assertIn("/ortsteil/gertenbach/</loc>", karte)
             self.assertIn("/sitzungen/</loc>", karte)
+            self.assertIn("/gremien/</loc>", karte)
+            self.assertIn("/gremium/stvv/</loc>", karte)
+            self.assertIn("/barrierefreiheit.html</loc>", karte)
+            self.assertIn("/einfache-sprache.html</loc>", karte)
+            for name in ("barrierefreiheit.html", "einfache-sprache.html"):
+                seite = (out / name).read_text(encoding="utf-8")
+                self.assertIn('href="mailto:', seite)  # Kontakt aus der Konfiguration
+                self.assertNotIn("<script", seite)
+                self.assertIn(f'href="{name}"', (out / "index.html").read_text(encoding="utf-8"))
             self.assertIn('href="sitzungen/"', (out / "index.html").read_text(encoding="utf-8"))
             seite = (out / "ortsteil" / "kernstadt" / "index.html").read_text(encoding="utf-8")
             self.assertIn('<link rel="canonical" href="https://stadtmonitor-witzenhausen.de/ortsteil/kernstadt/">', seite)
