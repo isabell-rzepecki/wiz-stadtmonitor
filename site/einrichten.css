@@ -1,9 +1,20 @@
-/* Einrichtungsseite: Textseite (page.css) mit Formularfeldern und einer Druckansicht, die nur das gewählte Blatt zeigt */
+/* Interner Bereich: Textseite (page.css) mit Formularfeldern, nummerierten Schritten und einer Druckansicht, die nur das gewählte Blatt zeigt */
 .feld { display: grid; gap: 4px; font-weight: 700; margin: 0 0 12px; }
 .feld input, .feld textarea { font: inherit; font-weight: 400; min-height: 44px; padding: 8px 10px; border-radius: 10px; border: 1px solid #8a8285; background: #fff; color: var(--text); width: 100%; }
 .feld textarea { font-size: 13px; line-height: 1.4; resize: vertical; }
 [aria-invalid="true"] { border-color: var(--accent-ink) !important; outline: 2px solid var(--accent-ink); outline-offset: 1px; }
 .knopf { font: inherit; font-weight: 700; min-height: 44px; padding: 6px 14px; border-radius: 12px; border: 0; background: var(--accent-tint); color: var(--accent-ink); cursor: pointer; }
+.knopf.gross { min-height: 52px; padding: 10px 20px; font-size: 17px; background: var(--accent-ink); color: #fff; }
+.knopf.klein-knopf { min-height: 36px; padding: 4px 10px; font-size: 14px; }
+.schritt { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 20px; }
+.schritt h2 { display: flex; align-items: center; gap: 10px; }
+.schritt .nr { flex: none; display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--accent-ink); color: #fff; font-size: 17px; }
+.rollen { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin: 16px 0; padding: 0; list-style: none; }
+.rollen a { display: block; height: 100%; padding: 14px 16px; border: 2px solid var(--accent-ink); border-radius: 14px; color: inherit; text-decoration: none; }
+.rollen a:hover, .rollen a:focus-visible { background: var(--accent-tint); }
+.rollen strong { display: block; font-size: 18px; color: var(--accent-ink); margin-bottom: 4px; }
+details.mehr { margin: 16px 0; }
+details.mehr > summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
 .knopf:disabled { opacity: 0.55; cursor: not-allowed; }
 .klein { font-size: 14px; color: var(--muted); }
 .hinweis { padding: 8px 12px; border-radius: 10px; background: #fff4d6; border: 1px solid #8a6d1f; }
@@ -21,5 +32,16 @@
   #druck figure svg { width: 46mm; height: auto; }
   #druck pre { font-size: 10px; white-space: pre-wrap; word-break: break-all; }
   #druck .karte { border: 1px dashed #555; padding: 7mm; margin: 0 0 5mm; break-inside: avoid; font-size: 13px; }
+  #druck .karte:has(.karte-qr) { display: flex; gap: 6mm; align-items: center; padding: 5mm; font: 12px/1.4 system-ui, sans-serif; }
+  #druck .karte-qr svg { width: 42mm; height: auto; display: block; }
+  #druck .karte ol { margin: 2mm 0; padding-left: 5mm; }
+  #druck .karte p { margin: 1mm 0; }
+  #druck .blatt + .blatt { break-before: page; }
+  #druck .liste { font: 12px/1.4 system-ui, sans-serif; }
+  #druck .liste table { width: 100%; border-collapse: collapse; }
+  #druck .liste th, #druck .liste td { border: 1px solid #555; padding: 3mm; text-align: left; }
+  #druck .liste td:last-child { width: 55%; }
   #druck .karte .code { font: 700 22px/1.2 ui-monospace, monospace; letter-spacing: 2px; margin: 3mm 0; }
 }
+.link-btn { font: inherit; background: none; border: 0; padding: 0; min-height: 44px; color: var(--accent-ink); text-decoration: underline; cursor: pointer; }
+.link-btn:disabled { opacity: 0.55; cursor: not-allowed; }

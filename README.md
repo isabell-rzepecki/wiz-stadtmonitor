@@ -65,7 +65,7 @@ Der Stadtmonitor erschließt die Sitzungsinformationen der Stadt Witzenhausen in
 **Methode.**
 - Öffentliche Grundlage (Pipeline): alle Gebäude aus ALKIS mit Höhe aus LoD2 (2D und 3D), Zensus 2022 (Gemeinde; Ortsbezirke als Näherung aus dem Gitter), Bodenrichtwerte 2022 und 2024, rechtlicher Rahmen als datierte Textbausteine.
 - Zwei getrennte Erfassungen in `erfassen.html` (nicht öffentlich verlinkt, Zugang über Einladungscode): Eigentum und Vermietung durch das Team; Mietangaben freiwillig mit Einwilligung. Getrennt wegen unterschiedlicher Betroffener und Rechtsgrundlagen.
-- Prüfung lokal bei der Prüfgruppe (`tools/pruefen.py`): entschlüsseln, gegen die Schemata prüfen, Dubletten, Vermieter-Schlüssel (`V-017` statt Namen; juristische Personen `JP:<Name>`), Freigabe nach dem Vier-Augen-Prinzip. Veröffentlichung (`tools/veroeffentlichen.py`) nur zusammengefasst nach `docs/uebergabe-v0.4.2/veroeffentlichungsregeln.tsv`.
+- Prüfung lokal bei der Prüfgruppe (`tools/pruefen.py`): entschlüsseln, gegen die Schemata prüfen, Dubletten, Vermieter-Schlüssel (`V-017` statt Namen; juristische Personen `JP:<Name>`), Freigabe durch die Prüfgruppe (Anzahl: `freigaben_noetig`). Im Browser: interner Bereich `/intern/` mit Prüfseite (Arbeitsdatei mit Passwort) und Seite für Einladungskarten (QR-Code). Veröffentlichung (`tools/veroeffentlichen.py`) nur zusammengefasst nach `docs/uebergabe-v0.4.2/veroeffentlichungsregeln.tsv`.
 
 **Datenschutz.**
 - Kein Server, keine Datenbank. Jeder Eintrag wird im Gerät mit dem öffentlichen Schlüssel der Prüfgruppe versiegelt (libsodium sealed box); kein automatischer Upload, nur verschlüsselte Exportdateien.
@@ -143,5 +143,5 @@ Weitere Lizenzen:
 - PMTiles 4.4.1 (`site/vendor/pmtiles/`): BSD-3
 - libsodium.js 0.8.4 (`site/vendor/libsodium/`, Verschlüsselung in der Erfassung): ISC
 - libsodium.js 0.8.4, Fassung „sumo“ mit Argon2id (`site/vendor/libsodium-sumo/`, nur Einrichtungsseite): ISC
-- qrcode-generator 1.4.4 von Kazuhiko Arase (`site/vendor/qrcode/`, Papiersicherung auf der Einrichtungsseite): MIT
+- qrcode-generator 1.4.4 von Kazuhiko Arase (`site/vendor/qrcode/`, QR-Codes der Einladungskarten): MIT
 - Schriften: SIL OFL 1.1

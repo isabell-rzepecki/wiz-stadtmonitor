@@ -7,7 +7,7 @@ Aufruf (ARBEIT und SCHLUESSEL außerhalb jedes Git-Repositorys):
   python tools/pruefen.py schluessel SCHLUESSEL                        neues Schlüsselpaar; öffentlichen Teil in stadt.json
   python tools/pruefen.py einlesen   -a ARBEIT -s SCHLUESSEL -p P-1 DATEI…   Exportdateien entschlüsseln, prüfen, aufnehmen
   python tools/pruefen.py pruefen    -a ARBEIT -s SCHLUESSEL -p P-1    Vermieter-Schlüssel, Dubletten, Konflikte, Prüfliste
-  python tools/pruefen.py freigeben  -a ARBEIT -s SCHLUESSEL -p P-1 [ID…|--alle]   Freigabe (je Eintrag zwei Prüfer-IDs)
+  python tools/pruefen.py freigeben  -a ARBEIT -s SCHLUESSEL -p P-1 [ID…|--alle]   Freigabe (Anzahl: freigaben_noetig)
   python tools/pruefen.py verwerfen  -a ARBEIT -s SCHLUESSEL -p P-1 ID --grund TEXT
   python tools/pruefen.py name       -a ARBEIT -s SCHLUESSEL -p P-1 ID --oeffentlich|--nur-kategorie
   python tools/pruefen.py zusammenfuehren -a … V-003 V-007             zwei Vermieter-Schlüssel als dieselbe Person führen
@@ -19,6 +19,8 @@ Aufruf (ARBEIT und SCHLUESSEL außerhalb jedes Git-Repositorys):
   python tools/pruefen.py schluessel-wechsel -a ARBEIT -s SCHLUESSEL -p P-1 [--kompromittiert] [--neue-passphrase]
   python tools/pruefen.py schluessel-ausdruck SCHLUESSEL DRUCK.html    Sicherung auf Papier (QR-Codes und Zeilen)
   python tools/pruefen.py schluessel-zurueck TEXTDATEI SCHLUESSEL      Schlüsseldatei aus der Papiersicherung
+  python tools/pruefen.py arbeitsdatei-auspacken ARBEITSDATEI ZIEL      Arbeitsdatei der Prüfseite in diese Dateien
+  python tools/pruefen.py arbeitsdatei-einpacken -a ARBEIT -s SCHLUESSEL ARBEITSDATEI   und zurück
 Die Passphrase der Schlüsseldatei wird abgefragt (docs/datenschutz/schluesselverfahren.md).
 
 Ausgabe: ARBEIT/audit/pruefung_<datum>.tsv, ohne Namen von Privatpersonen und ohne Mietbeträge.
@@ -48,14 +50,14 @@ def validator(typ):
 def einladung_pruefen(z, erfasst_am):
     """Grund zur Abweisung nach dem Einladungsregister (tools/einladung.py) oder None. Maßgeblich ist der Erfassungstag."""
     if z is None:
-        return "Erfasser-ID nicht im Einladungsregister"
+        return "Karte nicht in der Kartenliste"
     tag = erfasst_am[:10]
     if tag < z["ausgegeben"]:
-        return "vor Ausgabe des Einladungscodes erfasst"
+        return "vor Ausgabe der Karte erfasst"
     if z.get("widerrufen") and tag > z["widerrufen"]:
-        return f"nach Widerruf des Einladungscodes ({z['widerrufen']}) erfasst"
+        return f"nach Sperre der Karte ({z['widerrufen']}) erfasst"
     if tag > z["gueltig_bis"]:
-        return f"nach Ablauf des Einladungscodes ({z['gueltig_bis']}) erfasst"
+        return f"nach Ablauf der Karte ({z['gueltig_bis']}) erfasst"
     return None
 
 
@@ -330,6 +332,13 @@ def main(argv=None):
     s = sub.add_parser("schluessel-zurueck", help="Schlüsseldatei aus der Papiersicherung")
     s.add_argument("text", help="gescannte oder abgetippte Zeilen als Textdatei")
     s.add_argument("ziel")
+    s = sub.add_parser("arbeitsdatei-auspacken", help="Arbeitsdatei der Prüfseite in Schlüsseldatei, Bestand, Register, Protokoll")
+    s.add_argument("datei")
+    s.add_argument("ziel")
+    s = sub.add_parser("arbeitsdatei-einpacken", help="Schlüsseldatei, Bestand, Register, Protokoll in eine Arbeitsdatei")
+    s.add_argument("-a", "--arbeit", required=True)
+    s.add_argument("-s", "--schluessel", required=True)
+    s.add_argument("datei")
     for name in ("einlesen", "pruefen", "freigeben", "verwerfen", "name", "zusammenfuehren", "loeschen", "widerspruch", "fristen", "schluessel-wechsel"):
         p = sub.add_parser(name)
         p.add_argument("-a", "--arbeit", required=True)
@@ -372,6 +381,13 @@ def main(argv=None):
         return
     if a.befehl == "schluessel-zurueck":
         print(f"Schlüsseldatei {pg.aus_ausdruck(Path(a.text).read_text(encoding='utf-8'), a.ziel)}; mit der Passphrase prüfen, Textdatei löschen.")
+        return
+    if a.befehl == "arbeitsdatei-auspacken":
+        z = pg.arbeitsdatei_auspacken(a.datei, pg.passphrase_abfragen(a.datei), a.ziel)
+        print(f"Ausgepackt nach {z}: schluessel.json, arbeit/ (bestand.sealed, einladungen.tsv, namenzugriff.tsv).")
+        return
+    if a.befehl == "arbeitsdatei-einpacken":
+        print(f"Arbeitsdatei {pg.arbeitsdatei_einpacken(a.schluessel, pg.passphrase_abfragen(a.schluessel), a.arbeit, a.datei)}")
         return
     arbeit = pg.Arbeit(a.arbeit, pg.Schluessel(a.schluessel, pg.passphrase_abfragen(a.schluessel)), a.pruefer)
     if a.befehl == "einlesen":

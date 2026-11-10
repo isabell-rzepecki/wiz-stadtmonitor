@@ -8,6 +8,7 @@
   <title>Interner Bereich – Stadtmonitor</title>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../page.css">
+  <link rel="stylesheet" href="../einrichten.css">
 </head>
 <body>
   <header class="page-head">
@@ -15,37 +16,68 @@
   </header>
   <main class="page" id="inhalt">
     <!-- Interner Bereich der Erfassung Wohnen und Eigentum. Auf dem Webserver mit Passwort geschützt (Plesk,
-         „Passwortgeschützte Verzeichnisse“, Ordner /intern/); nicht verlinkt. Die Seiten rechnen nur im Browser und senden
-         nichts; ohne Schlüsseldatei, Passphrase und Codes lässt sich mit ihnen nichts entschlüsseln. -->
-    <h1>Interner Bereich: Erfassung Wohnen und Eigentum</h1>
-    <p>Für die Beteiligten der Erfassung. Bitte nicht weitergeben. Alle Seiten rechnen nur in Ihrem Browser und senden nichts. Schlüsseldateien, Register und Bestände gehören nie in E-Mails, Messenger oder Cloud-Ordner; weitergegeben werden sie persönlich (USB-Stick).</p>
+         „Passwortgeschützte Verzeichnisse“, Ordner /intern/); nicht verlinkt. Die Seiten rechnen nur im Browser und
+         senden nichts. -->
+    <h1>Erfassung Wohnen und Eigentum: interner Bereich</h1>
+    <p>Hier arbeiten die Ausgabestelle und die Prüfgruppe. Erfassende brauchen diesen Bereich nicht; sie bekommen eine Einladungskarte.</p>
 
-    <h2>Prüfgruppe</h2>
-    <ul>
-      <li><a href="einrichten.html">Einrichtungsseite</a>, einmalig zu zweit:
-        <strong>Schritt 1</strong> Schlüssel und Papiersicherung erzeugen (vorher das Netz trennen), danach <strong>Schritt 3</strong> die Wiederherstellung probeweise prüfen. Die „öffentliche Datei“ geht an die verantwortliche Stelle.</li>
-      <li><a href="pruefen.html">Prüfseite</a>, laufend: Schlüsseldatei, Passphrase und Prüfer-ID (etwa P-1) eingeben, Bestandsdatei und Register laden; Exportdateien einlesen, „Prüfen“, zu zweit freigeben, veröffentlichen. Zum Kennenlernen: „Probe ohne echte Daten“.</li>
-      <li>Vierteljährlich sieht eine Person <strong>ohne</strong> Schlüssel das Zugriffsprotokoll durch; jährlich steht der Schlüsselwechsel an (die Prüfseite zeigt ihn an).</li>
+    <h2>Wer sind Sie?</h2>
+    <ul class="rollen">
+      <li><a href="#pruefgruppe"><strong>Prüfgruppe</strong>Ich prüfe die eingegangenen Angaben und gebe sie frei.</a></li>
+      <li><a href="#ausgabestelle"><strong>Ausgabestelle</strong>Ich verteile Einladungskarten an Personen, die mitmachen.</a></li>
+      <li><a href="#erfassende"><strong>Erfassende</strong>Ich habe eine Karte bekommen und möchte Angaben machen.</a></li>
     </ul>
 
-    <h2>Ausgabestelle (nicht in der Prüfgruppe)</h2>
-    <ul>
-      <li><a href="einrichten.html">Einrichtungsseite</a>, <strong>Schritt 2</strong>: Codekarten und Register erzeugen (vorher das Netz trennen). Karten drucken und <strong>persönlich</strong> übergeben, nie per E-Mail oder Messenger. Eine Kopie des Registers (ohne Namen) geht an die Prüfgruppe, die „öffentliche Datei“ an die verantwortliche Stelle.</li>
-      <li>Wer welche Erfasser-ID hat, steht nur in den eigenen Unterlagen.</li>
-    </ul>
+    <section class="schritt" id="pruefgruppe" aria-labelledby="t-pg">
+      <h2 id="t-pg">Prüfgruppe</h2>
+      <h3>Einmal zu Beginn</h3>
+      <ol>
+        <li><a href="pruefen.html">Prüfseite</a> öffnen und „Erstmals einrichten“ aufklappen.</li>
+        <li>Ein Passwort wählen und zweimal eingeben. Es ist das einzige Passwort, das die Prüfgruppe braucht.</li>
+        <li>Die <strong>Arbeitsdatei</strong> speichern, auf einen USB-Stick und als Sicherung auf einen zweiten.</li>
+        <li>Die <strong>Kartenliste</strong> speichern und der Ausgabestelle schicken (E-Mail ist in Ordnung).</li>
+      </ol>
+      <h3>Immer wenn neue Dateien da sind</h3>
+      <ol>
+        <li><a href="pruefen.html">Prüfseite</a> öffnen, Arbeitsdatei wählen, Passwort eingeben.</li>
+        <li>Die Dateien der Erfassenden einlesen. Eine neue Kartenliste der Ausgabestelle einfach mit auswählen.</li>
+        <li>Einträge ohne Hinweis freigeben, Einträge mit Hinweis ansehen.</li>
+        <li>Arbeitsdatei speichern und die alte auf beiden Sticks ersetzen.</li>
+      </ol>
+      <p class="klein">Zum Kennenlernen: Auf der Prüfseite „Ohne echte Daten ausprobieren“.</p>
+    </section>
 
-    <h2>Erfassende</h2>
-    <ul>
-      <li><a href="../erfassen.html">Erfassungs-App</a> mit dem Code der Karte; ohne Code nur zum Ausprobieren. Einmal mit Netz öffnen und zum Startbildschirm hinzufügen, dann geht sie auch offline.</li>
-      <li>Export über „Einträge“ → „Exportieren“; die verschlüsselte Datei geht an die Prüfgruppe. Erst nach deren Bestätigung „Exportierte löschen“.</li>
-    </ul>
+    <section class="schritt" id="ausgabestelle" aria-labelledby="t-as">
+      <h2 id="t-as">Ausgabestelle</h2>
+      <ol>
+        <li><a href="karten.html">Seite Einladungskarten</a> öffnen und die Kartenliste wählen. Beim ersten Mal ist das die Datei von der Prüfgruppe, danach Ihre zuletzt gespeicherte.</li>
+        <li>Anzahl eingeben, „Karten erstellen und drucken“. Mit den Karten druckt die Seite eine Liste, auf der Sie von Hand eintragen, wer welche Karte bekommt.</li>
+        <li>Die Karten persönlich übergeben.</li>
+        <li>Die Kartenliste speichern und der Prüfgruppe eine Kopie schicken.</li>
+      </ol>
+      <p class="klein">Die Liste mit den Namen bleibt bei Ihnen. Die Prüfgruppe sieht nur die Kartennummern.</p>
+    </section>
 
-    <h2>Information und Aushang</h2>
-    <ul>
-      <li><a href="../aushang.html">Aushang zum Drucken</a> (mit QR-Code zur Datenschutzseite)</li>
-      <li><a href="../datenschutz.html">Datenschutzhinweis</a> · <a href="../impressum.html">Impressum</a></li>
-      <li><a href="../wohnen.html">Seite „Wohnen und Eigentum“</a> (veröffentlichte Ergebnisse)</li>
-    </ul>
+    <section class="schritt" id="erfassende" aria-labelledby="t-er">
+      <h2 id="t-er">Erfassende</h2>
+      <ol>
+        <li>Den QR-Code auf der Einladungskarte mit der Handykamera scannen. Die Erfassung öffnet sich, Sie sind angemeldet.</li>
+        <li>Im Browsermenü „Zum Startbildschirm hinzufügen“ wählen. Danach geht die Erfassung auch ohne Netz.</li>
+        <li>Gebäude auf der Karte antippen und das Formular ausfüllen.</li>
+        <li>Unter „Einträge“ auf „Exportieren“ tippen und die Datei der Prüfgruppe schicken. Die Datei ist verschlüsselt; nur die Prüfgruppe kann sie lesen.</li>
+        <li>Wenn die Prüfgruppe den Eingang bestätigt hat: „Exportierte löschen“.</li>
+      </ol>
+      <p class="klein">Ohne Karte lässt sich die <a href="../erfassen.html">Erfassung</a> nur ausprobieren; gespeichert wird dann nichts.</p>
+    </section>
+
+    <section class="schritt" aria-labelledby="t-info">
+      <h2 id="t-info">Zum Weitergeben</h2>
+      <ul>
+        <li><a href="../aushang.html">Aushang zum Drucken</a> (mit QR-Code zur Datenschutzseite)</li>
+        <li><a href="../datenschutz.html">Datenschutzhinweis</a> · <a href="../impressum.html">Impressum</a></li>
+        <li><a href="../wohnen.html">Seite „Wohnen und Eigentum“</a> mit den veröffentlichten Ergebnissen</li>
+      </ul>
+    </section>
   </main>
 </body>
 </html>

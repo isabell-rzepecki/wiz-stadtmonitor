@@ -1,11 +1,12 @@
 """Testdaten für den Vergleich Prüfseite (site/pruefen.js) ↔ tools/pruefen.py; alle Namen und Beträge erfunden.
 
-  python3 tests/browser/pruef_fixture.py erzeugen ORDNER     Schlüssel, Register, Exportdateien; Referenzlauf mit Python
+  python3 tests/browser/pruef_fixture.py erzeugen ORDNER     Schlüssel, Register, Exportdateien; Referenzlauf mit Python;
+      Arbeitsdateien der Prüfseite: start.json (Kartenliste, leerer Bestand) und ref.json (Bestand des Referenzlaufs)
   python3 tests/browser/pruef_fixture.py veroeffentlichen ORDNER DATEI   Veröffentlichung der Prüfseite gegen Python
-  python3 tests/browser/pruef_fixture.py rechte ORDNER BESTAND CODE GEBAEUDE   Widerruf und Widerspruch gegen Python
-  python3 tests/browser/pruef_fixture.py vergleichen ORDNER BESTAND
-      Bestand der Prüfseite mit Python öffnen und mit dem Referenzlauf vergleichen (gleiche Einträge, Hinweise,
-      Vermieter-Schlüssel, Freigaben und Abfolge im Verlauf); gibt „gleich“ oder die Unterschiede aus
+  python3 tests/browser/pruef_fixture.py rechte ORDNER ARBEITSDATEI CODE GEBAEUDE   Widerruf und Widerspruch gegen Python
+  python3 tests/browser/pruef_fixture.py vergleichen ORDNER ARBEITSDATEI
+      Arbeitsdatei der Prüfseite mit Python auspacken, den Bestand öffnen und mit dem Referenzlauf vergleichen (gleiche
+      Einträge, Hinweise, Vermieter-Schlüssel, Freigaben und Abfolge im Verlauf); gibt „gleich“ oder die Unterschiede aus
 """
 import json
 import shutil
@@ -77,14 +78,20 @@ def erzeugen(o):
 
     dateien = [export("eigentum", a, eid, "eigentum_1.json"), export("miete", [*b, kaputt], eid, "mieten_1.json"),
                export("eigentum", [fremd], "E-00000000", "eigentum_fremd.json")]
-    # Referenzlauf: einlesen, prüfen, zwei Freigaben
+    # Arbeitsdatei zum Start: Schlüssel und Kartenliste, leerer Bestand
+    (o / "start").mkdir()
+    shutil.copy(o / "einladungen.tsv", o / "start" / "einladungen.tsv")
+    pg.arbeitsdatei_einpacken(o / "pg.json", PW, o / "start", o / "start.json", stufe="interaktiv")
+    # Referenzlauf: einlesen, prüfen, freigeben (eine Freigabe, wie konfiguriert); als Arbeitsdatei ref.json
     ref = o / "ref"
     ar = pg.Arbeit(ref, pg.Schluessel(o / "pg.json", PW), "P-1")
     pruefen.einlesen(ar, dateien, o / "einladungen.tsv")
     pruefen.pruefen(ar)
     pruefen.freigeben(ar, alle=True)
-    pruefen.freigeben(pg.Arbeit(ref, pg.Schluessel(o / "pg.json", PW), "P-2"), alle=True)
+    shutil.copy(o / "einladungen.tsv", ref / "einladungen.tsv")
+    pg.arbeitsdatei_einpacken(o / "pg.json", PW, ref, o / "ref.json", stufe="interaktiv")
     print(json.dumps({"passphrase": PW, "dateien": [str(p) for p in dateien], "aufgenommen": 26, "abgewiesen": 4,
+                      "start": str(o / "start.json"), "ref": str(o / "ref.json"),
                       "widerrufscode": b[2]["angabe_id"].replace("-", "")[:8].upper(), "widerspruch": geb[3]}))
 
 
@@ -94,14 +101,18 @@ def normiert(d):
             "verlauf": [(v["pruefer"], v["aktion"], v["datensatz"]) for v in d["verlauf"]]}
 
 
-def vergleichen(o, bestand):
+def auspacken(o, datei, name):
+    """Arbeitsdatei der Prüfseite mit Python auspacken und den Bestand mit der ausgepackten Schlüsseldatei öffnen."""
+    ziel = Path(o) / name
+    pg.arbeitsdatei_auspacken(datei, PW, ziel, stufe="interaktiv")
+    return pg.Arbeit(ziel / "arbeit", pg.Schluessel(ziel / "schluessel.json", PW), "P-1").d
+
+
+def vergleichen(o, datei):
     o = Path(o)
     schl = pg.Schluessel(o / "pg.json", PW)
     ref = normiert(pg.Arbeit(o / "ref", schl, "P-1").d)
-    ziel = o / "browser"
-    ziel.mkdir(exist_ok=True)
-    shutil.copy(bestand, ziel / "bestand.sealed")
-    neu = normiert(pg.Arbeit(ziel, schl, "P-1").d)
+    neu = normiert(auspacken(o, datei, "browser"))
     unterschiede = [k for k in ref if ref[k] != neu[k]]
     for i in set(ref["eintraege"]) | set(neu["eintraege"]):
         if ref["eintraege"].get(i) != neu["eintraege"].get(i):
@@ -109,7 +120,7 @@ def vergleichen(o, bestand):
     print("gleich" if not unterschiede else "\n".join(map(str, unterschiede)))
 
 
-def rechte(o, bestand, code, gebaeude):
+def rechte(o, datei, code, gebaeude):
     """Widerruf (Code) und Widerspruch (Gebäude) mit Python auf einer Kopie des Referenzbestands; gleich dem Bestand der Seite?"""
     o = Path(o)
     shutil.copytree(o / "ref", o / "ref_rechte")
@@ -117,10 +128,7 @@ def rechte(o, bestand, code, gebaeude):
     pruefen.loeschen(ar, pruefen.code_zu_id(ar, code), "Widerruf der Einwilligung")
     pruefen.widerspruch(ar, [gebaeude], "Widerspruch nach Art. 21 DSGVO")
     ref = normiert(ar.d)
-    ziel = o / "browser_rechte"
-    ziel.mkdir(exist_ok=True)
-    shutil.copy(bestand, ziel / "bestand.sealed")
-    neu = normiert(pg.Arbeit(ziel, pg.Schluessel(o / "pg.json", PW), "P-1").d)
+    neu = normiert(auspacken(o, datei, "browser_rechte"))
     print("gleich" if ref == neu else "\n".join(f"{k}: {ref[k]} != {neu[k]}" for k in ref if ref[k] != neu[k]))
 
 

@@ -31,6 +31,8 @@ SCHEMAS = {"eigentum": ROOT / "docs" / "uebergabe-v0.4.2" / "schema_erfassung_ei
            "miete": ROOT / "docs" / "uebergabe-v0.4.2" / "schema_mietangabe.json"}
 STADT = json.loads((ROOT / "config" / "stadt.json").read_text(encoding="utf-8"))
 
+FREIGABEN = STADT["wohnen_eigentum"]["erfassung"]["freigaben_noetig"]
+
 jetzt = lambda: datetime.now(timezone.utc).isoformat(timespec="seconds")  # noqa: E731
 b64 = lambda b: base64.b64encode(b).decode()  # noqa: E731
 
@@ -52,10 +54,10 @@ STUFEN = {"moderat": (nacl.pwhash.argon2id.OPSLIMIT_MODERATE, nacl.pwhash.argon2
           "interaktiv": (nacl.pwhash.argon2id.OPSLIMIT_INTERACTIVE, nacl.pwhash.argon2id.MEMLIMIT_INTERACTIVE)}  # interaktiv nur für Tests
 
 
-def _schuetzen(geheim: bytes, passphrase, stufe="moderat"):
+def _schuetzen(geheim: bytes, passphrase, stufe="moderat", mindestens=12):
     """Privaten Schlüssel mit der Passphrase verschlüsseln (Argon2id, XSalsa20-Poly1305)."""
-    if not passphrase or len(passphrase) < 12:
-        raise Abbruch("Passphrase mit mindestens 12 Zeichen angeben.")
+    if not passphrase or len(passphrase) < mindestens:
+        raise Abbruch(f"Passphrase mit mindestens {mindestens} Zeichen angeben.")
     ops, mem = STUFEN[stufe]
     salz = nacl.utils.random(nacl.pwhash.argon2id.SALTBYTES)
     k = nacl.pwhash.argon2id.kdf(SecretBox.KEY_SIZE, passphrase.encode(), salz, opslimit=ops, memlimit=mem)
@@ -298,7 +300,7 @@ class Arbeit:
         return self.schl.oeffnen(enc["ciphertext"], enc.get("key_id") if enc.get("key_id") in self.schl.paare else None).decode()
 
     def freigegeben(self, e):
-        return e["status"] == "offen" and not e.get("konflikt") and len(set(e["freigaben"])) >= 2
+        return e["status"] == "offen" and not e.get("konflikt") and len(set(e["freigaben"])) >= FREIGABEN
 
     def audit(self, name, kopf, zeilen):
         (self.pfad / "audit").mkdir(exist_ok=True)
@@ -313,3 +315,93 @@ class Arbeit:
 def name_normieren(n):
     """Für den Abgleich: Kleinschreibung, ohne Satzzeichen, Leerraum vereinheitlicht."""
     return " ".join(re.sub(r"[^\wäöüß ]", " ", n.casefold()).split())
+
+
+# --- Arbeitsdatei der Prüfseite (intern/pruefen.html) -----------------------------------------------------------------
+# Die Prüfseite hält Schlüssel, Bestand, Kartenliste und Zugriffsprotokoll in einer Datei, verschlüsselt mit dem Passwort
+# der Prüfgruppe (Argon2id, XSalsa20-Poly1305). Auspacken ergibt die Dateien dieser Werkzeuge, Einpacken den Rückweg.
+AFORMAT, KFORMAT = "wiz-arbeitsdatei-1", "wiz-kartenliste-1"
+KOPF_REGISTER = ["erfasser_id", "hash", "ausgegeben", "gueltig_bis", "widerrufen"]
+PASSWORT_MIN = 10  # wie die Prüfseite
+
+
+def arbeitsdatei_lesen(datei, passwort):
+    a = json.loads(Path(datei).read_text(encoding="utf-8"))
+    if a.get("format") != AFORMAT:
+        raise Abbruch(f"{datei} ist keine Arbeitsdatei der Prüfgruppe.")
+    e = a["kdf"]
+    k = nacl.pwhash.argon2id.kdf(SecretBox.KEY_SIZE, passwort.encode(), base64.b64decode(e["salt"]), opslimit=e["opslimit"], memlimit=e["memlimit"])
+    try:
+        return json.loads(SecretBox(k).decrypt(base64.b64decode(a["ciphertext"])))
+    except nacl.exceptions.CryptoError:
+        raise Abbruch("Passwort falsch oder Arbeitsdatei beschädigt.") from None
+
+
+def arbeitsdatei_schreiben(inhalt, passwort, datei, stufe="moderat"):
+    if not passwort or len(passwort) < PASSWORT_MIN:
+        raise Abbruch(f"Passwort mit mindestens {PASSWORT_MIN} Zeichen angeben.")
+    ops, mem = STUFEN[stufe]
+    salz = nacl.utils.random(nacl.pwhash.argon2id.SALTBYTES)
+    k = nacl.pwhash.argon2id.kdf(SecretBox.KEY_SIZE, passwort.encode(), salz, opslimit=ops, memlimit=mem)
+    datei = ausserhalb_git(datei)
+    _schreiben(datei, {"format": AFORMAT, "key_id": inhalt["schluessel"]["key_id"], "gespeichert": jetzt(),
+                       "kdf": {"kdf": "argon2id", "opslimit": ops, "memlimit": mem, "salt": b64(salz)},
+                       "ciphertext": b64(SecretBox(k).encrypt(json.dumps(inhalt, ensure_ascii=False).encode()))}, neu=False)
+    return datei
+
+
+def _tsv(pfad, kopf, zeilen):
+    with pfad.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f, delimiter="\t")
+        w.writerow(kopf)
+        w.writerows([[z.get(k, "") for k in kopf] for z in zeilen])
+
+
+def arbeitsdatei_auspacken(datei, passwort, ziel, stufe="moderat"):
+    """ZIEL/schluessel.json (privater Teil mit demselben Passwort geschützt), ZIEL/arbeit/bestand.sealed,
+    ZIEL/arbeit/namenzugriff.tsv und ZIEL/arbeit/einladungen.tsv (Kartenliste als Register)."""
+    inhalt = arbeitsdatei_lesen(datei, passwort)
+    ziel = ausserhalb_git(ziel)
+    s = inhalt["schluessel"]
+
+    def geschuetzt(e):
+        out = {k: v for k, v in e.items() if k not in ("version", "frueher", "gesperrt", "secret_key")}
+        if "secret_key" in e:
+            out["secret_enc"] = _schuetzen(base64.b64decode(e["secret_key"]), passwort, stufe, mindestens=PASSWORT_MIN)
+        return out
+    (ziel / "arbeit").mkdir(parents=True, exist_ok=True)
+    _schreiben(ziel / "schluessel.json", {"version": 2, **geschuetzt(s), "frueher": [geschuetzt(f) for f in s.get("frueher", [])],
+                                          "gesperrt": s.get("gesperrt", [])})
+    (ziel / "arbeit" / "bestand.sealed").write_text(versiegeln(s["public_key"], json.dumps(inhalt["bestand"], ensure_ascii=False).encode()),
+                                                     encoding="ascii")
+    if inhalt.get("protokoll"):
+        _tsv(ziel / "arbeit" / "namenzugriff.tsv", ["zeit", "pruefer", "datensatz", "zweck"], inhalt["protokoll"])
+    if inhalt.get("karten"):
+        _tsv(ziel / "arbeit" / "einladungen.tsv", KOPF_REGISTER, inhalt["karten"]["karten"])
+    return ziel
+
+
+def arbeitsdatei_einpacken(schluesseldatei, passwort, arbeit, datei, stufe="moderat"):
+    """Rückweg: Schlüsseldatei, ARBEIT/bestand.sealed, namenzugriff.tsv und einladungen.tsv in eine Arbeitsdatei."""
+    schl = Schluessel(schluesseldatei, passwort)
+    arbeit = ausserhalb_git(arbeit)
+
+    def offen(e):
+        return {**{k: v for k, v in e.items() if k != "secret_enc"}, "secret_key": b64(bytes(schl.paare[e["key_id"]]))}
+    d = schl.d
+    sd = {"version": 2, **offen({k: v for k, v in d.items() if k not in ("version", "frueher", "gesperrt")}),
+          "frueher": [offen(f) for f in d.get("frueher", [])], "gesperrt": d.get("gesperrt", [])}
+    b = arbeit / "bestand.sealed"
+    bestand = json.loads(schl.oeffnen(b.read_text(encoding="ascii"))) if b.exists() else {"version": 1, "eintraege": {}, "vermieter_naechste": 1, "verlauf": []}
+
+    def tsv_lesen(p):
+        if not p.exists():
+            return []
+        with p.open(encoding="utf-8", newline="") as f:
+            return list(csv.DictReader(f, delimiter="\t"))
+    reg = tsv_lesen(arbeit / "einladungen.tsv")
+    karten = {"format": KFORMAT, "key_id": d["key_id"], "alg": ALG, "public_key": d["public_key"],
+              "gueltig_monate": STADT["wohnen_eigentum"]["erfassung"]["einladung_gueltig_monate"],
+              "karten": [{k: z.get(k) or "" for k in KOPF_REGISTER} for z in reg]} if reg else None
+    return arbeitsdatei_schreiben({"version": 1, "schluessel": sd, "bestand": bestand, "karten": karten,
+                                   "protokoll": tsv_lesen(arbeit / "namenzugriff.tsv")}, passwort, datei, stufe)

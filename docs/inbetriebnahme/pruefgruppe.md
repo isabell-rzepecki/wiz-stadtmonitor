@@ -1,30 +1,25 @@
 # Ablaufkarte Prüfgruppe
 
-**Wer:** zwei Schlüsselinhaber:innen; zum Freigeben mindestens zwei Personen mit Prüfer-IDs (`P-1`, `P-2`).
-**Wo:** eigener Rechner, im Wurzelverzeichnis des Repositorys. Schlüssel, Arbeitsordner und Druckblätter liegen **außerhalb** jedes Git-Repositorys.
+**Wer:** eine oder mehrere Personen, die das Passwort der Prüfgruppe kennen. Eine Freigabe je Eintrag genügt (`freigaben_noetig: 1`).
+**Wo:** Prüfseite im internen Bereich (`/intern/pruefen.html`). Sie rechnet nur im Browser und sendet nichts.
 
-## Einmalig
+## Einmal zu Beginn
 
-**Ohne Python (empfohlen für Schlüssel und Sicherung):** die Einrichtungsseite `intern/einrichten.html` (interner Bereich, mit Passwort) im Browser öffnen, das Netz trennen, Schritt 1 gemeinsam ausführen. Die Seite erzeugt die Schlüsseldatei (mit der Passphrase durch Argon2id geschützt, dasselbe Format wie unten), die Papiersicherung zum Drucken und eine „öffentliche Datei“ mit dem öffentlichen Schlüssel. Danach Schritt 3: die Sicherung einmal probeweise einlesen und die Passphrase prüfen. Die öffentliche Datei überträgt `python tools/einrichten.py uebernehmen DATEI` in `config/stadt.json`. Die Schlüsseldatei funktioniert unverändert mit `tools/pruefen.py`.
+1. Prüfseite öffnen, „Erstmals einrichten“ aufklappen, ein Passwort wählen (mindestens 10 Zeichen, gut: vier Wörter).
+2. **Arbeitsdatei** speichern (`arbeitsdatei.json`): auf einen USB-Stick und als Sicherung auf einen zweiten. Sie enthält Schlüssel, Bestand, Kartenliste und Zugriffsprotokoll, verschlüsselt mit dem Passwort.
+3. **Kartenliste** speichern und der Ausgabestelle schicken. Sie enthält nur den öffentlichen Schlüssel.
 
-Mit Python:
+## Immer wenn neue Dateien da sind
 
-1. Pakete: `python -m pip install -r requirements.txt -r tools/requirements.txt`
-2. Generalprobe: `python tools/generalprobe.py`. Weiter erst, wenn sie „bestanden“ meldet.
-3. Schlüssel: `python tools/einrichten.py schluessel PFAD/pg.json --druck PFAD/druck`
-   - Die Passphrase hat mindestens 12 Zeichen und wird nie notiert, außer im versiegelten Umschlag.
-4. Papiersicherung: das Druckblatt an einem lokalen Drucker drucken; die Wiederherstellung einmal prüfen (`pruefen.py schluessel-zurueck`). Danach das Druckblatt löschen; den Ausdruck in den Tresor, den Umschlag mit der Passphrase getrennt davon.
-5. `config/stadt.json` committen (enthält nur den öffentlichen Teil).
+1. Arbeitsdatei wählen, Passwort eingeben, „Öffnen“.
+2. Exportdateien der Erfassenden (und eine neue Kartenliste der Ausgabestelle) auswählen, „Einlesen und prüfen“. Die Seite weist ab, was nicht passt (fremder Schlüssel, Schema, Freitext, Karte unbekannt, gesperrt oder abgelaufen), vergibt Vermieter-Schlüssel und markiert Dubletten und abweichende Angaben.
+3. „Alle Einträge ohne Hinweis freigeben“; Einträge mit Hinweis ansehen und gegebenenfalls mit Grund verwerfen.
+4. Bei Bedarf „Vorschau erzeugen“ und die Veröffentlichungsdatei an die verantwortliche Stelle geben. Sie wird mit `python tools/veroeffentlichen.py uebernehmen DATEI` erneut geprüft und nach `data/wohnen/` übernommen.
+5. Arbeitsdatei speichern und auf beiden Sticks ersetzen. Nie per E-Mail, Messenger oder Cloud weitergeben.
 
-## Laufend
+Unter „Löschen auf Anfrage und Speicherfristen“: Widerruf per Widerrufscode, Widerspruch je Gebäude (mit Sperrliste), Auskunft zu einem Gebäude, Löschen nach der Speicherdauer. „Ohne echte Daten ausprobieren“ spielt den Ablauf mit erfundenen Einträgen durch.
 
-**Ohne Python:** die Prüfseite `intern/pruefen.html` (interner Bereich, mit Passwort, rechnet nur im Browser, sendet nichts). Öffnen mit Schlüsseldatei, Passphrase, Prüfer-ID, Bestandsdatei (`bestand.sealed`) und Register; dann Exportdateien einlesen, „Prüfen“, freigeben. Die zweite Freigabe gibt die zweite Person mit eigener Prüfer-ID, nacheinander am selben Gerät oder mit der gespeicherten Bestandsdatei an ihrem Gerät. Am Ende den Bestand und, falls Namen geöffnet wurden, das Zugriffsprotokoll speichern. Die Dateien sind dieselben wie bei Python; man kann zwischen beiden wechseln. Unter „Veröffentlichen“ erzeugt die Seite nach derselben Sperre wie `veroeffentlichen.py` eine einzige Veröffentlichungsdatei (nur zusammengefasste Werte) mit Vorschau; sie geht an die verantwortliche Stelle bzw. in den Chat und wird mit `python tools/veroeffentlichen.py uebernehmen DATEI` erneut geprüft und nach `data/wohnen/` übernommen. Danach den Bestand speichern. Unter „Rechte und Fristen“: Widerruf per Widerrufscode, Widerspruch je Gebäude (mit Sperrliste), Auskunft zu einem Gebäude und das Löschen nach der Speicherdauer; das gespeicherte Zugriffsprotokoll enthält nur Zeilen innerhalb der Speicherdauer. Der jährliche Schlüsselwechsel wird angezeigt, bleibt aber vorerst bei Python (`pruefen.py schluessel-wechsel`). „Probe ohne echte Daten“ spielt den ganzen Ablauf mit Wegwerf-Schlüssel und erfundenen Einträgen durch; ihre Dateien sind als Probe markiert und werden nicht übernommen.
+## Mit Python (technischer Weg)
 
-Mit Python:
-
-- **Eingang:** `python tools/pruefen.py einlesen -a ARBEIT -s PFAD/pg.json -p P-1 DATEI…`, danach die Exportdatei löschen.
-- **Prüfen und Freigeben:** `python tools/pruefen.py pruefen -a ARBEIT -s PFAD/pg.json -p P-1`, dann `python tools/pruefen.py freigeben -a ARBEIT -s PFAD/pg.json -p P-1 --alle` durch P-1 **und** P-2.
-- **Veröffentlichen:** `python tools/veroeffentlichen.py -a ARBEIT -s PFAD/pg.json -p P-1`; nur die Dateien unter `data/wohnen/` committen.
-- **Widerruf und Widerspruch:** `loeschen --code XXXX-XXXX`, `widerspruch GEBÄUDE…` (siehe `docs/datenschutz/loeschverfahren.md`).
-- **Vierteljährlich:** Eine Person **ohne** Schlüssel sieht `namenzugriff.tsv` durch.
-- **Jährlich:** `fristen` meldet den Schlüsselwechsel; dann `schluessel-wechsel` und eine neue Papiersicherung.
+- `python tools/pruefen.py arbeitsdatei-auspacken arbeitsdatei.json ZIEL` ergibt `ZIEL/schluessel.json` und `ZIEL/arbeit/` (Bestand, Register, Protokoll) für alle Befehle von `tools/pruefen.py`; `arbeitsdatei-einpacken -a ZIEL/arbeit -s ZIEL/schluessel.json arbeitsdatei.json` führt zurück.
+- Generalprobe: `python tools/generalprobe.py`.

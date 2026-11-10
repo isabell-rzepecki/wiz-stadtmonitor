@@ -1,7 +1,9 @@
-// Prüfung der Erfassungen im Browser (Prüfseite, Schritt 1): Sitzung öffnen, Eingang, Prüfen, Freigeben, Verwerfen.
-// Gleiche Regeln und Dateien wie tools/pruefgruppe.py (Schluessel, Arbeit) und tools/pruefen.py (einlesen, pruefen,
-// freigeben, verwerfen); eine Bestandsdatei lässt sich abwechselnd hier und mit Python bearbeiten. Nichts wird gesendet
-// (connect-src 'none') oder im Browser gespeichert; der entschlüsselte Bestand liegt nur im Arbeitsspeicher dieses Fensters.
+// Prüfung der Erfassungen im Browser: Arbeitsdatei öffnen oder einrichten, Dateien einlesen, prüfen, freigeben,
+// veröffentlichen, Arbeitsdatei speichern. Gleiche Regeln wie tools/pruefgruppe.py und tools/pruefen.py (einlesen, pruefen,
+// freigeben, verwerfen). Die Arbeitsdatei (wiz-arbeitsdatei-1) enthält Schlüssel, Bestand, Kartenliste und
+// Zugriffsprotokoll, verschlüsselt mit dem Passwort der Prüfgruppe (Argon2id, XSalsa20-Poly1305); tools/pruefgruppe.py
+// packt sie in die einzelnen Dateien aus und wieder ein. Nichts wird gesendet (connect-src 'none') oder im Browser
+// gespeichert; Entschlüsseltes liegt nur im Arbeitsspeicher dieses Fensters.
 (() => {
   "use strict";
   const $ = (s) => document.querySelector(s);
@@ -16,9 +18,13 @@
   for (const [o, ids] of Object.entries(window.PRUEFEN_GEBAEUDE?.o || {}))
     for (const s of ids.split(",").filter(Boolean)) GEB.set(window.PRUEFEN_GEBAEUDE.praefix + s, o || null);
   const KOPF_REGISTER = ["erfasser_id", "hash", "ausgegeben", "gueltig_bis", "widerrufen"];
-  const PRUEFER = /^P-[\w-]{1,20}$/;
+  const AFORMAT = "wiz-arbeitsdatei-1", KFORMAT = "wiz-kartenliste-1";
+  const FREIGABEN = Number(K.freigaben_noetig) || 1;
+  // Argon2id „moderat“ wie nacl.pwhash.argon2id.OPSLIMIT_MODERATE / MEMLIMIT_MODERATE in tools/pruefgruppe.py
+  const OPS = 3, MEM = 268435456;
   let sodium = null, V = null;
-  let S = null;  // Sitzung: {schl, d, pruefer, register, protokoll, protokollAlt, einlesen, geaendert}
+  // Sitzung: {schl, schlDatei, d, pruefer, karten, register, protokoll, protokollAlt, einlesen, geaendert, k, kdf}
+  let S = null;
 
   // --- Hilfen wie in Python ---------------------------------------------------------------------------------------
   const jetzt = () => new Date().toISOString().slice(0, 19) + "+00:00";  // pg.jetzt()
@@ -87,7 +93,7 @@
 
   // --- Bestand (wie pruefgruppe.Arbeit) ----------------------------------------------------------------------------
   const verlauf = (aktion, datensatz = "") => { S.d.verlauf.push({ zeit: jetzt(), pruefer: S.pruefer, aktion, datensatz }); S.geaendert = true; };
-  const freigegeben = (e) => e.status === "offen" && !e.konflikt && new Set(e.freigaben).size >= 2;
+  const freigegeben = (e) => e.status === "offen" && !e.konflikt && new Set(e.freigaben).size >= FREIGABEN;
   function nameOeffnen(id, zweck) {
     const enc = S.d.eintraege[id].datensatz.name_privat_enc;
     if (!enc) return null;
@@ -98,13 +104,67 @@
     if ((e[feld] ?? null) !== wert) { e[feld] = wert; e.freigaben = []; S.geaendert = true; }
   }
 
+  // --- Arbeitsdatei (wie pruefgruppe.arbeitsdatei_lesen/_schreiben) und Kartenliste ------------------------------
+  const ableiten = (pass, salz, ops, mem) => sodium.crypto_pwhash(sodium.crypto_secretbox_KEYBYTES, pass, salz, ops, mem, sodium.crypto_pwhash_ALG_ARGON2ID13);
+  function arbeitsdateiOeffnen(a, pass) {
+    if (a.format !== AFORMAT || !a.kdf || !a.ciphertext) throw new Error("Diese Datei ist keine Arbeitsdatei der Prüfgruppe.");
+    const salz = sodium.from_base64(a.kdf.salt, V);
+    const k = ableiten(pass, salz, a.kdf.opslimit, a.kdf.memlimit);
+    const ct = sodium.from_base64(a.ciphertext, V), n = sodium.crypto_secretbox_NONCEBYTES;
+    let roh;
+    try { roh = sodium.crypto_secretbox_open_easy(ct.slice(n), ct.slice(0, n), k); } catch { sodium.memzero(k); throw new Error("Das Passwort ist falsch."); }
+    return { inhalt: JSON.parse(sodium.to_string(roh)), k, kdf: { kdf: "argon2id", opslimit: a.kdf.opslimit, memlimit: a.kdf.memlimit, salt: a.kdf.salt } };
+  }
+  function arbeitsdateiText() {
+    const inhalt = { version: 1, schluessel: S.schlDatei, bestand: S.d, karten: S.karten,
+      protokoll: protokollZeilen().map(([zeit, pruefer, datensatz, zweck]) => ({ zeit, pruefer, datensatz, zweck })) };
+    const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
+    const box = sodium.crypto_secretbox_easy(sodium.from_string(JSON.stringify(inhalt)), nonce, S.k);
+    const ct = new Uint8Array(nonce.length + box.length); ct.set(nonce); ct.set(box, nonce.length);
+    return JSON.stringify({ format: AFORMAT, key_id: S.schlDatei.key_id, gespeichert: new Date().toISOString().slice(0, 19) + "Z", kdf: S.kdf,
+      ciphertext: sodium.to_base64(ct, V) });
+  }
+  async function sha256Hex(u8) { return [...new Uint8Array(await crypto.subtle.digest("SHA-256", u8))].map((b) => b.toString(16).padStart(2, "0")).join(""); }
+  async function einrichten(pass) {  // neues Schlüsselpaar wie pruefgruppe._neues_paar, Bestand leer
+    const paar = sodium.crypto_box_keypair();
+    const key_id = `pg-${isoTag(new Date()).replace(/-/g, "")}-${(await sha256Hex(paar.publicKey)).slice(0, 8)}`;
+    const schlDatei = { version: 2, key_id, alg: ALG, public_key: sodium.to_base64(paar.publicKey, V), secret_key: sodium.to_base64(paar.privateKey, V),
+      frueher: [], gesperrt: [] };
+    sodium.memzero(paar.privateKey);
+    const salz = sodium.randombytes_buf(sodium.crypto_pwhash_SALTBYTES);
+    const k = ableiten(pass, salz, OPS, MEM);
+    const karten = { format: KFORMAT, key_id, alg: ALG, public_key: schlDatei.public_key, gueltig_monate: K.einladung_gueltig_monate || 12, karten: [] };
+    sitzungStarten(schlDatei, { version: 1, eintraege: {}, vermieter_naechste: 1, verlauf: [] }, karten, [], k,
+      { kdf: "argon2id", opslimit: OPS, memlimit: MEM, salt: sodium.to_base64(salz, V) });
+    S.geaendert = true;
+  }
+  function sitzungStarten(schlDatei, d, karten, protokollAlt, k, kdf) {
+    if (d.version !== 1 || typeof d.eintraege !== "object") throw new Error("Die Arbeitsdatei ist beschädigt (Bestand).");
+    S = { schl: schluesselLaden(schlDatei, ""), schlDatei, d, pruefer: "P-1", karten, register: kartenRegister(karten), protokoll: [], protokollAlt,
+      einlesen: [], geaendert: false, k, kdf };
+  }
+  const kartenRegister = (karten) => (karten ? new Map(karten.karten.map((z) => [z.erfasser_id, z])) : null);
+  function kartenlisteUebernehmen(text, name) {  // Kartenliste der Ausgabestelle (JSON) oder älteres Register (TSV)
+    let neu;
+    if (text.startsWith("erfasser_id\t")) neu = { ...(S.karten || {}), karten: tsvLesen(text, KOPF_REGISTER) };
+    else {
+      neu = JSON.parse(text);
+      if (neu.format !== KFORMAT || !Array.isArray(neu.karten)) throw new Error(`${name}: keine Kartenliste.`);
+      if (!S.schl.paare.has(neu.key_id)) throw new Error(`${name}: Die Kartenliste gehört zu einem anderen Schlüssel (${neu.key_id}).`);
+    }
+    S.karten = { format: KFORMAT, key_id: S.schl.key_id, alg: ALG, public_key: S.schlDatei.public_key, gueltig_monate: K.einladung_gueltig_monate || 12, ...neu };
+    S.register = kartenRegister(S.karten);
+    verlauf("Kartenliste übernommen");
+    return S.karten.karten.length;
+  }
+
   // --- Einlesen (wie pruefen.einlesen) ----------------------------------------------------------------------------
   function einladungPruefen(z, erfasstAm) {
-    if (!z) return "Erfasser-ID nicht im Einladungsregister";
+    if (!z) return "Karte nicht in der Kartenliste";
     const tag = erfasstAm.slice(0, 10);
-    if (tag < z.ausgegeben) return "vor Ausgabe des Einladungscodes erfasst";
-    if (z.widerrufen && tag > z.widerrufen) return `nach Widerruf des Einladungscodes (${z.widerrufen}) erfasst`;
-    if (tag > z.gueltig_bis) return `nach Ablauf des Einladungscodes (${z.gueltig_bis}) erfasst`;
+    if (tag < z.ausgegeben) return "vor Ausgabe der Karte erfasst";
+    if (z.widerrufen && tag > z.widerrufen) return `nach Sperre der Karte (${z.widerrufen}) erfasst`;
+    if (tag > z.gueltig_bis) return `nach Ablauf der Karte (${z.gueltig_bis}) erfasst`;
     return null;
   }
   function minimieren(rec) {  // Miete und Fläche werden zum Preis je m², beide Ausgangswerte verworfen
@@ -264,10 +324,6 @@
   }
   const fristGrenze = () => monateVersetzt(isoTag(new Date()), -K.speicherdauer_monate);
   const faellig = () => Object.entries(S.d.eintraege).filter(([, e]) => e.eingelesen.slice(0, 10) < fristGrenze()).map(([i]) => i);
-  function wechselFaellig() {
-    const m = /^[^-]+-(\d{4})(\d{2})(\d{2})/.exec(S.schl.key_id);
-    return !m || isoTag(new Date()) >= monateVersetzt(`${m[1]}-${m[2]}-${m[3]}`, K.schluessel_wechsel_monate);
-  }
   function protokollZeilen() {  // bisheriges und neues Protokoll, ohne Zeilen älter als die Speicherdauer
     const g = fristGrenze();
     return [...S.protokollAlt.map((z) => [z.zeit, z.pruefer, z.datensatz, z.zweck]), ...S.protokoll].filter((z) => String(z[0]).slice(0, 10) >= g);
@@ -283,8 +339,8 @@
       versiegeln: (bytes) => sodium.to_base64(sodium.crypto_box_seal(bytes, kp.publicKey), V) };
     const eid = "E-probe001";
     const register = new Map([[eid, { erfasser_id: eid, hash: "", ausgegeben: "2000-01-01", gueltig_bis: "2999-12-31", widerrufen: "" }]]);
-    S = { schl, d: { version: 1, eintraege: {}, vermieter_naechste: 1, verlauf: [] }, pruefer: "P-1", register, protokoll: [], protokollAlt: [],
-      einlesen: [], geaendert: true, probe: true };
+    S = { schl, d: { version: 1, eintraege: {}, vermieter_naechste: 1, verlauf: [] }, pruefer: "P-1", karten: null, register, protokoll: [], protokollAlt: [],
+      einlesen: [], geaendert: false, probe: true };
     const ids = [...GEB].filter(([, o]) => o === "kernstadt").slice(0, 8).map(([g]) => g);
     const zeit = (i) => new Date(Date.now() - (60 - i) * 60000).toISOString();
     const siegel = (r) => sodium.to_base64(sodium.crypto_box_seal(sodium.from_string(JSON.stringify(r)), kp.publicKey), V);
@@ -325,7 +381,7 @@
       if (name) props.name = name.split(/\s+/).filter(Boolean).join(" ");
       feats.push({ type: "Feature", geometry: null, properties: props });  // Umriss setzt die Übernahme aus gebaeude.geojson
     }
-    return { type: "FeatureCollection", stand, hinweis: "Nur geprüfte Erfassungen mit zwei Freigaben; unvollständig.",
+    return { type: "FeatureCollection", stand, hinweis: "Nur geprüfte und freigegebene Erfassungen; unvollständig.",
       attribution: `${K.gebaeude_attribution}; Eigentum: eigene Erfassung, geprüft`, features: feats };
   }
   function anteile(je, stand) {
@@ -448,17 +504,13 @@
   function anzeigen() {
     const E = Object.values(S.d.eintraege);
     const zahl = (f) => E.filter(f).length;
-    $("#stand").innerHTML = [["Schlüssel", S.schl.key_id], ["Prüfer-ID", S.pruefer],
-      ["Einträge", `${E.length} (Eigentum ${zahl((e) => e.typ === "eigentum")}, Mietangaben ${zahl((e) => e.typ === "miete")})`],
-      ["Offen ohne Hinweis", zahl((e) => e.status === "offen" && !e.konflikt)], ["Mit Hinweis", zahl((e) => e.status === "offen" && e.konflikt)],
-      ["Verworfen", zahl((e) => e.status === "verworfen")], ["Zweimal freigegeben", zahl(freigegeben)],
-      ["Register", S.register ? `${S.register.size} Erfasser-IDs` : "nicht geladen: Einladungscodes werden nicht geprüft"],
-      ["Zugriffe auf Namen in dieser Sitzung", S.protokoll.length],
-      ["Sperrliste (Widerspruch)", `${(S.d.sperrliste || []).length} Gebäude`],
-      ["Speicherdauer abgelaufen", `${faellig().length} Einträge`],
-      ["Schlüsselwechsel", wechselFaellig() ? "fällig (jährlich; derzeit mit Python: pruefen.py schluessel-wechsel)" : "nicht fällig"]]
+    const offen = zahl((e) => e.status === "offen" && !e.konflikt && !freigegeben(e)), hinweis = zahl((e) => e.status === "offen" && e.konflikt);
+    const gueltig = S.register ? [...S.register.values()].filter((z) => !z.widerrufen && z.gueltig_bis >= heute()).length : 0;
+    $("#stand").innerHTML = [["Einträge", `${E.length} (Eigentum ${zahl((e) => e.typ === "eigentum")}, Mietangaben ${zahl((e) => e.typ === "miete")})`],
+      ["Freigegeben", zahl(freigegeben)], ["Noch freizugeben", offen], ["Mit Hinweis, bitte ansehen", hinweis], ["Verworfen", zahl((e) => e.status === "verworfen")],
+      ["Einladungskarten", S.register ? `${S.register.size}, davon ${gueltig} gültig` : "keine Kartenliste: Karten werden nicht geprüft"],
+      ...(faellig().length ? [["Speicherdauer abgelaufen", `${faellig().length} Einträge (siehe „Löschen auf Anfrage und Speicherfristen“)`]] : [])]
       .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
-    document.querySelectorAll(".pruefer-id").forEach((x) => { x.textContent = S.pruefer; });
     const angaben = (e) => {
       const r = e.datensatz;
       return e.typ === "eigentum" ? [r.kategorie, r.vermietet && `vermietet: ${r.vermietet}`, r.beleg_art, r.sicherheit, r.name_juristische_person].filter(Boolean).join(" · ")
@@ -471,58 +523,84 @@
         <td><code>${esc(i.slice(0, 8))}</code></td><td>${e.typ === "eigentum" ? "Eigentum" : "Miete"}</td>
         <td>${esc(e.typ === "eigentum" ? e.datensatz.objekt.id : e.datensatz.gebaeude_id)}</td><td>${esc(angaben(e))}</td>
         <td>${esc(e.vermieter || "")}</td><td>${esc(e.status)}</td><td>${esc(e.konflikt || "")}</td>
-        <td>${esc([...new Set(e.freigaben)].join(", ") || "–")}</td></tr>`;
+        <td>${freigegeben(e) ? "ja" : "–"}</td></tr>`;
     }).join("") || `<tr><td colspan="9">Noch keine Einträge.</td></tr>`;
     const f = faellig().length;
     $("#fristen-text").textContent = `Einträge werden ${K.speicherdauer_monate} Monate nach dem Eingang gelöscht (Grenze: eingelesen vor ${fristGrenze()}). Fällig: ${f}.`;
     $("#knopf-fristen").disabled = !f;
-    $("#probe-band").hidden = !S.probe;
-    $("#ungespeichert").textContent = S.geaendert ? "Es gibt Änderungen, die noch nicht als Bestandsdatei gespeichert sind." : "";
-    $("#speichern-protokoll").disabled = !S.protokoll.length && protokollZeilen().length === S.protokollAlt.length;
+    $("#ungespeichert").textContent = S.probe ? "Probe: Es wird nichts gespeichert." : S.geaendert ? "Es gibt Änderungen. Bitte die Arbeitsdatei speichern, bevor Sie die Seite schließen." : "";
+    $("#speichern-arbeitsdatei").disabled = Boolean(S.probe);
+    $("#speichern-kartenliste").disabled = !S.karten;
+    $("#speichern-protokoll").disabled = !protokollZeilen().length;
   }
   const ausgewaehlt = () => [...document.querySelectorAll("#liste tbody input:checked")].map((x) => x.value);
   async function dateiText(input) { const f = input.files[0]; return f ? { name: f.name, inhalt: await f.text() } : null; }
 
-  function netz() { $("#netz").textContent = navigator.onLine ? "Hinweis: Das Gerät ist mit dem Netz verbunden. Die Seite sendet nichts; sicherer ist es trotzdem, das Netz zu trennen." : ""; }
-  addEventListener("online", netz); addEventListener("offline", netz); netz();
-
   $("#form-oeffnen").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const st = $("#oeffnen-status"), knopf = $("#knopf-oeffnen");
-    const pruefer = $("#f-pruefer").value.trim();
-    if (!PRUEFER.test(pruefer)) { $("#f-pruefer").setAttribute("aria-invalid", "true"); return melden(st, "Prüfer-ID im Format P-… angeben (pseudonym, kein Name).", "fehler"); }
-    $("#f-pruefer").removeAttribute("aria-invalid");
-    const sd = await dateiText($("#f-schluessel"));
-    if (!sd) return melden(st, "Bitte die Schlüsseldatei auswählen.", "fehler");
+    const f = $("#f-arbeitsdatei").files[0];
+    if (!f) return melden(st, "Bitte die Arbeitsdatei auswählen.", "fehler");
+    if (!$("#f-pass").value) return melden(st, "Bitte das Passwort eingeben.", "fehler");
     knopf.disabled = true; knopf.textContent = "Wird geöffnet …";
     await new Promise((r) => setTimeout(r, 30));  // Argon2id braucht einige Sekunden
     try {
-      const schl = schluesselLaden(JSON.parse(sd.inhalt), $("#f-pass").value);
-      const bd = await dateiText($("#f-bestand"));
-      const d = bd ? JSON.parse(sodium.to_string(schl.oeffnen(bd.inhalt))) : { version: 1, eintraege: {}, vermieter_naechste: 1, verlauf: [] };
-      if (d.version !== 1 || typeof d.eintraege !== "object") throw new Error("Keine Bestandsdatei der Prüfgruppe.");
-      const rd = await dateiText($("#f-register"));
-      const register = rd ? new Map(tsvLesen(rd.inhalt, KOPF_REGISTER).map((z) => [z.erfasser_id, z])) : null;
-      const pd = await dateiText($("#f-protokoll"));
-      S = { schl, d, pruefer, register, protokoll: [], protokollAlt: pd ? tsvLesen(pd.inhalt, ["zeit", "pruefer", "datensatz", "zweck"]) : [],
-        einlesen: [], geaendert: !bd };
+      let a;
+      try { a = JSON.parse(await f.text()); } catch { throw new Error("Diese Datei ist keine Arbeitsdatei der Prüfgruppe."); }
+      const { inhalt, k, kdf } = arbeitsdateiOeffnen(a, $("#f-pass").value);
+      sitzungStarten(inhalt.schluessel, inhalt.bestand, inhalt.karten || null, inhalt.protokoll || [], k, kdf);
       $("#f-pass").value = "";
-      $("#sitzung").hidden = false;
+      $("#sitzung").hidden = false; $("#probe-band").hidden = true;
       anzeigen();
-      melden(st, `Geöffnet: ${bd ? `Bestand mit ${Object.keys(d.eintraege).length} Einträgen` : "neuer Bestand"}, Schlüssel ${schl.key_id}.`);
+      melden(st, `Geöffnet: ${Object.keys(S.d.eintraege).length} Einträge. Weiter mit Schritt 2.`);
     } catch (err) {
-      melden(st, `Fehler: ${err.message.includes("mit keinem Schlüssel") ? "Die Bestandsdatei passt nicht zu diesem Schlüssel." : err.message}`, "fehler");
+      melden(st, `Fehler: ${err.message}`, "fehler");
     } finally {
       knopf.disabled = false; knopf.textContent = "Öffnen";
     }
   });
 
+  $("#form-einrichten").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const p1 = $("#pass1"), p2 = $("#pass2"), st = $("#einrichten-status"), knopf = $("#knopf-einrichten");
+    p1.removeAttribute("aria-invalid"); p2.removeAttribute("aria-invalid");
+    $("#einrichten-ergebnis").hidden = true;
+    if (p1.value.length < 10) { p1.setAttribute("aria-invalid", "true"); return melden(st, "Das Passwort braucht mindestens 10 Zeichen.", "fehler"); }
+    if (p1.value !== p2.value) { p2.setAttribute("aria-invalid", "true"); return melden(st, "Die beiden Eingaben stimmen nicht überein.", "fehler"); }
+    if (S && !S.probe && S.geaendert && !confirm("Die geöffnete Arbeitsdatei ist nicht gespeichert. Trotzdem neu einrichten?")) return;
+    knopf.disabled = true; knopf.textContent = "Wird eingerichtet …";
+    await new Promise((r) => setTimeout(r, 30));
+    try {
+      await einrichten(p1.value);
+      p1.value = ""; p2.value = "";
+      $("#einrichten-ergebnis").hidden = false;
+      $("#sitzung").hidden = false; $("#probe-band").hidden = true;
+      anzeigen();
+      melden(st, "Eingerichtet. Bitte jetzt beide Dateien speichern.");
+    } catch (err) {
+      melden(st, `Fehler: ${err.message}`, "fehler");
+    } finally {
+      knopf.disabled = false; knopf.textContent = "Einrichten";
+    }
+  });
+  function arbeitsdateiSpeichern() {
+    speichern("arbeitsdatei.json", arbeitsdateiText(), "application/json");
+    S.geaendert = false; anzeigen();
+  }
+  const kartenlisteSpeichern = () => speichern("kartenliste.json", JSON.stringify({ ...S.karten, gespeichert: new Date().toISOString().slice(0, 19) + "Z" }, null, 1), "application/json");
+  $("#speichern-arbeitsdatei-neu").addEventListener("click", arbeitsdateiSpeichern);
+  $("#speichern-kartenliste-neu").addEventListener("click", kartenlisteSpeichern);
+  $("#speichern-kartenliste").addEventListener("click", kartenlisteSpeichern);
+
   $("#knopf-probe").addEventListener("click", () => {
+    if (S && !S.probe && S.geaendert && !confirm("Die geöffnete Arbeitsdatei ist nicht gespeichert. Trotzdem die Probe starten?")) return;
     const dateien = probeStarten();
     $("#sitzung").hidden = false;
     const { neu } = einlesen(dateien);
+    pruefen();
     anzeigen();
-    melden($("#oeffnen-status"), `Probe gestartet: Wegwerf-Schlüssel ${S.schl.key_id}, ${neu} erfundene Einträge eingelesen. Weiter mit „Prüfen“.`);
+    $("#probe-band").hidden = false;
+    melden($("#oeffnen-status"), `Probe gestartet: ${neu} erfundene Einträge eingelesen und geprüft. Weiter mit Schritt 3.`);
   });
 
   $("#form-widerruf").addEventListener("submit", (ev) => {
@@ -532,7 +610,7 @@
       const i = w in S.d.eintraege ? w : codeZuId(w);
       loeschen(i, "Widerruf der Einwilligung");
       $("#f-widerruf").value = "";
-      anzeigen(); melden(st, `Eintrag ${i.slice(0, 8)} gelöscht (Widerruf). Bestand danach speichern.`);
+      anzeigen(); melden(st, `Eintrag ${i.slice(0, 8)} gelöscht (Widerruf). Danach die Arbeitsdatei speichern.`);
     } catch (err) { melden(st, err.message, "fehler"); }
   });
   $("#form-widerspruch").addEventListener("submit", (ev) => {
@@ -543,7 +621,7 @@
     if (!geb.length || unbekannt.length) return melden(st, `Bitte gültige Gebäudekennungen angeben${unbekannt.length ? ` (unbekannt: ${unbekannt.join(", ")})` : ""}.`, "fehler");
     const { weg, ziele } = widerspruch(geb, "Widerspruch nach Art. 21 DSGVO");
     $("#f-widerspruch").value = "";
-    anzeigen(); melden(st, `${weg.length} Eigentumseinträge gelöscht, ${ziele.length} Gebäude auf der Sperrliste. Bestand danach speichern.`);
+    anzeigen(); melden(st, `${weg.length} Eigentumseinträge gelöscht, ${ziele.length} Gebäude auf der Sperrliste. Danach die Arbeitsdatei speichern.`);
   });
   $("#form-auskunft").addEventListener("submit", (ev) => {
     ev.preventDefault();
@@ -558,31 +636,30 @@
     const f = faellig();
     if (!f.length || !confirm(`${f.length} Einträge endgültig löschen (Speicherdauer abgelaufen)?`)) return;
     for (const i of f) loeschen(i, `Speicherdauer ${K.speicherdauer_monate} Monate`);
-    anzeigen(); melden($("#rechte-status"), `${f.length} Einträge nach Ablauf der Speicherdauer gelöscht. Bestand und Zugriffsprotokoll (gekürzt) speichern.`);
-  });
-
-  $("#form-pruefer").addEventListener("submit", (ev) => {
-    ev.preventDefault();
-    const p = $("#f-pruefer2").value.trim();
-    if (!PRUEFER.test(p)) return melden($("#pruefer-status"), "Prüfer-ID im Format P-… angeben.", "fehler");
-    S.pruefer = p; $("#f-pruefer2").value = "";
-    melden($("#pruefer-status"), `Jetzt prüft ${p}. Freigaben werden unter dieser ID vermerkt.`);
-    anzeigen();
+    anzeigen(); melden($("#rechte-status"), `${f.length} Einträge nach Ablauf der Speicherdauer gelöscht. Danach die Arbeitsdatei speichern.`);
   });
 
   $("#form-eingang").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const st = $("#eingang-status");
-    const dateien = await Promise.all([...$("#f-exporte").files].map(async (f) => ({ name: f.name, inhalt: await f.text() })));
-    if (!dateien.length) return melden(st, "Bitte Exportdateien auswählen.", "fehler");
+    const alle = await Promise.all([...$("#f-exporte").files].map(async (f) => ({ name: f.name, inhalt: await f.text() })));
+    if (!alle.length) return melden(st, "Bitte Dateien auswählen.", "fehler");
     try {
+      // Kartenlisten zuerst übernehmen, damit die Karten beim Einlesen schon geprüft werden
+      const istKarten = (x) => x.inhalt.startsWith("erfasser_id\t") || x.inhalt.includes(`"${KFORMAT}"`);
+      let karten = null;
+      for (const x of alle.filter(istKarten)) karten = kartenlisteUebernehmen(x.inhalt, x.name);
+      const dateien = alle.filter((x) => !istKarten(x));
       const { neu, zeilen } = einlesen(dateien);
+      if (dateien.length) pruefen();
       S.einlesen.push(...zeilen);
       $("#eingang-tabelle tbody").innerHTML = zeilen.map((z) => `<tr><td><code>${esc(z[0].slice(0, 8))}</code></td><td>${esc(z[1])}</td><td>${esc(z[2])}</td><td>${esc(z[3])}</td></tr>`).join("");
-      $("#eingang-ergebnis").hidden = false;
       $("#f-exporte").value = "";
       anzeigen();
-      melden(st, `${neu} aufgenommen, ${zeilen.filter((z) => z[2].startsWith("abgewiesen")).length} abgewiesen, ${zeilen.filter((z) => z[2] === "schon im Bestand").length} schon im Bestand. Danach „Prüfen“.`);
+      $("#eingang-ergebnis").hidden = !zeilen.length;
+      melden(st, [karten !== null ? `Kartenliste übernommen (${karten} Karten).` : "",
+        dateien.length ? `${neu} aufgenommen, ${zeilen.filter((z) => z[2].startsWith("abgewiesen")).length} abgewiesen, ${zeilen.filter((z) => z[2] === "schon im Bestand").length} schon vorhanden. Weiter mit Schritt 3.` : ""]
+        .filter(Boolean).join(" "));
     } catch (err) {
       melden(st, `Fehler: ${err.message}`, "fehler");
     }
@@ -594,11 +671,11 @@
     const E = Object.values(S.d.eintraege);
     melden($("#pruefen-status"), `Geprüft: ${E.filter((e) => e.status === "offen" && !e.konflikt).length} ohne Hinweis, ${E.filter((e) => e.status === "offen" && e.konflikt).length} mit Hinweis (bitte ansehen und verwerfen oder in der Erfassung klären).`);
   });
-  $("#knopf-alle").addEventListener("click", () => { const n = freigeben(null); anzeigen(); melden($("#pruefen-status"), `${n} Einträge von ${S.pruefer} freigegeben.`); });
+  $("#knopf-alle").addEventListener("click", () => { const n = freigeben(null); anzeigen(); melden($("#pruefen-status"), `${n} Einträge freigegeben.`); });
   $("#knopf-auswahl-frei").addEventListener("click", () => {
     const ids = ausgewaehlt();
     if (!ids.length) return melden($("#pruefen-status"), "Bitte Einträge auswählen.", "fehler");
-    const n = freigeben(ids); anzeigen(); melden($("#pruefen-status"), `${n} Einträge von ${S.pruefer} freigegeben.`);
+    const n = freigeben(ids); anzeigen(); melden($("#pruefen-status"), `${n} Einträge freigegeben.`);
   });
   $("#knopf-verwerfen").addEventListener("click", () => {
     const ids = ausgewaehlt(), grund = $("#f-grund").value.trim();
@@ -619,7 +696,7 @@
       $("#vorschau-inhalt").innerHTML = vorschau(veroeffentlichung);
       $("#vorschau").hidden = false;
       anzeigen();
-      melden(st, `Sperre bestanden. Grundlage: ${Object.values(S.d.eintraege).filter(freigegeben).length} zweimal freigegebene Einträge. Bitte die Vorschau ansehen, dann die Datei speichern.`);
+      melden(st, `Sperre bestanden. Grundlage: ${Object.values(S.d.eintraege).filter(freigegeben).length} freigegebene Einträge. Bitte die Vorschau ansehen, dann die Datei speichern.`);
     } catch (err) {
       veroeffentlichung = null; $("#vorschau").hidden = true;
       melden(st, `Gesperrt, nichts erzeugt: ${err.message}`, "fehler");
@@ -628,23 +705,19 @@
   $("#speichern-veroeffentlichung").addEventListener("click", () =>
     speichern(`${S.probe ? "probe_" : ""}veroeffentlichung_${veroeffentlichung.stand}.json`, JSON.stringify(veroeffentlichung), "application/json"));
 
-  $("#speichern-bestand").addEventListener("click", () => {
-    speichern(S.probe ? "probe_bestand.sealed" : "bestand.sealed", S.schl.versiegeln(sodium.from_string(JSON.stringify(S.d))));
-    S.geaendert = false; anzeigen();
-  });
+  $("#speichern-arbeitsdatei").addEventListener("click", () => { if (!S.probe) arbeitsdateiSpeichern(); });
   $("#speichern-protokoll").addEventListener("click", () => speichern(S.probe ? "probe_namenzugriff.tsv" : "namenzugriff.tsv",
     tsv(["zeit", "pruefer", "datensatz", "zweck"], protokollZeilen()), "text/tab-separated-values"));
   $("#knopf-beenden").addEventListener("click", () => {
-    if (S?.geaendert && !confirm("Der Bestand ist noch nicht gespeichert. Trotzdem beenden?")) return;
+    if (S?.geaendert && !S.probe && !confirm("Die Arbeitsdatei ist noch nicht gespeichert. Trotzdem beenden?")) return;
     S = null; location.reload();
   });
-  addEventListener("beforeunload", (ev) => { if (S?.geaendert) { ev.preventDefault(); ev.returnValue = ""; } });
-  addEventListener("pagehide", () => { S = null; });
+  addEventListener("beforeunload", (ev) => { if (S?.geaendert && !S.probe) { ev.preventDefault(); ev.returnValue = ""; } });
+  addEventListener("pagehide", () => { if (S?.k) sodium.memzero(S.k); S = null; });
 
   window.sodium.ready.then(() => {
     sodium = window.sodium; V = sodium.base64_variants.ORIGINAL;
-    $("#knopf-oeffnen").disabled = false;
-    $("#knopf-probe").disabled = false;
+    for (const id of ["#knopf-oeffnen", "#knopf-probe", "#knopf-einrichten"]) $(id).disabled = false;
     $("#laden").remove();
   });
 })();

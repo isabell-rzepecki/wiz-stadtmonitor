@@ -23,7 +23,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
         shutil.copy2(config.ROOT / "docs" / "uebergabe-v0.4.2" / quelle, out / "schemas" / name)
     for seite in ("datenschutz.html", "impressum.html", "aushang.html", "index.html"):
         datenschutz_ausfuellen(out / seite)
-    einrichten_ausfuellen(out / "intern" / "einrichten.html")
+    karten_ausfuellen(out / "intern" / "karten.html")
     pruefen_ausfuellen(out / "intern" / "pruefen.html")
     # Datenquellen als Seite der eigenen Domain (aus DATA_SOURCES.md, die tools/datenquellen.py aus dem Register erzeugt)
     markdown_seite(config.ROOT / "DATA_SOURCES.md", out / "quellen.html", "Datenquellen")
@@ -79,15 +79,13 @@ def datenschutz_ausfuellen(seite):
     seite.write_text(text, encoding="utf-8")
 
 
-def einrichten_ausfuellen(seite):
-    """Einrichtungsseite: Adresse der Seite (für die Codekarten) und Gültigkeit der Codes aus stadt.json; die Seite selbst
-    lädt nichts nach (connect-src 'none')."""
+def karten_ausfuellen(seite):
+    """Seite der Einladungskarten: Adresse der Erfassungsseite (für die QR-Codes) aus stadt.json; die Seite selbst lädt
+    nichts nach (connect-src 'none'). Die Gültigkeit der Karten steht in der Kartenliste (von der Prüfgruppe)."""
     if not seite.exists():
         return
-    F = config.STADT["wohnen_eigentum"]["erfassung"]
     text = seite.read_text(encoding="utf-8")
     text = text.replace('<meta name="wiz-site-url" content="">', f'<meta name="wiz-site-url" content="{html.escape(config.SITE_URL or "")}">')
-    text = re.sub(r'<meta name="wiz-einladung-monate" content="\d+">', f'<meta name="wiz-einladung-monate" content="{int(F["einladung_gueltig_monate"])}">', text)
     seite.write_text(text, encoding="utf-8")
 
 
@@ -99,7 +97,8 @@ def pruefen_ausfuellen(seite):
     E = config.STADT["wohnen_eigentum"]
     U = config.ROOT / "docs" / "uebergabe-v0.4.2"
     k = {"kategorien": [{x: kat[x] for x in ("code", "titel", "name_veroeffentlichen")} for kat in E["kategorien"]],
-         "speicherdauer_monate": E["erfassung"]["speicherdauer_monate"], "schluessel_wechsel_monate": E["erfassung"]["schluessel_wechsel_monate"],
+         "speicherdauer_monate": E["erfassung"]["speicherdauer_monate"], "freigaben_noetig": E["erfassung"]["freigaben_noetig"],
+         "einladung_gueltig_monate": E["erfassung"]["einladung_gueltig_monate"],
          "regeln": E["regeln"], "lizenz": E["lizenz"], "mietangaben_aktiv": E["mietangaben_aktiv"],
          "einwilligung_version": E["erfassung"]["einwilligung"]["version"],
          "gebaeude_attribution": config.STADT["gebaeude"]["attribution"],

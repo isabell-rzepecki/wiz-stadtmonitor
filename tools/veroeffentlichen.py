@@ -1,7 +1,7 @@
 """Öffentliche Dateien aus dem geprüften Bestand der Prüfgruppe (Übergabe v0.4.2, W5). Läuft nur lokal.
 
 Zweck: Für die Stadt gibt es keinen Mietspiegel. Veröffentlicht wird nur, was die Veröffentlichungsregeln
-(docs/uebergabe-v0.4.2/veroeffentlichungsregeln.tsv) zulassen, und nur aus Einträgen mit zwei Freigaben:
+(docs/uebergabe-v0.4.2/veroeffentlichungsregeln.tsv) zulassen, und nur aus freigegebenen Einträgen (Anzahl der Freigaben: erfassung.freigaben_noetig):
 - data/wohnen/eigentum_gebaeude.geojson: Gebäude juristischer Personen mit Kategorie, Name nur nach Regel R3
   (sonstige juristische Personen nur nach ausdrücklicher Prüfung, ob der Name eine natürliche Person erkennbar macht)
 - data/wohnen/eigentum_anteile_ortsbezirk.json: Erfassungsstand und Kategorien je Ortsbezirk; „privat“ nur als Anzahl ab
@@ -67,7 +67,7 @@ def karte(je, geb, stand):
         if name:
             props["name"] = " ".join(name.split())
         feats.append({"type": "Feature", "geometry": geb[gid]["geometry"], "properties": props})
-    return {"type": "FeatureCollection", "stand": stand, "hinweis": "Nur geprüfte Erfassungen mit zwei Freigaben; unvollständig.",
+    return {"type": "FeatureCollection", "stand": stand, "hinweis": "Nur geprüfte und freigegebene Erfassungen; unvollständig.",
             "attribution": f"{pg.STADT['gebaeude']['attribution']}; Eigentum: eigene Erfassung, geprüft",
             "features": feats}
 

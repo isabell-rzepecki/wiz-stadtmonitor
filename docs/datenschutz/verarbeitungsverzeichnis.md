@@ -14,7 +14,7 @@ Verantwortliche Stelle: Isabell Rzepecki, Mündener Str. 10, 37213 Witzenhausen;
 - **Empfänger:** Prüfgruppe der verantwortlichen Stelle. Öffentlich nur Kategorien juristischer Personen je Gebäude und Anzahlen je Ortsbezirk.
 - **Drittland:** keines. Die Website liegt auf einem Plesk-Server in Deutschland (EU); dort liegen keine Erfassungsdaten.
 - **Löschung:** 24 Monate nach Eingang bei der Prüfgruppe; bei Widerspruch sofort (`loeschverfahren.md`).
-- **Technische und organisatorische Maßnahmen:** Verschlüsselung im Gerät (libsodium sealed box), kein Server und kein Upload, Schlüssel nur bei Schlüsselinhaber:innen, Vier-Augen-Freigabe, Zugriffsprotokoll für Namen, Sperre gegen Rohdaten in Git, Veröffentlichung nur nach Mindestzahlen.
+- **Technische und organisatorische Maßnahmen:** Verschlüsselung im Gerät (libsodium sealed box), kein Server und kein Upload, Schlüssel nur in der passwortgeschützten Arbeitsdatei der Prüfgruppe, Freigabe durch die Prüfgruppe, Zugriffsprotokoll für Namen, Sperre gegen Rohdaten in Git, Veröffentlichung nur nach Mindestzahlen.
 
 ## V2 Freiwillige Mietangaben
 

@@ -107,19 +107,27 @@ class Pruefgruppe(unittest.TestCase):
             self.assertNotIn(verboten, liste)
         self.assertNotIn("Erika", (self.tmp / "arbeit" / "bestand.sealed").read_text(encoding="ascii"))
         self.assertIn("Abgleich Vermieter-Schlüssel", (self.tmp / "arbeit" / "namenzugriff.tsv").read_text(encoding="utf-8"))
-        # Vier Augen: eine Freigabe genügt nicht; Konflikt nicht freigebbar
-        pruefen.freigeben(ar, alle=True)
-        self.assertFalse(any(ar.freigegeben(x) for x in e.values()))
-        pruefen.freigeben(ar, alle=True)  # dieselbe Person zählt nicht doppelt
-        self.assertFalse(any(ar.freigegeben(x) for x in e.values()))
-        ar2 = self.arbeit("P-2")
-        pruefen.verwerfen(ar2, konflikt_b["erfassung_id"], "Beleg widerspricht")
-        pruefen.pruefen(ar2)
-        pruefen.freigeben(ar2, alle=True)
-        ar1 = self.arbeit("P-1")
-        pruefen.freigeben(ar1, [konflikt_a["erfassung_id"]])
-        self.assertTrue(ar1.freigegeben(ar1.eintraege[konflikt_a["erfassung_id"]]))
-        self.assertTrue(ar1.freigegeben(ar1.eintraege[a[0]["erfassung_id"]]))
+        # Konfiguriert ist eine Freigabe (Entscheidung 10.11.2026); Konflikte sind nie freigebbar
+        self.assertEqual(pg.FREIGABEN, 1)
+        self.assertTrue(ar.freigegeben({**e[a[0]["erfassung_id"]], "freigaben": ["P-1"]}))
+        self.assertFalse(ar.freigegeben({**e[konflikt_a["erfassung_id"]], "freigaben": ["P-1"]}))
+        # Mit zwei nötigen Freigaben (Vier Augen) genügt eine nicht, und dieselbe Person zählt nicht doppelt
+        alt, pg.FREIGABEN = pg.FREIGABEN, 2
+        try:
+            pruefen.freigeben(ar, alle=True)
+            self.assertFalse(any(ar.freigegeben(x) for x in e.values()))
+            pruefen.freigeben(ar, alle=True)
+            self.assertFalse(any(ar.freigegeben(x) for x in e.values()))
+            ar2 = self.arbeit("P-2")
+            pruefen.verwerfen(ar2, konflikt_b["erfassung_id"], "Beleg widerspricht")
+            pruefen.pruefen(ar2)
+            pruefen.freigeben(ar2, alle=True)
+            ar1 = self.arbeit("P-1")
+            pruefen.freigeben(ar1, [konflikt_a["erfassung_id"]])
+            self.assertTrue(ar1.freigegeben(ar1.eintraege[konflikt_a["erfassung_id"]]))
+            self.assertTrue(ar1.freigegeben(ar1.eintraege[a[0]["erfassung_id"]]))
+        finally:
+            pg.FREIGABEN = alt
         # Veröffentlichen (Mietangaben nur, wenn freigeschaltet)
         ziel = self.tmp / "repo"
         ohne = vo.veroeffentlichen(ar1, ziel, cfg={"mietangaben_aktiv": False})
@@ -174,12 +182,37 @@ class Pruefgruppe(unittest.TestCase):
         einladung.register_schreiben(reg, [{**zeile, "widerrufen": "2026-10-25"}])
         n, z = pruefen.einlesen(self.arbeit(), [self.export("miete", [miete(G[1], 410)])])
         self.assertEqual(n, 0)
-        self.assertIn("nach Widerruf", z[0][2])
+        self.assertIn("nach Sperre", z[0][2])
         einladung.register_schreiben(reg, [{**zeile, "erfasser_id": "E-anders00"}])
         n, z = pruefen.einlesen(self.arbeit(), [self.export("miete", [miete(G[2], 420)])])
-        self.assertIn("nicht im Einladungsregister", z[0][2])
+        self.assertIn("nicht in der Kartenliste", z[0][2])
         self.assertIn("nach Ablauf", pruefen.einladung_pruefen({**zeile, "gueltig_bis": "2026-10-20"}, "2026-10-26T08:00:00Z"))
         self.assertIn("vor Ausgabe", pruefen.einladung_pruefen(zeile, "2026-09-30T08:00:00Z"))
+
+    def test_arbeitsdatei_aus_und_einpacken(self):
+        # Arbeitsdatei der Prüfseite: aus den Python-Dateien einpacken, wieder auspacken, gleicher Bestand und Schlüssel
+        import einladung
+        ar = self.arbeit()
+        self.assertEqual(pruefen.einlesen(ar, [self.export("miete", [miete(G[0], 400)])])[0], 1)
+        einladung.register_schreiben(self.tmp / "arbeit" / "einladungen.tsv", [{"erfasser_id": "E-0000test", "hash": "0" * 64,
+                                                                            "ausgegeben": "2026-10-01", "gueltig_bis": "2027-10-01", "widerrufen": ""}])
+        datei = pg.arbeitsdatei_einpacken(self.schl_datei, PW, self.tmp / "arbeit", self.tmp / "arbeitsdatei.json", stufe="interaktiv")
+        roh = datei.read_text(encoding="utf-8")
+        self.assertNotIn("E-0000test", roh)  # alles verschlüsselt außer Format, Kennung und Ableitung
+        self.assertEqual(set(json.loads(roh)), {"format", "key_id", "gespeichert", "kdf", "ciphertext"})
+        with self.assertRaises(pg.Abbruch):
+            pg.arbeitsdatei_lesen(datei, "falsches Passwort")
+        inhalt = pg.arbeitsdatei_lesen(datei, PW)
+        self.assertEqual(inhalt["karten"]["format"], "wiz-kartenliste-1")
+        self.assertEqual(inhalt["karten"]["karten"][0]["erfasser_id"], "E-0000test")
+        self.assertIn("secret_key", inhalt["schluessel"])
+        ziel = self.tmp / "aus"
+        pg.arbeitsdatei_auspacken(datei, PW, ziel, stufe="interaktiv")
+        self.assertNotIn("secret_key", (ziel / "schluessel.json").read_text(encoding="utf-8"))
+        schl = pg.Schluessel(ziel / "schluessel.json", PW)
+        self.assertEqual(schl.key_id, self.schl.key_id)
+        self.assertEqual(json.loads(schl.oeffnen((ziel / "arbeit" / "bestand.sealed").read_text(encoding="ascii"))), ar.d)
+        self.assertIn("E-0000test", (ziel / "arbeit" / "einladungen.tsv").read_text(encoding="utf-8"))
 
     def test_widerruf_widerspruch_fristen(self):
         b = [miete(G[0], 410), miete(G[1], 420)]
