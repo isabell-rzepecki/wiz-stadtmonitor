@@ -27,6 +27,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
     pruefen_ausfuellen(out / "intern" / "pruefen.html")
     # Datenquellen als Seite der eigenen Domain (aus DATA_SOURCES.md, die tools/datenquellen.py aus dem Register erzeugt)
     markdown_seite(config.ROOT / "DATA_SOURCES.md", out / "quellen.html", "Datenquellen")
+    stadtname_ausfuellen(out)
     # Fehlerseite: GitHub Pages liefert sie für jeden Pfad aus, ein relativer Link führte dort ins Leere
     p404 = out / "404.html"
     if p404.exists() and config.SITE_URL:
@@ -44,6 +45,17 @@ def build(out=config.SITE_OUT, mit_daten=True):
         shutil.copy2(lic, data / "LICENSE-DATA.md")
     print(f"Seite in {out}")
     return out
+
+
+def stadtname_ausfuellen(out):
+    """Stadtname aus stadt.json in alle Stellen <span data-cfg="stadt.name"></span>, damit die Wortmarke
+    „Stadtmonitor <Stadt>“ auf jeder Seite steht, auch ohne JavaScript und auf den internen Seiten."""
+    name = html.escape(config.STADT["stadt"]["name"])
+    for seite in out.rglob("*.html"):
+        text = seite.read_text(encoding="utf-8")
+        neu = re.sub(r'<span data-cfg="stadt\.name">[^<]*</span>', f'<span data-cfg="stadt.name">{name}</span>', text)
+        if neu != text:
+            seite.write_text(neu, encoding="utf-8")
 
 
 def datenschutz_ausfuellen(seite):
@@ -244,11 +256,12 @@ def markdown_seite(quelle, ziel, titel, tiefe=0, robots=None):
   {f'<meta name="robots" content="{robots}">' if robots else ""}
   <title>{html.escape(titel)} – Stadtmonitor</title>
   <link rel="icon" href="{vor}favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{vor}apple-touch-icon.png">
   <link rel="stylesheet" href="{vor}page.css">
 </head>
 <body>
   <header class="page-head">
-    <a class="page-brand" href="{vor}./"><img src="{vor}favicon.svg" width="32" height="32" alt="">Stadtmonitor</a>
+    <a class="page-brand" href="{vor}./"><img src="{vor}favicon.svg" width="32" height="32" alt="">Stadtmonitor <span data-cfg="stadt.name"></span></a>
     <a class="page-back" href="{vor}./">Zur Karte</a>
   </header>
   <main class="page breit" id="inhalt">

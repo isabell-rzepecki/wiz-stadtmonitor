@@ -101,8 +101,11 @@ button, select, input { font: inherit; color: inherit; }
 /* Seitentitel: auf dem Desktop nur für Bildschirmleser (sichtbar steht der Name in der Leiste),
    mobil als schwebende Kopfzeile oben links, weil die Leiste dort unten liegt */
 .site-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
-.brand { font: 400 22px/1 var(--font-display); letter-spacing: -0.02em; white-space: nowrap; color: var(--accent-fill); }
+.brand { display: inline-flex; align-items: center; gap: 10px; font: 400 22px/1 var(--font-display); letter-spacing: -0.02em; white-space: nowrap; color: var(--accent-fill); text-decoration: none; }
+.brand img { flex: none; border-radius: 8px; }
 .brand span { color: var(--text); }
+/* Wortmarke für das Handy (oben links, schwebend); auf dem Desktop steht sie in der Leiste */
+.brand-mobil { display: none; }
 .nav-search { position: relative; flex: 1 1 260px; max-width: 440px; min-width: 160px; }
 .nav-search .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
 .nav-search input {
@@ -409,7 +412,8 @@ body.list-open .leaflet-left { left: calc(var(--list-w) + 16px); }
   .toggle, .menu-btn { padding: 0 10px; }
 }
 @media (min-width: 901px) and (max-width: 1100px) {
-  .brand span { display: none; }
+  .brand { font-size: 18px; gap: 8px; }
+  .brand img { width: 26px; height: 26px; }
   .nav-area { max-width: 150px; }
 }
 
@@ -419,13 +423,14 @@ body.list-open .leaflet-left { left: calc(var(--list-w) + 16px); }
   .glass { -webkit-backdrop-filter: blur(8px) saturate(150%); backdrop-filter: blur(8px) saturate(150%); }
   .nav { top: auto; bottom: 10px; left: 10px; right: 10px; height: auto; flex-wrap: wrap; padding: 8px; gap: 6px; border-radius: 22px; }
   .brand { display: none; }
-  .site-title {
-    position: fixed; top: 10px; left: 10px; z-index: 850; width: auto; height: auto; overflow: visible; clip: auto;
-    padding: 9px 16px; border-radius: 999px; background: var(--surface-strong); border: 1px solid var(--border);
+  .brand-mobil {
+    position: fixed; top: 10px; left: 10px; z-index: 850; display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 16px 6px 7px; border-radius: 999px; background: var(--surface-strong); border: 1px solid var(--border);
     box-shadow: var(--shadow), var(--highlight); -webkit-backdrop-filter: blur(8px) saturate(150%); backdrop-filter: blur(8px) saturate(150%);
-    font: 400 22px/1 var(--font-display); letter-spacing: -0.02em; color: var(--accent-fill);
+    font: 400 20px/1 var(--font-display); letter-spacing: -0.02em; color: var(--accent-fill); text-decoration: none; white-space: nowrap;
   }
-  .site-title span { color: var(--text); }
+  .brand-mobil img { flex: none; border-radius: 50%; }
+  .brand-mobil span { color: var(--text); }
   .nav-search { flex: 1 1 60%; max-width: none; }
   .nav-area { flex: 1 1 30%; max-width: none; min-width: 0; height: 44px; }
   .nav-search input { height: 44px; }

@@ -9,6 +9,7 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Erfassung – Stadtmonitor</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="manifest" href="erfassen.webmanifest">
   <meta name="theme-color" content="#b8352e">
   <link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
@@ -18,7 +19,7 @@
 </head>
 <body class="wohnen erfassen">
   <header class="leiste">
-    <span class="page-brand"><img src="favicon.svg" width="32" height="32" alt=""><span class="marke">Erfassung</span></span>
+    <a class="page-brand" href="./"><img src="favicon.svg" width="32" height="32" alt="">Stadtmonitor <span data-cfg="stadt.name"></span></a>
     <p id="probe-band" class="probe-band" role="status" hidden>Probe: nichts wird gespeichert · <a href="erfassen.html">beenden</a></p>
     <label class="wahl" hidden id="ortsteil-wahl">Ortsteil <select id="ortsteil"></select></label>
     <button type="button" class="knopf-angaben" id="knopf-eintraege" hidden>Einträge <span id="anzahl">0</span></button>

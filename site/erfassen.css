@@ -1,7 +1,6 @@
 /* Erfassung: gleiche Grundlage wie die Seite Wohnen und Eigentum (wohnen.css), Tafel rechts bzw. unten, große Schaltflächen */
 .erfassen .leiste .page-brand { margin-right: auto; }
 .leiste [hidden] { display: none !important; }
-.erfassen .page-brand .marke { color: inherit; }
 .tafel { display: block; }
 .tafel h2 { margin-bottom: 10px; }
 .tafel form { display: grid; gap: 12px; }
