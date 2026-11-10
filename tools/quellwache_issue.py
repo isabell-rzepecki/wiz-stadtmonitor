@@ -23,6 +23,13 @@ def text(q):
         zeilen += [f"- {x['datum']} · {x['gremium']} · {x['grund']} ([Nr. {x['fundstelle']}]({x['pdf']}))" for x in neu]
         zeilen += ["", "Ist die Lücke geklärt oder dauerhaft (die Stadt veröffentlicht die Einladung nicht), Datum und Gremium in "
                    "`config/quellwache_bekannt.tsv` eintragen; dann schließt der nächste Lauf dieses Issue."]
+    tote = q.get("tote_links") or []
+    if tote:
+        zeilen += ["## Nicht erreichbare Fundstellen", "Verlinkte PDFs der Stadt, die zweimal hintereinander nicht gefunden wurden "
+                   "(`pipeline/fundstellen.py`):", ""]
+        zeilen += [f"- Nr. {x['fundstelle']} · Status {x['status']} seit {x['seit']}: {x['url']}" for x in tote]
+        zeilen += ["", "Hat die Stadt die Datei verschoben, die neue Adresse suchen; das Issue schließt, sobald die Adresse wieder "
+                   "erreichbar ist oder nicht mehr verlinkt wird."]
     return "\n".join(zeilen) + "\n"
 
 

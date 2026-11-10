@@ -204,3 +204,68 @@ def erzeugen(out, mit_daten=True):
                            "Monate und Zahlen zum Ortsteil.", "../", inhalt), encoding="utf-8")
     pfade.append("ortsteile/index.html")
     return pfade
+
+
+def _punkte(sitzung, vorgaenge):
+    """[(TOP, Titel, Vorgangsnummer)] einer Sitzung ohne Verfahrenspunkte, nach TOP geordnet."""
+    out = []
+    for v in vorgaenge:
+        if v.get("verfahrenspunkt"):
+            continue
+        out += [(s["top"], s.get("titel") or v["name"], v.get("reference") or "") for s in v["process"] if s["sitzung"] == sitzung["id"]]
+    return sorted(out, key=lambda t: [int(x) if x.isdigit() else 0 for x in str(t[0]).split(".")])
+
+
+def _sitzung(s, punkte, vor, offen):
+    zeit = f", {e(s['time'])} Uhr" if s.get("time") else ""
+    anzahl = f'<span class="anzahl">{len(punkte)} {"Punkt" if len(punkte) == 1 else "Punkte"}</span>' if punkte else ""
+    info = " · ".join(x for x in (e(s["ort"]) if s.get("ort") else "",
+                                  f'<a href="{e(s["pdf"])}" rel="noopener">Einladung (PDF)</a>' if s.get("pdf") else "") if x)
+    tops = "".join(f'<li><span class="top">TOP {e(str(t))}</span> '
+                   + (f'<a href="{vor}#{quote(ref)}">{e(x)}</a>' if ref else e(x)) + "</li>" for t, x, ref in punkte)
+    return (f'    <details class="sitzung"{" open" if offen else ""}><summary><strong>{e(datum(s["date"]))}{zeit}</strong> '
+            f'<span class="gremium">{e(s["gremium"])}</span>{anzahl}</summary>'
+            f'{f"<p class=klein>{info}</p>" if info else ""}{f"<ol class=tops>{tops}</ol>" if tops else ""}</details>')
+
+
+def sitzungen_erzeugen(out, mit_daten=True):
+    """out/sitzungen/index.html: kommende Sitzungen aller Gremien und die der letzten zwölf Monate, je Sitzung aufklappbar
+    mit Tagesordnung (Link auf den Vorgang in der Karte) und Einladung."""
+    daten = _daten() if mit_daten else {"sitzungen": [], "vorgaenge": [], "meta": {}}
+    heute = _stand(daten) if daten.get("meta") else date.today()
+    vor = "../"
+    je_sitzung = {}
+    for v in daten["vorgaenge"]:
+        for s in v["process"]:
+            je_sitzung.setdefault(s["sitzung"], []).append(v)
+    alle = sorted(daten["sitzungen"], key=lambda s: (s["date"], s.get("time") or ""))
+    kommend = [s for s in alle if s["date"] >= heute.isoformat()]
+    grenze = (heute - timedelta(days=TAGE)).isoformat()
+    vergangen = [s for s in reversed(alle) if grenze <= s["date"] < heute.isoformat()]
+    teile = ["    <h1>Sitzungen</h1>",
+             '    <p class="einleitung">Alle Sitzungen der Stadtverordnetenversammlung, der Ausschüsse, Ortsbeiräte und Beiräte: '
+             "die kommenden und die der letzten zwölf Monate, jeweils mit Tagesordnung und Einladung. Ein Klick auf einen "
+             'Punkt öffnet den Vorgang auf der <a href="../">Karte</a>.</p>',
+             f"    <h2>Kommende Sitzungen ({len(kommend)})</h2>"]
+    if kommend:
+        teile += [_sitzung(s, _punkte(s, je_sitzung.get(s["id"], [])), vor, i == 0) for i, s in enumerate(kommend)]
+    else:
+        teile.append("    <p>Zurzeit sind keine Sitzungen angekündigt.</p>")
+    if (config.EXPORT / "abo").exists() and mit_daten:
+        teile.append(f'    <p class="klein">Termine abonnieren: <a href="{vor}data/export/abo/alle.ics">Kalender (.ics)</a> · '
+                     f'<a href="{vor}data/export/abo/alle.atom">Feed (Atom)</a> · je Ortsteil auf den <a href="{vor}ortsteile/">Seiten der Ortsteile</a></p>')
+    teile.append(f"    <h2>Vergangene Sitzungen der letzten zwölf Monate ({len(vergangen)})</h2>")
+    monat = None
+    for s in vergangen:
+        if s["date"][:7] != monat:
+            monat = s["date"][:7]
+            teile.append(f'    <h3>{MONATE[int(monat[5:7]) - 1]} {monat[:4]}</h3>')
+        teile.append(_sitzung(s, _punkte(s, je_sitzung.get(s["id"], [])), vor, False))
+    if not vergangen:
+        teile.append("    <p>Keine Sitzungen in den letzten zwölf Monaten im Datenbestand.</p>")
+    ziel = out / "sitzungen" / "index.html"
+    ziel.parent.mkdir(parents=True, exist_ok=True)
+    ziel.write_text(_seite("Sitzungen der Stadtverordneten, Ausschüsse und Ortsbeiräte",
+                           "Kommende und vergangene Sitzungen der Stadtverordnetenversammlung, der Ausschüsse, Ortsbeiräte und "
+                           "Beiräte mit Tagesordnung, Einladung und Quellenangabe.", vor, "\n".join(teile)), encoding="utf-8")
+    return ["sitzungen/index.html"]

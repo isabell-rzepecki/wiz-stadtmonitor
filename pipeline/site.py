@@ -29,6 +29,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
     markdown_seite(config.ROOT / "DATA_SOURCES.md", out / "quellen.html", "Datenquellen")
     # Seiten je Ortsteil (Text ohne JavaScript, für Menschen und Suchmaschinen)
     ortsteilseiten.erzeugen(out, mit_daten)
+    ortsteilseiten.sitzungen_erzeugen(out, mit_daten)
     stadtname_ausfuellen(out)
     vorschau_ausfuellen(out)
     suchmaschinen(out)
@@ -73,7 +74,8 @@ VORSCHAU_SEITEN = ("index.html", "wohnen.html", "erfassen.html", "quellen.html",
 def oeffentliche_seiten(out):
     """Öffentliche Seiten mit Vorschau, Canonical und Eintrag in der Sitemap: feste Seiten und die Seiten je Ortsteil."""
     ortsteile = sorted(str(p.relative_to(out)) for p in out.glob("ortsteil/*/index.html"))
-    return list(VORSCHAU_SEITEN) + (["ortsteile/index.html"] if (out / "ortsteile" / "index.html").exists() else []) + ortsteile
+    erzeugt = [d for d in ("sitzungen/index.html", "ortsteile/index.html") if (out / d).exists()]
+    return list(VORSCHAU_SEITEN) + erzeugt + ortsteile
 
 
 def vorschau_ausfuellen(out):

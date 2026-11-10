@@ -12,7 +12,7 @@
 .gremium { font-weight: 700; color: var(--accent-ink); }
 .anzahl { margin-left: auto; font-size: 13px; color: var(--muted); white-space: nowrap; }
 .sitzung > p { margin: 8px 14px 0; }
-.tops { margin: 6px 0 0; padding: 0 14px 12px 36px; font-size: 14px; line-height: 1.45; }
+.tops { margin: 6px 0 0; padding: 0 14px 12px; list-style: none; font-size: 14px; line-height: 1.45; }
 .tops li { margin: 0 0 5px; } .top { font-weight: 700; white-space: nowrap; }
 .vorgaenge { margin: 0; padding: 10px 14px 6px 34px; font-size: 15px; line-height: 1.45; }
 .vorgaenge > li { margin: 0 0 10px; }

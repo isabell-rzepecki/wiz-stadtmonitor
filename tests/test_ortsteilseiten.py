@@ -35,12 +35,35 @@ class Ortsteilseiten(unittest.TestCase):
             uebersicht = (out / "ortsteile" / "index.html").read_text(encoding="utf-8")
             self.assertEqual(len(re.findall(r'href="\.\./ortsteil/[^/]+/"', uebersicht)), len(config.STADT["ortsteile"]))
 
+    def test_sitzungsseite(self):
+        with tempfile.TemporaryDirectory() as d:
+            export = Path(d) / "export"
+            export.mkdir()
+            shutil.copy(FIX, export / "vorgaenge.json")
+            out = Path(d) / "_site"
+            out.mkdir()
+            with mock.patch.object(config, "EXPORT", export):
+                ortsteilseiten.sitzungen_erzeugen(out)
+            seite = (out / "sitzungen" / "index.html").read_text(encoding="utf-8")
+            daten = json.loads(FIX.read_text(encoding="utf-8"))
+            stand = daten["meta"]["generated_at"][:10]
+            kommend = [s for s in daten["sitzungen"] if s["date"] >= stand]
+            self.assertIn(f"Kommende Sitzungen ({len(kommend)})", seite)
+            self.assertEqual(seite.count('<details class="sitzung" open>'), 1 if kommend else 0)
+            self.assertIn('href="../#STV/066/2026"', seite)  # Punkt öffnet den Vorgang auf der Karte
+            for v in daten["vorgaenge"]:
+                if v["verfahrenspunkt"]:
+                    self.assertNotIn(f">{v['name']}<", seite)
+            self.assertNotIn("<script", seite)
+
     def test_im_seitenbau_sitemap_und_verweise(self):
         with tempfile.TemporaryDirectory() as d:
             out = site.build(Path(d) / "_site", mit_daten=False)
             karte = (out / "sitemap.xml").read_text(encoding="utf-8")
             self.assertIn("/ortsteile/</loc>", karte)
             self.assertIn("/ortsteil/gertenbach/</loc>", karte)
+            self.assertIn("/sitzungen/</loc>", karte)
+            self.assertIn('href="sitzungen/"', (out / "index.html").read_text(encoding="utf-8"))
             seite = (out / "ortsteil" / "kernstadt" / "index.html").read_text(encoding="utf-8")
             self.assertIn('<link rel="canonical" href="https://stadtmonitor-witzenhausen.de/ortsteil/kernstadt/">', seite)
             self.assertIn(f"Stadtmonitor {config.STADT['stadt']['name']}</title>", seite)
