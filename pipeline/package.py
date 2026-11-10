@@ -1,4 +1,4 @@
-"""Datenpaket (Zip): Vorgänge, Gesellschaften, Beteiligung, Wahlen, Wanderung, Wohnen, Audit-Protokolle,
+"""Datenpaket (Zip): Vorgänge, Gesellschaften, Beteiligung, Wahlen, Wanderung, Wohnen, Strukturdaten, Audit-Protokolle,
 Quellenregister und Lizenzen (je Datei in LICENSE-DATA.md).
 
 Bauleitplanung (Nutzung nur nicht kommerziell, nicht weitergeben): Das Paket enthält nur die Zuordnung Vorgang →
@@ -63,6 +63,10 @@ def package():
             z.write(config.ROOT / "data" / "wanderung" / "wanderung.json", "wanderung.json")
         if (config.EXPORT / "wohnen.json").exists():  # Bodenrichtwert-Spannen und Zensuswerte (ohne Geometrie)
             z.write(config.EXPORT / "wohnen.json", "wohnen.json")
+        struktur = config.ROOT / "data" / "strukturdaten"  # Datenvertrag „Strukturdaten v1“ mit Audits (offene Lizenzen)
+        for p in sorted(struktur.rglob("*")) if struktur.exists() else []:
+            if p.is_file():
+                z.write(p, f"strukturdaten/{p.relative_to(struktur).as_posix()}")
         for p in sorted((config.EXPORT / "audit").glob("*.tsv")):
             if p.name in AUDIT_FILTER:
                 z.writestr(f"audit/{p.name}", _tsv(p, **AUDIT_FILTER[p.name]))

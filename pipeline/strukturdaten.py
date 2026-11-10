@@ -370,7 +370,10 @@ def build():
         dict(indikator_id="zensus_wohnungen_efh_zfh", name="Wohnungen in Ein- und Zweifamilienhäusern", thema="Wohnen", einheit="Wohnungen",
              typ="anzahl", metatext=m["anzahl"]),
         dict(indikator_id="zensus_anteil_wohnungen_efh_zfh", name="Anteil der Wohnungen in Ein- und Zweifamilienhäusern", thema="Wohnen",
-             einheit="%", typ="anteil", zaehler_id="zensus_wohnungen_efh_zfh", nenner_id="", metatext=m["anteil"] + " Nenner ist die Summe der Gebäudetypen."),
+             einheit="%", typ="anteil", zaehler_id="zensus_wohnungen_efh_zfh", nenner_id="",
+             metatext=m["anteil"] + " Gezählt nach der Bauart des Gebäudes (freistehend, Doppelhaushälfte, Reihenhaus); Nenner ist die Summe aller"
+             " Gebäudetypen einschließlich Gebäuden anderer Bauart. Die amtliche Gemeindetabelle zählt dagegen nach der Zahl der Wohnungen im"
+             " Gebäude, der Wegweiser Kommune nach der Fortschreibung auf Basis des Zensus 2011; die Werte sind deshalb nicht gleich."),
     ] if zensus_da else []
     for i in ind:
         i.setdefault("abrufdatum", za)
