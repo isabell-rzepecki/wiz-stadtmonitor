@@ -38,6 +38,18 @@ class Auswahl(unittest.TestCase):
         self.assertEqual([s["id"] for s, _ in g["stadt"][1]], ["151/2026", "010/2025"])
         self.assertEqual(len(g["alle"][1]), 4)
 
+    def test_gremium_mit_ganzer_tagesordnung(self):
+        d = daten()
+        for s in d["sitzungen"]:
+            if s["gremium_typ"] == "stvv":
+                s["gremium_id"] = "STVV"
+        g, je = abo.auswahl(d)
+        titel, eintraege = g[abo.gremium_slug("STVV")]
+        self.assertEqual(titel, "Stadtverordnetenversammlung")
+        self.assertEqual([(s["id"], f) for s, f in eintraege], [("151/2026", None), ("010/2025", None)])
+        self.assertEqual(len(abo.tagesordnung(eintraege[0][0], je["151/2026"])), 2)
+        self.assertNotIn("gertenbach", abo.gremium_slug("STVV"))
+
 
 class Kalender(unittest.TestCase):
     def setUp(self):

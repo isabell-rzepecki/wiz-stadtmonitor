@@ -12,6 +12,11 @@ from urllib.parse import quote
 
 from . import abo, config
 
+
+def _vorgang(ref, vor):
+    from .vorgangsseiten import pfad
+    return pfad(ref, vor)
+
 TAGE = 365          # Vorgänge der letzten zwölf Monate
 SITZUNGEN_MAX = 6   # nächste Sitzungen je Ortsteil
 STRUKTUR = ("zensus_einwohner", "zensus_anteil_unter18", "zensus_anteil_ab65", "zensus_durchschnittsalter",
@@ -149,7 +154,7 @@ def _ortsteil(o, daten, je_sitzung, auswahl, struktur, quelle, heute, mit_abo):
             zeilen = []
             for d, v, s in eintraege:
                 ref = v.get("reference") or ""
-                link = f"{karte}#{quote(ref)}" if ref else karte
+                link = _vorgang(ref, vor) if ref else karte
                 nr = f'<span class="nr">{e(v["vorlage"])}</span> ' if v.get("vorlage") else ""
                 ergebnis = f" · {e(s['result'])}" if s.get("result") else ""
                 pdf = f' · <a href="{e(s["pdf"])}" rel="noopener">Fundstelle (PDF)</a>' if s.get("pdf") else ""
@@ -222,7 +227,7 @@ def _sitzung(s, punkte, vor, offen):
     info = " · ".join(x for x in (e(s["ort"]) if s.get("ort") else "",
                                   f'<a href="{e(s["pdf"])}" rel="noopener">Einladung (PDF)</a>' if s.get("pdf") else "") if x)
     tops = "".join(f'<li><span class="top">TOP {e(str(t))}</span> '
-                   + (f'<a href="{vor}#{quote(ref)}">{e(x)}</a>' if ref else e(x)) + "</li>" for t, x, ref in punkte)
+                   + (f'<a href="{_vorgang(ref, vor)}">{e(x)}</a>' if ref else e(x)) + "</li>" for t, x, ref in punkte)
     return (f'    <details class="sitzung"{" open" if offen else ""}><summary><strong>{e(datum(s["date"]))}{zeit}</strong> '
             f'<span class="gremium">{e(s["gremium"])}</span>{anzahl}</summary>'
             f'{f"<p class=klein>{info}</p>" if info else ""}{f"<ol class=tops>{tops}</ol>" if tops else ""}</details>')
@@ -245,7 +250,7 @@ def sitzungen_erzeugen(out, mit_daten=True):
     teile = ["    <h1>Sitzungen</h1>",
              '    <p class="einleitung">Alle Sitzungen der Stadtverordnetenversammlung, der Ausschüsse, Ortsbeiräte und Beiräte: '
              "die kommenden und die der letzten zwölf Monate, jeweils mit Tagesordnung und Einladung. Ein Klick auf einen "
-             'Punkt öffnet den Vorgang auf der <a href="../">Karte</a>.</p>',
+             'Punkt öffnet die Seite des Vorgangs; alles zusammen zeigt die <a href="../">Karte</a>.</p>',
              f"    <h2>Kommende Sitzungen ({len(kommend)})</h2>"]
     if kommend:
         teile += [_sitzung(s, _punkte(s, je_sitzung.get(s["id"], [])), vor, i == 0) for i, s in enumerate(kommend)]
@@ -285,6 +290,7 @@ def gremien_erzeugen(out, mit_daten=True):
         for s in v["process"]:
             je_sitzung.setdefault(s["sitzung"], []).append(v)
     pfade, gruppen = [], {"aktuell": [], "frueher": []}
+    mit_abo = mit_daten and (config.EXPORT / "abo").exists()
     for g in config.STADT["gremien"]:
         slug, vor = g["id"].lower(), "../../"
         sitz = sorted((s for s in daten["sitzungen"] if s.get("gremium_id") == g["id"]), key=lambda s: (s["date"], s.get("time") or ""))
@@ -295,7 +301,7 @@ def gremien_erzeugen(out, mit_daten=True):
         teile = [f"    <h1>{e(g['name'])}</h1>",
                  f'    <p class="einleitung">{e(ARTEN.get(g.get("typ"), "Gremium"))} der Stadt {e(config.STADT["stadt"]["name"])}'
                  f'{" (" + e(zeit) + ")" if zeit else ""}. Hier stehen die nächsten Sitzungen und die Sitzungen der letzten zwölf '
-                 f'Monate mit Tagesordnung und Einladung. Ein Klick auf einen Punkt öffnet den Vorgang auf der Karte.</p>']
+                 f'Monate mit Tagesordnung und Einladung. Ein Klick auf einen Punkt öffnet die Seite des Vorgangs.</p>']
         if g.get("hinweis"):
             teile.append(f'    <p class="klein">{e(g["hinweis"])}</p>')
         teile.append(f"    <h2>Nächste Sitzungen ({len(kommend)})</h2>")
@@ -304,6 +310,10 @@ def gremien_erzeugen(out, mit_daten=True):
         teile.append(f"    <h2>Sitzungen der letzten zwölf Monate ({len(vergangen)})</h2>")
         teile += [_sitzung(s, _punkte(s, je_sitzung.get(s["id"], [])), vor, False) for s in vergangen] or \
                  ["    <p>Keine Sitzung in den letzten zwölf Monaten im Datenbestand.</p>"]
+        if mit_abo:
+            a = quote(abo.gremium_slug(g["id"]))
+            teile.append(f'    <p class="klein">Termine abonnieren: <a href="{vor}data/export/abo/{a}.ics">Kalender (.ics)</a> · '
+                         f'<a href="{vor}data/export/abo/{a}.atom">Feed (Atom)</a></p>')
         teile.append(f'    <p><a class="mehr-link" href="{e(karte)}">Alle Vorgänge dieses Gremiums auf der Karte</a></p>')
         ziel = out / "gremium" / slug / "index.html"
         ziel.parent.mkdir(parents=True, exist_ok=True)
