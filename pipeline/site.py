@@ -60,6 +60,10 @@ FUSS_ENTDECKEN = (("./", "Karte"), ("ortsteile/", "Ortsteile"), ("sitzungen/", "
                   ("wohnen.html", "Wohnen und Eigentum"), ("teilen/", "Teilen"))
 FUSS_UEBER = (("einfache-sprache.html", "Einfache Sprache"), ("barrierefreiheit.html", "Barrierefreiheit"),
               ("quellen.html", "Datenquellen"), ("impressum.html", "Impressum"), ("datenschutz.html", "Datenschutz"))
+# Abzeichen der Schlusszeile: Name und Symbol (Pfad für ein 24er-Raster, nur Linien)
+FUSS_BADGES = (("Nichtkommerziell", "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"),
+               ("Open Source", "M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"),
+               ("Trackingfrei", "M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6zM8.5 12l2.5 2.5 4.5-5"))
 FUSS_SATZ = "Beschlüsse, Anträge und Termine der Stadtverordneten sowie Daten zu Wohnen und Bevölkerung auf einer Karte."
 
 
@@ -71,7 +75,10 @@ def fusszeile(vor="", hier=""):
     kontakt = config.STADT.get("projekt", {}).get("kontakt")
     mail = (f'<p class="fuss-kontakt">Hinweise und Fehler: <a href="mailto:{html.escape(kontakt)}">{html.escape(kontakt)}</a></p>'
             if kontakt else "")
+    badges = "".join(f'<li class="fuss-badge"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">'
+                     f'<path d="{d}"/></svg>{name}</li>' for name, d in FUSS_BADGES)
     return ("<footer class=\"page-foot\">\n"
+            "   <div class=\"fuss-innen\">\n"
             "    <div class=\"fuss-raster\">\n"
             "      <div class=\"fuss-marke\">\n"
             f'        <a class="fuss-brand" href="{vor or './'}"><img src="{vor}favicon.svg" width="36" height="36" alt="">'
@@ -82,7 +89,11 @@ def fusszeile(vor="", hier=""):
             f'      <nav aria-labelledby="fuss-entdecken"><h2 id="fuss-entdecken">Entdecken</h2><ul>{liste(FUSS_ENTDECKEN)}</ul></nav>\n'
             f'      <nav aria-labelledby="fuss-ueber"><h2 id="fuss-ueber">Über das Projekt</h2><ul>{liste(FUSS_UEBER)}</ul></nav>\n'
             "    </div>\n"
-            f'    <p class="fuss-zeile">Nichtkommerzielles Projekt · Open Source · Maßgeblich sind die amtlichen Bekanntmachungen der Stadt.</p>\n'
+            '    <div class="fuss-zeile">\n'
+            f'      <ul class="fuss-badges" aria-label="Grundsätze des Projekts">{badges}</ul>\n'
+            '      <p>Maßgeblich sind die amtlichen Bekanntmachungen der Stadt.</p>\n'
+            "    </div>\n"
+            "   </div>\n"
             "  </footer>")
 
 
