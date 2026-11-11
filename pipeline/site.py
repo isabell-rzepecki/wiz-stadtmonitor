@@ -32,6 +32,7 @@ def build(out=config.SITE_OUT, mit_daten=True):
     ortsteilseiten.sitzungen_erzeugen(out, mit_daten)
     ortsteilseiten.gremien_erzeugen(out, mit_daten)
     vorgangsseiten.erzeugen(out, mit_daten)
+    fusszeilen_einsetzen(out)
     stadtname_ausfuellen(out)
     vorschau_ausfuellen(out)
     suchmaschinen(out)
@@ -52,6 +53,53 @@ def build(out=config.SITE_OUT, mit_daten=True):
         shutil.copy2(lic, data / "LICENSE-DATA.md")
     print(f"Seite in {out}")
     return out
+
+
+# Fußzeile der Textseiten: eine Vorlage für alle Unterseiten (statische und erzeugte), relative Pfade je Tiefe
+FUSS_ENTDECKEN = (("./", "Karte"), ("ortsteile/", "Ortsteile"), ("sitzungen/", "Sitzungen"), ("gremien/", "Gremien"),
+                  ("wohnen.html", "Wohnen und Eigentum"), ("teilen/", "Teilen"))
+FUSS_UEBER = (("einfache-sprache.html", "Einfache Sprache"), ("barrierefreiheit.html", "Barrierefreiheit"),
+              ("quellen.html", "Datenquellen"), ("impressum.html", "Impressum"), ("datenschutz.html", "Datenschutz"))
+FUSS_SATZ = "Beschlüsse, Anträge und Termine der Stadtverordneten sowie Daten zu Wohnen und Bevölkerung auf einer Karte."
+
+
+def fusszeile(vor="", hier=""):
+    """HTML der Fußzeile; vor ist der Weg zur Wurzel (z. B. "../../"), hier die eigene Seite (z. B. "sitzungen/")."""
+    def liste(eintraege):
+        return "".join(f'<li><a href="{(vor + ziel) if ziel != "./" else (vor or "./")}"{' aria-current="page"' if ziel == hier else ""}>{name}</a></li>'
+                       for ziel, name in eintraege)
+    kontakt = config.STADT.get("projekt", {}).get("kontakt")
+    mail = (f'<p class="fuss-kontakt">Hinweise und Fehler: <a href="mailto:{html.escape(kontakt)}">{html.escape(kontakt)}</a></p>'
+            if kontakt else "")
+    return ("<footer class=\"page-foot\">\n"
+            "    <div class=\"fuss-raster\">\n"
+            "      <div class=\"fuss-marke\">\n"
+            f'        <a class="fuss-brand" href="{vor or './'}"><img src="{vor}favicon.svg" width="36" height="36" alt="">'
+            '<span>Stadtmonitor <span data-cfg="stadt.name"></span></span></a>\n'
+            f"        <p>{FUSS_SATZ}</p>\n"
+            f"        {mail}\n"
+            "      </div>\n"
+            f'      <nav aria-labelledby="fuss-entdecken"><h2 id="fuss-entdecken">Entdecken</h2><ul>{liste(FUSS_ENTDECKEN)}</ul></nav>\n'
+            f'      <nav aria-labelledby="fuss-ueber"><h2 id="fuss-ueber">Über das Projekt</h2><ul>{liste(FUSS_UEBER)}</ul></nav>\n'
+            "    </div>\n"
+            f'    <p class="fuss-zeile">Nichtkommerzielles Projekt · Open Source · Maßgeblich sind die amtlichen Bekanntmachungen der Stadt.</p>\n'
+            "  </footer>")
+
+
+def fusszeilen_einsetzen(out):
+    """Ersetzt die Fußzeile (<footer class="page-foot">…</footer>) aller Textseiten durch die gemeinsame Vorlage."""
+    muster = re.compile(r'<footer class="page-foot">.*?</footer>', re.S)
+    for seite in out.rglob("*.html"):
+        rel = seite.relative_to(out)
+        if rel.parts[0] in ("intern", "data"):
+            continue
+        text = seite.read_text(encoding="utf-8")
+        if '<footer class="page-foot">' not in text:
+            continue
+        vor = "../" * (len(rel.parts) - 1)
+        hier = rel.as_posix()
+        hier = hier[: -len("index.html")] if hier.endswith("index.html") else hier
+        seite.write_text(muster.sub(lambda _: fusszeile(vor, hier), text, count=1), encoding="utf-8")
 
 
 def stadtname_ausfuellen(out):
