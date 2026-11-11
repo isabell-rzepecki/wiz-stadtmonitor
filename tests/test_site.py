@@ -15,6 +15,24 @@ class Seite(unittest.TestCase):
                 self.assertTrue((out / f).exists(), f)
             self.assertIn("ortsteile", json.loads((out / "stadt.json").read_text(encoding="utf-8")))
 
+    def test_fusszeile_auf_allen_unterseiten(self):
+        # eine gemeinsame Fußzeile mit Wegen relativ zur Tiefe der Seite; die eigene Seite ist markiert
+        with tempfile.TemporaryDirectory() as d:
+            out = site.build(Path(d) / "_site", mit_daten=False)
+            for pfad, vor, hier in (("impressum.html", "", "impressum.html"), ("teilen/index.html", "../", "teilen/"),
+                                    ("ortsteil/gertenbach/index.html", "../../", None), ("quellen.html", "", "quellen.html")):
+                seite = (out / pfad).read_text(encoding="utf-8")
+                self.assertEqual(seite.count('<footer class="page-foot">'), 1, pfad)
+                self.assertIn('class="fuss-raster"', seite, pfad)
+                self.assertIn(f'href="{vor}gremien/"', seite, pfad)
+                self.assertIn(f'href="{vor}barrierefreiheit.html"', seite, pfad)
+                self.assertIn('href="mailto:', seite, pfad)
+                self.assertIn('<span data-cfg="stadt.name">Witzenhausen</span>', seite.split('class="fuss-brand"')[1], pfad)
+                if hier:
+                    self.assertIn(f'href="{vor}{hier}" aria-current="page"', seite, pfad)
+                self.assertEqual(seite.count('aria-current="page"'), 1 if hier else 0, pfad)
+            self.assertNotIn("fuss-raster", (out / "intern" / "index.html").read_text(encoding="utf-8"))
+
     def test_wortmarke_und_vorschau_beim_teilen(self):
         # Wortmarke „Stadtmonitor <Stadt>“ mit Link zur Startseite auf allen Seiten; Vorschau nur auf öffentlichen Seiten
         with tempfile.TemporaryDirectory() as d:

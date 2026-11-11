@@ -21,7 +21,22 @@ a { color: var(--accent-ink); }
 .page .lead { font-size: 18px; color: var(--muted); margin-top: 0; }
 .page code { font-size: 15px; background: var(--accent-tint); padding: 1px 5px; border-radius: 6px; }
 .page .offen { padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--accent-ink); }
-.page-foot { padding: 20px 0 32px; color: var(--muted); font-size: 14px; }
+/* Fußzeile (Vorlage in pipeline/site.py, fusszeile): Karte in Akzentfarbe, drei Spalten, auf dem Handy untereinander */
+.page-foot { margin: 28px auto 32px; padding: 26px 28px 16px; border-radius: 20px; background: var(--accent-tint); color: var(--muted); font-size: 14px; line-height: 1.55; }
+.fuss-raster { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: 24px 32px; }
+.fuss-brand { display: inline-flex; align-items: center; gap: 10px; font: 400 21px/1.1 "Lilita One", system-ui, sans-serif; color: var(--accent-ink); text-decoration: none; }
+.fuss-brand span span { color: var(--text); }
+.fuss-marke p { margin: 12px 0 0; }
+.fuss-kontakt a { white-space: nowrap; }
+.page-foot h2 { margin: 4px 0 10px; font: 700 12px/1.3 "Space Mono", ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
+.page-foot ul { list-style: none; margin: 0; padding: 0; }
+.page-foot li { margin: 0 0 6px; }
+.page-foot nav a { color: var(--text); text-decoration: none; border-bottom: 1px solid transparent; }
+.page-foot nav a:hover, .page-foot nav a[aria-current="page"] { color: var(--accent-ink); border-bottom-color: currentColor; }
+.page-foot nav a[aria-current="page"] { font-weight: 700; }
+.fuss-zeile { margin: 22px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; }
+@media (max-width: 700px) { .fuss-raster { grid-template-columns: 1fr 1fr; } .fuss-marke { grid-column: 1 / -1; } }
+@media (max-width: 600px) { .page-foot { padding: 22px 18px 14px; } }
 @media (max-width: 600px) { .page { padding: 8px 18px 20px; } .page h1 { font-size: 28px; } }
 /* Schmale Handys: Wortmarke „Stadtmonitor <Stadt>“ und Rückweg nebeneinander, ohne über den Rand zu ragen */
 @media (max-width: 440px) { .page-head { gap: 8px; } .page-brand { font-size: 17px; gap: 7px; } .page-brand img { width: 26px; height: 26px; } .page-back { padding: 6px 10px; font-size: 14px; white-space: nowrap; } }
