@@ -27,6 +27,8 @@ class Seite(unittest.TestCase):
                 self.assertIn(f'href="{vor}gremien/"', seite, pfad)
                 self.assertIn(f'href="{vor}barrierefreiheit.html"', seite, pfad)
                 self.assertIn('href="mailto:', seite, pfad)
+                for abzeichen in ("Nichtkommerziell", "Open Source", "Trackingfrei"):
+                    self.assertIn(f"</svg>{abzeichen}</li>", seite, pfad)
                 self.assertIn('<span data-cfg="stadt.name">Witzenhausen</span>', seite.split('class="fuss-brand"')[1], pfad)
                 if hier:
                     self.assertIn(f'href="{vor}{hier}" aria-current="page"', seite, pfad)
