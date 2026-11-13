@@ -8,7 +8,8 @@
 4. **Eigentum und Vermietung:** Gebäude antippen und die Kategorie wählen.
    - Bei Unternehmen, Genossenschaften, der öffentlichen Hand und Kirchen den Namen eintragen.
    - Beleg und Sicherheit angeben.
-   - **Art des Hauses:** Ein- oder Zweifamilienhaus, Mehrfamilienhaus (3 oder mehr Wohnungen) oder „weiß nicht“. Beim Mehrfamilienhaus die Zahl der Wohnungen eintragen oder „Zahl unbekannt“ ankreuzen; optional, wie viele Wohnungen welcher Art von Eigentümer gehören (nur Zahlen, keine Namen). Gehört das Haus mehreren, als Eigentum die Art wählen, der die meisten Wohnungen gehören.
+   - **Art des Hauses** zuerst: Ein- oder Zweifamilienhaus, Mehrfamilienhaus (3 oder mehr Wohnungen) oder „weiß nicht“.
+   - **Mehrfamilienhaus:** Zahl der Wohnungen eintragen oder „Zahl unbekannt“ ankreuzen. Dann je Eigentümer eine Zeile: Art, bei Unternehmen, Genossenschaften, öffentlicher Hand und Kirche der Name, und wie viele Wohnungen ihm gehören. Bei Privatpersonen nur die Zahl, nie ein Name. Was unbekannt ist, weglassen.
    - **Nie:** Namen aus Grundbuchauszügen Dritter, Klingelschilder, Fotos von Personen oder Hausnummern im Freitext.
 5. **Mietangabe:** nur mit der Einwilligung der Mietenden, die sie selbst ankreuzen. Den angezeigten **Widerrufscode** den Mietenden geben (notieren oder fotografieren lassen).
 6. **Export:** Über „Einträge“ und „Exportieren“ entsteht eine verschlüsselte Datei; nur die Prüfgruppe kann sie lesen. Diese Datei der Prüfgruppe schicken. Erst wenn die Prüfgruppe den Eingang bestätigt hat, „Exportierte löschen“.

@@ -281,7 +281,7 @@
         name_juristische_person: "Name", lage_hinweis: "Lage", bemerkung: "Bemerkung", nettokalt_eur: "Nettokaltmiete", wohnflaeche_klasse: "Wohnfläche",
         wohnflaeche_m2: "Wohnfläche in m²", baujahr_klasse: "Baujahr", vertragsbeginn_jahr: "Vertragsbeginn", letzte_erhoehung_jahr: "Letzte Erhöhung",
         einwilligung: "Einwilligung", erfassungsweg: "Erfassungsweg", vermieter_schluessel: "Vermieter", gebaeudeart: "Art des Hauses",
-        wohnungen_gesamt: "Zahl der Wohnungen", wohnungen_je_kategorie: "Wohnungen je Eigentümer-Art" };
+        wohnungen_gesamt: "Zahl der Wohnungen", wohnungen_je_kategorie: "Wohnungen je Eigentümer-Art", eigentuemer: "Eigentümer der Wohnungen" };
       const schemaFehler = (s, rec) => ErfassenPruefung.schema(s, rec).map((f) => {
         const name = f.pfad.split(/[.[]/)[0] === "objekt" ? f.pfad.split(".")[1] : f.pfad.split(/[.[]/)[0];
         return { name, feld: FELDNAMEN[name] || name, text: f.text };
@@ -313,23 +313,29 @@
       function formularA(p) {
         titel("Eigentum und Vermietung");
         const kat = E.kategorien.map((k) => [k.code, k.titel]);
+        const jpArt = (k) => k && k !== "privat" && k !== "unklar";
         inhalt.innerHTML = `${gebaeudeKopf(p)}<form id="form-a" novalidate>
           <div class="fehlerliste" tabindex="-1" role="alert" hidden></div>
-          <fieldset class="kacheln"><legend>Wem gehört das Gebäude?</legend>${auswahl("kategorie", Object.fromEntries(kat), null)}</fieldset>
-          <p class="meta">GbR und Einzelkaufleute gelten als Privatpersonen. Gehört das Haus mehreren (etwa Eigentumswohnungen), die Art wählen, der die meisten Wohnungen gehören.</p>
-          <div id="feld-jp" hidden><label class="feld">Name (Unternehmen, Genossenschaft, öffentliche Hand, Kirche)
-            <input name="name_juristische_person" maxlength="120" autocomplete="off"></label></div>
-          <div id="feld-privat" hidden>${E.privat_namen_aktiv
-            ? `<label class="feld">Name der Privatperson <span class="meta">(wird sofort verschlüsselt, nicht veröffentlicht)</span>
-                <input name="name_privat" autocomplete="off" spellcheck="false"></label>
-                <p class="meta">Nur zur Prüfung und zum Erkennen von Dubletten. Keine Namen aus Grundbuchauszügen Dritter, keine Klingelschilder.</p>`
-            : `<p class="hinweis-kasten">Namen von Privatpersonen werden noch nicht erfasst (nicht freigegeben). Die Kategorie genügt.</p>`}</div>
           <fieldset class="kacheln klein"><legend>Was für ein Haus ist das?</legend>${auswahl("gebaeudeart", GEBAEUDEART, "unbekannt")}</fieldset>
+          <div id="feld-kategorie">
+            <fieldset class="kacheln"><legend>Wem gehört das Gebäude?</legend>${auswahl("kategorie", Object.fromEntries(kat), null)}</fieldset>
+            <p class="meta">GbR und Einzelkaufleute gelten als Privatpersonen.</p>
+            <div id="feld-jp" hidden><label class="feld">Name (Unternehmen, Genossenschaft, öffentliche Hand, Kirche)
+              <input name="name_juristische_person" maxlength="120" autocomplete="off"></label></div>
+            <div id="feld-privat" hidden>${E.privat_namen_aktiv
+              ? `<label class="feld">Name der Privatperson <span class="meta">(wird sofort verschlüsselt, nicht veröffentlicht)</span>
+                  <input name="name_privat" autocomplete="off" spellcheck="false"></label>
+                  <p class="meta">Nur zur Prüfung und zum Erkennen von Dubletten. Keine Namen aus Grundbuchauszügen Dritter, keine Klingelschilder.</p>`
+              : `<p class="hinweis-kasten">Namen von Privatpersonen werden noch nicht erfasst (nicht freigegeben). Die Kategorie genügt.</p>`}</div>
+          </div>
           <div id="feld-mfh" hidden>
             <label class="feld">Wie viele Wohnungen hat das Haus? <input name="wohnungen_gesamt" type="number" inputmode="numeric" min="3" max="999" step="1"></label>
             <label class="wahlknopf"><input type="checkbox" name="wohnungen_unbekannt"> <span>Zahl unbekannt</span></label>
-            <fieldset class="wohnungen"><legend>Wem gehören wie viele Wohnungen? <span class="meta">(optional; nur Zahlen je Art, keine Namen; Unbekanntes leer lassen)</span></legend>
-              ${kat.filter(([c]) => c !== "unklar").map(([c, t]) => `<label class="feld zahl">${esc(t)} <input name="wj_${esc(c)}" type="number" inputmode="numeric" min="0" max="999" step="1"></label>`).join("")}
+            <fieldset class="eigentuemer"><legend>Wem gehören die Wohnungen?</legend>
+              <p class="meta">Je Eigentümer eine Zeile. Bei Unternehmen, Genossenschaften, öffentlicher Hand und Kirche mit Namen; bei Privatpersonen nur die Zahl, nie ein Name. Was du nicht weißt, lässt du weg.</p>
+              <div id="ez-liste"></div>
+              <p><button type="button" class="knopf" id="ez-neu">+ Weitere Eigentümer hinzufügen</button></p>
+              <p class="meta" id="ez-summe" aria-live="polite"></p>
             </fieldset>
           </div>
           <fieldset class="kacheln klein"><legend>Werden Wohnungen vermietet?</legend>${auswahl("vermietet", VERMIETET, "unbekannt")}</fieldset>
@@ -341,19 +347,75 @@
             <textarea name="bemerkung" maxlength="200" rows="3"></textarea></label>
           <p class="knoepfe"><button class="knopf" type="submit"${speichernA ? "" : " disabled"}>${probe ? "Prüfen (Probe)" : "Verschlüsselt speichern"}</button>
             <button class="link-btn" type="button" id="abbrechen">Abbrechen</button></p></form>`;
-        const form = $("#form-a");
+        const form = $("#form-a"), liste = $("#ez-liste");
+        // Eigentümer-Liste beim Mehrfamilienhaus: je Zeile Art, Name (nur Unternehmen usw.) und Zahl der Wohnungen
+        let nr = 0;
+        const zeilen = () => [...liste.querySelectorAll(".ez-zeile")];
+        function nummerieren() {
+          zeilen().forEach((z, i) => { z.querySelector("legend").textContent = `Eigentümer ${i + 1}`;
+            z.querySelector("[data-entfernen]").setAttribute("aria-label", `Eigentümer ${i + 1} entfernen`); });
+        }
+        function summe() {
+          const s = zeilen().reduce((a, z) => a + (Number(z.querySelector(".ez-zahl").value) || 0), 0);
+          const g = form.elements.wohnungen_unbekannt.checked ? null : Number(form.elements.wohnungen_gesamt.value) || null;
+          $("#ez-summe").textContent = zeilen().length ? (g ? `Zusammen ${s} von ${g} Wohnungen zugeordnet.` : `Zusammen ${s} Wohnungen zugeordnet.`) : "";
+        }
+        function zeileNeu() {
+          nr += 1;
+          const z = document.createElement("fieldset");
+          z.className = "ez-zeile";
+          z.innerHTML = `<legend></legend>
+            <label class="feld">Art <select class="ez-art" name="ez_art_${nr}"><option value="">bitte wählen</option>${kat.map(([c, t]) => `<option value="${esc(c)}">${esc(t)}</option>`).join("")}</select></label>
+            <label class="feld ez-name" hidden>Name <input class="ez-name-feld" name="ez_name_${nr}" maxlength="120" autocomplete="off"></label>
+            <label class="feld">Wohnungen <input class="ez-zahl" name="ez_zahl_${nr}" type="number" inputmode="numeric" min="1" max="999" step="1"></label>
+            <button type="button" class="link-btn" data-entfernen>Entfernen</button>`;
+          z.querySelector(".ez-art").addEventListener("change", (e) => { z.querySelector(".ez-name").hidden = !jpArt(e.target.value); });
+          z.querySelector("[data-entfernen]").addEventListener("click", () => { z.remove(); nummerieren(); summe(); $("#ez-neu").focus(); });
+          liste.append(z);
+          nummerieren();
+          return z;
+        }
+        $("#ez-neu").addEventListener("click", () => zeileNeu().querySelector(".ez-art").focus());
+        form.addEventListener("input", summe);
         form.addEventListener("change", () => {
+          const mfh = form.elements.gebaeudeart.value === "mfh";
           const k = (form.elements.kategorie.value || "");
-          $("#feld-jp").hidden = !k || k === "privat" || k === "unklar";
+          $("#feld-mfh").hidden = !mfh;
+          $("#feld-kategorie").hidden = mfh;  // beim Mehrfamilienhaus gehört das Haus meist mehreren: dann die Liste
+          $("#feld-jp").hidden = !jpArt(k);
           $("#feld-privat").hidden = k !== "privat";
-          $("#feld-mfh").hidden = form.elements.gebaeudeart.value !== "mfh";
           form.elements.wohnungen_gesamt.disabled = form.elements.wohnungen_unbekannt.checked;
+          if (mfh && !zeilen().length) zeileNeu();
+          summe();
         });
         $("#abbrechen").addEventListener("click", () => gebaeude(p));
         form.addEventListener("submit", async (e) => {
           e.preventDefault();
           const w = (n) => (form.elements[n] ? String(form.elements[n].value || "").trim() : "");
-          const k = w("kategorie"), jp = k && k !== "privat" && k !== "unklar";
+          const mfh = w("gebaeudeart") === "mfh";
+          const zusatz = [];
+          // Mehrfamilienhaus: Eigentümer aus der Liste; die Art oben ist die mit den meisten Wohnungen
+          let k = w("kategorie"), name = w("name_juristische_person").replace(/\s+/g, " ");
+          const eigentuemer = [];
+          if (mfh) {
+            for (const z of zeilen()) {
+              const art = z.querySelector(".ez-art").value, zahlText = z.querySelector(".ez-zahl").value.trim();
+              const n = zahlText === "" ? null : Number(zahlText), nm = z.querySelector(".ez-name-feld").value.trim().replace(/\s+/g, " ");
+              const leer = !art && n === null && !nm;
+              if (leer) continue;
+              const feld = z.querySelector("legend").textContent;
+              if (!art) zusatz.push({ name: z.querySelector(".ez-art").name, feld, text: "Art wählen" });
+              if (n === null) zusatz.push({ name: z.querySelector(".ez-zahl").name, feld, text: "Zahl der Wohnungen eintragen" });
+              else if (!Number.isInteger(n) || n < 1) zusatz.push({ name: z.querySelector(".ez-zahl").name, feld, text: "nur ganze Zahlen ab 1" });
+              if (art && n !== null) eigentuemer.push({ kategorie: art, ...(jpArt(art) && nm ? { name_juristische_person: nm } : {}), wohnungen: n });
+            }
+            const je = {};
+            for (const x of eigentuemer) je[x.kategorie] = (je[x.kategorie] || 0) + x.wohnungen;
+            k = Object.keys(je).reduce((a, b) => (je[b] > (je[a] || 0) ? b : a), eigentuemer.length ? eigentuemer[0].kategorie : "unklar");
+            const groesster = eigentuemer.filter((x) => x.kategorie === k && x.name_juristische_person).sort((a, b) => b.wohnungen - a.wohnungen)[0];
+            name = groesster ? groesster.name_juristische_person : "";
+          }
+          const jp = jpArt(k);
           const rec = { erfassung_id: crypto.randomUUID(), objekt: { typ: "gebaeude", id: p.id }, kategorie: k || undefined, beleg_art: w("beleg_art") || undefined,
             sicherheit: w("sicherheit"), vermietet: w("vermietet"), erfasst_am: new Date().toISOString(), erfasser: zugang.erfasser, app_version: F.app_version };
           const ot = cfg.ortsteile.find((o) => o.slug === p.o);
@@ -361,28 +423,17 @@
           if (w("lage_hinweis")) rec.objekt.lage_hinweis = w("lage_hinweis");
           if (w("beleg_url")) rec.beleg_url = w("beleg_url");
           if (w("bemerkung")) rec.bemerkung = w("bemerkung");
-          const name = w("name_juristische_person").replace(/\s+/g, " ");
           if (jp && name) { rec.name_juristische_person = name; rec.vermieter_schluessel = `JP:${name}`; }
           if (k === "privat") rec.vermieter_schluessel = "V-neu";
-          // Mehrfamilienhaus: Zahl der Wohnungen (oder „unbekannt“) und Wohnungen je Eigentümer-Art, nur als Zahlen
-          const zusatz = [];
           rec.gebaeudeart = w("gebaeudeart") || "unbekannt";
-          if (rec.gebaeudeart === "mfh") {
-            const ganz = (s) => (s === "" ? null : Number(s));
-            const gesamt = ganz(w("wohnungen_gesamt")), unbekannt = form.elements.wohnungen_unbekannt.checked;
+          if (mfh) {
+            const gesamt = w("wohnungen_gesamt") === "" ? null : Number(w("wohnungen_gesamt")), unbekannt = form.elements.wohnungen_unbekannt.checked;
             if (!unbekannt && gesamt === null) zusatz.push({ name: "wohnungen_gesamt", feld: FELDNAMEN.wohnungen_gesamt, text: "Zahl eingeben oder „Zahl unbekannt“ ankreuzen" });
             if (!unbekannt && gesamt !== null) rec.wohnungen_gesamt = gesamt;
-            const je = {};
-            for (const [c] of kat) {
-              const n = form.elements[`wj_${c}`] ? ganz(w(`wj_${c}`)) : null;
-              if (n === null || n === 0) continue;
-              if (!Number.isInteger(n) || n < 0) zusatz.push({ name: `wj_${c}`, feld: FELDNAMEN.wohnungen_je_kategorie, text: "nur ganze Zahlen" });
-              else je[c] = n;
-            }
-            if (Object.keys(je).length) rec.wohnungen_je_kategorie = je;
-            const summe = Object.values(je).reduce((s, x) => s + x, 0);
+            if (eigentuemer.length) rec.eigentuemer = eigentuemer;
+            const summe = eigentuemer.reduce((s, x) => s + x.wohnungen, 0);
             if (Number.isInteger(rec.wohnungen_gesamt) && summe > rec.wohnungen_gesamt)
-              zusatz.push({ name: "wohnungen_gesamt", feld: FELDNAMEN.wohnungen_je_kategorie, text: `zusammen ${summe}, mehr als die ${rec.wohnungen_gesamt} Wohnungen des Hauses` });
+              zusatz.push({ name: "wohnungen_gesamt", feld: FELDNAMEN.eigentuemer, text: `zusammen ${summe}, mehr als die ${rec.wohnungen_gesamt} Wohnungen des Hauses` });
           }
           Object.keys(rec).forEach((x) => rec[x] === undefined && delete rec[x]);
           const fehler = [...zusatz, ...schemaFehler(sEig, rec)];
@@ -391,7 +442,7 @@
             if (t) fehler.push({ name: n, feld: FELDNAMEN[n], text: t });
           }
           if (fehlerZeigen(form, fehler)) return;
-          if (k === "privat" && E.privat_namen_aktiv && w("name_privat") && !probe) {
+          if (k === "privat" && !mfh && E.privat_namen_aktiv && w("name_privat") && !probe) {
             rec.name_privat_enc = { alg: ALG, key_id: SCHL.key_id, ciphertext: await versiegeln(w("name_privat"), SCHL) };
             form.elements.name_privat.value = "";
           }

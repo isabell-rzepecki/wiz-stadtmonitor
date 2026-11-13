@@ -53,10 +53,14 @@ def erzeugen(o):
                 "einwilligung": {"erteilt": True, "textversion": pg.STADT["wohnen_eigentum"]["erfassung"]["einwilligung"]["version"],
                                  "zeitpunkt": zeit(next(n))}, "erfasst_am": zeit(next(n)), "erfassungsweg": "selbst", **mehr}
 
-    # geb[0] und geb[2] als Mehrfamilienhäuser: Wohnungen je Kategorie (R10); „privat“ aus einem Haus bleibt verdeckt
-    a = [eig(geb[0], "geno", "Probe-Wohnbau eG", gebaeudeart="mfh", wohnungen_gesamt=12, wohnungen_je_kategorie={"geno": 12}),
+    # geb[0] und geb[2] als Mehrfamilienhäuser mit Eigentümer-Liste (R10): zwei Genossenschaften in einem Haus, Stadt und
+    # Privatpersonen im anderen; „privat“ aus einem Haus bleibt verdeckt; je Gebäude Namen ohne Zahlen, je Eigentümer Summen
+    a = [eig(geb[0], "geno", "Probe-Wohnbau eG", gebaeudeart="mfh", wohnungen_gesamt=12,
+             eigentuemer=[{"kategorie": "geno", "name_juristische_person": "Probe-Wohnbau eG", "wohnungen": 8},
+                          {"kategorie": "geno", "name_juristische_person": "Hasenohr eG (Probe)", "wohnungen": 4}]),
          eig(geb[1], "geno", "probe-wohnbau  EG", gebaeudeart="efh"),
-         eig(geb[2], "kom", "Stadt (Probe)", gebaeudeart="mfh", wohnungen_je_kategorie={"kom": 6, "privat": 2}),
+         eig(geb[2], "kom", "Stadt (Probe)", gebaeudeart="mfh",
+             eigentuemer=[{"kategorie": "kom", "name_juristische_person": "Stadt (Probe)", "wohnungen": 6}, {"kategorie": "privat", "wohnungen": 2}]),
          eig(geb[3], "privat", privat="Erika Probe"), eig(geb[4], "privat", privat="erika  probe"), eig(geb[5], "privat"), eig(geb[6], "unklar"),
          eig(geb[7], "kom", "Stadt (Probe)"), eig(geb[7], "kom", "Stadt (Probe)"),           # Dublette
          eig(geb[8], "kom", "Stadt (Probe)"), eig(geb[8], "geno", "Probe-Wohnbau eG"),      # abweichende Angaben

@@ -191,7 +191,11 @@
       const e = eigIndex.get(id);
       if (!e) return "";
       const art = e.gebaeudeart === "mfh" ? `Mehrfamilienhaus${e.wohnungen ? ` mit ${zahl(e.wohnungen)} Wohnungen` : ""}` : e.gebaeudeart === "efh" ? "Ein- oder Zweifamilienhaus" : "";
-      return `<dt>Eigentum</dt><dd>${esc(e.kategorie_titel)}${e.name ? `: ${esc(e.name)}` : ""} <span class="meta">(${esc(e.sicherheit)}, geprüfte Erfassung)</span></dd>${art ? `<dt>Haus</dt><dd>${esc(art)}</dd>` : ""}`;
+      // Mehrfamilienhaus mit mehreren Eigentümern: Unternehmen, Genossenschaften und öffentliche Hand mit Namen, ohne Zahlen
+      const wer = e.eigentuemer && e.eigentuemer.length
+        ? e.eigentuemer.map((x) => `${esc(x.kategorie_titel)}${x.name ? `: ${esc(x.name)}` : ""}`).join("<br>")
+        : `${esc(e.kategorie_titel)}${e.name ? `: ${esc(e.name)}` : ""}`;
+      return `<dt>Eigentum</dt><dd>${wer} <span class="meta">(${esc(e.sicherheit)}, geprüfte Erfassung)</span></dd>${art ? `<dt>Haus</dt><dd>${esc(art)}</dd>` : ""}`;
     };
     function zeigeGebaeude(p, zone = null) {
       gewaehlt = p ? p.id : null;

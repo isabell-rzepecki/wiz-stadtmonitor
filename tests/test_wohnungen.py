@@ -1,5 +1,5 @@
-"""Mehrfamilienhäuser: Gebäudeart, Zahl der Wohnungen und Wohnungen je Eigentümer-Kategorie (Schema, Zusammenfassung je
-Ortsbezirk nach Regel R10, Sperre, Konflikte). Gebäude-Kennungen und Zahlen sind erfunden."""
+"""Mehrfamilienhäuser: Gebäudeart, Zahl der Wohnungen und Eigentümer-Liste (Schema, Zusammenfassung je Ortsbezirk nach
+Regel R10, Karte mit Namen ohne Zahlen, Auswertung je Eigentümer, Sperre). Gebäude-Kennungen, Namen und Zahlen sind erfunden."""
 import sys
 import unittest
 
@@ -35,6 +35,49 @@ class Schema(unittest.TestCase):
             self.assertEqual(list(v.iter_errors(rec("G1", **z))), [], z)
         for z in schlecht:
             self.assertTrue(list(v.iter_errors(rec("G1", **z))), z)
+
+
+def ez(kategorie, wohnungen, name=None):
+    return {"kategorie": kategorie, "wohnungen": wohnungen, **({"name_juristische_person": name} if name else {})}
+
+
+class EigentuemerListe(unittest.TestCase):
+    def test_schema(self):
+        v = pruefen.validator("eigentum")
+        gut = {"gebaeudeart": "mfh", "wohnungen_gesamt": 12, "eigentuemer": [ez("geno", 5, "Stinkycat eG (Test)"), ez("geno", 3, "Hasenohr eG (Test)"), ez("privat", 2)]}
+        self.assertEqual(list(v.iter_errors(rec("G1", kategorie="geno", **gut))), [])
+        for schlecht in ({"gebaeudeart": "mfh", "eigentuemer": [ez("privat", 2, "Name")]}, {"gebaeudeart": "efh", "eigentuemer": [ez("geno", 2)]},
+                         {"gebaeudeart": "mfh", "eigentuemer": []}, {"gebaeudeart": "mfh", "eigentuemer": [ez("kom", 0)]}):
+            self.assertTrue(list(v.iter_errors(rec("G1", **schlecht))), schlecht)
+
+    def test_summen_karte_und_auswertung(self):
+        je, geb = bestand(rec("G1", kategorie="geno", name_juristische_person="Stinkycat eG (Test)", gebaeudeart="mfh", wohnungen_gesamt=12,
+                              eigentuemer=[ez("geno", 5, "Stinkycat eG (Test)"), ez("geno", 3, "Hasenohr eG (Test)"), ez("privat", 2)]),
+                          rec("G2", kategorie="privat", gebaeudeart="mfh", eigentuemer=[ez("privat", 6), ez("geno", 2, "stinkycat  EG (test)")]),
+                          rec("G3", kategorie="geno", name_juristische_person="Hasenohr eG (Test)", gebaeudeart="efh"))
+        for f in geb.values():
+            f["geometry"] = None
+        w = vo.wohnungen(je, geb)["gertenbach"]
+        self.assertEqual(w["je_kategorie"], {"geno": 10})
+        self.assertIsNone(w["privat"])  # 2 Häuser mit privaten Wohnungen < Mindestzahl
+        self.assertIsNone(w["wohnungen"])
+        props = {f["properties"]["id"]: f["properties"] for f in vo.karte(je, geb, "2026-11-13")["features"]}
+        self.assertEqual([x.get("name") for x in props["G1"]["eigentuemer"]], ["Hasenohr eG (Test)", "Stinkycat eG (Test)"])
+        self.assertTrue(all("wohnungen" not in x for x in props["G1"]["eigentuemer"]))  # Namen ohne Zahlen
+        self.assertEqual(props["G2"]["kategorie"], "geno")  # Haus mit privater Mehrheit erscheint nur mit der Genossenschaft
+        self.assertNotIn("privat", str(props["G2"]))
+        auswertung = {x["name"]: (x["haeuser"], x["wohnungen"]) for x in vo.je_eigentuemer(je)}
+        self.assertEqual(auswertung, {"Stinkycat eG (Test)": (2, 7), "Hasenohr eG (Test)": (2, 3)})
+
+    def test_sperre(self):
+        f = {"properties": {"id": "G1", "kategorie": "geno", "eigentuemer": [{"kategorie": "privat"}]}}
+        with self.assertRaises(vo.Verstoss):
+            vo.pruefe_ausgabe({"eigentum_gebaeude.geojson": {"features": [f]}}, [])
+        f["properties"]["eigentuemer"] = [{"kategorie": "geno", "name": "X eG", "wohnungen": 5}]
+        with self.assertRaises(vo.Verstoss):
+            vo.pruefe_ausgabe({"eigentum_gebaeude.geojson": {"features": [f]}}, [])
+        with self.assertRaises(vo.Verstoss):
+            vo.pruefe_ausgabe({"eigentum_anteile_ortsbezirk.json": {"ortsbezirke": {}, "je_eigentuemer": [{"name": "Erika", "kategorie": "privat"}]}}, [])
 
 
 class Zusammenfassung(unittest.TestCase):
