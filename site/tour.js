@@ -41,19 +41,19 @@
     { target: "#detail .steps", clip: "#detail", scroll: true,
       title: "Die Prozesslinie",
       text: "Die Stationen des Vorgangs: die Sitzungen, in deren Tagesordnung er stand, mit Datum, TOP und Fundstelle. Beschlussergebnisse sind nicht veröffentlicht; die Prozesslinie zeigt sie als Lücke und leitet nichts ab. Unter „Methode und Quellen“ stehen Evidenzstatus und Bekanntmachungen." },
-    { menu: "mega-mitmachen", target: "#mega-mitmachen", beacons: ["#cta-termine", "#cta-wahlen", "#cta-wohnen", "#cta-wanderung"],
-      title: "Sitzungen und Themen",
-      text: "Kommende Sitzungen mit Tagesordnung und laufender Beteiligung an der Bauleitplanung; Kennzahlen zum Gebiet; amtliche Wahlergebnisse und Sitzverteilung; Wohnen und Boden mit Bodenrichtwerten und Zensus; Zuzug und Wegzug seit 2015. Dazu der Weg ins Bürgerinformationssystem und ein Hinweis, wenn etwas falsch zugeordnet ist." },
-    { menu: "mega-daten", target: "#mega-daten",
-      title: "Offene Daten",
-      text: "Alle Daten zum Herunterladen: das Datenpaket mit Prüfprotokollen, dazu Quellen, Lizenzen und Datenstand." },
+    { menu: "mega-politik", target: "#mega-politik", beacons: ["#cta-termine", "#cta-stats", "#cta-wahlen"],
+      title: "Politik",
+      text: "Die nächsten Sitzungen mit Tagesordnung, alle Sitzungen und Gremien als Liste, Kennzahlen dazu, was beraten wird, und die amtlichen Wahlergebnisse mit der Sitzverteilung. Dazu der Weg ins Bürgerinformationssystem der Stadt." },
+    { menu: "mega-stadt", target: "#mega-stadt", beacons: ["#cta-wohnen", "#cta-struktur", "#cta-wanderung"],
+      title: "Stadt in Zahlen",
+      text: "Je Ortsteil eine Übersichtsseite, Wohnen und Boden mit Bodenrichtwerten und Zensus, Bevölkerung und Wohnungen sowie Zuzug und Wegzug seit 2015, immer mit Stichtag und Quelle." },
     { target: ".nav-group.seg",
       title: "Flächen ein- und ausklappen",
       text: () => "Liste, Zeitleiste und Vorgang lassen sich hier öffnen und schließen; die Karte bleibt darunter sichtbar. Esc schließt die Fläche, in der Sie gerade sind."
         + (MOBILE.matches ? " Auf dem Handy starten die Flächen auf halber Höhe; der Pfeil im Kopf vergrößert sie." : "") },
-    { target: "#about-open",
+    { menu: "mega-ueber", target: "#mega-ueber", beacons: ["#about-open", "#cta-report"],
       title: "Über den Stadtmonitor",
-      text: "Hier steht, woher die Daten stammen, wie verortet wird, wie sicher die Angaben sind und was der Stadtmonitor nicht zeigen kann. Viel Freude beim Erkunden." },
+      text: "Hier steht, woher die Daten stammen, wie verortet wird und was der Stadtmonitor nicht zeigen kann, auch in Einfacher Sprache. Dazu ein Hinweis, wenn etwas falsch ist, und alle Daten zum Herunterladen. Viel Freude beim Erkunden." },
   ];
 
   let steps = [], i = 0, root = null, card = null, spot = null, raf = 0, prevFocus = null, ui = null;

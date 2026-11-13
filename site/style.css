@@ -153,8 +153,8 @@ button.card:hover, a.card:hover { transform: translateY(-2px); box-shadow: var(-
 .card-text { font-size: 14px; color: var(--text-muted); line-height: 1.45; overflow-wrap: break-word; hyphens: auto; }
 .card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .card-actions .btn { max-width: 100%; text-align: left; }
-#mega-daten .acc { margin-top: 14px; }
-#mega-daten .acc p { font-size: 14px; margin: 0 0 6px; }
+#mega-ueber .acc { margin-top: 14px; }
+#mega-ueber .acc p { font-size: 14px; margin: 0 0 6px; }
 
 /* Schaltflächen: Hauptaktion (CTA), weich, Geist */
 .btn-cta { background: var(--cta); color: var(--on-accent-fill); border: 0; box-shadow: var(--cta-shadow), var(--highlight); transition: transform .15s, box-shadow .2s, filter .2s; }
@@ -406,6 +406,8 @@ body.list-open .leaflet-left { left: calc(var(--list-w) + 16px); }
   .nav-area { max-width: 150px; }
   .toggle, .menu-btn { padding: 0 8px; }
   .nav-group + .nav-group, .nav-area + .nav-group { padding-left: 6px; }
+  /* Platz für die Menünamen („Stadt in Zahlen“): Liste, Zeitleiste und Vorgang hier nur als Symbol */
+  .toggle > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
 @media (min-width: 901px) and (max-width: 1439px) {
   .toggle > span, .menu-btn > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }  /* nur Symbole; Name bleibt für Screenreader */
@@ -416,6 +418,12 @@ body.list-open .leaflet-left { left: calc(var(--list-w) + 16px); }
   .brand { font-size: 18px; gap: 8px; }
   .brand img { width: 26px; height: 26px; }
   .nav-area { max-width: 150px; }
+  /* schmale Laptops: Suche und Gebiet etwas schmaler, damit „Teilen“ nicht über den Rand ragt */
+  .nav-search { min-width: 110px; }
+  .toggle, .menu-btn { padding: 0 8px; }
+}
+@media (min-width: 901px) and (max-width: 1000px) {
+  .nav-area { max-width: 118px; }
 }
 
 /* Mobil: Leiste unten (Suche, Gebiet, Symbole), Flächen und Menüs als Blätter */

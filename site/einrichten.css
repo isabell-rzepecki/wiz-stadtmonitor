@@ -57,3 +57,8 @@ details.mehr > summary { cursor: pointer; font-weight: 700; min-height: 44px; di
 }
 .link-btn { font: inherit; background: none; border: 0; padding: 0; min-height: 44px; color: var(--accent-ink); text-decoration: underline; cursor: pointer; }
 .link-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+/* Startseite intern: Rollen und Reihenfolge zum Anfangen */
+.rollen { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 10px; }
+.rollen li { padding: 10px 14px; border-left: 4px solid var(--accent-ink); background: var(--accent-tint); border-radius: 0 12px 12px 0; margin: 0; }
+.ablauf { padding-left: 24px; margin: 12px 0; }
+.ablauf li { margin: 0 0 10px; padding-left: 4px; }
