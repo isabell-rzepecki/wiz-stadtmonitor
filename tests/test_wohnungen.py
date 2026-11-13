@@ -1,0 +1,75 @@
+"""Mehrfamilienhäuser: Gebäudeart, Zahl der Wohnungen und Wohnungen je Eigentümer-Kategorie (Schema, Zusammenfassung je
+Ortsbezirk nach Regel R10, Sperre, Konflikte). Gebäude-Kennungen und Zahlen sind erfunden."""
+import sys
+import unittest
+
+from pipeline import config
+
+sys.path.insert(0, str(config.ROOT / "tools"))
+import pruefen  # noqa: E402
+import veroeffentlichen as vo  # noqa: E402
+
+MIN = vo.R["privat_anteil_min"]
+
+
+def rec(gid, **x):
+    return {"erfassung_id": f"id-{gid}", "objekt": {"typ": "gebaeude", "id": gid}, "kategorie": x.pop("kategorie", "wu_priv"),
+            "beleg_art": "ortskenntnis", "sicherheit": "wahrscheinlich", "erfasst_am": "2026-11-13T10:00:00Z", "erfasser": "E-0000test", **x}
+
+
+def bestand(*recs, o="gertenbach"):
+    je = {r["objekt"]["id"]: {"typ": "eigentum", "datensatz": r} for r in recs}
+    geb = {r["objekt"]["id"]: {"properties": {"o": o}} for r in recs}
+    return je, geb
+
+
+class Schema(unittest.TestCase):
+    def test_nur_beim_mehrfamilienhaus(self):
+        v = pruefen.validator("eigentum")
+        gut = [{}, {"gebaeudeart": "efh"}, {"gebaeudeart": "unbekannt"}, {"gebaeudeart": "mfh"},
+               {"gebaeudeart": "mfh", "wohnungen_gesamt": 12, "wohnungen_je_kategorie": {"wu_priv": 8, "privat": 4}}]
+        schlecht = [{"gebaeudeart": "efh", "wohnungen_gesamt": 4}, {"wohnungen_je_kategorie": {"privat": 2}},
+                    {"gebaeudeart": "mfh", "wohnungen_gesamt": 2}, {"gebaeudeart": "mfh", "wohnungen_je_kategorie": {"unklar": 3}},
+                    {"gebaeudeart": "mfh", "wohnungen_je_kategorie": {"privat": 0}}, {"gebaeudeart": "reihenhaus"}]
+        for z in gut:
+            self.assertEqual(list(v.iter_errors(rec("G1", **z))), [], z)
+        for z in schlecht:
+            self.assertTrue(list(v.iter_errors(rec("G1", **z))), z)
+
+
+class Zusammenfassung(unittest.TestCase):
+    def test_wohnungen_je_kategorie(self):
+        je, geb = bestand(rec("G1", gebaeudeart="mfh", wohnungen_gesamt=12, wohnungen_je_kategorie={"wu_priv": 12}),
+                          rec("G2", gebaeudeart="mfh", wohnungen_je_kategorie={"geno": 6}),
+                          rec("G3", gebaeudeart="efh"), rec("G4"))
+        w = vo.wohnungen(je, geb)["gertenbach"]
+        self.assertEqual(w, {"mehrfamilienhaeuser": 2, "mit_wohnungszahl": 1, "wohnungen": 12, "je_kategorie": {"geno": 6, "wu_priv": 12},
+                             "privat": None, "privat_haeuser": None})
+
+    def test_privat_erst_ab_der_mindestzahl_und_ohne_rueckrechnung(self):
+        wenige = [rec(f"P{i}", kategorie="privat", gebaeudeart="mfh", wohnungen_gesamt=4, wohnungen_je_kategorie={"privat": 4})
+                  for i in range(MIN - 1)]
+        je, geb = bestand(rec("G1", gebaeudeart="mfh", wohnungen_gesamt=10, wohnungen_je_kategorie={"wu_priv": 10}), *wenige)
+        w = vo.wohnungen(je, geb)["gertenbach"]
+        self.assertIsNone(w["privat"])
+        self.assertIsNone(w["wohnungen"])  # sonst ließe sich „privat“ als Differenz zurückrechnen
+        self.assertIn("privat_hinweis", w)
+        genug = wenige + [rec("PX", kategorie="privat", gebaeudeart="mfh", wohnungen_gesamt=3, wohnungen_je_kategorie={"privat": 3})]
+        je, geb = bestand(*genug)
+        w = vo.wohnungen(je, geb)["gertenbach"]
+        self.assertEqual((w["privat"], w["privat_haeuser"], w["wohnungen"]), (4 * (MIN - 1) + 3, MIN, 4 * (MIN - 1) + 3))
+
+    def test_sperre(self):
+        def ausgabe(w):
+            return {"eigentum_anteile_ortsbezirk.json": {"ortsbezirke": {"gertenbach": {
+                "gebaeude": 10, "erfasst": 1, "kategorien": {"kom": 1}, "privat": None, "wohnungen": w}}}}
+        vo.pruefe_ausgabe(ausgabe({"mehrfamilienhaeuser": 1, "wohnungen": 10, "je_kategorie": {"kom": 10}, "privat": None}), [])
+        with self.assertRaises(vo.Verstoss):
+            vo.pruefe_ausgabe(ausgabe({"mehrfamilienhaeuser": 2, "wohnungen": 8, "je_kategorie": {}, "privat": 8, "privat_haeuser": 2}), [])
+        with self.assertRaises(vo.Verstoss):
+            vo.pruefe_ausgabe(ausgabe({"mehrfamilienhaeuser": 2, "wohnungen": 8, "je_kategorie": {"kom": 5}, "privat": None,
+                                       "privat_hinweis": "zu wenige Angaben"}), [])
+
+
+if __name__ == "__main__":
+    unittest.main()

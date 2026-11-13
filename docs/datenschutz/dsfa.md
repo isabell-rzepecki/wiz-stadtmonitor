@@ -13,13 +13,15 @@
 
 | Schritt | Ort | Daten | Schutz |
 |---|---|---|---|
-| Erfassen | Gerät der erfassenden Person (App `erfassen.html`, ohne Server) | V1: Gebäude, Kategorie, vermietet, Beleg, Sicherheit. V2: Gebäude, Miete, Fläche, Baujahr, Vertragsbeginn, Ausstattung, Einwilligung | Jeder Eintrag wird beim Speichern versiegelt (libsodium sealed box); das Gerät kann ihn danach nicht mehr lesen. Zugang nur mit Einladungscode |
+| Erfassen | Gerät der erfassenden Person (App `erfassen.html`, ohne Server) | V1: Gebäude, Kategorie, vermietet, Beleg, Sicherheit, Art des Hauses, bei Mehrfamilienhäusern Zahl der Wohnungen und Wohnungen je Eigentümer-Kategorie. V2: Gebäude, Miete, Fläche, Baujahr, Vertragsbeginn, Ausstattung, Einwilligung | Jeder Eintrag wird beim Speichern versiegelt (libsodium sealed box); das Gerät kann ihn danach nicht mehr lesen. Zugang nur mit Einladungscode |
 | Export | Datei, die die erfassende Person übergibt | versiegelte Einträge, pseudonyme Erfasser-ID | Kein Upload. Nur die Prüfgruppe kann die Datei öffnen |
 | Einlesen und Prüfen | Rechner der Prüfgruppe, außerhalb von Git | entschlüsselt nur im Arbeitsspeicher; Bestand versiegelt; Miete und Fläche werden zu €/m² | Schema- und Freitextprüfung, Kartenliste, Sperrliste, Freigabe, Zugriffsprotokoll |
-| Veröffentlichen | Repository und Website | Kategorien juristischer Personen je Gebäude; Anzahlen je Ortsbezirk; Median €/m² ab 5 Angaben, Spanne ab 10, gerundet auf 0,10 € | Regeln R1–R9 und eine automatische Sperre vor dem Schreiben |
+| Veröffentlichen | Repository und Website | Kategorien juristischer Personen je Gebäude; Anzahlen je Ortsbezirk; Median €/m² ab 5 Angaben, Spanne ab 10, gerundet auf 0,10 € | Regeln R1–R10 und eine automatische Sperre vor dem Schreiben |
 | Löschen | Prüfgruppe | alle Rohdaten nach 24 Monaten; bei Widerruf oder Widerspruch sofort | `pruefen.py fristen`, `loeschen`, `widerspruch` oder die Prüfseite |
 
 **Werkzeug (Vermerk 27.10.2026):** Einlesen, Prüfen, Freigeben, Veröffentlichen, Widerruf, Widerspruch und Fristen gehen gleichwertig mit den Python-Werkzeugen oder mit der Prüfseite `intern/pruefen.html` im Browser. Die Prüfseite rechnet lokal, speichert nichts im Browser und nutzt dieselben Regeln und die Sperre. Seit 10.11.2026 sendet sie nur beim Veröffentlichen, und nur die Veröffentlichungsdatei (zusammengefasste Zahlen, keine Einzelangaben) an den eigenen Server (`connect-src 'self'`, `intern/veroeffentlichen.php` im passwortgeschützten Bereich); der tägliche Lauf prüft sie mit `veroeffentlichen.py uebernehmen` vor der Übernahme erneut. Die Maßnahmen und das Ergebnis dieser DSFA ändern sich dadurch nicht.
+
+**Änderung 13.11.2026 (zur Bestätigung durch die verantwortliche Stelle):** V1 erfasst zusätzlich die Art des Hauses und bei Mehrfamilienhäusern die Zahl der Wohnungen sowie die Wohnungen je Eigentümer-Kategorie, nur als Zahlen ohne Namen. Veröffentlicht wird nur die Summe je Ortsbezirk (Regel R10): „privat“ erst ab 5 Häusern mit privaten Wohnungen, darunter ohne „privat“ und ohne Gesamtzahl, damit sich „privat“ nicht als Differenz zurückrechnen lässt; die Sperre prüft das vor dem Schreiben. Nach unserer Einschätzung ändert das die Bewertung der Risiken nicht, weil keine neuen Betroffenen und keine Namen hinzukommen; die Bestätigung steht aus.
 
 Namen von Privatpersonen sind derzeit abgeschaltet (`privat_namen_aktiv: false`). Wer sie einschaltet, muss diese DSFA vorher erneut prüfen (Risiko R4).
 

@@ -143,6 +143,77 @@
         "unbekannt"
       ],
       "description": "Ob im Gebäude Wohnungen vermietet werden"
+    },
+    "gebaeudeart": {
+      "enum": [
+        "efh",
+        "mfh",
+        "unbekannt"
+      ],
+      "description": "Ein- oder Zweifamilienhaus (efh) oder Mehrfamilienhaus mit 3 oder mehr Wohnungen (mfh), abgegrenzt wie im Zensus 2022; fehlt bei älteren Einträgen"
+    },
+    "wohnungen_gesamt": {
+      "type": "integer",
+      "minimum": 3,
+      "maximum": 999,
+      "description": "Nur bei gebaeudeart mfh: Zahl der Wohnungen im Gebäude; fehlt, wenn unbekannt"
+    },
+    "wohnungen_je_kategorie": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Nur bei gebaeudeart mfh: Zahl der Wohnungen je Eigentümer-Kategorie (etwa bei Eigentumswohnungen); nur Zahlen je Kategorie, keine Angaben zu einzelnen Personen; nicht bekannte Wohnungen fehlen",
+      "properties": {
+        "kom": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "kreis": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "land": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "bund": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "kirche": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "geno": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "wu_oeff": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "wu_priv": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "jp_sonst": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "privat": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        }
+      }
     }
   },
   "allOf": [
@@ -181,6 +252,35 @@
             "name_privat_enc"
           ]
         }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "gebaeudeart": {
+            "not": {
+              "const": "mfh"
+            }
+          }
+        }
+      },
+      "then": {
+        "allOf": [
+          {
+            "not": {
+              "required": [
+                "wohnungen_gesamt"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "wohnungen_je_kategorie"
+              ]
+            }
+          }
+        ]
       }
     }
   ]

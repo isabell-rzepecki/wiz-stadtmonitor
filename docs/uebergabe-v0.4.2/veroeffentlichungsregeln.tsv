@@ -8,3 +8,4 @@ R6	Mieten je privater Vermieter:in	nie veröffentlichen, auch nicht pseudonym	Mi
 R7	Einzelne Mietangaben	nie veröffentlichen	Wiedererkennbarkeit über Gebäude
 R8	Zellen unter Schwellenwert	als „zu wenige Angaben“ ausweisen, nicht als 0 oder leer ohne Hinweis	Transparenz über Datenlage
 R9	Rohdaten (Exportdateien)	nie in ein Git-Repository (öffentlich oder privat) übernehmen	Datenschutz; keine Drittlandverarbeitung; Kontrolle bleibt bei der Prüfgruppe
+R10	Wohnungen in Mehrfamilienhäusern	nur als Summe je Ortsbezirk und Eigentümer-Kategorie, nie je Gebäude; „privat“ erst ab 5 Häusern mit privaten Wohnungen, darunter ohne „privat“ und ohne Gesamtzahl	Wohnungszahl je Gebäude mit „privat“ wäre personenbeziehbar; die Gesamtzahl ließe „privat“ als Differenz zurückrechnen

@@ -799,7 +799,7 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
   // Screenreader: Fehlerliste als Meldung mit Fokus, Gruppen mit Legende, jedes Feld mit Namen
   assert.equal(await page.evaluate(() => document.activeElement.classList.contains("fehlerliste")), true);
   assert.equal(await page.locator(".fehlerliste").getAttribute("role"), "alert");
-  for (const g of ["Wem gehört das Gebäude?", "Werden Wohnungen vermietet?", "Wie sicher ist die Angabe?"]) await page.getByRole("group", { name: g }).waitFor();
+  for (const g of ["Wem gehört das Gebäude?", "Was für ein Haus ist das?", "Werden Wohnungen vermietet?", "Wie sicher ist die Angabe?"]) await page.getByRole("group", { name: g }).waitFor();
   await page.getByRole("radio", { name: /Privatperson/ }).waitFor();
   await page.getByRole("combobox", { name: "Beleg" }).waitFor();
   assert.equal(await page.evaluate(() => [...document.querySelectorAll("#form-a input, #form-a select, #form-a textarea")]
@@ -817,6 +817,18 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
   assert.deepEqual(await axe(page), []);
   await page.fill('input[name="lage_hinweis"]', "Hauptstraße");
   await page.fill('textarea[name="bemerkung"]', "");
+  // Mehrfamilienhaus: Zahl der Wohnungen oder „Zahl unbekannt“; Wohnungen je Eigentümer-Art zusammen höchstens die Gesamtzahl
+  await page.getByRole("radio", { name: /Mehrfamilienhaus/ }).check();
+  await page.locator("#feld-mfh").waitFor();
+  await page.locator('#form-a button[type="submit"]').click();
+  assert.match(await page.locator(".fehlerliste").textContent(), /Zahl der Wohnungen: Zahl eingeben/);
+  await page.fill('input[name="wohnungen_gesamt"]', "4");
+  await page.fill('input[name="wj_privat"]', "6");
+  await page.locator('#form-a button[type="submit"]').click();
+  assert.match(await page.locator(".fehlerliste").textContent(), /zusammen 6, mehr als die 4 Wohnungen/);
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll("#form-a input")].filter((x) => !x.closest("[hidden]") && !(x.labels && x.labels.length)).length), 0);
+  assert.deepEqual(await axe(page), []);
+  await page.fill('input[name="wohnungen_gesamt"]', "10");
   await page.locator('#form-a button[type="submit"]').click();
   await page.locator(".erfolg").waitFor();
   // Formular B: ohne Einwilligung nicht speicherbar; Fläche ergibt die Klasse
@@ -1165,9 +1177,11 @@ test("Prüfseite: Arbeitsdatei mit Passwort, Einlesen und Prüfen wie tools/prue
     assert.match(vorschau, /Kernstadt, 1949-1978/);
     assert.match(vorschau, /Probe-Wohnbau eG/);
     assert.match(vorschau, /zu wenige/);  // privat unter der Mindestzahl
+    assert.match(vorschau, /Wohnungen in Mehrfamilienhäusern/);  // R10: Wohnungen je Kategorie, „privat“ aus einem Haus verdeckt
     const veroeff = await laden("#speichern-veroeffentlichung");
     const vtext = readFileSync(veroeff, "utf8");
     assert.doesNotMatch(vtext, /Erika|V-0\d\d|[0-9a-f]{8}-[0-9a-f]{4}-4|eur_je_m2|nettokalt_eur/i);
+    assert.match(JSON.stringify(JSON.parse(vtext)), /"wohnungen":\{"mehrfamilienhaeuser":2,"mit_wohnungszahl":1,"wohnungen":null/);
     const pub = execFileSync("python3", ["tests/browser/pruef_fixture.py", "veroeffentlichen", dir, veroeff], { cwd: root, encoding: "utf8" });
     assert.equal(pub.trim(), "gleich");
     assert.match(await page.locator("#ungespeichert").textContent(), /sichere die Prüfmappe/);  // Verlauf vermerkt die Veröffentlichung

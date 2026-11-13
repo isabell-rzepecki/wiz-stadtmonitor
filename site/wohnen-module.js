@@ -124,7 +124,26 @@ window.WohnenModule = (function () {
     return `<p>Anteil der Gebäude mit belegter Kategorie. Die Eigentumskarte zeigt nur, was erfasst ist; ein niedriger Anteil heißt nicht, dass es wenig Eigentum einer Art gibt.</p>
       <div class="tabelle"><table><caption class="visually-hidden">Erfassungsstand je Ortsbezirk</caption>
       <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Gebäude</th><th scope="col">mit Kategorie</th><th scope="col">Anteil</th><th scope="col">davon privat</th></tr></thead><tbody>${zeilen}</tbody></table></div>
-      <p class="meta">Privat: nur als Anzahl ab ${zahl(cfg.wohnen_eigentum.regeln.privat_anteil_min)} Gebäuden; darunter auch nicht in „mit Kategorie“ enthalten.</p>`;
+      <p class="meta">Privat: nur als Anzahl ab ${zahl(cfg.wohnen_eigentum.regeln.privat_anteil_min)} Gebäuden; darunter auch nicht in „mit Kategorie“ enthalten.</p>
+      ${wohnungenTabelle(cfg, a)}`;
+  }
+
+  // Wohnungen in Mehrfamilienhäusern je Ortsbezirk (Regel R10): nur Zahlen je Eigentümer-Art; „privat“ erst ab der Mindestzahl Häuser
+  function wohnungenTabelle(cfg, a) {
+    const titel = Object.fromEntries((cfg.wohnen_eigentum.kategorien || []).map((k) => [k.code, k.titel]));
+    const zeilen = cfg.ortsteile.filter((x) => a[x.slug] && a[x.slug].wohnungen).map((x) => {
+      const w = a[x.slug].wohnungen;
+      const je = Object.entries(w.je_kategorie || {}).map(([k, n]) => `${esc(titel[k] || k)}: ${zahl(n)}`).join("<br>") || "–";
+      const privat = w.privat != null ? zahl(w.privat) : w.privat_hinweis ? `<span class="luecke">${ZU_WENIG}</span>` : "–";
+      const gesamt = w.wohnungen != null ? zahl(w.wohnungen) : `<span class="luecke">${ZU_WENIG}</span>`;
+      return `<tr><th scope="row">${esc(x.name)}</th><td>${zahl(w.mehrfamilienhaeuser)}</td><td>${gesamt}</td><td>${je}</td><td>${privat}</td></tr>`;
+    }).join("");
+    if (!zeilen) return "";
+    return `<h4>Wohnungen in Mehrfamilienhäusern</h4>
+      <p>Erfasste Mehrfamilienhäuser (3 oder mehr Wohnungen), die bekannte Zahl ihrer Wohnungen und wem wie viele davon gehören. Nicht zugeordnete Wohnungen fehlen in den Spalten der Eigentümer.</p>
+      <div class="tabelle"><table><caption class="visually-hidden">Wohnungen in Mehrfamilienhäusern je Ortsbezirk</caption>
+      <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Häuser</th><th scope="col">Wohnungen</th><th scope="col">davon Unternehmen, Genossenschaften, öffentliche Hand</th><th scope="col">davon privat</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+      <p class="meta">Privat: nur ab ${zahl(cfg.wohnen_eigentum.regeln.privat_anteil_min)} Häusern mit privaten Wohnungen; darunter fehlt auch die Gesamtzahl, damit sich „privat“ nicht zurückrechnen lässt.</p>`;
   }
 
   function tagesordnung() {
