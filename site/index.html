@@ -71,49 +71,66 @@
           <svg class="icon" aria-hidden="true"><use href="#i-doc"/></svg><span>Vorgang</span></button>
       </div>
       <div class="nav-group" role="group" aria-label="Menü">
-        <button type="button" class="menu-btn" data-mega="mega-mitmachen" aria-expanded="false" aria-controls="mega-mitmachen">
-          <svg class="icon" aria-hidden="true"><use href="#i-people"/></svg><span>Sitzungen</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg></button>
-        <button type="button" class="menu-btn" data-mega="mega-daten" aria-expanded="false" aria-controls="mega-daten">
-          <svg class="icon" aria-hidden="true"><use href="#i-data"/></svg><span>Daten</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg></button>
-        <button type="button" class="menu-btn" id="about-open" aria-haspopup="dialog">
-          <svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span>Über</span></button>
+        <button type="button" class="menu-btn" data-mega="mega-politik" aria-expanded="false" aria-controls="mega-politik">
+          <svg class="icon" aria-hidden="true"><use href="#i-vote"/></svg><span>Politik</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        <button type="button" class="menu-btn" data-mega="mega-stadt" aria-expanded="false" aria-controls="mega-stadt">
+          <svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg><span>Stadt in Zahlen</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        <button type="button" class="menu-btn" data-mega="mega-ueber" aria-expanded="false" aria-controls="mega-ueber">
+          <svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span>Über</span><svg class="icon chev" aria-hidden="true"><use href="#i-chevron"/></svg></button>
         <a class="menu-btn" href="teilen/" title="Bilder, Wortmarke und Link zum Teilen">
           <svg class="icon" aria-hidden="true"><use href="#i-share"/></svg><span>Teilen</span></a>
       </div>
     </nav>
 
-    <section class="mega glass" id="mega-mitmachen" aria-label="Sitzungen und Hinweise" hidden>
+    <section class="mega glass" id="mega-politik" aria-label="Politik: Sitzungen, Gremien und Wahlen" hidden>
       <div class="cards">
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg></span>
-          <span class="card-title">Kommende Sitzungen</span>
+          <span class="card-title">Nächste Sitzungen</span>
           <span class="card-text">Stadtverordnetenversammlung, Ausschüsse, Ortsbeiräte und Beiräte tagen in der Regel öffentlich.</span>
           <span class="card-actions"><button type="button" class="btn btn-cta" id="cta-termine"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>Termine anzeigen</button>
             <a class="btn btn-soft" href="sitzungen/">Alle Sitzungen als Liste</a> <a class="btn btn-soft" href="gremien/">Gremien</a></span>
         </div>
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></span>
-          <span class="card-title">Kennzahlen zum Gebiet</span>
+          <span class="card-title">Was beraten wird</span>
           <span class="card-text">Tagesordnungspunkte nach Gremium, Jahr und Ortsbezug. Ein Klick auf einen Balken filtert die Liste.</span>
-          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-stats"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>Kennzahlen</button></span>
+          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-stats"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>Kennzahlen zu den Themen</button></span>
         </div>
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-vote"/></svg></span>
-          <span class="card-title">Wahlen und Gremien</span>
+          <span class="card-title">Wahlen und Sitzverteilung</span>
           <span class="card-text">Amtliche Ergebnisse der Kommunal-, Bundestags- und Europawahlen und die Sitzverteilung der Stadtverordnetenversammlung und Ortsbeiräte.</span>
-          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-wahlen"><svg class="icon" aria-hidden="true"><use href="#i-vote"/></svg>Wahlen und Gremien</button></span>
+          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-wahlen"><svg class="icon" aria-hidden="true"><use href="#i-vote"/></svg>Wahlen und Sitzverteilung</button></span>
+        </div>
+        <div class="card static">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg></span>
+          <span class="card-title">Bürgerinfo der Stadt</span>
+          <span class="card-text">Vorlagen, Niederschriften und Beschlüsse stehen, soweit veröffentlicht, im Bürgerinformationssystem der Stadt.</span>
+          <span class="card-actions"><a class="btn btn-soft" data-cfg-href="stadt.sessionnet" href="#" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg>Bürgerinfo öffnen<span class="visually-hidden"> (neuer Tab)</span></a></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="mega glass" id="mega-stadt" aria-label="Stadt in Zahlen: Ortsteile, Wohnen, Bevölkerung und Zuzug" hidden>
+      <div class="cards">
+        <div class="card static">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg></span>
+          <span class="card-title">Ortsteile im Überblick</span>
+          <span class="card-text">Je Ortsteil eine Seite: nächste Sitzungen, Vorgänge der letzten zwölf Monate, Zahlen aus dem Zensus.</span>
+          <span class="card-actions"><a class="btn btn-soft" href="ortsteile/"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Alle Ortsteile</a></span>
         </div>
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg></span>
           <span class="card-title">Wohnen und Boden</span>
           <span class="card-text">Bodenrichtwerte und Bestandsmiete zum Gebiet, Eigentümerquote der Stadt, mit Stichtag und Quelle; Vergleich mit Nachbargemeinden; städtische Gesellschaften.</span>
-          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-wohnen"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Wohnen und Boden</button></span>
+          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-wohnen"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Wohnen und Boden</button> <a class="btn btn-soft" href="wohnen.html">Wohnen und Eigentum</a></span>
         </div>
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-people"/></svg></span>
-          <span class="card-title">Strukturdaten</span>
+          <span class="card-title">Bevölkerung</span>
           <span class="card-text">Einwohner, Altersgruppen, Durchschnittsalter und Wohnungen je Ortsteil aus dem Zensus 2022; Vergleich mit ähnlichen Kommunen aus dem Wegweiser Kommune.</span>
-          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-struktur"><svg class="icon" aria-hidden="true"><use href="#i-people"/></svg>Strukturdaten</button></span>
+          <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-struktur"><svg class="icon" aria-hidden="true"><use href="#i-people"/></svg>Bevölkerung und Wohnungen</button></span>
         </div>
         <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-move"/></svg></span>
@@ -121,39 +138,32 @@
           <span class="card-text">Zu- und Fortzüge seit 2015, Wanderungssaldo der Gemeinden im Kreis und Herkunft und Ziel über die Kreisgrenze, aus der amtlichen Statistik.</span>
           <span class="card-actions"><button type="button" class="btn btn-soft" id="cta-wanderung"><svg class="icon" aria-hidden="true"><use href="#i-move"/></svg>Zuzug und Wegzug</button></span>
         </div>
-        <div class="card static">
-          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg></span>
-          <span class="card-title">Ratsinformationssystem</span>
-          <span class="card-text">Vorlagen, Niederschriften und Beschlüsse stehen, soweit veröffentlicht, im Bürgerinformationssystem der Stadt.</span>
-          <span class="card-actions"><a class="btn btn-soft" data-cfg-href="stadt.sessionnet" href="#" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg>Bürgerinfo öffnen<span class="visually-hidden"> (neuer Tab)</span></a></span>
-        </div>
-        <div class="card static">
-          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg></span>
-          <span class="card-title">Fehler melden</span>
-          <span class="card-text">Ort falsch zugeordnet oder etwas unklar? Ein Hinweis hilft, die Karte zu verbessern.</span>
-          <span class="card-actions"><a class="btn btn-soft" id="cta-report" href="impressum.html"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg>Hinweis geben</a></span>
-        </div>
       </div>
     </section>
 
-    <section class="mega glass" id="mega-daten" aria-label="Daten und Quellen" hidden>
+    <section class="mega glass" id="mega-ueber" aria-label="Über das Projekt, Hinweise, Daten und Quellen" hidden>
       <div class="cards cards-3">
-        <a class="card" href="data/export/vorgaenge.json" download>
+        <div class="card static">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg></span>
+          <span class="card-title">Was ist der Stadtmonitor?</span>
+          <span class="card-text">Woher die Daten stammen, wie verortet wird, wie sicher die Angaben sind und was der Stadtmonitor nicht zeigen kann.</span>
+          <span class="card-actions"><button type="button" class="btn btn-soft" id="about-open" aria-haspopup="dialog"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>Über den Stadtmonitor</button>
+            <a class="btn btn-soft" href="einfache-sprache.html">In Einfacher Sprache</a></span>
+        </div>
+        <div class="card static">
+          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg></span>
+          <span class="card-title">Hinweis geben</span>
+          <span class="card-text">Ort falsch zugeordnet oder etwas unklar? Ein Hinweis hilft, die Karte zu verbessern.</span>
+          <span class="card-actions"><a class="btn btn-soft" id="cta-report" href="impressum.html"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg>Fehler oder Hinweis melden</a></span>
+        </div>
+        <div class="card static">
           <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></span>
-          <span class="card-title">Vorgänge (JSON)</span>
-          <span class="card-text">Sitzungen, Tagesordnungspunkte und Ortsbezüge mit Fundstelle (ohne Flächen der Bauleitplanung).</span></a>
-        <a class="card" href="data/export/stadtmonitor-daten.zip" download>
-          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></span>
-          <span class="card-title">Datenpaket (Zip)</span>
-          <span class="card-text">Vorgänge, Strukturdaten, Audit-Protokolle (TSV), Quellenregister und Lizenzen.</span></a>
-        <a class="card" href="ortsteile/">
-          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg></span>
-          <span class="card-title">Ortsteile im Überblick</span>
-          <span class="card-text">Je Ortsteil eine Seite: nächste Sitzungen, Vorgänge der letzten zwölf Monate, Zahlen aus dem Zensus.</span></a>
-        <a class="card" data-cfg-href="stadt.bekanntmachungen" href="#" target="_blank" rel="noopener">
-          <span class="card-icon"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg></span>
-          <span class="card-title">Amtliche Bekanntmachungen</span>
-          <span class="card-text">Die Originale (PDF) auf der Seite der Stadt.</span></a>
+          <span class="card-title">Daten herunterladen</span>
+          <span class="card-text">Vorgänge mit Fundstelle (JSON) und das Datenpaket mit Strukturdaten, Prüfprotokollen, Quellenregister und Lizenzen. Die Originale stehen in den Bekanntmachungen der Stadt.</span>
+          <span class="card-actions"><a class="btn btn-soft" href="data/export/vorgaenge.json" download><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>Vorgänge (JSON)</a>
+            <a class="btn btn-soft" href="data/export/stadtmonitor-daten.zip" download><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>Datenpaket (Zip)</a>
+            <a class="btn btn-soft" data-cfg-href="stadt.bekanntmachungen" href="#" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-external"/></svg>Bekanntmachungen<span class="visually-hidden"> (neuer Tab)</span></a></span>
+        </div>
       </div>
       <details class="acc" id="sources">
         <summary>Quellen, Lizenzen und Datenstand</summary>
@@ -165,7 +175,7 @@
           <p><a href="data/LICENSE-DATA.md">Lizenzen der Daten</a> · <a href="quellen.html">Alle Datenquellen</a> · <a href="teilen/">Teilen</a> · <a href="einfache-sprache.html">Einfache Sprache</a> · <a href="barrierefreiheit.html">Barrierefreiheit</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
         </div>
       </details>
-    </section>
+        </section>
   </header>
 
   <main>

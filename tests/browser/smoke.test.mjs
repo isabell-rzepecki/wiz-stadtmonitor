@@ -141,6 +141,12 @@ test("Nur eigene Domain: Datenquellen als Seite, interner Bereich, Hinweise per 
   }
   const page = await open(SITE);
   assert.match(await page.locator("#cta-report").getAttribute("href"), /^mailto:/);
+  // Hauptmenü nach Fragen der Nutzenden: Politik, Stadt in Zahlen, Über (mit Hinweis, Daten und Quellen), Teilen
+  if (await page.locator('.nav [data-mega="mega-politik"] span').first().isVisible())
+    assert.deepEqual((await page.locator(".nav .menu-btn span:not(.visually-hidden)").allTextContents()).map((s) => s.trim()), ["Politik", "Stadt in Zahlen", "Über", "Teilen"]);
+  assert.equal(await page.locator("#mega-ueber #cta-report, #mega-ueber #about-open, #mega-ueber #sources").count(), 3);
+  assert.equal(await page.locator("#mega-stadt #cta-wohnen, #mega-stadt #cta-struktur, #mega-stadt #cta-wanderung, #mega-stadt a[href='ortsteile/']").count(), 4);
+  assert.equal(await page.locator("#mega-politik #cta-termine, #mega-politik #cta-stats, #mega-politik #cta-wahlen, #mega-politik a[href='gremien/']").count(), 4);
   assert.equal(await page.locator('a[href*="github"]').count(), 0);
   await page.close();
 });
@@ -173,7 +179,7 @@ test("Karte: Ortsbezirk anklicken lädt das Gebiet, Hinweis zur Zuordnung", asyn
 
 test("Termine im Ortsteil: Abo des Ortsbeirats, Punkte der Stadtgremien mit Ortsbezug, ohne Verstöße", async () => {
   const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
-  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator('[data-mega="mega-politik"]').click();
   await page.locator("#cta-termine").click();
   await page.waitForSelector("#termine .abo");
   const abo = page.locator("#termine .abo");
@@ -199,7 +205,7 @@ test("Verfahrenspunkte sind standardmäßig ausgeblendet", async () => {
 
 test("Termine: kommende Sitzungen mit Tagesordnung", async () => {
   const page = await open(SITE);
-  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator('[data-mega="mega-politik"]').click();
   await page.locator("#cta-termine").click();
   await page.waitForFunction(() => document.querySelectorAll("#termine .meeting").length > 0);
   // Sitzungen ab heute (24.10.2026); die Testdaten enthalten zwei im November 2026
@@ -224,7 +230,7 @@ test("Zeitleiste und Kennzahlen, ohne Verstöße", async () => {
   await page.locator('.toggle[data-panel="timeline-wrap"]').click();
   assert.ok(await page.locator("#timeline-wrap .tl-svg rect").count() > 0);
   assert.deepEqual(await axe(page), []);
-  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator('[data-mega="mega-politik"]').click();
   await page.locator("#cta-stats").click();
   assert.ok(await page.locator("#stats .bar").count() > 0);
   assert.deepEqual(await axe(page), []);
@@ -280,7 +286,7 @@ test("Umweltebenen: zuschaltbar, Legende mit Hinweis, Quelle unter © Quellen, Z
 
 test("Wohnen und Boden (Fenster): Kennzahlen mit Stichtag, Ortsbezirk als Näherung, Verweis auf die Seite, ohne Verstöße", async () => {
   const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
-  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator('[data-mega="mega-stadt"]').click();
   await page.locator("#cta-wohnen").click();
   const text = await page.locator("#wohnen").textContent();
   assert.match(text, /Stichtag 01\.01\.2024/);
@@ -299,7 +305,7 @@ test("Wohnen und Boden (Fenster): Kennzahlen mit Stichtag, Ortsbezirk als Näher
 
 test("Strukturdaten: Werte des Ortsteils und der Stadt, Vergleich mit Verlauf, sortierbare Tabelle, Kartenebene mit Legende, Hinweis im Vorgang, ohne Verstöße", async () => {
   const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
-  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator('[data-mega="mega-stadt"]').click();
   await page.locator("#cta-struktur").click();
   await page.waitForSelector("#struktur table");
   const text = await page.locator("#struktur").textContent();
@@ -386,7 +392,7 @@ test("Bodenrichtwerte 2026: eigene Bildebene mit Stichtag, Hinweis zum Heranzoom
 
 test("Zuzug und Wegzug: Zeitreihe mit Tabelle, Gemeinden im Kreis, Kreisebene gekennzeichnet, Kartenebenen, ohne Verstöße", async () => {
   const page = await open(SITE);
-  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator('[data-mega="mega-stadt"]').click();
   await page.locator("#cta-wanderung").click();
   await page.waitForSelector("#wanderung svg.chart");
   const text = await page.locator("#wanderung").textContent();
@@ -414,7 +420,7 @@ test("Zuzug und Wegzug: Zeitreihe mit Tabelle, Gemeinden im Kreis, Kreisebene ge
 
 test("Wahlen und Gremien: amtliche Ergebnisse mit Stufe (Schnellmeldung), 2016, Ortsbeirat des Gebiets, ohne Verstöße", async () => {
   const page = await open(SITE, "?gebiet=ortsteil:gertenbach");
-  await page.locator('[data-mega="mega-mitmachen"]').click();
+  await page.locator('[data-mega="mega-politik"]').click();
   await page.locator("#cta-wahlen").click();
   const text = await page.locator("#wahlen").textContent();
   assert.match(text, /Stadtverordnetenwahl 15\.03\.2026/);
@@ -430,7 +436,7 @@ test("Wahlen und Gremien: amtliche Ergebnisse mit Stufe (Schnellmeldung), 2016, 
 
 test("Quellwache: bekannte Lücken unter Quellen und Datenstand, mit Fundstelle, ohne Verstöße", async () => {
   const page = await open(SITE);
-  await page.locator('[data-mega="mega-daten"]').click();
+  await page.locator('[data-mega="mega-ueber"]').click();
   await page.locator("#sources > summary").click();
   await page.locator("#luecken summary").click();
   const t = await page.locator("#luecken").textContent();
@@ -965,7 +971,7 @@ test("Tour: Start aus dem Startfenster, alle Schritte mit Pfeiltaste, Beispielvo
     await page.waitForFunction((ist) => !document.querySelector("#tour-count")?.textContent.startsWith(`Schritt ${ist} `), ist);
     titel.push(await page.locator("#tour-title").textContent());
   }
-  for (const t of ["Suche", "Gebiet wählen", "Die Karte", "Kartenoptionen und Ebenen", "Die Liste", "Der Vorgang", "Die Prozesslinie", "Sitzungen und Themen", "Über den Stadtmonitor"])
+  for (const t of ["Suche", "Gebiet wählen", "Die Karte", "Kartenoptionen und Ebenen", "Die Liste", "Der Vorgang", "Die Prozesslinie", "Politik", "Stadt in Zahlen", "Über den Stadtmonitor"])
     assert.ok(titel.includes(t), `Schritt „${t}“ fehlt: ${titel.join(", ")}`);
   assert.equal(await page.locator("#detail-heading").textContent(), "Vorgang", "Beispielvorgang geöffnet");
   await page.keyboard.press("Escape");
