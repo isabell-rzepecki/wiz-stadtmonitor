@@ -372,7 +372,7 @@
   }
 
   // --- Veröffentlichen (wie tools/veroeffentlichen.py) -------------------------------------------------------------
-  const VERBOTEN = new Set(["name_privat_enc", "name_privat", "angabe_id", "erfassung_id", "nettokalt_eur", "wohnflaeche_m2", "eur_je_m2", "einwilligung",
+  const VERBOTEN = new Set(["wohnungen_je_kategorie", "name_privat_enc", "name_privat", "angabe_id", "erfassung_id", "nettokalt_eur", "wohnflaeche_m2", "eur_je_m2", "einwilligung",
     "erfasser", "vermieter_schluessel", "bemerkung", "lage_hinweis", "beleg_url", "letzte_erhoehung_jahr", "ausstattung"]);
   const nachSchluessel = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
   function eigentumJe(frei) {  // je Gebäude der jüngste freigegebene Eintrag
@@ -390,6 +390,10 @@
       if (r.kategorie === "jp_sonst" && !e.name_oeffentlich) name = null;
       const props = { id: gid, kategorie: r.kategorie, kategorie_titel: k.titel, sicherheit: r.sicherheit, beleg: r.beleg_art };
       if (name) props.name = name.split(/\s+/).filter(Boolean).join(" ");
+      if (r.gebaeudeart === "efh" || r.gebaeudeart === "mfh") {  // R3: Art des Hauses und Zahl der Wohnungen, nie je Kategorie
+        props.gebaeudeart = r.gebaeudeart;
+        if (r.wohnungen_gesamt) props.wohnungen = r.wohnungen_gesamt;
+      }
       feats.push({ type: "Feature", geometry: null, properties: props });  // Umriss setzt die Übernahme aus gebaeude.geojson
     }
     return { type: "FeatureCollection", stand, hinweis: "Nur geprüfte und freigegebene Erfassungen; unvollständig.",

@@ -125,25 +125,30 @@ window.WohnenModule = (function () {
       <div class="tabelle"><table><caption class="visually-hidden">Erfassungsstand je Ortsbezirk</caption>
       <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Gebäude</th><th scope="col">mit Kategorie</th><th scope="col">Anteil</th><th scope="col">davon privat</th></tr></thead><tbody>${zeilen}</tbody></table></div>
       <p class="meta">Privat: nur als Anzahl ab ${zahl(cfg.wohnen_eigentum.regeln.privat_anteil_min)} Gebäuden; darunter auch nicht in „mit Kategorie“ enthalten.</p>
-      ${wohnungenTabelle(cfg, a)}`;
+      ${wohnungenTabelle(cfg, a, w && w.zensus_mfh)}`;
   }
 
-  // Wohnungen in Mehrfamilienhäusern je Ortsbezirk (Regel R10): nur Zahlen je Eigentümer-Art; „privat“ erst ab der Mindestzahl Häuser
-  function wohnungenTabelle(cfg, a) {
+  // Wohnungen in Mehrfamilienhäusern je Ortsbezirk (Regel R10): nur Zahlen je Eigentümer-Art; „privat“ erst ab der Mindestzahl
+  // Häuser. Bezugsgröße ist die Näherung aus dem Zensus 2022 (wohnen.json: zensus_mfh), damit der Erfassungsstand lesbar wird.
+  function wohnungenTabelle(cfg, a, z) {
     const titel = Object.fromEntries((cfg.wohnen_eigentum.kategorien || []).map((k) => [k.code, k.titel]));
-    const zeilen = cfg.ortsteile.filter((x) => a[x.slug] && a[x.slug].wohnungen).map((x) => {
-      const w = a[x.slug].wohnungen;
+    const zob = (z && z.ortsbezirke) || {};
+    const zeilen = cfg.ortsteile.filter((x) => (a[x.slug] && a[x.slug].wohnungen) || zob[x.slug] != null).map((x) => {
+      const w = (a[x.slug] && a[x.slug].wohnungen) || null, ref = zob[x.slug];
+      const zensus = ref != null ? zahl(ref) : "–";
+      if (!w) return `<tr><th scope="row">${esc(x.name)}</th><td>${zensus}</td><td>0</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>`;
       const je = Object.entries(w.je_kategorie || {}).map(([k, n]) => `${esc(titel[k] || k)}: ${zahl(n)}`).join("<br>") || "–";
       const privat = w.privat != null ? zahl(w.privat) : w.privat_hinweis ? `<span class="luecke">${ZU_WENIG}</span>` : "–";
       const gesamt = w.wohnungen != null ? zahl(w.wohnungen) : `<span class="luecke">${ZU_WENIG}</span>`;
-      return `<tr><th scope="row">${esc(x.name)}</th><td>${zahl(w.mehrfamilienhaeuser)}</td><td>${gesamt}</td><td>${je}</td><td>${privat}</td></tr>`;
+      const anteil = w.wohnungen != null && ref ? `${zahl(Math.min(100, (100 * w.wohnungen) / ref), 1)} %` : "–";
+      return `<tr><th scope="row">${esc(x.name)}</th><td>${zensus}</td><td>${zahl(w.mehrfamilienhaeuser)}</td><td>${gesamt}</td><td>${anteil}</td><td>${je}</td><td>${privat}</td></tr>`;
     }).join("");
     if (!zeilen) return "";
     return `<h4>Wohnungen in Mehrfamilienhäusern</h4>
-      <p>Erfasste Mehrfamilienhäuser (3 oder mehr Wohnungen), die bekannte Zahl ihrer Wohnungen und wem wie viele davon gehören. Nicht zugeordnete Wohnungen fehlen in den Spalten der Eigentümer.</p>
-      <div class="tabelle"><table><caption class="visually-hidden">Wohnungen in Mehrfamilienhäusern je Ortsbezirk</caption>
-      <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Häuser</th><th scope="col">Wohnungen</th><th scope="col">davon Unternehmen, Genossenschaften, öffentliche Hand</th><th scope="col">davon privat</th></tr></thead><tbody>${zeilen}</tbody></table></div>
-      <p class="meta">Privat: nur ab ${zahl(cfg.wohnen_eigentum.regeln.privat_anteil_min)} Häusern mit privaten Wohnungen; darunter fehlt auch die Gesamtzahl, damit sich „privat“ nicht zurückrechnen lässt.</p>`;
+      <p>Erfasste Mehrfamilienhäuser (3 oder mehr Wohnungen), die bekannte Zahl ihrer Wohnungen und wem wie viele davon gehören, verglichen mit der Zahl aus dem Zensus 2022. Nicht zugeordnete Wohnungen fehlen in den Spalten der Eigentümer.</p>
+      <div class="tabelle" tabindex="0" role="region" aria-label="Tabelle Wohnungen in Mehrfamilienhäusern (seitlich verschiebbar)"><table><caption class="visually-hidden">Wohnungen in Mehrfamilienhäusern je Ortsbezirk, erfasst und laut Zensus 2022</caption>
+      <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">laut Zensus 2022</th><th scope="col">erfasste Häuser</th><th scope="col">erfasste Wohnungen</th><th scope="col">Anteil</th><th scope="col">davon Unternehmen, Genossenschaften, öffentliche Hand</th><th scope="col">davon privat</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+      <p class="meta">Privat: nur ab ${zahl(cfg.wohnen_eigentum.regeln.privat_anteil_min)} Häusern mit privaten Wohnungen; darunter fehlt auch die Gesamtzahl, damit sich „privat“ nicht zurückrechnen lässt.${z ? ` Zensus: ${esc(z.hinweis)} Stichtag ${datum(z.stichtag)}; ${esc(z.attribution)}.` : ""}</p>`;
   }
 
   function tagesordnung() {

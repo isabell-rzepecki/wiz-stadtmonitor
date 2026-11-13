@@ -32,7 +32,7 @@ E = pg.STADT["wohnen_eigentum"]
 R = E["regeln"]
 KAT = {k["code"]: k for k in E["kategorien"]}
 GEBAEUDE = pg.ROOT / "data" / "geo" / "hvgg" / "gebaeude.geojson"
-VERBOTEN = {"name_privat_enc", "name_privat", "angabe_id", "erfassung_id", "nettokalt_eur", "wohnflaeche_m2", "eur_je_m2", "einwilligung", "erfasser",
+VERBOTEN = {"wohnungen_je_kategorie", "name_privat_enc", "name_privat", "angabe_id", "erfassung_id", "nettokalt_eur", "wohnflaeche_m2", "eur_je_m2", "einwilligung", "erfasser",
             "vermieter_schluessel", "bemerkung", "lage_hinweis", "beleg_url", "letzte_erhoehung_jahr", "ausstattung"}
 
 
@@ -67,6 +67,10 @@ def karte(je, geb, stand):
         props = {"id": gid, "kategorie": r["kategorie"], "kategorie_titel": k["titel"], "sicherheit": r["sicherheit"], "beleg": r["beleg_art"]}
         if name:
             props["name"] = " ".join(name.split())
+        if r.get("gebaeudeart") in ("efh", "mfh"):  # R3: Art des Hauses und Zahl der Wohnungen, nie Wohnungen je Kategorie
+            props["gebaeudeart"] = r["gebaeudeart"]
+            if r.get("wohnungen_gesamt"):
+                props["wohnungen"] = r["wohnungen_gesamt"]
         feats.append({"type": "Feature", "geometry": geb[gid]["geometry"], "properties": props})
     return {"type": "FeatureCollection", "stand": stand, "hinweis": "Nur geprüfte und freigegebene Erfassungen; unvollständig.",
             "attribution": f"{pg.STADT['gebaeude']['attribution']}; Eigentum: eigene Erfassung, geprüft",

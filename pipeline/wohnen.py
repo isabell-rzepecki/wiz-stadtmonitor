@@ -368,6 +368,26 @@ def pruefprotokoll(zensus, vl, by_nr):
     audit.tabelle(f"wohnen_{date.today().isoformat()}.tsv", AUDIT_SPALTEN, zeilen)
 
 
+def zensus_mfh(werte=None):
+    """Wohnungen außerhalb von Ein- und Zweifamilienhäusern je Ortsbezirk (Zensus 2022, Strukturdaten), als Näherung für
+    Wohnungen in Mehrfamilienhäusern und Bezugsgröße der Erfassung. Nur wo der Anteil der Wohnungen in Ein- und
+    Zweifamilienhäusern ausgewiesen ist (Mindestnenner und Abweichungsgrenze der Strukturdaten); sonst fehlt der Ortsbezirk."""
+    werte = werte or config.ROOT / "data" / "strukturdaten" / "werte.tsv"
+    if not werte.exists():
+        return None
+    w = {}
+    with open(werte, encoding="utf-8") as f:
+        for r in csv.DictReader(f, delimiter="\t"):
+            if r["raumebene"] == "ortsbezirk" and r["indikator_id"] in ("zensus_wohnungen", "zensus_wohnungen_efh_zfh", "zensus_anteil_wohnungen_efh_zfh"):
+                w.setdefault(r["raum_id"], {})[r["indikator_id"]] = r["wert"]
+    ob = {slug: round(float(x["zensus_wohnungen"]) - float(x["zensus_wohnungen_efh_zfh"])) for slug, x in sorted(w.items())
+          if x.get("zensus_anteil_wohnungen_efh_zfh") and x.get("zensus_wohnungen") and x.get("zensus_wohnungen_efh_zfh")}
+    return {"stichtag": W["zensus"]["stichtag"], "attribution": W["zensus"]["attribution"] + "; eigene Aggregation",
+            "hinweis": "Wohnungen insgesamt abzüglich der Wohnungen in Ein- und Zweifamilienhäusern (nach Bauart), aus dem "
+                       "100-Meter-Gitter; enthält auch Wohnungen in Gebäuden anderer Bauart. Ortsbezirke ohne verlässlichen "
+                       "Anteil fehlen.", "ortsbezirke": ob}
+
+
 def build():
     gem = _gemarkungen()
     sp = _boris(gem)
@@ -413,6 +433,7 @@ def build():
     # Eigentum und Mieten erst, wenn geprüfte Dateien vorliegen; sonst null (die Seite zeigt den Stand der Erfassung)
     for k, p in (("eigentum_anteile", EIGENTUM_ANTEILE), ("mieten", MIETEN)):
         daten[k] = json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+    daten["zensus_mfh"] = zensus_mfh()
     # Eigentumskarte (Seite Wohnen und Eigentum): nur die geprüfte Datei; ohne sie keine Ebene
     EIGENTUM_KARTE.parent.mkdir(parents=True, exist_ok=True)
     daten["eigentum_karte"] = EIGENTUM_GEBAEUDE.exists()

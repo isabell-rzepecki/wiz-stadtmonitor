@@ -604,7 +604,7 @@ test("Wohnen und Eigentum: Ebene Eigentum aus der geprüften Datei, privat nie j
   const mitte = (f) => { const r = f.geometry.coordinates[0].slice(0, -1); return [r.reduce((s, c) => s + c[0], 0) / r.length, r.reduce((s, c) => s + c[1], 0) / r.length]; };
   const eig = { type: "FeatureCollection", stand: "2026-10-26", features: geb.map((f, i) => ({ type: "Feature", geometry: f.geometry,
     properties: { id: f.properties.id, kategorie: i % 2 ? "kom" : "geno", kategorie_titel: i % 2 ? "Stadt" : "Wohnungsgenossenschaft",
-      sicherheit: "gesichert", beleg: "ortskenntnis", ...(i % 2 ? {} : { name: "Wohnbau Test eG" }) } })) };
+      sicherheit: "gesichert", beleg: "ortskenntnis", ...(i % 2 ? {} : { name: "Wohnbau Test eG", gebaeudeart: "mfh", wohnungen: 12 }) } })) };
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, bypassCSP: true });
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
@@ -614,7 +614,9 @@ test("Wohnen und Eigentum: Ebene Eigentum aus der geprüften Datei, privat nie j
     const res = await r.fetch(), w = await res.json();
     w.eigentum_karte = true;
     w.eigentum_anteile = { stand: "2026-10-26", ortsbezirke: { gertenbach: { gebaeude: 1295, erfasst: 40, kategorien: { geno: 20, kom: 20 }, privat: null,
-      privat_hinweis: "zu wenige Angaben; nicht in „erfasst“ enthalten" } } };
+      privat_hinweis: "zu wenige Angaben; nicht in „erfasst“ enthalten",
+      wohnungen: { mehrfamilienhaeuser: 3, mit_wohnungszahl: 3, wohnungen: 36, je_kategorie: { geno: 24 }, privat: null, privat_haeuser: null } } } };
+    w.zensus_mfh = { stichtag: "2022-05-15", attribution: "Zensus (Test)", hinweis: "Näherung (Test).", ortsbezirke: { gertenbach: 147, kernstadt: 2238 } };
     await r.fulfill({ response: res, json: w });
   });
   await page.route("**/data/export/karte/eigentum_gebaeude.json", (r) => r.fulfill({ json: eig }));
@@ -639,12 +641,17 @@ test("Wohnen und Eigentum: Ebene Eigentum aus der geprüften Datei, privat nie j
     await page.mouse.click(pt.x, pt.y);
     await page.locator("#gebaeude").waitFor();
     assert.match(await page.locator("#gebaeude").textContent(), /Eigentum\s*Wohnungsgenossenschaft: Wohnbau Test eG/);
+    assert.match(await page.locator("#gebaeude").textContent(), /Haus\s*Mehrfamilienhaus mit 12 Wohnungen/);
     getroffen = true;
     break;
   }
   assert.ok(getroffen, "kein erfasstes Gebäude anklickbar");
   await page.locator("#modul-stand > summary").click();
   assert.match(await page.locator("#modul-stand").textContent(), /Gertenbach\s*[\d.]+\s*40\s*[\d,]+ %\s*zu wenige Angaben/);
+  // Wohnungen in Mehrfamilienhäusern: erfasst gegen Zensus 2022 (36 von 147 = 24,5 %), Ortsteile ohne Erfassung mit Bezugsgröße
+  const stand = await page.locator("#modul-stand").textContent();
+  assert.match(stand, /Wohnungen in Mehrfamilienhäusern.*Gertenbach\s*147\s*3\s*36\s*24,5 %\s*Wohnungsgenossenschaft: 24/s);
+  assert.match(stand, /Kernstadt\s*2\.238\s*0/);
   await page.locator("#modul-eigentum > summary").click();
   assert.match(await page.locator("#modul-eigentum").textContent(), /Geprüfte Erfassung, Stand 26\.10\.2026/);
   assert.deepEqual(await axe(page), []);

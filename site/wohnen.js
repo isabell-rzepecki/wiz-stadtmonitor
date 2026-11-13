@@ -189,7 +189,9 @@
     const zoneHtml = (z) => `<dt>Bodenrichtwert</dt><dd>${zahl(z.wert)} €/m² <span class="meta">(${esc(z.art || "–")}, Gemarkung ${esc(z.gemarkung || "–")}, Stichtag ${esc(datum(z.stichtag))})</span></dd>`;
     const eigHtml = (id) => {
       const e = eigIndex.get(id);
-      return e ? `<dt>Eigentum</dt><dd>${esc(e.kategorie_titel)}${e.name ? `: ${esc(e.name)}` : ""} <span class="meta">(${esc(e.sicherheit)}, geprüfte Erfassung)</span></dd>` : "";
+      if (!e) return "";
+      const art = e.gebaeudeart === "mfh" ? `Mehrfamilienhaus${e.wohnungen ? ` mit ${zahl(e.wohnungen)} Wohnungen` : ""}` : e.gebaeudeart === "efh" ? "Ein- oder Zweifamilienhaus" : "";
+      return `<dt>Eigentum</dt><dd>${esc(e.kategorie_titel)}${e.name ? `: ${esc(e.name)}` : ""} <span class="meta">(${esc(e.sicherheit)}, geprüfte Erfassung)</span></dd>${art ? `<dt>Haus</dt><dd>${esc(art)}</dd>` : ""}`;
     };
     function zeigeGebaeude(p, zone = null) {
       gewaehlt = p ? p.id : null;
