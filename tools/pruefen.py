@@ -167,7 +167,9 @@ def pruefen(arbeit):
         je_geb.setdefault(e["datensatz"]["objekt"]["id"], []).append(i)
     for ids in je_geb.values():
         ids.sort(key=lambda i: eig[i]["datensatz"]["erfasst_am"])
-        merkmal = lambda i: (eig[i]["datensatz"]["kategorie"], eig[i]["vermieter"], eig[i]["datensatz"].get("vermietet"))  # noqa: E731
+        merkmal = lambda i: (eig[i]["datensatz"]["kategorie"], eig[i]["vermieter"], eig[i]["datensatz"].get("vermietet"),  # noqa: E731
+                             eig[i]["datensatz"].get("gebaeudeart") or "unbekannt", eig[i]["datensatz"].get("wohnungen_gesamt"),
+                             json.dumps(eig[i]["datensatz"].get("wohnungen_je_kategorie") or {}, sort_keys=True))
         if len({merkmal(i) for i in ids}) == 1:
             for i in ids[:-1]:
                 eig[i]["status"], eig[i]["konflikt"] = "verworfen", f"Dublette von {ids[-1]}"

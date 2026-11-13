@@ -257,7 +257,9 @@
     for (const [i, e] of eig) { const g = e.datensatz.objekt.id; if (!jeGeb.has(g)) jeGeb.set(g, []); jeGeb.get(g).push(i); }
     for (const ids of jeGeb.values()) {
       ids.sort((a, b) => (E[a].datensatz.erfasst_am < E[b].datensatz.erfasst_am ? -1 : E[a].datensatz.erfasst_am > E[b].datensatz.erfasst_am ? 1 : 0));
-      const merkmal = (i) => JSON.stringify([E[i].datensatz.kategorie, E[i].vermieter ?? null, E[i].datensatz.vermietet ?? null]);
+      const sortiert = (o) => Object.fromEntries(Object.entries(o || {}).sort((a, b) => nachSchluessel(a[0], b[0])));
+      const merkmal = (i) => JSON.stringify([E[i].datensatz.kategorie, E[i].vermieter ?? null, E[i].datensatz.vermietet ?? null,
+        E[i].datensatz.gebaeudeart || "unbekannt", E[i].datensatz.wohnungen_gesamt ?? null, sortiert(E[i].datensatz.wohnungen_je_kategorie)]);
       if (new Set(ids.map(merkmal)).size === 1) {
         for (const i of ids.slice(0, -1)) {
           E[i].status = "verworfen"; E[i].konflikt = `Dublette von ${ids.at(-1)}`;
@@ -411,7 +413,33 @@
         kategorien: Object.fromEntries(Object.entries(kat).sort((a, b) => nachSchluessel(a[0], b[0]))), privat: zeigen ? privat : null };
       if (privat > 0 && !zeigen) ob[slug].privat_hinweis = "zu wenige Angaben; nicht in „erfasst“ enthalten";
     }
+    for (const [slug, w] of Object.entries(wohnungen(je))) if (ob[slug]) ob[slug].wohnungen = w;
     return { stand, mindestzahl_privat: R.privat_anteil_min, ortsbezirke: ob };
+  }
+  // Wohnungen in Mehrfamilienhäusern je Ortsbezirk (R10, wie veroeffentlichen.wohnungen): „privat“ nur aus mindestens
+  // privat_anteil_min Häusern; darunter fehlen „privat“ und die Gesamtzahl, sonst ließe sich „privat“ zurückrechnen
+  function wohnungen(je) {
+    const roh = {};
+    for (const [gid, e] of je) {
+      const r = e.datensatz, o = GEB.get(gid);
+      if (!o || r.gebaeudeart !== "mfh") continue;
+      const w = (roh[o] ||= { haeuser: 0, mit_zahl: 0, summe: 0, je: {}, privat_haeuser: 0 });
+      w.haeuser += 1;
+      if (r.wohnungen_gesamt) { w.mit_zahl += 1; w.summe += r.wohnungen_gesamt; }
+      for (const [k, n] of Object.entries(r.wohnungen_je_kategorie || {})) w.je[k] = (w.je[k] || 0) + n;
+      if ((r.wohnungen_je_kategorie || {}).privat) w.privat_haeuser += 1;
+    }
+    const out = {};
+    for (const slug of Object.keys(roh).sort(nachSchluessel)) {
+      const w = roh[slug], privat = w.je.privat || 0;
+      delete w.je.privat;
+      const zeigen = w.privat_haeuser >= R.privat_anteil_min, verdeckt = privat > 0 && !zeigen;
+      out[slug] = { mehrfamilienhaeuser: w.haeuser, mit_wohnungszahl: w.mit_zahl, wohnungen: verdeckt ? null : w.summe,
+        je_kategorie: Object.fromEntries(Object.entries(w.je).sort((a, b) => nachSchluessel(a[0], b[0]))),
+        privat: zeigen ? privat : null, privat_haeuser: zeigen ? w.privat_haeuser : null };
+      if (verdeckt) out[slug].privat_hinweis = "zu wenige Angaben; Gesamtzahl nicht ausgewiesen";
+    }
+    return out;
   }
   const runden = (x) => { const s = R.mieten_rundung_eur; return runden2(rundenGanz(x / s) * s); };
   function kennzahlen(werte) {  // statistics.median und statistics.quantiles(n=4, method="inclusive")
@@ -481,6 +509,9 @@
       for (const o of Object.values(d.ortsbezirke || {})) {
         if (o.privat != null && o.privat < R.privat_anteil_min) throw new Error(`${name}: Anteil privat unter der Mindestzahl`);
         if (o.privat == null && o.erfasst !== Object.values(o.kategorien || {}).reduce((s, x) => s + x, 0)) throw new Error(`${name}: Anteil privat als Differenz rückrechenbar`);
+        const w = o.wohnungen;
+        if (w && w.privat != null && (w.privat_haeuser || 0) < R.privat_anteil_min) throw new Error(`${name}: Wohnungen privat aus zu wenigen Häusern`);
+        if (w && "privat_hinweis" in w && w.wohnungen != null) throw new Error(`${name}: Wohnungen privat als Differenz rückrechenbar`);
       }
     }
   }
@@ -502,10 +533,13 @@
     const zahl = (x) => (x == null ? "–" : x.toFixed(2).replace(".", ","));
     const anteileZeilen = Object.entries(a).filter(([, o]) => o.erfasst || o.privat_hinweis)
       .map(([s, o]) => `<tr><td>${esc(K.ortsteile[s] ?? s)}</td><td>${o.gebaeude}</td><td>${o.erfasst}</td><td>${esc(Object.entries(o.kategorien).map(([k, n]) => `${k} ${n}`).join(", "))}</td><td>${o.privat ?? esc(o.privat_hinweis ? "zu wenige" : "–")}</td></tr>`).join("");
+    const wohnZeilen = Object.entries(a).filter(([, o]) => o.wohnungen).map(([s, o]) => { const w = o.wohnungen;
+      return `<tr><td>${esc(K.ortsteile[s] ?? s)}</td><td>${w.mehrfamilienhaeuser}</td><td>${w.wohnungen ?? "zu wenige"}</td><td>${esc(Object.entries(w.je_kategorie).map(([k, n]) => `${k} ${n}`).join(", ") || "–")}</td><td>${w.privat ?? esc(w.privat_hinweis ? "zu wenige" : "–")}</td></tr>`; }).join("");
     const mietZeilen = m ? [...m.zellen.map((z) => [`${K.ortsteile[z.ortsbezirk] ?? z.ortsbezirk}, ${z.baujahr_klasse}`, z]), ...m.juristische_personen.map((j) => [j.name, j])]
       .map(([t, z]) => `<tr><td>${esc(t)}</td><td>${z.n ?? esc(z.hinweis)}</td><td>${zahl(z.median)}</td><td>${z.p25 != null ? `${zahl(z.p25)} – ${zahl(z.p75)}` : "–"}</td></tr>`).join("") : "";
     return `<p>Häuser von Firmen, Genossenschaften und öffentlicher Hand: ${v.dateien["eigentum_gebaeude.geojson"].features.length}</p>
       <div class="tabelle-rahmen"><table><caption>Wem die Häuser gehören, je Ortsteil</caption><thead><tr><th scope="col">Ortsteil</th><th scope="col">Häuser</th><th scope="col">erfasst</th><th scope="col">Eigentümer</th><th scope="col">privat</th></tr></thead><tbody>${anteileZeilen || '<tr><td colspan="5">keine</td></tr>'}</tbody></table></div>
+      ${wohnZeilen ? `<div class="tabelle-rahmen"><table><caption>Wohnungen in Mehrfamilienhäusern, je Ortsteil</caption><thead><tr><th scope="col">Ortsteil</th><th scope="col">Häuser</th><th scope="col">Wohnungen</th><th scope="col">Eigentümer</th><th scope="col">privat</th></tr></thead><tbody>${wohnZeilen}</tbody></table></div>` : ""}
       ${m ? `<div class="tabelle-rahmen"><table><caption>Mieten in € je m² nach Ortsteil und Baujahr</caption><thead><tr><th scope="col">Gruppe</th><th scope="col">Angaben</th><th scope="col">Mitte</th><th scope="col">Spanne</th></tr></thead><tbody>${mietZeilen || '<tr><td colspan="4">keine</td></tr>'}</tbody></table></div>` : ""}`;
   }
 

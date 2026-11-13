@@ -5,7 +5,8 @@ Zweck: Für die Stadt gibt es keinen Mietspiegel. Veröffentlicht wird nur, was 
 - data/wohnen/eigentum_gebaeude.geojson: Gebäude juristischer Personen mit Kategorie, Name nur nach Regel R3
   (sonstige juristische Personen nur nach ausdrücklicher Prüfung, ob der Name eine natürliche Person erkennbar macht)
 - data/wohnen/eigentum_anteile_ortsbezirk.json: Erfassungsstand und Kategorien je Ortsbezirk; „privat“ nur als Anzahl ab
-  der Mindestzahl (R2)
+  der Mindestzahl (R2); Wohnungen in Mehrfamilienhäusern je Eigentümer-Kategorie, „privat“ nur aus mindestens so vielen
+  Häusern, sonst ohne Gesamtzahl (R10)
 - data/wohnen/mieten_aggregiert.json: €/m² je Ortsbezirk und Baujahrklasse (Median, P25–P75) ab 5 Angaben (R4), je
   juristischer Person ab 5 Angaben aus 2 Gebäuden (R5); nie je privater Vermieter:in (R6), nie einzeln (R7); darunter
   „zu wenige Angaben“ (R8)
@@ -92,7 +93,41 @@ def anteile(je, geb, stand):
                     "privat": privat if zeigen else None}
         if 0 < privat and not zeigen:
             ob[slug]["privat_hinweis"] = "zu wenige Angaben; nicht in „erfasst“ enthalten"
+    for slug, w in wohnungen(je, geb).items():
+        if slug in ob:
+            ob[slug]["wohnungen"] = w
     return {"stand": stand, "mindestzahl_privat": R["privat_anteil_min"], "ortsbezirke": ob}
+
+
+def wohnungen(je, geb):
+    """Wohnungen in Mehrfamilienhäusern je Ortsbezirk (R10): Zahl der Häuser, Summe der bekannten Wohnungszahlen und Wohnungen je
+    Eigentümer-Kategorie. „privat“ nur, wenn mindestens privat_anteil_min Häuser private Wohnungen haben; darunter fehlen
+    „privat“ und die Gesamtzahl, sonst ließe sich „privat“ als Differenz zurückrechnen."""
+    roh = {}
+    for gid, e in je.items():
+        r, o = e["datensatz"], geb[gid]["properties"]["o"]
+        if not o or r.get("gebaeudeart") != "mfh":
+            continue
+        w = roh.setdefault(o, {"haeuser": 0, "mit_zahl": 0, "summe": 0, "je": {}, "privat_haeuser": 0})
+        w["haeuser"] += 1
+        if r.get("wohnungen_gesamt"):
+            w["mit_zahl"] += 1
+            w["summe"] += r["wohnungen_gesamt"]
+        for k, n in r.get("wohnungen_je_kategorie", {}).items():
+            w["je"][k] = w["je"].get(k, 0) + n
+        if r.get("wohnungen_je_kategorie", {}).get("privat"):
+            w["privat_haeuser"] += 1
+    out = {}
+    for slug, w in sorted(roh.items()):
+        privat = w["je"].pop("privat", 0)
+        zeigen = w["privat_haeuser"] >= R["privat_anteil_min"]
+        verdeckt = privat > 0 and not zeigen
+        out[slug] = {"mehrfamilienhaeuser": w["haeuser"], "mit_wohnungszahl": w["mit_zahl"],
+                     "wohnungen": None if verdeckt else w["summe"], "je_kategorie": dict(sorted(w["je"].items())),
+                     "privat": privat if zeigen else None, "privat_haeuser": w["privat_haeuser"] if zeigen else None}
+        if verdeckt:
+            out[slug]["privat_hinweis"] = "zu wenige Angaben; Gesamtzahl nicht ausgewiesen"
+    return out
 
 
 def kennzahlen(werte):
@@ -186,6 +221,11 @@ def pruefe_ausgabe(ausgaben, private_namen):
                 raise Verstoss(f"{name}: Anteil privat unter der Mindestzahl")
             if o.get("privat") is None and o["erfasst"] != sum(o.get("kategorien", {}).values()):
                 raise Verstoss(f"{name}: Anteil privat als Differenz rückrechenbar")
+            w = o.get("wohnungen")
+            if w and w.get("privat") is not None and (w.get("privat_haeuser") or 0) < R["privat_anteil_min"]:
+                raise Verstoss(f"{name}: Wohnungen privat aus zu wenigen Häusern")
+            if w and "privat_hinweis" in w and w.get("wohnungen") is not None:
+                raise Verstoss(f"{name}: Wohnungen privat als Differenz rückrechenbar")
 
 
 def veroeffentlichen(arbeit, ziel=pg.ROOT, cfg=E):

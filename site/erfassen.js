@@ -63,6 +63,8 @@
     bekanntmachung_stadt: "Bekanntmachung der Stadt", bauschild: "Bauschild", presse: "Presse",
     eigener_grundbuchauszug: "Eigener Grundbuchauszug (nur für ein eigenes Grundstück)", ortskenntnis: "Ortskenntnis" };
   const VERMIETET = { ja: "ja", teilweise: "teilweise", nein: "nein", unbekannt: "unbekannt" };
+  // Gebäudeart wie im Zensus 2022: Ein- und Zweifamilienhäuser gegenüber Mehrfamilienhäusern (3 oder mehr Wohnungen)
+  const GEBAEUDEART = { efh: "Ein- oder Zweifamilienhaus", mfh: "Mehrfamilienhaus (3 oder mehr Wohnungen)", unbekannt: "weiß nicht" };
   const SICHERHEIT = { gesichert: "gesichert", wahrscheinlich: "wahrscheinlich", unklar: "unklar" };
   const AUSSTATTUNG = { balkon: "Balkon", einbaukueche: "Einbauküche", aufzug: "Aufzug", zentralheizung: "Zentralheizung", neubaustandard: "Neubaustandard" };
   const FLAECHE = [[40, "<40", "unter 40 m²"], [60, "40-59", "40 bis 59 m²"], [80, "60-79", "60 bis 79 m²"], [100, "80-99", "80 bis 99 m²"],
@@ -278,7 +280,8 @@
       const FELDNAMEN = { kategorie: "Eigentum", vermietet: "Vermietet", beleg_art: "Beleg", beleg_url: "Beleg-Adresse", sicherheit: "Sicherheit",
         name_juristische_person: "Name", lage_hinweis: "Lage", bemerkung: "Bemerkung", nettokalt_eur: "Nettokaltmiete", wohnflaeche_klasse: "Wohnfläche",
         wohnflaeche_m2: "Wohnfläche in m²", baujahr_klasse: "Baujahr", vertragsbeginn_jahr: "Vertragsbeginn", letzte_erhoehung_jahr: "Letzte Erhöhung",
-        einwilligung: "Einwilligung", erfassungsweg: "Erfassungsweg", vermieter_schluessel: "Vermieter" };
+        einwilligung: "Einwilligung", erfassungsweg: "Erfassungsweg", vermieter_schluessel: "Vermieter", gebaeudeart: "Art des Hauses",
+        wohnungen_gesamt: "Zahl der Wohnungen", wohnungen_je_kategorie: "Wohnungen je Eigentümer-Art" };
       const schemaFehler = (s, rec) => ErfassenPruefung.schema(s, rec).map((f) => {
         const name = f.pfad.split(/[.[]/)[0] === "objekt" ? f.pfad.split(".")[1] : f.pfad.split(/[.[]/)[0];
         return { name, feld: FELDNAMEN[name] || name, text: f.text };
@@ -313,7 +316,7 @@
         inhalt.innerHTML = `${gebaeudeKopf(p)}<form id="form-a" novalidate>
           <div class="fehlerliste" tabindex="-1" role="alert" hidden></div>
           <fieldset class="kacheln"><legend>Wem gehört das Gebäude?</legend>${auswahl("kategorie", Object.fromEntries(kat), null)}</fieldset>
-          <p class="meta">GbR und Einzelkaufleute gelten als Privatpersonen.</p>
+          <p class="meta">GbR und Einzelkaufleute gelten als Privatpersonen. Gehört das Haus mehreren (etwa Eigentumswohnungen), die Art wählen, der die meisten Wohnungen gehören.</p>
           <div id="feld-jp" hidden><label class="feld">Name (Unternehmen, Genossenschaft, öffentliche Hand, Kirche)
             <input name="name_juristische_person" maxlength="120" autocomplete="off"></label></div>
           <div id="feld-privat" hidden>${E.privat_namen_aktiv
@@ -321,6 +324,14 @@
                 <input name="name_privat" autocomplete="off" spellcheck="false"></label>
                 <p class="meta">Nur zur Prüfung und zum Erkennen von Dubletten. Keine Namen aus Grundbuchauszügen Dritter, keine Klingelschilder.</p>`
             : `<p class="hinweis-kasten">Namen von Privatpersonen werden noch nicht erfasst (nicht freigegeben). Die Kategorie genügt.</p>`}</div>
+          <fieldset class="kacheln klein"><legend>Was für ein Haus ist das?</legend>${auswahl("gebaeudeart", GEBAEUDEART, "unbekannt")}</fieldset>
+          <div id="feld-mfh" hidden>
+            <label class="feld">Wie viele Wohnungen hat das Haus? <input name="wohnungen_gesamt" type="number" inputmode="numeric" min="3" max="999" step="1"></label>
+            <label class="wahlknopf"><input type="checkbox" name="wohnungen_unbekannt"> <span>Zahl unbekannt</span></label>
+            <fieldset class="wohnungen"><legend>Wem gehören wie viele Wohnungen? <span class="meta">(optional; nur Zahlen je Art, keine Namen; Unbekanntes leer lassen)</span></legend>
+              ${kat.filter(([c]) => c !== "unklar").map(([c, t]) => `<label class="feld zahl">${esc(t)} <input name="wj_${esc(c)}" type="number" inputmode="numeric" min="0" max="999" step="1"></label>`).join("")}
+            </fieldset>
+          </div>
           <fieldset class="kacheln klein"><legend>Werden Wohnungen vermietet?</legend>${auswahl("vermietet", VERMIETET, "unbekannt")}</fieldset>
           <label class="feld">Beleg <select name="beleg_art"><option value="">bitte wählen</option>${Object.entries(BELEGE).map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join("")}</select></label>
           <label class="feld">Adresse des Belegs <span class="meta">(optional)</span> <input name="beleg_url" type="url" inputmode="url" placeholder="https://…"></label>
@@ -335,6 +346,8 @@
           const k = (form.elements.kategorie.value || "");
           $("#feld-jp").hidden = !k || k === "privat" || k === "unklar";
           $("#feld-privat").hidden = k !== "privat";
+          $("#feld-mfh").hidden = form.elements.gebaeudeart.value !== "mfh";
+          form.elements.wohnungen_gesamt.disabled = form.elements.wohnungen_unbekannt.checked;
         });
         $("#abbrechen").addEventListener("click", () => gebaeude(p));
         form.addEventListener("submit", async (e) => {
@@ -351,8 +364,28 @@
           const name = w("name_juristische_person").replace(/\s+/g, " ");
           if (jp && name) { rec.name_juristische_person = name; rec.vermieter_schluessel = `JP:${name}`; }
           if (k === "privat") rec.vermieter_schluessel = "V-neu";
+          // Mehrfamilienhaus: Zahl der Wohnungen (oder „unbekannt“) und Wohnungen je Eigentümer-Art, nur als Zahlen
+          const zusatz = [];
+          rec.gebaeudeart = w("gebaeudeart") || "unbekannt";
+          if (rec.gebaeudeart === "mfh") {
+            const ganz = (s) => (s === "" ? null : Number(s));
+            const gesamt = ganz(w("wohnungen_gesamt")), unbekannt = form.elements.wohnungen_unbekannt.checked;
+            if (!unbekannt && gesamt === null) zusatz.push({ name: "wohnungen_gesamt", feld: FELDNAMEN.wohnungen_gesamt, text: "Zahl eingeben oder „Zahl unbekannt“ ankreuzen" });
+            if (!unbekannt && gesamt !== null) rec.wohnungen_gesamt = gesamt;
+            const je = {};
+            for (const [c] of kat) {
+              const n = form.elements[`wj_${c}`] ? ganz(w(`wj_${c}`)) : null;
+              if (n === null || n === 0) continue;
+              if (!Number.isInteger(n) || n < 0) zusatz.push({ name: `wj_${c}`, feld: FELDNAMEN.wohnungen_je_kategorie, text: "nur ganze Zahlen" });
+              else je[c] = n;
+            }
+            if (Object.keys(je).length) rec.wohnungen_je_kategorie = je;
+            const summe = Object.values(je).reduce((s, x) => s + x, 0);
+            if (Number.isInteger(rec.wohnungen_gesamt) && summe > rec.wohnungen_gesamt)
+              zusatz.push({ name: "wohnungen_gesamt", feld: FELDNAMEN.wohnungen_je_kategorie, text: `zusammen ${summe}, mehr als die ${rec.wohnungen_gesamt} Wohnungen des Hauses` });
+          }
           Object.keys(rec).forEach((x) => rec[x] === undefined && delete rec[x]);
-          const fehler = schemaFehler(sEig, rec);
+          const fehler = [...zusatz, ...schemaFehler(sEig, rec)];
           for (const [n, ohneZiffern] of [["lage_hinweis", true], ["bemerkung", false]]) {
             const t = ErfassenPruefung.freitext(w(n), { ohneZiffern });
             if (t) fehler.push({ name: n, feld: FELDNAMEN[n], text: t });
