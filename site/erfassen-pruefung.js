@@ -27,6 +27,8 @@ window.ErfassenPruefung = (function () {
     if (Array.isArray(v)) {
       if (s.items) v.forEach((x, i) => schema(s.items, x, `${pfad}[${i}]`, fehler));
       if (s.uniqueItems && new Set(v.map((x) => JSON.stringify(x))).size !== v.length) f("doppelte Einträge");
+      if (s.minItems != null && v.length < s.minItems) f(`mindestens ${s.minItems} Einträge`);
+      if (s.maxItems != null && v.length > s.maxItems) f(`höchstens ${s.maxItems} Einträge`);
     }
     if (typ(v) === "object") {
       for (const r of s.required || []) if (!(r in v)) fehler.push({ pfad: pfad ? `${pfad}.${r}` : r, text: "fehlt" });

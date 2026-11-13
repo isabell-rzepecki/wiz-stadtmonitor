@@ -161,7 +161,7 @@
     "wohnungen_je_kategorie": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Nur bei gebaeudeart mfh: Zahl der Wohnungen je Eigentümer-Kategorie (etwa bei Eigentumswohnungen); nur Zahlen je Kategorie, keine Angaben zu einzelnen Personen; nicht bekannte Wohnungen fehlen",
+      "description": "Veraltet (App 0.4.3, 13.11.2026), weiter gültig für ältere Einträge; neu: eigentuemer. Nur bei gebaeudeart mfh: Zahl der Wohnungen je Eigentümer-Kategorie (etwa bei Eigentumswohnungen); nur Zahlen je Kategorie, keine Angaben zu einzelnen Personen; nicht bekannte Wohnungen fehlen",
       "properties": {
         "kom": {
           "type": "integer",
@@ -213,6 +213,68 @@
           "minimum": 1,
           "maximum": 999
         }
+      }
+    },
+    "eigentuemer": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "description": "Nur bei gebaeudeart mfh: wem wie viele Wohnungen gehören, je Eigentümer eine Zeile. Bei Unternehmen, Genossenschaften, öffentlicher Hand und Kirchen mit Namen; bei Privatpersonen und unklarer Zuordnung nie ein Name. kategorie oben ist dann die Art mit den meisten Wohnungen.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kategorie",
+          "wohnungen"
+        ],
+        "properties": {
+          "kategorie": {
+            "enum": [
+              "kom",
+              "kreis",
+              "land",
+              "bund",
+              "kirche",
+              "geno",
+              "wu_oeff",
+              "wu_priv",
+              "jp_sonst",
+              "privat",
+              "unklar"
+            ]
+          },
+          "name_juristische_person": {
+            "type": "string",
+            "maxLength": 120,
+            "description": "Nur erlaubt, wenn kategorie nicht privat/unklar"
+          },
+          "wohnungen": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 999
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kategorie": {
+                  "enum": [
+                    "privat",
+                    "unklar"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "not": {
+                "required": [
+                  "name_juristische_person"
+                ]
+              }
+            }
+          }
+        ]
       }
     }
   },
@@ -277,6 +339,13 @@
             "not": {
               "required": [
                 "wohnungen_je_kategorie"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "eigentuemer"
               ]
             }
           }

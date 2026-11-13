@@ -259,7 +259,8 @@
       ids.sort((a, b) => (E[a].datensatz.erfasst_am < E[b].datensatz.erfasst_am ? -1 : E[a].datensatz.erfasst_am > E[b].datensatz.erfasst_am ? 1 : 0));
       const sortiert = (o) => Object.fromEntries(Object.entries(o || {}).sort((a, b) => nachSchluessel(a[0], b[0])));
       const merkmal = (i) => JSON.stringify([E[i].datensatz.kategorie, E[i].vermieter ?? null, E[i].datensatz.vermietet ?? null,
-        E[i].datensatz.gebaeudeart || "unbekannt", E[i].datensatz.wohnungen_gesamt ?? null, sortiert(E[i].datensatz.wohnungen_je_kategorie)]);
+        E[i].datensatz.gebaeudeart || "unbekannt", E[i].datensatz.wohnungen_gesamt ?? null, sortiert(E[i].datensatz.wohnungen_je_kategorie),
+        (E[i].datensatz.eigentuemer || []).map((x) => JSON.stringify(sortiert(x))).sort()]);
       if (new Set(ids.map(merkmal)).size === 1) {
         for (const i of ids.slice(0, -1)) {
           E[i].status = "verworfen"; E[i].konflikt = `Dublette von ${ids.at(-1)}`;
@@ -381,18 +382,45 @@
       if (e.typ === "eigentum" && GEB.has(e.datensatz.objekt.id)) je.set(e.datensatz.objekt.id, e);
     return je;
   }
+  // Eigentümer-Liste der Mehrfamilienhäuser (wie veroeffentlichen.je_art, name_erlaubt, jp_anteile)
+  const istJP = (k) => k in KAT && k !== "privat" && k !== "unklar";
+  const leer = (s) => s.split(/\s+/).filter(Boolean).join(" ");
+  function jeArt(r) {
+    if (r.eigentuemer && r.eigentuemer.length) { const o = {}; for (const x of r.eigentuemer) o[x.kategorie] = (o[x.kategorie] || 0) + x.wohnungen; return o; }
+    return { ...(r.wohnungen_je_kategorie || {}) };
+  }
+  const nameErlaubt = (e, k) => istJP(k) && !!KAT[k].name_veroeffentlichen && (k !== "jp_sonst" || !!e.name_oeffentlich);
+  function jpAnteile(e) {
+    const r = e.datensatz;
+    if (r.eigentuemer && r.eigentuemer.length)
+      return r.eigentuemer.filter((x) => istJP(x.kategorie)).map((x) => [x.kategorie, x.name_juristische_person && nameErlaubt(e, x.kategorie) ? leer(x.name_juristische_person) : null, x.wohnungen]);
+    if (istJP(r.kategorie))
+      return [[r.kategorie, r.name_juristische_person && nameErlaubt(e, r.kategorie) ? leer(r.name_juristische_person) : null, r.gebaeudeart === "mfh" ? (r.wohnungen_gesamt ?? null) : null]];
+    return [];
+  }
   function karte(je, stand) {
     const feats = [];
     for (const gid of [...je.keys()].sort(nachSchluessel)) {
-      const e = je.get(gid), r = e.datensatz, k = KAT[r.kategorie];
-      if (r.kategorie === "privat" || r.kategorie === "unklar") continue;  // R2: privat nie je Gebäude
-      let name = k.name_veroeffentlichen ? r.name_juristische_person : null;
-      if (r.kategorie === "jp_sonst" && !e.name_oeffentlich) name = null;
-      const props = { id: gid, kategorie: r.kategorie, kategorie_titel: k.titel, sicherheit: r.sicherheit, beleg: r.beleg_art };
-      if (name) props.name = name.split(/\s+/).filter(Boolean).join(" ");
+      const e = je.get(gid), r = e.datensatz, anteileJP = jpAnteile(e);
+      if (!anteileJP.length) continue;  // R2: privat nie je Gebäude; unklar nicht dargestellt
+      const haupt = istJP(r.kategorie) ? r.kategorie : anteileJP[0][0], k = KAT[haupt];
+      const name = haupt === r.kategorie && nameErlaubt(e, haupt) ? r.name_juristische_person : null;
+      const props = { id: gid, kategorie: haupt, kategorie_titel: k.titel, sicherheit: r.sicherheit, beleg: r.beleg_art };
+      if (name) props.name = leer(name);
       if (r.gebaeudeart === "efh" || r.gebaeudeart === "mfh") {  // R3: Art des Hauses und Zahl der Wohnungen, nie je Kategorie
         props.gebaeudeart = r.gebaeudeart;
         if (r.wohnungen_gesamt) props.wohnungen = r.wohnungen_gesamt;
+      }
+      if (r.eigentuemer && r.eigentuemer.length) {  // juristische Personen mit Namen, ohne Zahlen
+        const gesehen = new Set(), liste = [];
+        const sortiert = [...anteileJP].sort((a, b) => nachSchluessel(a[0], b[0]) || nachSchluessel(a[1] || "", b[1] || ""));
+        for (const [kat, nm] of sortiert) {
+          const s = JSON.stringify([kat, nm ? nameNormieren(nm) : ""]);
+          if (gesehen.has(s)) continue;
+          gesehen.add(s);
+          liste.push({ kategorie: kat, kategorie_titel: KAT[kat].titel, ...(nm ? { name: nm } : {}) });
+        }
+        props.eigentuemer = liste;
       }
       feats.push({ type: "Feature", geometry: null, properties: props });  // Umriss setzt die Übernahme aus gebaeude.geojson
     }
@@ -418,10 +446,26 @@
       if (privat > 0 && !zeigen) ob[slug].privat_hinweis = "zu wenige Angaben; nicht in „erfasst“ enthalten";
     }
     for (const [slug, w] of Object.entries(wohnungen(je))) if (ob[slug]) ob[slug].wohnungen = w;
-    return { stand, mindestzahl_privat: R.privat_anteil_min, ortsbezirke: ob };
+    return { stand, mindestzahl_privat: R.privat_anteil_min, ortsbezirke: ob, je_eigentuemer: jeEigentuemer(je) };
   }
   // Wohnungen in Mehrfamilienhäusern je Ortsbezirk (R10, wie veroeffentlichen.wohnungen): „privat“ nur aus mindestens
   // privat_anteil_min Häusern; darunter fehlen „privat“ und die Gesamtzahl, sonst ließe sich „privat“ zurückrechnen
+  // Häuser und bekannte Wohnungen je juristischer Person in der Stadt (wie veroeffentlichen.je_eigentuemer)
+  function jeEigentuemer(je) {
+    const roh = new Map();
+    for (const gid of [...je.keys()].sort(nachSchluessel)) {
+      for (const [kat, nm, n] of jpAnteile(je.get(gid))) {
+        if (!nm) continue;
+        const s = nameNormieren(nm);
+        if (!roh.has(s)) roh.set(s, { name: nm, kategorie: kat, haeuser: new Set(), wohnungen: 0 });
+        const x = roh.get(s);
+        x.haeuser.add(gid);
+        x.wohnungen += n || 0;
+      }
+    }
+    return [...roh.values()].map((x) => ({ name: x.name, kategorie: x.kategorie, kategorie_titel: KAT[x.kategorie].titel, haeuser: x.haeuser.size, wohnungen: x.wohnungen }))
+      .sort((a, b) => b.wohnungen - a.wohnungen || b.haeuser - a.haeuser || nachSchluessel(a.name, b.name));
+  }
   function wohnungen(je) {
     const roh = {};
     for (const [gid, e] of je) {
@@ -430,8 +474,9 @@
       const w = (roh[o] ||= { haeuser: 0, mit_zahl: 0, summe: 0, je: {}, privat_haeuser: 0 });
       w.haeuser += 1;
       if (r.wohnungen_gesamt) { w.mit_zahl += 1; w.summe += r.wohnungen_gesamt; }
-      for (const [k, n] of Object.entries(r.wohnungen_je_kategorie || {})) w.je[k] = (w.je[k] || 0) + n;
-      if ((r.wohnungen_je_kategorie || {}).privat) w.privat_haeuser += 1;
+      const arten = jeArt(r);
+      for (const [k, n] of Object.entries(arten)) w.je[k] = (w.je[k] || 0) + n;
+      if (arten.privat) w.privat_haeuser += 1;
     }
     const out = {};
     for (const slug of Object.keys(roh).sort(nachSchluessel)) {
@@ -500,6 +545,12 @@
       for (const f of d.features || [])
         if (["privat", "unklar"].includes(f.properties.kategorie) || ("name" in f.properties && !KAT[f.properties.kategorie].name_veroeffentlichen))
           throw new Error(`${name}: Gebäude mit Kategorie ${f.properties.kategorie} oder Name, der nicht veröffentlicht werden darf`);
+      for (const f of d.features || [])
+        for (const x of f.properties.eigentuemer || [])
+          if (!istJP(x.kategorie) || "wohnungen" in x || ("name" in x && !KAT[x.kategorie].name_veroeffentlichen))
+            throw new Error(`${name}: Eigentümer im Gebäude mit Privatperson, Wohnungszahl oder Name, der nicht veröffentlicht werden darf`);
+      for (const x of d.je_eigentuemer || [])
+        if (!istJP(x.kategorie) || !KAT[x.kategorie].name_veroeffentlichen) throw new Error(`${name}: Auswertung je Eigentümer mit Kategorie ${x.kategorie}`);
       for (const z of [...(d.zellen || []), ...(d.juristische_personen || [])]) {
         if ("p25" in z && (z.n || 0) < R.mieten_spanne_min) throw new Error(`${name}: Spanne unter der Mindestzahl ${R.mieten_spanne_min}`);
         for (const k of ["median", "p25", "p75"]) if (z[k] != null && !ganz(z[k], R.mieten_rundung_eur)) throw new Error(`${name}: ${k} nicht auf ${R.mieten_rundung_eur} € gerundet`);
@@ -539,11 +590,13 @@
       .map(([s, o]) => `<tr><td>${esc(K.ortsteile[s] ?? s)}</td><td>${o.gebaeude}</td><td>${o.erfasst}</td><td>${esc(Object.entries(o.kategorien).map(([k, n]) => `${k} ${n}`).join(", "))}</td><td>${o.privat ?? esc(o.privat_hinweis ? "zu wenige" : "–")}</td></tr>`).join("");
     const wohnZeilen = Object.entries(a).filter(([, o]) => o.wohnungen).map(([s, o]) => { const w = o.wohnungen;
       return `<tr><td>${esc(K.ortsteile[s] ?? s)}</td><td>${w.mehrfamilienhaeuser}</td><td>${w.wohnungen ?? "zu wenige"}</td><td>${esc(Object.entries(w.je_kategorie).map(([k, n]) => `${k} ${n}`).join(", ") || "–")}</td><td>${w.privat ?? esc(w.privat_hinweis ? "zu wenige" : "–")}</td></tr>`; }).join("");
+    const jeZeilen = (v.dateien["eigentum_anteile_ortsbezirk.json"].je_eigentuemer || []).map((x) => `<tr><td>${esc(x.name)}</td><td>${esc(x.kategorie_titel)}</td><td>${x.haeuser}</td><td>${x.wohnungen || "–"}</td></tr>`).join("");
     const mietZeilen = m ? [...m.zellen.map((z) => [`${K.ortsteile[z.ortsbezirk] ?? z.ortsbezirk}, ${z.baujahr_klasse}`, z]), ...m.juristische_personen.map((j) => [j.name, j])]
       .map(([t, z]) => `<tr><td>${esc(t)}</td><td>${z.n ?? esc(z.hinweis)}</td><td>${zahl(z.median)}</td><td>${z.p25 != null ? `${zahl(z.p25)} – ${zahl(z.p75)}` : "–"}</td></tr>`).join("") : "";
     return `<p>Häuser von Firmen, Genossenschaften und öffentlicher Hand: ${v.dateien["eigentum_gebaeude.geojson"].features.length}</p>
       <div class="tabelle-rahmen"><table><caption>Wem die Häuser gehören, je Ortsteil</caption><thead><tr><th scope="col">Ortsteil</th><th scope="col">Häuser</th><th scope="col">erfasst</th><th scope="col">Eigentümer</th><th scope="col">privat</th></tr></thead><tbody>${anteileZeilen || '<tr><td colspan="5">keine</td></tr>'}</tbody></table></div>
       ${wohnZeilen ? `<div class="tabelle-rahmen"><table><caption>Wohnungen in Mehrfamilienhäusern, je Ortsteil</caption><thead><tr><th scope="col">Ortsteil</th><th scope="col">Häuser</th><th scope="col">Wohnungen</th><th scope="col">Eigentümer</th><th scope="col">privat</th></tr></thead><tbody>${wohnZeilen}</tbody></table></div>` : ""}
+      ${jeZeilen ? `<div class="tabelle-rahmen"><table><caption>Wohnungen je Unternehmen und Genossenschaft</caption><thead><tr><th scope="col">Eigentümer</th><th scope="col">Art</th><th scope="col">Häuser</th><th scope="col">Wohnungen</th></tr></thead><tbody>${jeZeilen}</tbody></table></div>` : ""}
       ${m ? `<div class="tabelle-rahmen"><table><caption>Mieten in € je m² nach Ortsteil und Baujahr</caption><thead><tr><th scope="col">Gruppe</th><th scope="col">Angaben</th><th scope="col">Mitte</th><th scope="col">Spanne</th></tr></thead><tbody>${mietZeilen || '<tr><td colspan="4">keine</td></tr>'}</tbody></table></div>` : ""}`;
   }
 

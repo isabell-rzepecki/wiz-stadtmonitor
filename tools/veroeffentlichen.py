@@ -54,23 +54,63 @@ def eigentum(freigegeben, geb):
     return je
 
 
+JP = {k for k in KAT if k not in ("privat", "unklar")}
+
+
+def je_art(r):
+    """Wohnungen je Eigentümer-Kategorie eines Mehrfamilienhauses: aus der Eigentümer-Liste (App ab 0.4.3) oder, bei älteren
+    Einträgen, aus wohnungen_je_kategorie."""
+    if r.get("eigentuemer"):
+        out = {}
+        for x in r["eigentuemer"]:
+            out[x["kategorie"]] = out.get(x["kategorie"], 0) + x["wohnungen"]
+        return out
+    return dict(r.get("wohnungen_je_kategorie") or {})
+
+
+def name_erlaubt(e, kategorie):
+    """R3: Name einer juristischen Person nur, wenn die Kategorie ihn zulässt; sonstige juristische Personen nur nach Prüfung."""
+    return kategorie in JP and KAT[kategorie]["name_veroeffentlichen"] and (kategorie != "jp_sonst" or bool(e.get("name_oeffentlich")))
+
+
+def jp_anteile(e):
+    """[(kategorie, Name oder None, Wohnungen oder None)] der juristischen Personen eines Gebäudes; Privatpersonen nie."""
+    r = e["datensatz"]
+    if r.get("eigentuemer"):
+        return [(x["kategorie"], " ".join(x["name_juristische_person"].split()) if x.get("name_juristische_person") and name_erlaubt(e, x["kategorie"]) else None,
+                 x["wohnungen"]) for x in r["eigentuemer"] if x["kategorie"] in JP]
+    if r["kategorie"] in JP:
+        name = r.get("name_juristische_person")
+        return [(r["kategorie"], " ".join(name.split()) if name and name_erlaubt(e, r["kategorie"]) else None,
+                 r.get("wohnungen_gesamt") if r.get("gebaeudeart") == "mfh" else None)]
+    return []
+
+
 def karte(je, geb, stand):
     feats = []
     for gid, e in sorted(je.items()):
         r = e["datensatz"]
-        k = KAT[r["kategorie"]]
-        if r["kategorie"] in ("privat", "unklar"):
+        anteile_jp = jp_anteile(e)
+        if not anteile_jp:
             continue  # R2: privat nie je Gebäude; unklar nicht dargestellt
-        name = r.get("name_juristische_person") if k["name_veroeffentlichen"] else None
-        if r["kategorie"] == "jp_sonst" and not e.get("name_oeffentlich"):
-            name = None
-        props = {"id": gid, "kategorie": r["kategorie"], "kategorie_titel": k["titel"], "sicherheit": r["sicherheit"], "beleg": r["beleg_art"]}
+        haupt = r["kategorie"] if r["kategorie"] in JP else anteile_jp[0][0]
+        k = KAT[haupt]
+        name = r.get("name_juristische_person") if haupt == r["kategorie"] and name_erlaubt(e, haupt) else None
+        props = {"id": gid, "kategorie": haupt, "kategorie_titel": k["titel"], "sicherheit": r["sicherheit"], "beleg": r["beleg_art"]}
         if name:
             props["name"] = " ".join(name.split())
         if r.get("gebaeudeart") in ("efh", "mfh"):  # R3: Art des Hauses und Zahl der Wohnungen, nie Wohnungen je Kategorie
             props["gebaeudeart"] = r["gebaeudeart"]
             if r.get("wohnungen_gesamt"):
                 props["wohnungen"] = r["wohnungen_gesamt"]
+        if r.get("eigentuemer"):  # Mehrfamilienhaus: juristische Personen mit Namen, ohne Zahlen (sonst ließe sich „privat“ zurückrechnen)
+            gesehen, liste = set(), []
+            for kat, nm, _ in sorted(anteile_jp, key=lambda x: (x[0], x[1] or "")):
+                if (kat, pg.name_normieren(nm) if nm else "") in gesehen:
+                    continue
+                gesehen.add((kat, pg.name_normieren(nm) if nm else ""))
+                liste.append({"kategorie": kat, "kategorie_titel": KAT[kat]["titel"], **({"name": nm} if nm else {})})
+            props["eigentuemer"] = liste
         feats.append({"type": "Feature", "geometry": geb[gid]["geometry"], "properties": props})
     return {"type": "FeatureCollection", "stand": stand, "hinweis": "Nur geprüfte und freigegebene Erfassungen; unvollständig.",
             "attribution": f"{pg.STADT['gebaeude']['attribution']}; Eigentum: eigene Erfassung, geprüft",
@@ -100,7 +140,23 @@ def anteile(je, geb, stand):
     for slug, w in wohnungen(je, geb).items():
         if slug in ob:
             ob[slug]["wohnungen"] = w
-    return {"stand": stand, "mindestzahl_privat": R["privat_anteil_min"], "ortsbezirke": ob}
+    return {"stand": stand, "mindestzahl_privat": R["privat_anteil_min"], "ortsbezirke": ob, "je_eigentuemer": je_eigentuemer(je)}
+
+
+def je_eigentuemer(je):
+    """Häuser und bekannte Wohnungen je juristischer Person in der Stadt (R3), nur mit veröffentlichbarem Namen; Privatpersonen nie.
+    Zusammengeführt über den normierten Namen; angezeigt wird die Schreibweise des ersten Gebäudes (nach Kennung)."""
+    roh = {}
+    for gid, e in sorted(je.items()):
+        for kat, nm, n in jp_anteile(e):
+            if not nm:
+                continue
+            x = roh.setdefault(pg.name_normieren(nm), {"name": nm, "kategorie": kat, "haeuser": set(), "wohnungen": 0})
+            x["haeuser"].add(gid)
+            x["wohnungen"] += n or 0
+    out = [{"name": x["name"], "kategorie": x["kategorie"], "kategorie_titel": KAT[x["kategorie"]]["titel"], "haeuser": len(x["haeuser"]),
+            "wohnungen": x["wohnungen"]} for x in roh.values()]
+    return sorted(out, key=lambda x: (-x["wohnungen"], -x["haeuser"], x["name"]))
 
 
 def wohnungen(je, geb):
@@ -117,9 +173,10 @@ def wohnungen(je, geb):
         if r.get("wohnungen_gesamt"):
             w["mit_zahl"] += 1
             w["summe"] += r["wohnungen_gesamt"]
-        for k, n in r.get("wohnungen_je_kategorie", {}).items():
+        arten = je_art(r)
+        for k, n in arten.items():
             w["je"][k] = w["je"].get(k, 0) + n
-        if r.get("wohnungen_je_kategorie", {}).get("privat"):
+        if arten.get("privat"):
             w["privat_haeuser"] += 1
     out = {}
     for slug, w in sorted(roh.items()):
@@ -206,6 +263,12 @@ def pruefe_ausgabe(ausgaben, private_namen):
         for f in d.get("features", []):
             if f["properties"]["kategorie"] in ("privat", "unklar") or ("name" in f["properties"] and not KAT[f["properties"]["kategorie"]]["name_veroeffentlichen"]):
                 raise Verstoss(f"{name}: Gebäude mit Kategorie {f['properties']['kategorie']} oder Name, der nicht veröffentlicht werden darf")
+            for x in f["properties"].get("eigentuemer", []):
+                if x["kategorie"] not in JP or "wohnungen" in x or ("name" in x and not KAT[x["kategorie"]]["name_veroeffentlichen"]):
+                    raise Verstoss(f"{name}: Eigentümer im Gebäude mit Privatperson, Wohnungszahl oder Name, der nicht veröffentlicht werden darf")
+        for x in d.get("je_eigentuemer", []):
+            if x["kategorie"] not in JP or not KAT[x["kategorie"]]["name_veroeffentlichen"]:
+                raise Verstoss(f"{name}: Auswertung je Eigentümer mit Kategorie {x['kategorie']}")
         for z in [*d.get("zellen", []), *d.get("juristische_personen", [])]:
             if "p25" in z and (z.get("n") or 0) < R["mieten_spanne_min"]:
                 raise Verstoss(f"{name}: Spanne unter der Mindestzahl {R['mieten_spanne_min']}")

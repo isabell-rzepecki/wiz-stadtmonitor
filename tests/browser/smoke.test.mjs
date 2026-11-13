@@ -620,7 +620,8 @@ test("Wohnen und Eigentum: Ebene Eigentum aus der geprüften Datei, privat nie j
   const mitte = (f) => { const r = f.geometry.coordinates[0].slice(0, -1); return [r.reduce((s, c) => s + c[0], 0) / r.length, r.reduce((s, c) => s + c[1], 0) / r.length]; };
   const eig = { type: "FeatureCollection", stand: "2026-10-26", features: geb.map((f, i) => ({ type: "Feature", geometry: f.geometry,
     properties: { id: f.properties.id, kategorie: i % 2 ? "kom" : "geno", kategorie_titel: i % 2 ? "Stadt" : "Wohnungsgenossenschaft",
-      sicherheit: "gesichert", beleg: "ortskenntnis", ...(i % 2 ? {} : { name: "Wohnbau Test eG", gebaeudeart: "mfh", wohnungen: 12 }) } })) };
+      sicherheit: "gesichert", beleg: "ortskenntnis", ...(i % 2 ? {} : { name: "Wohnbau Test eG", gebaeudeart: "mfh", wohnungen: 12,
+        eigentuemer: [{ kategorie: "geno", kategorie_titel: "Wohnungsgenossenschaft", name: "Wohnbau Test eG" }, { kategorie: "geno", kategorie_titel: "Wohnungsgenossenschaft", name: "Hasenohr eG (Test)" }] }) } })) };
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, bypassCSP: true });
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
@@ -632,6 +633,7 @@ test("Wohnen und Eigentum: Ebene Eigentum aus der geprüften Datei, privat nie j
     w.eigentum_anteile = { stand: "2026-10-26", ortsbezirke: { gertenbach: { gebaeude: 1295, erfasst: 40, kategorien: { geno: 20, kom: 20 }, privat: null,
       privat_hinweis: "zu wenige Angaben; nicht in „erfasst“ enthalten",
       wohnungen: { mehrfamilienhaeuser: 3, mit_wohnungszahl: 3, wohnungen: 36, je_kategorie: { geno: 24 }, privat: null, privat_haeuser: null } } } };
+    w.eigentum_anteile.je_eigentuemer = [{ name: "Wohnbau Test eG", kategorie: "geno", kategorie_titel: "Wohnungsgenossenschaft", haeuser: 3, wohnungen: 24 }];
     w.zensus_mfh = { stichtag: "2022-05-15", attribution: "Zensus (Test)", hinweis: "Näherung (Test).", ortsbezirke: { gertenbach: 147, kernstadt: 2238 } };
     await r.fulfill({ response: res, json: w });
   });
@@ -656,7 +658,7 @@ test("Wohnen und Eigentum: Ebene Eigentum aus der geprüften Datei, privat nie j
     if (pt.id !== f.properties.id) continue;
     await page.mouse.click(pt.x, pt.y);
     await page.locator("#gebaeude").waitFor();
-    assert.match(await page.locator("#gebaeude").textContent(), /Eigentum\s*Wohnungsgenossenschaft: Wohnbau Test eG/);
+    assert.match(await page.locator("#gebaeude").textContent(), /Eigentum\s*Wohnungsgenossenschaft: Wohnbau Test eG\s*Wohnungsgenossenschaft: Hasenohr eG \(Test\)/);
     assert.match(await page.locator("#gebaeude").textContent(), /Haus\s*Mehrfamilienhaus mit 12 Wohnungen/);
     getroffen = true;
     break;
@@ -668,6 +670,7 @@ test("Wohnen und Eigentum: Ebene Eigentum aus der geprüften Datei, privat nie j
   const stand = await page.locator("#modul-stand").textContent();
   assert.match(stand, /Wohnungen in Mehrfamilienhäusern.*Gertenbach\s*147\s*3\s*36\s*24,5 %\s*Wohnungsgenossenschaft: 24/s);
   assert.match(stand, /Kernstadt\s*2\.238\s*0/);
+  assert.match(stand, /Wohnungen je Unternehmen und Genossenschaft.*Wohnbau Test eG\s*Wohnungsgenossenschaft\s*3\s*24/s);
   await page.locator("#modul-eigentum > summary").click();
   assert.match(await page.locator("#modul-eigentum").textContent(), /Geprüfte Erfassung, Stand 26\.10\.2026/);
   assert.deepEqual(await axe(page), []);
@@ -787,6 +790,28 @@ test("Erfassung als Probe: ohne Code und Schlüssel, Formulare prüfen, nichts g
   await page.locator('#form-b button[type="submit"]').click();
   assert.match(await page.locator(".erfolg").textContent(), /Probe: Die Angaben sind gültig\. Nichts wurde gespeichert/);
   assert.equal(await page.locator("#widerrufscode").count(), 0);
+  // Mehrfamilienhaus mit zwei Genossenschaften und privaten Wohnungen: gültig, nichts gespeichert
+  await page.locator("#weiter").click();
+  await gebaeudeAntippen(page);
+  await page.locator("#zu-a").click();
+  await page.getByRole("radio", { name: /Mehrfamilienhaus/ }).check();
+  await page.fill('input[name="wohnungen_gesamt"]', "12");
+  const zeile = (i) => page.locator(".ez-zeile").nth(i);
+  await zeile(0).locator(".ez-art").selectOption("geno");
+  await zeile(0).locator(".ez-name-feld").fill("Stinkycat eG (Probe)");
+  await zeile(0).locator(".ez-zahl").fill("5");
+  await page.locator("#ez-neu").click();
+  await zeile(1).locator(".ez-art").selectOption("geno");
+  await zeile(1).locator(".ez-name-feld").fill("Hasenohr eG (Probe)");
+  await zeile(1).locator(".ez-zahl").fill("3");
+  await page.locator("#ez-neu").click();
+  await zeile(2).locator(".ez-art").selectOption("privat");
+  await zeile(2).locator(".ez-zahl").fill("2");
+  assert.match(await page.locator("#ez-summe").textContent(), /Zusammen 10 von 12 Wohnungen zugeordnet/);
+  await page.selectOption('select[name="beleg_art"]', "ortskenntnis");
+  assert.deepEqual(await axe(page), []);
+  await page.locator('#form-a button[type="submit"]').click();
+  assert.match(await page.locator(".erfolg").textContent(), /Probe: Die Angaben sind gültig/);
   const n = await page.evaluate(async () => {
     const d = await new Promise((ok) => { const r = indexedDB.open("wiz-erfassung"); r.onsuccess = () => ok(r.result); });
     const z = (s) => new Promise((ok) => { const g = d.transaction(s).objectStore(s).count(); g.onsuccess = () => ok(g.result); });
@@ -841,17 +866,25 @@ test("Erfassung mit Testschlüssel: Formulare prüfen, versiegelt speichern, Exp
   await page.fill('input[name="lage_hinweis"]', "Hauptstraße");
   await page.fill('textarea[name="bemerkung"]', "");
   // Mehrfamilienhaus: Zahl der Wohnungen oder „Zahl unbekannt“; Wohnungen je Eigentümer-Art zusammen höchstens die Gesamtzahl
+  // Mehrfamilienhaus: statt „Wem gehört das Gebäude?“ die Eigentümer-Liste; Zahl der Wohnungen oder „Zahl unbekannt“;
+  // je Zeile Art und Zahl, zusammen höchstens die Gesamtzahl
   await page.getByRole("radio", { name: /Mehrfamilienhaus/ }).check();
   await page.locator("#feld-mfh").waitFor();
+  assert.equal(await page.locator("#feld-kategorie").isHidden(), true);
+  assert.equal(await page.locator(".ez-zeile").count(), 1);
   await page.locator('#form-a button[type="submit"]').click();
   assert.match(await page.locator(".fehlerliste").textContent(), /Zahl der Wohnungen: Zahl eingeben/);
   await page.fill('input[name="wohnungen_gesamt"]', "4");
-  await page.fill('input[name="wj_privat"]', "6");
+  await page.locator(".ez-zeile .ez-art").first().selectOption("privat");
+  assert.equal(await page.locator(".ez-zeile .ez-name").first().isHidden(), true);  // bei Privatpersonen nie ein Name
+  await page.locator(".ez-zeile .ez-zahl").first().fill("6");
   await page.locator('#form-a button[type="submit"]').click();
   assert.match(await page.locator(".fehlerliste").textContent(), /zusammen 6, mehr als die 4 Wohnungen/);
-  assert.equal(await page.evaluate(() => [...document.querySelectorAll("#form-a input")].filter((x) => !x.closest("[hidden]") && !(x.labels && x.labels.length)).length), 0);
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll("#form-a input, #form-a select")].filter((x) => !x.closest("[hidden]") && !(x.labels && x.labels.length)).length), 0);
   assert.deepEqual(await axe(page), []);
-  await page.fill('input[name="wohnungen_gesamt"]', "10");
+  // zurück zum Ein- oder Zweifamilienhaus: die Frage „Wem gehört das Gebäude?“ mit der Auswahl von vorher
+  await page.getByRole("radio", { name: /Ein- oder Zweifamilienhaus/ }).check();
+  assert.equal(await page.locator("#feld-kategorie").isVisible(), true);
   await page.locator('#form-a button[type="submit"]').click();
   await page.locator(".erfolg").waitFor();
   // Formular B: ohne Einwilligung nicht speicherbar; Fläche ergibt die Klasse

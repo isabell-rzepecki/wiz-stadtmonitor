@@ -169,7 +169,8 @@ def pruefen(arbeit):
         ids.sort(key=lambda i: eig[i]["datensatz"]["erfasst_am"])
         merkmal = lambda i: (eig[i]["datensatz"]["kategorie"], eig[i]["vermieter"], eig[i]["datensatz"].get("vermietet"),  # noqa: E731
                              eig[i]["datensatz"].get("gebaeudeart") or "unbekannt", eig[i]["datensatz"].get("wohnungen_gesamt"),
-                             json.dumps(eig[i]["datensatz"].get("wohnungen_je_kategorie") or {}, sort_keys=True))
+                             json.dumps(eig[i]["datensatz"].get("wohnungen_je_kategorie") or {}, sort_keys=True),
+                             json.dumps(sorted(eig[i]["datensatz"].get("eigentuemer") or [], key=lambda x: json.dumps(x, sort_keys=True)), sort_keys=True))
         if len({merkmal(i) for i in ids}) == 1:
             for i in ids[:-1]:
                 eig[i]["status"], eig[i]["konflikt"] = "verworfen", f"Dublette von {ids[-1]}"

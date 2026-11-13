@@ -125,7 +125,8 @@ window.WohnenModule = (function () {
       <div class="tabelle"><table><caption class="visually-hidden">Erfassungsstand je Ortsbezirk</caption>
       <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">Gebäude</th><th scope="col">mit Kategorie</th><th scope="col">Anteil</th><th scope="col">davon privat</th></tr></thead><tbody>${zeilen}</tbody></table></div>
       <p class="meta">Privat: nur als Anzahl ab ${zahl(cfg.wohnen_eigentum.regeln.privat_anteil_min)} Gebäuden; darunter auch nicht in „mit Kategorie“ enthalten.</p>
-      ${wohnungenTabelle(cfg, a, w && w.zensus_mfh)}`;
+      ${wohnungenTabelle(cfg, a, w && w.zensus_mfh)}
+      ${jeEigentuemerTabelle(w && w.eigentum_anteile && w.eigentum_anteile.je_eigentuemer)}`;
   }
 
   // Wohnungen in Mehrfamilienhäusern je Ortsbezirk (Regel R10): nur Zahlen je Eigentümer-Art; „privat“ erst ab der Mindestzahl
@@ -149,6 +150,16 @@ window.WohnenModule = (function () {
       <div class="tabelle" tabindex="0" role="region" aria-label="Tabelle Wohnungen in Mehrfamilienhäusern (seitlich verschiebbar)"><table><caption class="visually-hidden">Wohnungen in Mehrfamilienhäusern je Ortsbezirk, erfasst und laut Zensus 2022</caption>
       <thead><tr><th scope="col">Ortsbezirk</th><th scope="col">laut Zensus 2022</th><th scope="col">erfasste Häuser</th><th scope="col">erfasste Wohnungen</th><th scope="col">Anteil</th><th scope="col">davon Unternehmen, Genossenschaften, öffentliche Hand</th><th scope="col">davon privat</th></tr></thead><tbody>${zeilen}</tbody></table></div>
       <p class="meta">Privat: nur ab ${zahl(cfg.wohnen_eigentum.regeln.privat_anteil_min)} Häusern mit privaten Wohnungen; darunter fehlt auch die Gesamtzahl, damit sich „privat“ nicht zurückrechnen lässt.${z ? ` Zensus: ${esc(z.hinweis)} Stichtag ${datum(z.stichtag)}; ${esc(z.attribution)}.` : ""}</p>`;
+  }
+
+  // Häuser und Wohnungen je Unternehmen, Genossenschaft und öffentlicher Hand in der Stadt (R3); Privatpersonen nie
+  function jeEigentuemerTabelle(liste) {
+    if (!liste || !liste.length) return "";
+    const zeilen = liste.map((x) => `<tr><th scope="row">${esc(x.name)}</th><td>${esc(x.kategorie_titel)}</td><td>${zahl(x.haeuser)}</td><td>${x.wohnungen ? zahl(x.wohnungen) : "–"}</td></tr>`).join("");
+    return `<h4>Wohnungen je Unternehmen und Genossenschaft</h4>
+      <p>Erfasste Häuser und Wohnungen je Eigentümer mit Namen, in der ganzen Stadt. Gezählt sind nur bekannte Wohnungszahlen; Privatpersonen erscheinen nie.</p>
+      <div class="tabelle" tabindex="0" role="region" aria-label="Tabelle Wohnungen je Unternehmen und Genossenschaft (seitlich verschiebbar)"><table><caption class="visually-hidden">Häuser und Wohnungen je Eigentümer</caption>
+      <thead><tr><th scope="col">Eigentümer</th><th scope="col">Art</th><th scope="col">Häuser</th><th scope="col">Wohnungen</th></tr></thead><tbody>${zeilen}</tbody></table></div>`;
   }
 
   function tagesordnung() {

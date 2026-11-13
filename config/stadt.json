@@ -1402,7 +1402,7 @@
     ],
     "erfassung": {
       "_hinweis": "Erfassungs-App erfassen.html (W4), nicht öffentlich verlinkt. Zugang über Einladungskarten: Ihr QR-Code trägt Code, Ablaufdatum und den öffentlichen Schlüssel der Prüfgruppe; Gültigkeit und Sperre prüft die Prüfgruppe beim Einlesen anhand der Kartenliste (docs/datenschutz/einladungsverfahren.md). einladungen und schluessel hier nur noch für abgetippte Codes älterer Karten (tools/einladung.py). Freigabe durch freigaben_noetig Personen (Entscheidung 10.11.2026: eine). Die App kennt keinen privaten Schlüssel.",
-      "app_version": "0.4.3-w4",
+      "app_version": "0.4.4-w4",
       "speicherdauer_monate": 24,
       "einladung_gueltig_monate": 12,
       "freigaben_noetig": 1,
