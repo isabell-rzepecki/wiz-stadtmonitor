@@ -265,6 +265,12 @@
 
   // --- Über ----------------------------------------------------------------------------------------
   $("#about-open").addEventListener("click", () => { closeMega(); $("#about").showModal(); });
+  // Mauszeiger: Knöpfe mit Namen, aber ohne sichtbaren Text, zeigen ihren Namen auch als Hinweis
+  // (auch für Knöpfe, die erst später entstehen: beim ersten Darüberfahren gesetzt, bevor der Browser den Hinweis zeigt)
+  document.addEventListener("mouseover", (e) => {
+    const b = e.target.closest && e.target.closest("button[aria-label]:not([title])");
+    if (b && (!b.textContent.trim() || b.classList.contains("icon-btn"))) b.title = b.getAttribute("aria-label");
+  });
   // mobil: Blätter starten auf halber Höhe; die Schaltfläche im Kopf zeigt sie ganz (auf breiten Bildschirmen ausgeblendet)
   for (const id of SHEETS.filter((x) => x !== "timeline-wrap")) {
     const head = document.querySelector(`#${id} .panel-head`), close = head && head.querySelector("[data-close]");
@@ -493,6 +499,14 @@
       showStruktur().then(() => { const t = $("#struktur-tabelle"); if (t) { t.scrollIntoView({ block: "start" }); t.querySelector("button").focus(); } });
     });
     cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 40, animate: !REDUCED }).addTo(map);
+    // Gruppen von Punkten: Name für Screenreader und Hinweis bei Maus und Fokus (Eingabe vergrößert wie ein Klick)
+    new MutationObserver(() => {
+      for (const el of map.getPane("markerPane").querySelectorAll(".marker-cluster:not([aria-label])")) {
+        const n = el.textContent.trim();
+        el.setAttribute("aria-label", `${n} Vorgänge an dieser Stelle, vergrößern`);
+        el.title = `${n} Vorgänge an dieser Stelle; zum Vergrößern anklicken`;
+      }
+    }).observe(map.getPane("markerPane"), { childList: true });
     map.fitBounds(cityBounds());
   }
   function cityBounds() {
@@ -507,6 +521,21 @@
     const top = desktop && !$("#timeline-wrap").hidden ? 86 + $("#timeline-wrap").offsetHeight + 12 : 90;
     return { paddingTopLeft: [left, top], paddingBottomRight: [right, desktop ? 70 : 150], animate: !REDUCED };
   }
+  // Tastatur: Punkte und Flächen der Karte bekommen einen Namen, sind mit Tab erreichbar, öffnen mit Eingabe oder
+  // Leertaste und zeigen beim Fokus denselben Hinweis wie beim Darüberfahren mit der Maus
+  function tastatur(layer, name, aktion) {
+    layer.on("add", () => {
+      const el = layer.getElement && layer.getElement();
+      if (!el || el.dataset.tastatur) return;
+      el.dataset.tastatur = "1";
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("role", "button");
+      el.setAttribute("aria-label", name);
+      el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); aktion(); } });
+      el.addEventListener("focus", () => layer.openTooltip && layer.getTooltip() && layer.openTooltip());
+      el.addEventListener("blur", () => layer.closeTooltip && layer.closeTooltip());
+    });
+  }
   // Ortsbezirke als anklickbare Flächen, abgeleitet aus den Gemarkungen (HVBG); Zuordnung mit Prüfstatus
   function initNav() {
     if (!flaechen) return;
@@ -518,7 +547,9 @@
         const o = ortsteile().find((x) => x.slug === f.properties.slug);
         if (!o) return;
         layer.bindTooltip(() => `<strong>${esc(o.name)}</strong><br>${de(countIn(o))} Vorgänge mit Ortsbezug`, { sticky: true, className: "nav-tip" });
-        layer.on("click", () => { if (!(area.kind === "ortsteil" && area.key === o.slug)) chooseArea(`ortsteil:${o.slug}`); });
+        const waehlen = () => { if (!(area.kind === "ortsteil" && area.key === o.slug)) chooseArea(`ortsteil:${o.slug}`); };
+        layer.on("click", waehlen);
+        tastatur(layer, `Ortsteil ${o.name} auswählen`, waehlen);
       },
     }).addTo(map);
   }
@@ -718,6 +749,7 @@
       const ms = areaLocs(p).filter((l) => l.level !== "ortsteil" && l.lon != null).map((l) => {
         const m = L.circleMarker([l.lat, l.lon], { ...MARKER, fillColor: color(l.confidence) })
           .bindTooltip(`${esc(p.reference)} · ${esc(l.name)}<br>${CONF[l.confidence] || esc(l.confidence)}`).on("click", () => select(p, true));
+        tastatur(m, `Vorgang ${p.reference}, ${l.name}: ${p.name}`, () => select(p, true));
         return m;
       });
       ms.forEach((m) => cluster.addLayer(m));

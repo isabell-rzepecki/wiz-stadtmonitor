@@ -145,6 +145,16 @@ test("Nur eigene Domain: Datenquellen als Seite, interner Bereich, Hinweise per 
   if (await page.locator('.nav [data-mega="mega-politik"] span').first().isVisible())
     assert.deepEqual((await page.locator(".nav .menu-btn span:not(.visually-hidden)").allTextContents()).map((s) => s.trim()), ["Politik", "Stadt in Zahlen", "Über", "Teilen"]);
   assert.equal(await page.locator("#mega-ueber #cta-report, #mega-ueber #about-open, #mega-ueber #sources").count(), 3);
+  // Tastatur und Maus: Menüknöpfe mit Hinweis; Ortsteil auf der Karte mit Tab und Eingabe wählbar, mit Hinweis beim Fokus
+  assert.match(await page.locator('.nav [data-mega="mega-stadt"]').getAttribute("title"), /Ortsteile, Wohnen/);
+  const flaeche = page.locator('path[role="button"][aria-label^="Ortsteil "]').first();
+  await flaeche.waitFor({ state: "attached" });
+  const ortsteil = (await flaeche.getAttribute("aria-label")).match(/Ortsteil (.+) auswählen/)[1];
+  await flaeche.focus();
+  await page.locator(".leaflet-tooltip").first().waitFor();
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() => document.querySelector("#f-area").value.startsWith("ortsteil:"));
+  assert.match(await page.locator("#f-area option:checked").textContent(), new RegExp(ortsteil));
   assert.equal(await page.locator("#mega-stadt #cta-wohnen, #mega-stadt #cta-struktur, #mega-stadt #cta-wanderung, #mega-stadt a[href='ortsteile/']").count(), 4);
   assert.equal(await page.locator("#mega-politik #cta-termine, #mega-politik #cta-stats, #mega-politik #cta-wahlen, #mega-politik a[href='gremien/']").count(), 4);
   assert.equal(await page.locator('a[href*="github"]').count(), 0);
