@@ -59,6 +59,20 @@ class Zusammenfassung(unittest.TestCase):
         w = vo.wohnungen(je, geb)["gertenbach"]
         self.assertEqual((w["privat"], w["privat_haeuser"], w["wohnungen"]), (4 * (MIN - 1) + 3, MIN, 4 * (MIN - 1) + 3))
 
+    def test_karte_nur_art_und_gesamtzahl(self):
+        je, geb = bestand(rec("G1", gebaeudeart="mfh", wohnungen_gesamt=12, wohnungen_je_kategorie={"wu_priv": 8, "privat": 4}),
+                          rec("G2", kategorie="geno", gebaeudeart="efh"), rec("G3", kategorie="privat", gebaeudeart="mfh", wohnungen_gesamt=6))
+        for f in geb.values():
+            f["geometry"] = None
+        props = {f["properties"]["id"]: f["properties"] for f in vo.karte(je, geb, "2026-11-13")["features"]}
+        self.assertEqual((props["G1"]["gebaeudeart"], props["G1"]["wohnungen"]), ("mfh", 12))
+        self.assertNotIn("wohnungen_je_kategorie", props["G1"])
+        self.assertEqual(props["G2"]["gebaeudeart"], "efh")
+        self.assertNotIn("G3", props)  # privat nie je Gebäude (R2)
+        with self.assertRaises(vo.Verstoss):
+            vo.pruefe_ausgabe({"eigentum_gebaeude.geojson": {"features": [{"properties": {
+                "id": "G1", "kategorie": "wu_priv", "wohnungen_je_kategorie": {"privat": 4}}}]}}, [])
+
     def test_sperre(self):
         def ausgabe(w):
             return {"eigentum_anteile_ortsbezirk.json": {"ortsbezirke": {"gertenbach": {
